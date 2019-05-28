@@ -3,13 +3,15 @@ import {
 } from 'd3-selection';
 
 import { debounce } from 'es-toolkit';
-import { uiToolDrawModes, uiToolNotes, uiToolSave, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
+import { uiToolAddFavorite, uiToolAddRecent, uiToolSearchAdd, uiToolNotes, uiToolSave, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
 
 
 export function uiTopToolbar(context) {
 
     var sidebarToggle = uiToolSidebarToggle(context),
-        modes = uiToolDrawModes(context),
+        searchAdd = uiToolSearchAdd(context),
+        addFavorite = uiToolAddFavorite(context),
+        addRecent = uiToolAddRecent(context),
         notes = uiToolNotes(context),
         undoRedo = uiToolUndoRedo(context),
         save = uiToolSave(context);
@@ -33,6 +35,10 @@ export function uiTopToolbar(context) {
         context.layers()
             .on('change.topToolbar', debouncedUpdate);
 
+        context.presets()
+            .on('favoritePreset.topToolbar', update)
+            .on('recentsChange.topToolbar', update);
+
         update();
 
         function update() {
@@ -40,8 +46,16 @@ export function uiTopToolbar(context) {
             var tools = [
                 sidebarToggle,
                 'spacer',
-                modes
+                searchAdd
             ];
+
+            if (context.presets().getFavorites().length > 0) {
+                tools.push(addFavorite);
+            }
+
+            if (addRecent.shouldShow()) {
+                tools.push(addRecent);
+            }
 
             tools.push('spacer');
 
