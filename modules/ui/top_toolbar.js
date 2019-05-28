@@ -3,8 +3,7 @@ import {
 } from 'd3-selection';
 
 import { debounce } from 'es-toolkit';
-import { uiToolAddFavorite, uiToolAddRecent, uiToolSearchAdd, uiToolNotes, uiToolSave, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
-
+import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToolSave, uiToolSearchAdd, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
 
 export function uiTopToolbar(context) {
 
@@ -16,38 +15,62 @@ export function uiTopToolbar(context) {
         undoRedo = uiToolUndoRedo(context),
         save = uiToolSave(context);
 
+    var supportedOperationIDs = ['circularize', 'delete', 'disconnect', 'merge', 'orthogonalize', 'split', 'straighten'];
+
+    var operationToolsByID = {};
+
     function notesEnabled() {
         var noteLayer = context.layers().layer('notes');
         return noteLayer && noteLayer.enabled();
     }
 
-    function topToolbar(bar) {
+    function operationTool(operation) {
+        if (!operationToolsByID[operation.id]) {
+            // cache the tools
+            operationToolsByID[operation.id] = uiToolOperation(context);
+        }
+        var tool = operationToolsByID[operation.id];
+        tool.setOperation(operation);
+        return tool;
+    }
 
-        bar.on('wheel.topToolbar', function(d3_event) {
-            if (!d3_event.deltaX) {
-                // translate vertical scrolling into horizontal scrolling in case
-                // the user doesn't have an input device that can scroll horizontally
-                bar.node().scrollLeft += d3_event.deltaY;
+    function toolsToShow() {
+
+        var tools = [
+            sidebarToggle,
+            'spacer'
+        ];
+        var mode = context.mode();
+        if (mode &&
+            mode.id === 'select' &&
+            !mode.newFeature() &&
+            mode.selectedIDs().every(function(id) { return context.graph().hasEntity(id); })) {
+
+            var operationTools = [];
+            var operations = mode.operations().filter(function(operation) {
+                return supportedOperationIDs.indexOf(operation.id) !== -1;
+            });
+            var deleteTool;
+            for (var i in operations) {
+                var operation = operations[i];
+                var tool = operationTool(operation);
+                if (operation.id !== 'delete') {
+                    operationTools.push(tool);
+                } else {
+                    deleteTool = tool;
+                }
             }
-        });
-
-        var debouncedUpdate = debounce(update, 500, { edges: ['leading', 'trailing'] });
-        context.layers()
-            .on('change.topToolbar', debouncedUpdate);
-
-        context.presets()
-            .on('favoritePreset.topToolbar', update)
-            .on('recentsChange.topToolbar', update);
-
-        update();
-
-        function update() {
-
-            var tools = [
-                sidebarToggle,
-                'spacer',
-                searchAdd
-            ];
+            if (operationTools.length > 0) {
+                tools = tools.concat(operationTools);
+                tools.push('spacer');
+            }
+            if (deleteTool) {
+                // give the delete button its own space
+                tools.push(deleteTool);
+                tools.push('spacer');
+            }
+        } else {
+            tools.push(searchAdd);
 
             if (context.presets().getFavorites().length > 0) {
                 tools.push(addFavorite);
@@ -62,8 +85,43 @@ export function uiTopToolbar(context) {
             if (notesEnabled()) {
                 tools = tools.concat([notes, 'spacer']);
             }
+        }
+        tools = tools.concat([undoRedo, save]);
 
-            tools = tools.concat([undoRedo, save]);
+        return tools;
+    }
+
+    function topToolbar(bar) {
+
+        bar.on('wheel.topToolbar', function(d3_event) {
+            if (!d3_event.deltaX) {
+                // translate vertical scrolling into horizontal scrolling in case
+                // the user doesn't have an input device that can scroll horizontally
+                bar.node().scrollLeft += d3_event.deltaY;
+            }
+        });
+
+        var debouncedUpdate = debounce(update, 250, { edges: ['leading', 'trailing'] });
+        context.history()
+            .on('change.topToolbar', debouncedUpdate);
+        context.layers()
+            .on('change.topToolbar', debouncedUpdate);
+        context.map()
+            .on('move.topToolbar', debouncedUpdate)
+            .on('drawn.topToolbar', debouncedUpdate);
+
+        context.on('enter.topToolbar', update);
+
+        context.presets()
+            .on('favoritePreset.topToolbar', update)
+            .on('recentsChange.topToolbar', update);
+
+
+        update();
+
+        function update() {
+
+            var tools = toolsToShow();
 
             var toolbarItems = bar.selectAll('.toolbar-item')
                 .data(tools, function(d) {
@@ -100,6 +158,11 @@ export function uiTopToolbar(context) {
                 .append('div')
                 .attr('class', 'item-label')
                 .each(function(d) { d.label(d3_select(this)); });
+
+            toolbarItems.merge(itemsEnter)
+                .each(function(d){
+                    if (d.update) d.update();
+                });
         }
 
     }
