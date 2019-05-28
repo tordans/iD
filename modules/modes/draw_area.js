@@ -33,5 +33,11 @@ export function modeDrawArea(context, wayID, startGraph, button) {
         return (behavior && behavior.activeID()) || [];
     };
 
+
+    mode.finish = function() {
+        behavior.finish();
+    };
+
+
     return mode;
 }

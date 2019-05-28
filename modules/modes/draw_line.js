@@ -38,5 +38,11 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, continui
         return (behavior && behavior.activeID()) || [];
     };
 
+
+    mode.finish = function() {
+        behavior.finish();
+    };
+    
+
     return mode;
 }

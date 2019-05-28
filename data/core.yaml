@@ -27,6 +27,7 @@ en:
     recent: Recent
     favorites: Favorites
     add_feature: Add Feature
+    finish: Finish
   title:
     format:
       context: "{base} – {context}"
