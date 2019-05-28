@@ -36,7 +36,12 @@ en:
       one: "{labeled} and {count} more"
       other: "{labeled} and {count} more"
   modes:
-    add_area:
+    add_feature:
+      search_placeholder: Search feature types
+      description: "Browse features to add to the map."
+      key: Tab
+      result: "{count} result"
+      results: "{count} results"    add_area:
       title: Area
       description: "Add parks, buildings, lakes or other areas to the map."
       filter_tooltip: areas
