@@ -4,10 +4,12 @@ import {
 
 import { debounce } from 'es-toolkit';
 import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToolSave, uiToolSearchAdd, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
+import { uiToolDeselect } from './tools/deselect';
 
 export function uiTopToolbar(context) {
 
     var sidebarToggle = uiToolSidebarToggle(context),
+        deselect = uiToolDeselect(context),
         searchAdd = uiToolSearchAdd(context),
         addFavorite = uiToolAddFavorite(context),
         addRecent = uiToolAddRecent(context),
@@ -36,15 +38,19 @@ export function uiTopToolbar(context) {
 
     function toolsToShow() {
 
-        var tools = [
-            sidebarToggle,
-            'spacer'
-        ];
+        var tools = [];
+
         var mode = context.mode();
         if (mode &&
             mode.id === 'select' &&
             !mode.newFeature() &&
             mode.selectedIDs().every(function(id) { return context.graph().hasEntity(id); })) {
+
+            tools.push(sidebarToggle);
+            tools.push('spacer-half');
+
+            tools.push(deselect);
+            tools.push('spacer');
 
             var operationTools = [];
             var operations = mode.operations().filter(function(operation) {
@@ -70,6 +76,9 @@ export function uiTopToolbar(context) {
                 tools.push('spacer');
             }
         } else {
+            tools.push(sidebarToggle);
+            tools.push('spacer');
+
             tools.push(searchAdd);
 
             if (context.presets().getFavorites().length > 0) {
@@ -83,7 +92,7 @@ export function uiTopToolbar(context) {
             tools.push('spacer');
 
             if (notesEnabled()) {
-                tools = tools.concat([notes, 'spacer']);
+                tools = tools.concat([notes, 'spacer-flex']);
             }
         }
         tools = tools.concat([undoRedo, save]);
@@ -145,7 +154,7 @@ export function uiTopToolbar(context) {
                     return classes;
                 });
 
-            var actionableItems = itemsEnter.filter(function(d) { return d !== 'spacer'; });
+            var actionableItems = itemsEnter.filter(function(d) { return typeof d !== 'string'; });
 
             actionableItems
                 .append('div')

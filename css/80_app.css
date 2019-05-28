@@ -582,6 +582,9 @@ button.loading .icon {
     white-space: nowrap;
     margin: 1px 2px 2px 2px;
 }
+.top-toolbar .toolbar-item.spacer-half {
+    width: 50%;
+}
 .top-toolbar .toolbar-item.spacer {
     width: 100%;
     flex-grow: 2;
@@ -592,7 +595,7 @@ button.loading .icon {
 .top-toolbar .toolbar-item:last-child {
     justify-content: flex-end;
 }
-.top-toolbar .toolbar-item:empty:not(.spacer) {
+.top-toolbar .toolbar-item:empty:not(.spacer):not(.spacer-half) {
     display: none;
 }
 button.bar-button {
@@ -5776,8 +5779,7 @@ button.conflicts-button {
     min-width: 80px;
     padding: 10px;
     font-weight: normal;
-    background-color: var(--bg-color);
-}
+    background-color: var(--bg-color);}
 
 .popover-arrow {
     position: absolute;
@@ -5830,8 +5832,11 @@ button.conflicts-button {
 .keyhint-wrap {
     background: var(--bg-color-2);
     padding: 10px;
-    margin: 10px -10px -10px -10px;
+    margin: -10px -10px -10px -10px;
     border-radius: 0 0 3px 3px;
+}
+.popover-inner .tooltip-text {
+    margin-bottom: 20px;
 }
 .popover-inner .shortcut {
     font-weight: bold;

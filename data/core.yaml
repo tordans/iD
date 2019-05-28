@@ -20,6 +20,8 @@ en:
     collapse: collapse
     plus: add
   toolbar:
+    deselect:
+      title: Deselect
     inspect: Inspect
     undo_redo: Undo / Redo
     recent: Recent
