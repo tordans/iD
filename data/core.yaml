@@ -28,6 +28,8 @@ en:
     favorites: Favorites
     add_feature: Add Feature
     finish: Finish
+    segments:
+      title: Segments
   title:
     format:
       context: "{base} – {context}"

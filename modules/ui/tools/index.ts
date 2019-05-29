@@ -7,3 +7,4 @@ export * from './add_feature';
 export * from './sidebar_toggle';
 export * from './simple_button';
 export * from './undo_redo';
+export * from './way_segments';

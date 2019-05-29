@@ -22,7 +22,10 @@
             "recent": "Recent",
             "favorites": "Favorites",
             "add_feature": "Add Feature",
-            "finish": "Finish"
+            "finish": "Finish",
+            "segments": {
+                "title": "Segments"
+            }
         },
         "title": {
             "format": {
