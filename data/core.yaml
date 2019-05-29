@@ -30,6 +30,11 @@ en:
     finish: Finish
     segments:
       title: Segments
+      straight:
+        title: Straight
+      orthogonal:
+        title: Rectangular
+      shortcut: A
   title:
     format:
       context: "{base} – {context}"
@@ -44,7 +49,8 @@ en:
       description: "Browse features to add to the map."
       key: Tab
       result: "{count} result"
-      results: "{count} results"    add_area:
+      results: "{count} results"
+    add_area:
       title: Area
       description: "Add parks, buildings, lakes or other areas to the map."
       filter_tooltip: areas
