@@ -7,6 +7,7 @@ import { debounce } from 'es-toolkit';
 import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToolSave, uiToolAddFeature, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
 import { uiToolSimpleButton } from './tools/simple_button';
 import { uiToolWaySegments } from './tools/way_segments';
+import { uiToolRepeatAdd } from './tools/repeat_add';
 
 export function uiTopToolbar(context) {
 
@@ -18,6 +19,7 @@ export function uiTopToolbar(context) {
         undoRedo = uiToolUndoRedo(context),
         save = uiToolSave(context),
         waySegments = uiToolWaySegments(context),
+        repeatAdd = uiToolRepeatAdd(context),
         deselect = uiToolSimpleButton('deselect', t('toolbar.deselect.title'), 'iD-icon-close', function() {
             context.enter(modeBrowse(context));
         }, null, 'Esc'),
@@ -79,12 +81,12 @@ export function uiTopToolbar(context) {
                     deleteTool = tool;
                 }
             }
-            if (operationTools.length > 0) {
-                tools = tools.concat(operationTools);
-            }
+            tools = tools.concat(operationTools);
             if (deleteTool) {
                 // keep the delete button apart from the others
-                tools.push('spacer-half');
+                if (operationTools.length > 0) {
+                    tools.push('spacer-half');
+                }
                 tools.push(deleteTool);
             }
             tools.push('spacer');
@@ -105,6 +107,9 @@ export function uiTopToolbar(context) {
             if (mode.id.indexOf('draw') !== -1) {
 
                 tools.push(undoRedo);
+                if (!mode.isContinuing) {
+                    tools.push(repeatAdd);
+                }
 
                 var way = context.hasEntity(mode.wayID);
                 if (way && new Set(way.nodes).size - 1 >= (way.isArea() ? 3 : 2)) {
@@ -113,6 +118,7 @@ export function uiTopToolbar(context) {
                     tools.push(cancelDrawing);
                 }
             } else {
+                tools.push(repeatAdd);
                 tools.push(cancelDrawing);
             }
 

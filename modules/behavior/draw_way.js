@@ -610,8 +610,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             context.map().dblclickZoomEnable(true);
         }, 1000);
 
-        var isNewFeature = !mode.isContinuing;
-        context.enter(modeSelect(context, [wayID]).newFeature(isNewFeature));
+        mode.didFinishAdding();
     };
 
 
