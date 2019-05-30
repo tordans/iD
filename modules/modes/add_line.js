@@ -9,6 +9,7 @@ import { osmNode, osmWay } from '../osm';
 
 export function modeAddLine(context, mode) {
     mode.id = 'add-line';
+    mode.repeatCount = 0;
 
     var behavior = behaviorAddWay(context)
         .on('start', start)
@@ -69,6 +70,7 @@ export function modeAddLine(context, mode) {
     function enterDrawMode(way, startGraph) {
         var drawMode = modeDrawLine(context, way.id, startGraph, mode.button, null, mode);
         drawMode.repeatAddedFeature = mode.repeatAddedFeature;
+        drawMode.repeatCount = mode.repeatCount;
         drawMode.title = mode.title;
         context.enter(drawMode);
     }

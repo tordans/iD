@@ -11,6 +11,7 @@ import { actionAddMidpoint } from '../actions/add_midpoint';
 export function modeAddPoint(context, mode) {
 
     mode.id = 'add-point';
+    mode.repeatCount = 0;
 
     var behavior = behaviorDraw(context)
         .on('click', add)
@@ -70,7 +71,9 @@ export function modeAddPoint(context, mode) {
     }
 
     function didFinishAdding(node) {
-        if (!mode.repeatAddedFeature) {
+        if (mode.repeatAddedFeature) {
+            mode.repeatCount += 1;
+        } else {
             context.enter(
                 modeSelect(context, [node.id]).newFeature(true)
             );
