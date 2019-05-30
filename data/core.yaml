@@ -34,7 +34,7 @@ en:
         title: Straight
       orthogonal:
         title: Rectangular
-      shortcut: A
+      key: A
   title:
     format:
       context: "{base} – {context}"
