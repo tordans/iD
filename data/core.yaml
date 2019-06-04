@@ -41,6 +41,13 @@ en:
       orthogonal:
         title: Rectangular
       key: A
+  assistant:
+    mode:
+      adding: Adding
+      drawing: Drawing
+      mapping: Mapping
+      editing: Editing
+    global_location: Planet Earth
   title:
     format:
       context: "{base} – {context}"

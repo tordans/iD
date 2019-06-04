@@ -13,6 +13,7 @@ import { utilDetect } from '../util/detect';
 import { utilGetDimensions } from '../util/dimensions';
 
 import { uiAccount } from './account';
+import { uiAssistant } from './assistant';
 import { uiAttribution } from './attribution';
 import { uiContributors } from './contributors';
 import { uiEditMenu } from './edit_menu';
@@ -248,6 +249,12 @@ export function uiInit(context) {
             .classed('al', true)       // 'al'=left,  'ar'=right
             .classed('hide', true)
             .call(ui.photoviewer);
+
+        ui.assistant = uiAssistant(context);
+        overMap
+            .append('div')
+            .attr('class', 'sidebar-wrap')
+            .call(ui.assistant);
 
         overMap
             .append('div')
@@ -523,6 +530,7 @@ export function uiInit(context) {
 
     ui.flash = uiFlash(context);
 
+    ui.assistant = null;
     ui.sidebar = uiSidebar(context);
 
     ui.photoviewer = uiPhotoviewer(context);

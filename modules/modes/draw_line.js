@@ -1,11 +1,13 @@
 import { t } from '../core/localizer';
 import { behaviorDrawWay } from '../behavior/draw_way';
 import { modeSelect } from './select';
+import { utilDisplayLabel } from '../util';
 
 export function modeDrawLine(context, wayID, startGraph, button, affix, addMode) {
     var mode = {
         button: button,
-        id: 'draw-line'
+        id: 'draw-line',
+        title: utilDisplayLabel(context.entity(wayID), context)
     };
 
     var behavior = behaviorDrawWay(context, wayID, mode, startGraph)

@@ -14023,6 +14023,15 @@
             "Vaii": "Vai",
             "Hans": "Simplified",
             "Hant": "Traditional"
+        },
+        "assistant": {
+            "mode": {
+                "adding": "Adding",
+                "drawing": "Drawing",
+                "mapping": "Mapping",
+                "editing": "Editing"
+            },
+            "global_location": "Planet Earth"
         }
     }
 }
