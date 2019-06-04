@@ -4,7 +4,7 @@ import { drag as d3_drag } from 'd3-drag';
 import { event as d3_event, select as d3_select } from 'd3-selection';
 
 import { modeAddArea, modeAddLine, modeAddPoint, modeBrowse } from '../../modes';
-import { t, textDirection } from '../../util/locale';
+import { t, localizer } from '../../core/localizer';
 import { tooltip } from '../../util/tooltip';
 import { uiPresetIcon } from '../preset_icon';
 import { uiTooltipHtml } from '../tooltipHtml';
@@ -205,25 +205,25 @@ export function uiToolAddFavorite(context) {
                                 return 'translate(' + x + 'px, ' + y + 'px)';
                             } else if (y > 50) {
                                 if (index2 > index) {
-                                    return 'translateX(' + (textDirection === 'rtl' ? '' : '-') + '100%)';
+                                    return 'translateX(' + (localizer.textDirection() === 'rtl' ? '' : '-') + '100%)';
                                 }
                             } else if (d.source === d2.source) {
                                 if (index2 > index && (
-                                    (d3_event.x > node.offsetLeft && textDirection === 'ltr') ||
-                                    (d3_event.x < node.offsetLeft + node.offsetWidth && textDirection === 'rtl')
+                                    (d3_event.x > node.offsetLeft && localizer.textDirection() === 'ltr') ||
+                                    (d3_event.x < node.offsetLeft + node.offsetWidth && localizer.textDirection() === 'rtl')
                                 )) {
                                     if (targetIndex === null || index2 > targetIndex) {
                                         targetIndex = index2;
                                     }
-                                    return 'translateX(' + (textDirection === 'rtl' ? '' : '-') + '100%)';
+                                    return 'translateX(' + (localizer.textDirection() === 'rtl' ? '' : '-') + '100%)';
                                 } else if (index2 < index && (
-                                    (d3_event.x < node.offsetLeft + node.offsetWidth && textDirection === 'ltr') ||
-                                    (d3_event.x > node.offsetLeft && textDirection === 'rtl')
+                                    (d3_event.x < node.offsetLeft + node.offsetWidth && localizer.textDirection() === 'ltr') ||
+                                    (d3_event.x > node.offsetLeft && localizer.textDirection() === 'rtl')
                                 )) {
                                     if (targetIndex === null || index2 < targetIndex) {
                                         targetIndex = index2;
                                     }
-                                    return 'translateX(' + (textDirection === 'rtl' ? '-' : '') + '100%)';
+                                    return 'translateX(' + (localizer.textDirection() === 'rtl' ? '-' : '') + '100%)';
                                 }
                             }
                             return null;
