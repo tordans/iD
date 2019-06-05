@@ -28,7 +28,6 @@ import { uiLoading } from './loading';
 import { uiMapInMap } from './map_in_map';
 import { uiNotice } from './notice';
 import { uiPhotoviewer } from './photoviewer';
-import { uiRestore } from './restore';
 import { uiScale } from './scale';
 import { uiShortcuts } from './shortcuts';
 import { uiSidebar } from './sidebar';
@@ -445,11 +444,6 @@ export function uiInit(context) {
         context.enter(modeBrowse(context));
 
         if (!_initCounter++) {
-            if (!ui.hash.startWalkthrough) {
-                context.container()
-                    .call(uiRestore(context));
-            }
-
             context.container()
                 .call(ui.shortcuts);
         }
