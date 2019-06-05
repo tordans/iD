@@ -34,7 +34,6 @@ import { uiShortcuts } from './shortcuts';
 import { uiSidebar } from './sidebar';
 import { uiSourceSwitch } from './source_switch';
 import { uiSpinner } from './spinner';
-import { uiSplash } from './splash';
 import { uiStatus } from './status';
 import { uiTooltip } from './tooltip';
 import { uiTopToolbar } from './top_toolbar';
@@ -448,7 +447,6 @@ export function uiInit(context) {
         if (!_initCounter++) {
             if (!ui.hash.startWalkthrough) {
                 context.container()
-                    .call(uiSplash(context))
                     .call(uiRestore(context));
             }
 
