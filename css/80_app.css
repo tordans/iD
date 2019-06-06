@@ -370,6 +370,19 @@ button.hover {
 button.active {
     background: var(--link-color);
 }
+button.primary {
+    color: #fff;
+    background: #7092ff;
+}
+button.secondary {
+    color: #7092ff;
+    background: transparent;
+    border: 1px solid #7092ff;
+}
+button.secondary:hover {
+    color: #fff;
+    background: #7092ff;
+}
 button.destructive {
     background: #d32232;
     color: #fff;
@@ -1095,8 +1108,10 @@ summary.hide-toggle::-webkit-details-marker {
     border-radius: 4px;
     padding: 10px;
     display: flex;
+    flex-direction: column;
     margin-bottom: 10px;
     max-width: 350px;
+    max-height: 100%;
     line-height: 1.35em;
 
     -webkit-box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.5);
@@ -1125,6 +1140,129 @@ summary.hide-toggle::-webkit-details-marker {
     font-size: 13px;
     font-weight: bold;
 }
+.assistant .assistant-header {
+    display: flex;
+    flex: 0 0 auto;
+}
+.assistant .icon-col {
+    flex: 0 0 auto;
+}
+.assistant .icon-col .icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+}
+.assistant .mode-label {
+    color: #ccc;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    font-size: 10px;
+    font-weight: bold;
+}
+.assistant .subject-title {
+    font-size: 13px;
+    font-weight: bold;
+}
+.assistant .body-text {
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 6px;
+}
+.assistant .body-text:empty,
+.assistant .main-footer:empty,
+.assistant .assistant-body:empty {
+    display: none;
+}
+.assistant b {
+    font-weight: bold;
+}
+.assistant br {
+    display: block;
+    margin-top: 10px;
+    content: " ";
+}
+.assistant .main-footer {
+    margin-top: 12px;
+}
+.assistant button.geocode-item,
+.assistant .main-footer button {
+    min-width: 100px;
+    height: auto;
+    padding: 5px 2px;
+    line-height: 20px;
+    font-size: 13px;
+}
+[dir='ltr'] .assistant .main-footer button:first-of-type {
+    margin-right: 8px;
+}
+[dir='rtl'] .assistant .main-footer button:first-of-type {
+    margin-left: 8px;
+}
+
+.assistant .assistant-body {
+    margin-top: 15px;
+    padding: 0 5px;
+    display: flex;
+}
+.assistant .search-header {
+    position: relative;
+}
+.assistant .search-header .icon {
+    position: absolute;
+    left: 7px;
+    top: 5px;
+    pointer-events: none;
+    opacity: 0.75;
+}
+[dir='rtl'] .assistant .search-header .icon {
+    left: auto;
+    right: 7px;
+}
+
+.assistant input[type='search'] {
+    height: 30px;
+    width: 100%;
+    padding: 5px 10px;
+    border-radius: 15px;
+    border-width: 0;
+    text-indent: 25px;
+    font-size: 12px;
+    background: rgba(18, 18, 18, 0.97);
+    color: #fff;
+    min-width: 225px;
+}
+.assistant .no-results-item,
+.assistant .feature-list-item {
+    width: 100%;
+    background: transparent;
+    border-bottom: 1px solid #444;
+    color: #fff;
+}
+.assistant .feature-list-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+.assistant .feature-list > *:nth-last-child(2) {
+    border-bottom: none;
+}
+[dir='ltr'] .assistant .feature-list-item .label {
+    padding-left: 8px;
+}
+[dir='rtl'] .assistant .feature-list-item .label {
+    padding-right: 8px;
+}
+.assistant .feature-list-item .icon {
+    margin-right: 8px;
+}
+
+.assistant .geocode-item {
+    width: 50%;
+    margin-top: 5px;
+    margin-right: auto;
+    margin-left: auto;
+    margin-bottom: 10px;
+}
+
+
 .assistant .body-text {
     font-size: 12px;
     color: #ccc;
