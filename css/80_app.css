@@ -1374,8 +1374,7 @@ summary.hide-toggle::-webkit-details-marker {
     bottom: 0;
     right: 0;
     display: flex;
-    flex-direction: column;
-}
+    flex-direction: column;}
 
 .sidebar-component .body {
     width: 100%;
@@ -1384,7 +1383,6 @@ summary.hide-toggle::-webkit-details-marker {
     overflow-x: hidden;
     position: relative;
 }
-
 .panewrap {
     position: absolute;
     width: 200%;
