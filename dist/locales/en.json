@@ -14029,7 +14029,8 @@
                 "adding": "Adding",
                 "drawing": "Drawing",
                 "mapping": "Mapping",
-                "editing": "Editing"
+                "editing": "Editing",
+                "saving": "Saving"
             },
             "instructions": {
                 "add_point": "Click or tap the center of the feature.",
