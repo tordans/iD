@@ -501,6 +501,7 @@ export function uiInit(context) {
             .catch(err => console.error(err));  // eslint-disable-line
     };
 
+    ui.assistant = null;
 
     // `ui.restart()` will destroy and rebuild the entire iD interface,
     // for example to switch the locale while iD is running.
