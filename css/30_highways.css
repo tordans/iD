@@ -449,8 +449,7 @@ path.line.casing.tag-road {
 }
 
 /* service roads */
-path.line.stroke.tag-highway-service {
-    stroke: #fff;
+path.line.stroke.tag-highway-service {    stroke: #fff;
 }
 path.line.casing.tag-highway-service {
     stroke: #666;
