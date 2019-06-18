@@ -13,6 +13,8 @@ export function modeAddPoint(context, mode) {
     mode.id = 'add-point';
     mode.repeatCount = 0;
 
+    var baselineGraph = context.graph();
+
     var behavior = behaviorDraw(context)
         .on('click', add)
         .on('clickWay', addWay)
@@ -86,12 +88,23 @@ export function modeAddPoint(context, mode) {
     }
 
 
+    function undone() {
+        if (context.graph() === baselineGraph || mode.repeatCount === 0) {
+            context.enter(modeBrowse(context));
+        }
+    }
+
+
     mode.enter = function() {
         context.install(behavior);
+        context.history()
+            .on('undone.add_point', undone);
     };
 
 
     mode.exit = function() {
+        context.history()
+            .on('undone.add_point', null);
         context.uninstall(behavior);
     };
 
