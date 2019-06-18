@@ -91,6 +91,7 @@ export function uiSectionFeatureType(context) {
             .call(uiPresetIcon()
                 .geometry(_presets.length === 1 ? (geometries.length === 1 && geometries[0]) : null)
                 .preset(_presets.length === 1 ? _presets[0] : presetManager.item('point'))
+                .pointMarker(false)
             );
 
         var names = _presets.length === 1 ? [

@@ -9,6 +9,13 @@ import { utilFunctor } from '../util';
 export function uiPresetIcon() {
   let _preset;
   let _geometry;
+  let _sizeClass = 'medium';
+  let _pointMarker = true;
+
+
+  function isSmall() {
+    return _sizeClass === 'small';
+  }
 
 
   function presetIcon(selection) {
@@ -434,6 +441,19 @@ export function uiPresetIcon() {
   presetIcon.geometry = function(val) {
     if (!arguments.length) return _geometry;
     _geometry = utilFunctor(val);
+    return presetIcon;
+  };
+
+
+  presetIcon.sizeClass = function(val) {
+    if (!arguments.length) return _sizeClass;
+    _sizeClass = val;
+    return presetIcon;
+  };
+
+  presetIcon.pointMarker = function(val) {
+    if (!arguments.length) return _pointMarker;
+    _pointMarker = val;
     return presetIcon;
   };
 

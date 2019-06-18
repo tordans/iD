@@ -284,7 +284,8 @@ export function uiPresetList(context) {
                 .classed('expanded', false)
                 .call(uiPresetIcon()
                     .geometry(geometries.length === 1 && geometries[0])
-                    .preset(preset))
+                    .preset(preset)
+                    .pointMarker(false))
                 .on('click', click)
                 .on('keydown', function(d3_event) {
                     // right arrow, expand the focused item
@@ -375,7 +376,8 @@ export function uiPresetList(context) {
                 .attr('class', 'preset-list-button')
                 .call(uiPresetIcon()
                     .geometry(geometries.length === 1 && geometries[0])
-                    .preset(preset))
+                    .preset(preset)
+                    .pointMarker(false))
                 .on('click', item.choose)
                 .on('keydown', itemKeydown);
 
