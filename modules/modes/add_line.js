@@ -10,24 +10,34 @@ import { osmNode, osmWay } from '../osm';
 
 export function modeAddLine(context, mode) {
     mode.id = 'add-line';
-    mode.repeatCount = 0;
 
     var behavior = behaviorAddWay(context)
         .on('start', start)
         .on('startFromWay', startFromWay)
         .on('startFromNode', startFromNode);
 
-    function defaultTags(loc) {
-        var defaultTags = {};
-        if (mode.preset) defaultTags = mode.preset.setTags(defaultTags, 'line', false, loc);
-        return defaultTags;
-    }
+    mode.defaultTags = {};
+    if (mode.preset) mode.defaultTags = mode.preset.setTags(mode.defaultTags, 'line', false);
 
+    var _repeatAddedFeature = false;
+    var _repeatCount = 0;
+
+    mode.repeatAddedFeature = function(val) {
+        if (!arguments.length || val === undefined) return _repeatAddedFeature;
+        _repeatAddedFeature = val;
+        return mode;
+    };
+
+    mode.repeatCount = function(val) {
+        if (!arguments.length || val === undefined) return _repeatCount;
+        _repeatCount = val;
+        return mode;
+    };
 
     function start(loc) {
         var startGraph = context.graph();
         var node = new osmNode({ loc: loc });
-        var way = new osmWay({ tags: defaultTags(loc) });
+        var way = new osmWay({ tags: mode.defaultTags });
 
         context.perform(
             actionAddEntity(node),
@@ -42,7 +52,7 @@ export function modeAddLine(context, mode) {
     function startFromWay(loc, edge) {
         var startGraph = context.graph();
         var node = new osmNode({ loc: loc });
-        var way = new osmWay({ tags: defaultTags(loc) });
+        var way = new osmWay({ tags: mode.defaultTags });
 
         context.perform(
             actionAddEntity(node),
@@ -57,7 +67,7 @@ export function modeAddLine(context, mode) {
 
     function startFromNode(node) {
         var startGraph = context.graph();
-        var way = new osmWay({ tags: defaultTags(node.loc) });
+        var way = new osmWay({ tags: mode.defaultTags });
 
         context.perform(
             actionAddEntity(way),
@@ -70,9 +80,6 @@ export function modeAddLine(context, mode) {
 
     function enterDrawMode(way, startGraph) {
         var drawMode = modeDrawLine(context, way.id, startGraph, mode.button, null, mode);
-        drawMode.repeatAddedFeature = mode.repeatAddedFeature;
-        drawMode.repeatCount = mode.repeatCount;
-        drawMode.title = mode.title;
         context.enter(drawMode);
     }
 

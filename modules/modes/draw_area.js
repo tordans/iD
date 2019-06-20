@@ -1,12 +1,16 @@
 import { t } from '../core/localizer';
 import { behaviorDrawWay } from '../behavior/draw_way';
 import { modeSelect } from './select';
+import { utilDisplayLabel } from '../util';
 
 export function modeDrawArea(context, wayID, startGraph, button, addMode) {
     var mode = {
         button: button,
-        id: 'draw-area'
+        id: 'draw-area',
+        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context)
     };
+
+    mode.addMode = addMode;
 
     var behavior = behaviorDrawWay(context, wayID, mode, startGraph)
         .on('rejectedSelfIntersection.modeDrawArea', function() {
@@ -25,10 +29,17 @@ export function modeDrawArea(context, wayID, startGraph, button, addMode) {
         context.uninstall(behavior);
     };
 
+    mode.repeatCount = function(val) {
+        if (addMode) return addMode.repeatCount(val);
+    };
+
+    mode.repeatAddedFeature = function(val) {
+        if (addMode) return addMode.repeatAddedFeature(val);
+    };
+
     mode.didFinishAdding = function() {
-        if (mode.repeatAddedFeature) {
-            addMode.repeatAddedFeature = mode.repeatAddedFeature;
-            addMode.repeatCount += 1;
+        if (mode.repeatAddedFeature()) {
+            addMode.repeatCount(addMode.repeatCount() + 1);
             context.enter(addMode);
         } else {
             context.enter(modeSelect(context, [wayID]).newFeature(true));

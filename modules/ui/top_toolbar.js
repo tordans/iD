@@ -8,6 +8,7 @@ import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToo
 import { uiToolSimpleButton } from './tools/simple_button';
 import { uiToolWaySegments } from './tools/way_segments';
 import { uiToolRepeatAdd } from './tools/repeat_add';
+import { uiToolStructure } from './tools/structure';
 
 export function uiTopToolbar(context) {
 
@@ -19,6 +20,7 @@ export function uiTopToolbar(context) {
         undoRedo = uiToolUndoRedo(context),
         save = uiToolSave(context),
         waySegments = uiToolWaySegments(context),
+        structure = uiToolStructure(context),
         repeatAdd = uiToolRepeatAdd(context),
         deselect = uiToolSimpleButton('deselect', t('toolbar.deselect.title'), 'iD-icon-close', function() {
             context.enter(modeBrowse(context));
@@ -100,6 +102,11 @@ export function uiTopToolbar(context) {
             tools.push(sidebarToggle);
             tools.push('spacer');
 
+            if (mode.id.indexOf('line') !== -1 && structure.shouldShow()) {
+                tools.push(structure);
+                tools.push('spacer');
+            }
+
             if (mode.id.indexOf('line') !== -1 || mode.id.indexOf('area') !== -1) {
                 tools.push(waySegments);
                 tools.push('spacer');
@@ -107,10 +114,10 @@ export function uiTopToolbar(context) {
 
             if (mode.id.indexOf('draw') !== -1) {
 
-                tools.push(undoRedo);
                 if (!mode.isContinuing) {
                     tools.push(repeatAdd);
                 }
+                tools.push(undoRedo);
 
                 var way = context.hasEntity(mode.wayID);
                 var wayIsDegenerate = way && new Set(way.nodes).size - 1 < (way.isArea() ? 3 : 2);
@@ -125,7 +132,7 @@ export function uiTopToolbar(context) {
 
                 tools.push(undoRedo);
 
-                if (mode.repeatCount > 0) {
+                if (mode.repeatCount() > 0) {
                     tools.push(finishDrawing);
                 } else {
                     tools.push(cancelDrawing);

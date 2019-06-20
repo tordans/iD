@@ -7,8 +7,10 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
     var mode = {
         button: button,
         id: 'draw-line',
-        title: utilDisplayLabel(context.entity(wayID), context)
+        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context)
     };
+
+    mode.addMode = addMode;
 
     var behavior = behaviorDrawWay(context, wayID, mode, startGraph)
         .on('rejectedSelfIntersection.modeDrawLine', function() {
@@ -32,11 +34,18 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
         context.uninstall(behavior);
     };
 
+    mode.repeatCount = function(val) {
+        if (addMode) return addMode.repeatCount(val);
+    };
+
+    mode.repeatAddedFeature = function(val) {
+        if (addMode) return addMode.repeatAddedFeature(val);
+    };
+
     mode.didFinishAdding = function() {
-        if (mode.repeatAddedFeature) {
-            addMode.repeatAddedFeature = mode.repeatAddedFeature;
-            addMode.repeatCount += 1;
-            context.enter(addMode);
+        if (mode.repeatAddedFeature()) {
+            addMode.repeatCount(addMode.repeatCount() + 1);
+            context.enter(mode.addMode);
         } else {
             context.enter(modeSelect(context, [wayID]).newFeature(!mode.isContinuing));
         }
@@ -52,7 +61,10 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
     };
 
 
-    mode.finish = function() {
+    mode.finish = function(skipCompletion) {
+        if (skipCompletion) {
+            mode.didFinishAdding = function() {};
+        }
         behavior.finish();
     };
 

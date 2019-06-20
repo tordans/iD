@@ -40,6 +40,12 @@
                     "title": "Rectangular"
                 },
                 "key": "A"
+            },
+            "structure": {
+                "none": {
+                    "title": "None"
+                },
+                "key": "S"
             }
         },
         "title": {
