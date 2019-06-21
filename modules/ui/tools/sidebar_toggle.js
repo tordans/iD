@@ -11,6 +11,9 @@ export function uiToolSidebarToggle(context) {
 
     tool.render = function(selection) {
         selection
+            .selectAll('.bar-button')
+            .data([0])
+            .enter()
             .append('button')
             .attr('class', 'bar-button')
             .attr('aria-label', t('sidebar.tooltip'))

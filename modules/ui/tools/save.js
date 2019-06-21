@@ -73,15 +73,22 @@ export function uiToolSave(context) {
 
 
     tool.render = function(selection) {
-        tooltipBehavior = uiTooltip()
-            .placement('bottom')
-            .title(() => t.append('save.no_changes'))
-            .keys([key])
-            .scrollContainer(context.container().select('.top-toolbar'));
+        if (!tooltipBehavior) {
+            tooltipBehavior = uiTooltip()
+                .placement('bottom')
+                .title(() => t.append('save.no_changes'))
+                .keys([key])
+                .scrollContainer(context.container().select('.top-toolbar'));
+        }
 
         var lastPointerUpType;
 
         button = selection
+            .selectAll('.bar-button')
+            .data([0]);
+
+        var buttonEnter = button
+            .enter()
             .append('button')
             .attr('class', 'save disabled bar-button')
             .on('pointerup', function(d3_event) {
@@ -105,21 +112,24 @@ export function uiToolSave(context) {
             })
             .call(tooltipBehavior);
 
-        button
+        buttonEnter
             .call(svgIcon('#iD-icon-save'));
 
-        button
+        buttonEnter
             .append('span')
             .attr('class', 'count')
             .attr('aria-hidden', 'true')
             .text('0');
 
+        button = buttonEnter.merge(button);
+
         updateCount();
+    };
 
 
+    tool.install = function() {
         context.keybinding()
             .on(key, save, true);
-
 
         context.history()
             .on('change.save', updateCount);
