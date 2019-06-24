@@ -380,10 +380,11 @@ export function uiInit(context) {
 
         var panPixels = 80;
         context.keybinding()
-            .on([t('sidebar.key'), '`', '²', '@'], (d3_event) => {
+            .on('⌫', function(d3_event) { d3_event.preventDefault(); })
+            .on([t('sidebar.key'), '²', '@'], (d3_event) => {
                 d3_event.preventDefault();
                 ui.sidebar.toggle();
-            })   // #5663, #6864 - common QWERTY, AZERTY
+            })   // sidebar: apostrophe + AZERTY extras; backtick is add-feature
             .on('←', pan([panPixels, 0]))
             .on('↑', pan([0, panPixels]))
             .on('→', pan([-panPixels, 0]))
