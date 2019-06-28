@@ -1349,7 +1349,8 @@ summary.hide-toggle::-webkit-details-marker {
     margin-bottom: 10px;
 }
 
-/* prominent assistant */.assistant.prominent .assistant-header .body-col {
+/* prominent assistant */
+.assistant.prominent .assistant-header .body-col {
     padding-bottom: 16px;
 }
 .assistant.prominent .icon-col {
