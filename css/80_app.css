@@ -1255,7 +1255,7 @@ summary.hide-toggle::-webkit-details-marker {
     left: auto;
     right: 7px;
 }
-.assistant input[type='search'] {
+.assistant input[type='search'].feature-search {
     height: 30px;
     width: 100%;
     padding: 5px 10px;
@@ -1552,8 +1552,7 @@ summary.hide-toggle::-webkit-details-marker {
     overflow-x: hidden;
     position: relative;
     height: 100%;
-    flex: 1 1 100%;
-}
+    flex: 1 1 100%;}
 .entity-editor {
     padding: 20px;
 }
