@@ -352,7 +352,6 @@ export function behaviorSelect(context) {
         } else if (datum instanceof QAItem && !isMultiselect) {
             // targeting an external QA issue
             context
-                .selectedErrorID(datum.id)
                 .enter(modeSelectError(context, datum.id, datum.service));
 
         } else if (datum.service === 'photo') {
