@@ -20,6 +20,8 @@ en:
     collapse: collapse
     plus: add
   toolbar:
+    center_zoom:
+      title: Center
     deselect:
       title: Deselect
     inspect: Inspect
@@ -749,6 +751,10 @@ en:
       key: Z
       title: Zoom To Selection
       no_selection: Nothing to zoom to.
+      tooltip_feature: "Center and zoom the map to focus on this feature."
+      tooltip_note: "Center and zoom the map to focus on this note."
+      tooltip_data: "Center and zoom the map to focus on this data."
+      tooltip_issue: "Center and zoom the map to focus on this issue."
     show_more: Show More
     last_touched: Last touched {timeago} by {user}
     view_on_osm: View on openstreetmap.org

@@ -6599,6 +6599,9 @@ li.hide + li.version .badge .tooltip .popover-arrow {
     margin-right: 8px;
 }
 
+.toolbar-item.center-zoom button use {
+    fill: #79f;
+}
 .toolbar-item.operation button use,
 .edit-menu-item use {
     pointer-events: none;

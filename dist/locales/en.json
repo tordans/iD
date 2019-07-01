@@ -901,8 +901,10 @@
         "inspector": {
             "zoom_to": {
                 "key": "Z",
-                "title": "Zoom To Selection",
-                "no_selection": "Nothing to zoom to."
+                "tooltip_feature": "Center and zoom the map to focus on this feature.",
+                "tooltip_note": "Center and zoom the map to focus on this note.",
+                "tooltip_data": "Center and zoom the map to focus on this data.",
+                "tooltip_issue": "Center and zoom the map to focus on this issue."
             },
             "show_more": "Show More",
             "view_on_osm": "View on openstreetmap.org",
@@ -966,7 +968,11 @@
             "add_fields": "Add field:",
             "lock": {
                 "suggestion": "The \"{label}\" field is locked because there is a Wikidata tag. You can delete it or edit the tags in the \"Tags\" section."
-            }
+            },
+            "tags_count": "Tags ({count})",
+            "members_count": "Members ({count})",
+            "relations_count": "Relations ({count})",
+            "features_count": "Features ({count})"
         },
         "background": {
             "title": "Background",
