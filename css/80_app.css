@@ -1167,6 +1167,11 @@ summary.hide-toggle::-webkit-details-marker {
 /* assistant header */
 .assistant .assistant-header {
     flex: 0 0 auto;
+    border-top-left-radius: inherit;
+    border-top-right-radius: inherit;
+}
+.assistant.light:not(.body-collapsed, .prominent) .assistant-header{
+    background: #fff;
 }
 .assistant .icon-col {
     flex: 0 0 auto;
