@@ -225,12 +225,12 @@ export function uiCommit(context) {
             })
             .call(svgIcon('#iD-icon-close'));
 
-        var body = selection.selectAll('.body')
+        var body = selection.selectAll('.inspector-body')
             .data([0]);
 
         body = body.enter()
             .append('div')
-            .attr('class', 'body')
+            .attr('class', 'inspector-body')
             .merge(body);
 
 
