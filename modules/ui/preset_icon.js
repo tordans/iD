@@ -391,8 +391,8 @@ export function uiPresetIcon() {
     const imageURL = (showThirdPartyIcons === 'true') && p.imageURL;
     const picon = getIcon(p, geom);
     const isCategory = !p.setTags;
-    const drawPoint = false;
-    const drawVertex = picon !== null && geom === 'vertex';
+    const drawPoint = geom === 'point' && isSmall() && !isFallback;
+    const drawVertex = picon !== null && geom === 'vertex' && (!isSmall() || !isFallback);
     const drawLine = picon && geom === 'line' && !isFallback && !isCategory;
     const drawArea = picon && geom === 'area' && !isFallback && !isCategory;
     const drawRoute = picon && geom === 'route';
