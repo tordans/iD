@@ -96,9 +96,10 @@ export function uiPresetIcon() {
 
     const vertexFillEnter = vertexFill.enter();
 
-    const w = 60;
-    const h = 60;
-    const d = 40;
+    const d = isSmall() ? 40 : 60;
+    const w = d;
+    const h = d;
+    const r = d / 3;
 
     vertexFillEnter
       .append('svg')
@@ -109,7 +110,9 @@ export function uiPresetIcon() {
       .append('circle')
       .attr('cx', w / 2)
       .attr('cy', h / 2)
-      .attr('r', d / 2);
+      .attr('r', r);
+
+    vertexFill = vertexFillEnter.merge(vertexFill);
   }
 
 
@@ -391,7 +394,7 @@ export function uiPresetIcon() {
     const imageURL = (showThirdPartyIcons === 'true') && p.imageURL;
     const picon = getIcon(p, geom);
     const isCategory = !p.setTags;
-    const drawPoint = geom === 'point' && isSmall() && !isFallback;
+    const drawPoint = geom === 'point' && (isSmall() || !picon) && !isFallback;
     const drawVertex = picon !== null && geom === 'vertex' && (!isSmall() || !isFallback);
     const drawLine = picon && geom === 'line' && !isFallback && !isCategory;
     const drawArea = picon && geom === 'area' && !isFallback && !isCategory;
