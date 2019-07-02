@@ -50,9 +50,10 @@ en:
   assistant:
     mode:
       adding: Adding
+      authenticating: Authenticating
       drawing: Drawing
-      mapping: Mapping
       editing: Editing
+      mapping: Mapping
       saving: Saving
       viewing: Viewing
     instructions:
@@ -62,6 +63,34 @@ en:
       add_area: Click or tap any corner of the feature.
       draw_area: Place points along the feature's outline.
     global_location: Planet Earth
+    greetings:
+      morning: Good Morning
+      afternoon: Good Afternoon
+      evening: Good Evening
+      # "Good Night" isn't a greeting in English but it can be in some languages
+      night: Good Evening
+    welcome:
+      first_time: "You’re editing <b>OpenStreetMap</b>: the free, collborative world map.<br/>If this is your first time here, consider taking the <a>quick-start tutorial</a>.<br/>Thanks for contributing. Have fun!"
+      return: "Welcome back. Ready to make the map even better?"
+      start_mapping: Start Mapping
+    restore:
+      title: Restore
+      discard: Discard
+      info:
+        count_loc: "You have {count} unsaved changes around {location}."
+        count_loc_time: "You have {count} unsaved changes from {duration} ago around {location}."
+      ask: Would you like to restore them?
+    commit:
+      auth:
+        osm_account: OpenStreetMap Account
+        message: You must sign in to upload your changes.
+      success:
+        thank_you: Thank You!
+        just_improved: "You've just improved OpenStreetMap around {location}."
+        propagation_help: Your changes will be live momentarily. Some maps take longer to update than others.
+      keep_mapping: Keep Mapping
+    feature_count:
+      multiple: "{count} Features"
   title:
     format:
       context: "{base} – {context}"
