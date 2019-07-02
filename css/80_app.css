@@ -785,7 +785,15 @@ button.add-note svg.icon {
 [dir='rtl'] .preset-browser.popover {
     right: 0;
 }
-.preset-browser input[type='search'] {
+.assistant .preset-browser.popover {
+    top: 84px;
+}
+[dir='ltr'] .assistant .preset-browser.popover {
+    left: 20px;
+}
+[dir='rtl'] .assistant .preset-browser.popover {
+    right: 20px;
+}.preset-browser input[type='search'] {
     position: relative;
     width: 100%;
     height: 100%;
@@ -1123,14 +1131,28 @@ summary.hide-toggle::-webkit-details-marker {
 
 /* Assistant
 ------------------------------------------------------- */
+.assistant-wrap {
+    position: relative;
+    height: 100%;
+    padding: 10px;
+    flex: 0 0 auto;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+.assistant-wrap > * {
+    pointer-events: auto;
+}
 .assistant {
     flex: 0 0 auto;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     margin-bottom: 10px;
-    max-width: 350px;
+    max-width: 100%;
     max-height: 100%;
+    position: relative;
 
     background: rgba(45, 41, 41, 0.90);
     color: #fff;
@@ -1159,8 +1181,27 @@ summary.hide-toggle::-webkit-details-marker {
     display: flex;
     flex: 0 0 auto;
 }
+.assistant.body-collapsed {
+    width: auto !important;
+    max-width: 350px;
+}
 .assistant:not(.body-collapsed) {
     min-width: 250px;
+}
+.assistant > .resizer-x {
+    position: absolute;
+    top: 0;
+    right: -6px;
+    height: 100%;
+    width: 6px;
+    cursor: col-resize;
+}
+[dir='rtl'] .assistant > .resizer-x {
+    right: auto;
+    left: -6px;
+}
+.assistant.body-collapsed > .resizer-x {
+    display: none;
 }
 
 /* assistant header */
@@ -1550,8 +1591,7 @@ summary.hide-toggle::-webkit-details-marker {
     height: 100%;
     overflow: hidden;
     position: relative;
-}
-.entity-editor-pane {
+}.entity-editor-pane {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -1608,8 +1648,7 @@ summary.hide-toggle::-webkit-details-marker {
 
 .section:not(:last-child),
 .map-pane .section {
-    margin-bottom: 30px;
-}
+    margin-bottom: 30px;}
 
 
 /* Feature List / Search Results
@@ -6522,8 +6561,7 @@ button.conflicts-button {
 .sidebar .tooltip.right .popover-arrow,
 .modal .tooltip.right .popover-arrow {
     border-right-color: var(--dark-tooltip-bg-color);
-}
-.tooltip.dark .popover-inner,
+}.tooltip.dark .popover-inner,
 .tooltip.dark .tooltip-heading,
 .tooltip.dark .keyhint-wrap,
 .map-pane .popover-inner,
@@ -6534,8 +6572,7 @@ button.conflicts-button {
 .sidebar .keyhint-wrap,
 .modal .popover-inner {
     background: var(--dark-tooltip-bg-color);
-    color: var(--dark-tooltip-text-color);
-}
+    color: var(--dark-tooltip-text-color);}
 .tooltip.dark kbd,
 .map-pane .tooltip kbd,
 .sidebar .tooltip kbd {
@@ -6553,6 +6590,43 @@ button.conflicts-button {
     margin-top: -5px;
 }
 
+/* Uncramp map-control tooltips */
+.map-control .tooltip {
+    min-width: 160px;
+}
+.map-control .shortcuts .tooltip {
+    max-width: 160px;
+}
+
+/* Move over tooltips that are near the edge of screen */
+[dir='ltr'] .top-toolbar .toolbar-item:first-child .bar-button .tooltip {
+    left: 0 !important;
+}
+[dir='rtl'] .top-toolbar .toolbar-item:first-child .bar-button .tooltip {
+    right: 0 !important;
+}
+[dir='ltr'] .top-toolbar .toolbar-item:first-child .bar-button .tooltip .tooltip-arrow {
+    left: 20px;
+}
+[dir='rtl'] .top-toolbar .toolbar-item:first-child .bar-button .tooltip .tooltip-arrow {
+    right: 20px;
+}
+[dir='ltr'] .top-toolbar .toolbar-item:last-child .bar-button .tooltip {
+    left: auto !important;
+    right: 0 !important;
+}
+[dir='rtl'] .top-toolbar .toolbar-item:last-child .bar-button .tooltip {
+    right: auto !important;
+    left: 0 !important;
+}
+[dir='ltr'] .top-toolbar .toolbar-item:last-child .bar-button .tooltip .tooltip-arrow {
+    left: auto;
+    right: 20px;
+}
+[dir='rtl'] .top-toolbar .toolbar-item:last-child .bar-button .tooltip .tooltip-arrow {
+    right: auto;
+    left: 20px;
+}
 li:first-of-type .badge .tooltip,
 li.hide + li.version .badge .tooltip {
     left: auto !important;
