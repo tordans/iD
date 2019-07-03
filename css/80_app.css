@@ -747,8 +747,7 @@ button.add-note svg.icon {
     border-right-width: 0;
 }
 
-.ideditor[dir='ltr'] .undo-redo button:first-of-type {
-    margin-right: 1px;
+.ideditor[dir='ltr'] .undo-redo button:first-of-type {    margin-right: 1px;
 }
 .ideditor[dir='rtl'] .undo-redo button:first-of-type {
     margin-left: 1px;
