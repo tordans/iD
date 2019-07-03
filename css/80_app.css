@@ -3389,7 +3389,9 @@ div.combobox:has(.has-description) {
     margin-top: 10px;
     font-weight: bold;
 }
-
+.changeset-editor .more-fields {
+    padding: 15px 0 0 0;
+}
 .more-fields label {
     display: flex;
     flex-flow: row nowrap;
