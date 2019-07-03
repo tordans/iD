@@ -18,7 +18,7 @@ export function uiToolSave(context) {
     var tooltipBehavior = null;
     var history = context.history();
     var key = uiCmd('⌘S');
-    var _numChanges = 0;
+    var _numChanges;
 
     function isSaving() {
         var mode = context.mode();
@@ -26,7 +26,7 @@ export function uiToolSave(context) {
     }
 
     function isDisabled() {
-        return _numChanges === 0 || isSaving();
+        return !_numChanges || isSaving();
     }
 
     function save(d3_event) {
@@ -36,15 +36,15 @@ export function uiToolSave(context) {
         }
     }
 
-    function bgColor(numChanges) {
+    function bgColor(count) {
         var step;
-        if (numChanges === 0) {
+        if (count === 0) {
             return null;
-        } else if (numChanges <= 50) {
-            step = numChanges / 50;
+        } else if (count <= 50) {
+            step = count / 50;
             return d3_interpolateRgb('#fff0', '#ff08')(step);  // transparent -> yellow
         } else {
-            step = Math.min((numChanges - 50) / 50, 1.0);
+            step = Math.min((count - 50) / 50, 1.0);
             return d3_interpolateRgb('#ff08', '#f008')(step);  // yellow -> red
         }
     }
@@ -57,7 +57,7 @@ export function uiToolSave(context) {
 
         if (tooltipBehavior) {
             tooltipBehavior
-                .title(() => t.append(_numChanges > 0 ? 'save.help' : 'save.no_changes'))
+                .title(() => t.append(val > 0 ? 'save.help' : 'save.no_changes'))
                 .keys([key]);
         }
 
@@ -67,7 +67,7 @@ export function uiToolSave(context) {
                 .style('--accent-color', bgColor(_numChanges));
 
             button.select('span.count')
-                .text(_numChanges);
+                .html(val);
         }
     }
 
@@ -149,6 +149,9 @@ export function uiToolSave(context) {
 
 
     tool.uninstall = function() {
+
+        _numChanges = null;
+
         context.keybinding()
             .off(key, true);
 
