@@ -64,7 +64,7 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
         if (skipCompletion) {
             mode.didFinishAdding = function() {};
         }
-        behavior.finish();
+        return behavior.finish();
     };
 
 

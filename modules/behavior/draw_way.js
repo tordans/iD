@@ -591,7 +591,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
         checkGeometry(false /* includeDrawNode */);
         if (context.surface().classed('nope')) {
             dispatch.call('rejectedSelfIntersection', this);
-            return;   // can't click here
+            return false;   // can't click here
         }
 
         context.pauseChangeDispatch();
@@ -603,7 +603,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
         var way = context.hasEntity(wayID);
         if (!way || way.isDegenerate()) {
             drawWay.cancel();
-            return;
+            return false;
         }
 
         window.setTimeout(function() {
@@ -611,6 +611,8 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
         }, 1000);
 
         mode.didFinishAdding();
+
+        return true;
     };
 
 
