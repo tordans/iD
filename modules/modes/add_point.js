@@ -92,6 +92,11 @@ export function modeAddPoint(context, mode) {
         }
     }
 
+    function undone() {
+        if (context.graph() === baselineGraph || mode.addedEntityIDs().length === 0) {
+            context.enter(modeBrowse(context));
+        }
+    }
 
     function cancel() {
         context.enter(modeBrowse(context));
@@ -99,13 +104,6 @@ export function modeAddPoint(context, mode) {
 
     function finish() {
         mode.finish();
-    }
-
-
-    function undone() {
-        if (context.graph() === baselineGraph || mode.addedEntityIDs().length === 0) {
-            context.enter(modeBrowse(context));
-        }
     }
 
     mode.finish = function() {
