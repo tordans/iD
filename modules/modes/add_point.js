@@ -19,7 +19,7 @@ export function modeAddPoint(context, mode) {
         .on('clickWay', addWay)
         .on('clickNode', addNode)
         .on('cancel', cancel)
-        .on('finish', cancel);
+        .on('finish', finish);
 
     function defaultTags(loc) {
         var defaultTags = {};
@@ -88,9 +88,7 @@ export function modeAddPoint(context, mode) {
     function didFinishAdding(node) {
         _allAddedEntityIDs.push(node.id);
         if (!mode.repeatAddedFeature()) {
-            context.enter(
-                modeSelect(context, mode.addedEntityIDs()).newFeature(true)
-            );
+            mode.finish();
         }
     }
 
@@ -99,12 +97,28 @@ export function modeAddPoint(context, mode) {
         context.enter(modeBrowse(context));
     }
 
+    function finish() {
+        mode.finish();
+    }
+
 
     function undone() {
         if (context.graph() === baselineGraph || mode.addedEntityIDs().length === 0) {
             context.enter(modeBrowse(context));
         }
     }
+
+    mode.finish = function() {
+        if (mode.addedEntityIDs().length) {
+            context.enter(
+                modeSelect(context, mode.addedEntityIDs()).newFeature(true)
+            );
+        } else {
+            context.enter(
+                modeBrowse(context)
+            );
+        }
+    };
 
 
     mode.enter = function() {
