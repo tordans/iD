@@ -1,6 +1,11 @@
 {
     "matches": {
         "anyTags": {
+            "aeroway": "aerodrome"
+        }
+    },
+    "nearby": {
+        "anyTags": {
             "aeroway": "*",
             "amenity": {
                 "police": true
