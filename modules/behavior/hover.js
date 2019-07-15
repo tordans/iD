@@ -5,6 +5,7 @@ import {
 } from 'd3-selection';
 
 import { presetManager } from '../presets';
+import { schemaManager } from '../entities/schema_manager';
 import { OsmAbstractEntity, osmNote, QAItem } from '../osm';
 import { utilKeybinding, utilRebind } from '../util';
 
@@ -121,6 +122,11 @@ export function behaviorHover(context) {
         function modeAllowsHover(target) {
             var mode = context.mode();
             if (mode.id === 'add-point') {
+                if (target.type === 'node') {
+                    if (!schemaManager.canSnapNodeWithTagsToNode(mode.defaultTags, target, context.graph())) return false;
+                } else if (target.type === 'way') {
+                    if (!schemaManager.canAddNodeWithTagsToWay(mode.defaultTags, target, context.graph())) return false;
+                }
                 return mode.preset.matchGeometry('vertex') ||
                     (target.type !== 'way' && target.geometry(context.graph()) !== 'vertex');
             }

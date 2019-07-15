@@ -5,6 +5,7 @@ import {
 } from 'd3-selection';
 
 import { presetManager } from '../presets';
+import { schemaManager } from '../entities/schema_manager';
 import { behaviorEdit } from './edit';
 import { behaviorHover } from './hover';
 import { geoChooseEdge, geoVecLength } from '../geo';
@@ -166,11 +167,23 @@ export function behaviorDraw(context) {
 
         var mode = context.mode();
 
-        if (target && target.type === 'node' && allowsVertex(target)) {   // Snap to a node
-            dispatch.call('clickNode', this, target, d);
-            return;
+        if (target && target.type === 'node') {   // Snap to a node
 
-        } else if (target && target.type === 'way' && (mode.id !== 'add-point' || mode.preset.matchGeometry('vertex'))) {   // Snap to a way
+            if (!allowsVertex(target)) return;
+
+            if (mode.id === 'add-point') {
+                if (!schemaManager.canSnapNodeWithTagsToNode(mode.defaultTags, target, context.graph())) return;
+            }
+
+            dispatch.call('clickNode', this, target, d);
+
+        } else if (target && target.type === 'way') {   // Snap to a way
+
+            if (mode.id === 'add-point') {
+                if (!mode.preset || !mode.preset.matchGeometry('vertex')) return;
+                if (!schemaManager.canAddNodeWithTagsToWay(mode.defaultTags, target, context.graph())) return;
+            }
+
             var choice = geoChooseEdge(
                 context.graph().childNodes(target), loc, context.projection, context.activeID()
             );
@@ -179,7 +192,7 @@ export function behaviorDraw(context) {
                 dispatch.call('clickWay', this, choice.loc, edge, d);
                 return;
             }
-        } else if (mode.id !== 'add-point' || mode.preset.matchGeometry('point')) {
+        } else if (mode.id !== 'add-point' || (mode.preset && mode.preset.matchGeometry('point'))) {
             var locLatLng = context.projection.invert(loc);
             _disableSpace = true;
             _lastSpace = loc;
