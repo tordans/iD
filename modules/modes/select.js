@@ -235,10 +235,35 @@ export function modeSelect(context, selectedIDs) {
         return _operations.filter(operation => operation.available());
     };
 
+    function scheduleMissingMemberDownload() {
+        var missingMemberIDs = new Set();
+        selectedIDs.forEach(function(id) {
+            var entity = context.hasEntity(id);
+            if (!entity || entity.type !== 'relation') return;
+
+            entity.members.forEach(function(member) {
+                if (!context.hasEntity(member.id)) {
+                    missingMemberIDs.add(member.id);
+                }
+            });
+        });
+
+        if (missingMemberIDs.size) {
+            var osm = context.connection();
+            if (!osm) return;
+            var missingMemberIDsArray = Array.from(missingMemberIDs)
+                .slice(0, 450); // limit number of members downloaded at once to avoid blocking iD
+            osm.loadMultiple(missingMemberIDsArray);
+        }
+    }
 
     mode.enter = function() {
         if (!checkSelectedIDs()) return;
 
+        // if this selection includes relations, fetch their members
+        scheduleMissingMemberDownload();
+
+        // ensure that selected features are rendered even if they would otherwise be hidden
         context.features().forceVisible(selectedIDs);
 
         _modeDragNode.restoreSelectedIDs(selectedIDs);
