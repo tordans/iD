@@ -335,6 +335,63 @@ export function coreContext(this: object): coreContext {
     }
   };
 
+  context.loadEntities = (entityIDs, callback) => {
+    const handle = window.requestIdleCallback(() => {
+      _deferred.delete(handle);
+      if (!_connection) return;
+      const cid = _connection.getConnectionId();
+      _connection.loadMultiple(entityIDs, loadedMultiple);
+
+      function loadedMultiple(err, result) {
+        if (err || !result) {
+          afterLoad(cid, callback)(err, result);
+          return;
+        }
+
+        // `loadMultiple` doesn't fetch child nodes, so we have to fetch them
+        // manually before merging ways
+        const unloadedNodeIDs = new Set();
+        const okayResults = [];
+        const waitingEntities = [];
+        result.data.forEach((entity) => {
+          let hasUnloaded = false;
+          if (entity.type === 'way') {
+            entity.nodes.forEach((nodeID) => {
+              if (!context.hasEntity(nodeID)) {
+                hasUnloaded = true;
+                unloadedNodeIDs.add(nodeID);
+              }
+            });
+          }
+          if (hasUnloaded) {
+            waitingEntities.push(entity);
+          } else {
+            okayResults.push(entity);
+          }
+        });
+        if (okayResults.length) {
+          afterLoad(cid, callback)(err, { data: okayResults });
+        }
+        if (waitingEntities.length) {
+          _connection.loadMultiple(Array.from(unloadedNodeIDs), (err2, result2) => {
+            if (err2 || !result2) {
+              afterLoad(cid, callback)(err2, result2);
+              return;
+            }
+            result2.data.forEach((entity) => {
+              unloadedNodeIDs.delete(entity.id);
+              waitingEntities.push(entity);
+            });
+            if (unloadedNodeIDs.size === 0) {
+              afterLoad(cid, callback)(err2, { data: waitingEntities });
+            }
+          });
+        }
+      }
+    });
+    _deferred.add(handle);
+  };
+
   context.zoomToEntity = (entityID, zoomTo) => {
     context.zoomToEntities([entityID], zoomTo);
   };
