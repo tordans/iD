@@ -2,53 +2,153 @@
 <html>
     <head>
         <meta charset='utf-8'>
-        <title>iD</title>
-        <link rel='stylesheet' href='iD.css'>
+        <title>iD Fahrradstellplätze</title>
+        <link rel='stylesheet' href='iD.css'/>
         <link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='>
-
-        <!-- mobile devices -->
-        <meta name='viewport' content='initial-scale=1.0 maximum-scale=1.0'>
-        <meta name='apple-mobile-web-app-capable' content='yes' />
-        <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent' />
-
-        <!--[if !IE]>-->
+        <!-- <meta name='viewport' content='initial-scale=1.0 maximum-scale=1.0'> -->
+        <meta name='viewport' content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no'/>
+        <meta name='apple-mobile-web-app-capable' content='yes'/>
+        <meta name='apple-mobile-web-app-status-bar-style' content='black-translucent'/>
         <script src='iD.js'></script>
-        <!--<![endif]-->
     </head>
     <body>
+
+        <style>
+          .navbar {
+            position: relative;
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-wrap: wrap;
+            flex-wrap: wrap;
+            -ms-flex-align: center;
+            align-items: center;
+            -ms-flex-pack: justify;
+            justify-content: space-between;
+            background-color: #000066;
+            height: 35px;
+            padding: .25rem 1rem;
+            color: #fff;
+          }
+          .navbar-brand {
+            display: inline-block;
+            padding-top: .3125rem;
+            padding-bottom: .3125rem;
+            margin-right: 1rem;
+            font-size: 1.25rem;
+            line-height: inherit;
+            white-space: nowrap;
+            line-height: 30px;
+          }
+          .navbar-nav {
+            display: -ms-flexbox;
+            display: flex;
+            -ms-flex-direction: column;
+            flex-direction: column;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
+          }
+          .navbar-nav {margin-top: 0;}
+          .navbar-nav li {list-style: none;}
+          .navbar-nav .nav-link {
+            color: rgba(255,255,255,.5);
+            padding-right: 0;
+            padding-left: 0;
+            display: block;
+            padding: .5rem 1rem;
+          }
+        </style>
+        <nav class="navbar">
+          <div class="navbar-brand">
+              <svg class="icon maki-bicycle" style="width: 25px; height: 30px;">
+                <use xlink:href="#maki-bicycle-11"></use>
+              </svg>
+              Fahrradstellplätze Berlin
+          </div>
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="about.html">Über</a>
+            </li>
+          </ul>
+        </nav>
+
         <div id='id-container'></div>
+
+        <style>
+          /* Hide Toolbar Buttons for "Add Node", "Add Way", "Add Area" - we only use the preset. */
+          button.bar-button.add-preset.add-generic-preset.add-point,
+          button.bar-button.add-preset.add-generic-preset.add-line,
+          button.bar-button.add-preset.add-generic-preset.add-area {
+            display: none;
+          }
+          /* Hide the preset selector - we only use the one preset that is visible in the recent-bar. */
+          #bar .toolbar-item.add-feature {
+            display: none;
+          }
+          /* Hide the location selector since our use case is initialise the page in one fixed place. */
+          .assistant.dark {
+            display: none;
+          }
+          /* Hide controls that we don't use: Rules,  */
+          .map-control.map-issues-control,
+          .map-control.help-control {
+            display: none;
+          }
+          .map-control.map-data-control > button {
+            border-radius: 0 0 0 4px;
+          }
+          .id-container {
+              height: calc( 100% - 45px );
+              width: 100%;
+          }
+        </style>
+
         <script>
-            if (typeof iD == 'undefined' || !iD.utilDetect().support) {
-                document.getElementById('id-container').innerHTML = 'Sorry, your browser is not currently supported. Please use Potlatch 2 to edit the map.';
-                document.getElementById('id-container').className = 'unsupported';
 
-            } else {
-                var id = iD.coreContext();
+        id = iD.coreContext()
+            .assetPath('');
 
-                // disable boundaries (unless we have an explicit disable_features list)
-                var q = iD.utilStringQs(window.location.hash.substring(1));
-                if (!q.hasOwnProperty('disable_features')) {
-                    id.features().disable('boundaries');
-                }
+        // disable boundaries (unless we have an explicit disable_features list)
+        var q = iD.utilStringQs(window.location.hash.substring(1));
+        if (!q.hasOwnProperty('disable_features')) {
+            id.features().disable('boundaries');
+        }
 
-                id.ui()(document.getElementById('id-container'), function() {
-                    id.container().select('#about-list')
-                        .insert('li', '.user-list')
-                        .attr('class', 'source-switch')
-                        .call(iD.uiSourceSwitch(id)
-                            .keys([{
-                                    'urlroot': 'https://www.openstreetmap.org',
-                                    'oauth_consumer_key': '5A043yRSEugj4DJ5TljuapfnrflWDte8jTOcWLlT',
-                                    'oauth_secret': 'aB3jKq1TRsCOUrfOIZ6oQMEDmv2ptV76PA54NGLL'
-                                }, {
-                                    'urlroot': 'https://api06.dev.openstreetmap.org',
-                                    'oauth_consumer_key': 'zwQZFivccHkLs3a8Rq5CoS412fE5aPCXDw9DZj7R',
-                                    'oauth_secret': 'aMnOOCwExO2XYtRVWJ1bI9QOdqh1cay2UgpbhA6p'
-                                }
-                            ])
-                        );
-                });
-            }
+        // TODO: Issue erstellen, dass mit https://github.com/openstreetmap/iD/commit/2ad2bac93152adc6fa624856f5a798d7574e466b automatisch auch das favorite gesetzt wird.
+
+        // Add preset for amenity/bicycle_parking
+        bicycle_parking_preset = id.presets().collection.find(function(element) { return element.id == 'amenity/bicycle_parking' });
+        // id.presets().reset(); // warum klappt das nicht?
+        // todo: nur machen, wenn noch nciht getan.
+        // todo: oder code refactorn, so dsas es ein "add" gibt.
+        // id.presets().toggleFavorite(bicycle_parking_preset, "point");
+        id.presets().addFavorite(bicycle_parking_preset, "point");
+
+        // disable amenity/bicycle_parking
+        // if (!q.hasOwnProperty('presets')) {
+        //     console.log(id.features());
+        //     id.features().disable('amenity/bicycle_parking');
+        // }
+
+        id.ui()(document.getElementById('id-container'), function() {
+            id.container().select('#about-list')
+                .insert('li', '.user-list')
+                .attr('class', 'source-switch')
+                .call(iD.uiSourceSwitch(id)
+                    .keys([
+                        {
+                            'urlroot': 'https://www.openstreetmap.org',
+                            'oauth_consumer_key': '5A043yRSEugj4DJ5TljuapfnrflWDte8jTOcWLlT',
+                            'oauth_secret': 'aB3jKq1TRsCOUrfOIZ6oQMEDmv2ptV76PA54NGLL'
+                        },
+                        {
+                            'urlroot': 'https://api06.dev.openstreetmap.org',
+                            'oauth_consumer_key': 'zwQZFivccHkLs3a8Rq5CoS412fE5aPCXDw9DZj7R',
+                            'oauth_secret': 'aMnOOCwExO2XYtRVWJ1bI9QOdqh1cay2UgpbhA6p'
+                        }
+                    ])
+                );
+        });
         </script>
     </body>
 </html>
