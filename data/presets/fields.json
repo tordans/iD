@@ -36,6 +36,7 @@
     "beauty": {"key": "beauty", "type": "combo", "label": "Beauty Specialty"},
     "bench": {"key": "bench", "type": "check", "label": "Bench"},
     "bicycle_parking": {"key": "bicycle_parking", "type": "combo", "label": "Type"},
+    "bicycle_parking/position": {"key": "bicycle_parking:position", "type": "combo", "label": "Flächenverbrauch"},
     "bin": {"key": "bin", "type": "check", "label": "Waste Bin"},
     "blood_components": {"key": "blood:", "type": "multiCombo", "label": "Blood Components", "strings": {"options": {"whole": "whole blood", "plasma": "plasma", "platelets": "platelets", "stemcells": "stem cell samples"}}},
     "board_type": {"key": "board_type", "type": "typeCombo", "label": "Type"},

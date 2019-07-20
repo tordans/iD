@@ -3,22 +3,20 @@
     "fields": [
         "bicycle_parking",
         "capacity",
-        "operator",
-        "operator/type",
         "covered",
         "access_simple",
+        "bicycle_parking/position",
         "fee",
-        "payment_multi_fee"
+        "lit",
+        "operator",
+        "operator/type"
     ],
     "moreFields": [
         "colour",
-        "indoor",
-        "lit"
+        "indoor"
     ],
     "geometry": [
-        "point",
-        "vertex",
-        "area"
+        "point"
     ],
     "terms": [
         "bike"
@@ -26,5 +24,5 @@
     "tags": {
         "amenity": "bicycle_parking"
     },
-    "name": "Bicycle Parking"
+    "name": "Bicycle Parking Berlin"
 }

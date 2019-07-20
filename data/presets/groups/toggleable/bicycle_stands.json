@@ -1,0 +1,13 @@
+{
+    "name": "Bicycle stands",
+    "description": "todo",
+    "toggleable": true,
+    "matches": {
+        "allTags": {
+            "amenity": {
+                "*": false,
+                "bicycle_parking": true
+            }
+        }
+    }
+}

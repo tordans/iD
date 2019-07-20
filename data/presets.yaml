@@ -257,6 +257,9 @@ en:
       bicycle_parking:
         # bicycle_parking=*
         label: Type
+      bicycle_parking/position:
+        # 'bicycle_parking:position=*'
+        label: Flächenverbrauch
       bin:
         # bin=*
         label: Waste Bin
@@ -2323,6 +2326,9 @@ en:
       toggleable/aerialways:
         description: 'Chair Lifts, Gondolas, Zip Lines, etc.'
         name: Aerial Features
+      toggleable/bicycle_stands:
+        description: todo
+        name: Bicycle stands
       toggleable/boundaries:
         description: Administrative Boundaries
         name: Boundaries
@@ -2552,9 +2558,9 @@ en:
         terms: '<translate with synonyms or related terms for ''Bench'', separated by commas>'
       amenity/bicycle_parking:
         # amenity=bicycle_parking
-        name: Bicycle Parking
+        name: Bicycle Parking Berlin
         # 'terms: bike'
-        terms: '<translate with synonyms or related terms for ''Bicycle Parking'', separated by commas>'
+        terms: '<translate with synonyms or related terms for ''Bicycle Parking Berlin'', separated by commas>'
       amenity/bicycle_parking/building:
         # 'amenity=bicycle_parking, bicycle_parking=building'
         name: Bicycle Parking Garage

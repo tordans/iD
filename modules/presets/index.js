@@ -425,6 +425,16 @@ export function presetIndex(context) {
         setFavorites(favs);
     };
 
+    all.addFavorite = function(preset, geometry) {
+        geometry = all.fallback(geometry).id;
+        var favs = all.getFavorites();
+        var favorite = all.favoriteMatching(preset, geometry);
+        if (!favorite) {
+            favs.push(RibbonItem(preset, geometry, 'favorite'));
+        }
+        setFavorites(favs);
+    };
+
     all.removeFavorite = function(preset, geometry) {
         geometry = all.fallback(geometry).id;
         var item = all.favoriteMatching(preset, geometry);
