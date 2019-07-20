@@ -604,7 +604,7 @@ export function coreContext() {
     if (presetsParameter && presetsParameter.indexOf('://') !== -1) {
         // assume URL of external presets file
 
-        presets.fromExternal(external, function(externalPresets) {
+        presets.fromExternal(presetsParameter, function(externalPresets) {
             context.presets = function() { return externalPresets; }; // default + external presets...
             osmSetAreaKeys(presets.areaKeys());
             osmSetPointTags(presets.pointTags());
