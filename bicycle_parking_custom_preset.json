@@ -1,0 +1,5 @@
+{
+  "presets": {
+    "amenity/bicycle_parking_xxx": {"icon": "maki-bicycle", "fields": ["bicycle_parking", "capacity", "operator", "operator/type", "covered", "access_simple", "fee", "lit", "colour"], "moreFields": ["indoor"], "geometry": ["point"], "terms": ["bike"], "tags": {"amenity": "bicycle_parking"}, "name": "Bicycle Parking xxx"},
+  }
+}
