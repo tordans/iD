@@ -114,21 +114,15 @@
             id.features().disable('boundaries');
         }
 
-        // TODO: Issue erstellen, dass mit https://github.com/openstreetmap/iD/commit/2ad2bac93152adc6fa624856f5a798d7574e466b automatisch auch das favorite gesetzt wird.
-
         // Add preset for amenity/bicycle_parking
         bicycle_parking_preset = id.presets().collection.find(function(element) { return element.id == 'amenity/bicycle_parking' });
-        // id.presets().reset(); // warum klappt das nicht?
-        // todo: nur machen, wenn noch nciht getan.
-        // todo: oder code refactorn, so dsas es ein "add" gibt.
-        // id.presets().toggleFavorite(bicycle_parking_preset, "point");
         id.presets().addFavorite(bicycle_parking_preset, "point");
 
-        // disable amenity/bicycle_parking
-        // if (!q.hasOwnProperty('presets')) {
-        //     console.log(id.features());
-        //     id.features().disable('amenity/bicycle_parking');
-        // }
+        // Brute force the required params to customized the editor.
+        // Ideally, there is a config object for those, but for now …
+        if (!q.hasOwnProperty('presets')) {
+            window.location = window.location.origin + window.location.pathname + "#background=Berlin-2018&disable_features=aerialways,boundaries,building_parts,buildings,indoor,landuse,past_future,paths,pistes,points,power,rail,service_roads,traffic_roads,water,others&locale=en&map=20.00/52.47380/13.44926&presets=amenity/bicycle_parkinghttp://localhost:8080/bicycle_parking_editor.html#background=Berlin-2018&disable_features=aerialways,boundaries,building_parts,buildings,indoor,landuse,past_future,paths,pistes,points,power,rail,service_roads,traffic_roads,water,others&locale=en&map=20.00/52.47380/13.44926&presets=amenity/bicycle_parking"
+        }
 
         id.ui()(document.getElementById('id-container'), function() {
             id.container().select('#about-list')
