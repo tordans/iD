@@ -88,18 +88,18 @@ export function uiInit(context) {
 
         controls
             .append('div')
-            .attr('class', 'map-control zoombuttons')
+            .attr('class', 'map-control zoombuttons group-start')
             .call(uiZoom(context));
 
         controls
             .append('div')
-            .attr('class', 'map-control geolocate-control')
+            .attr('class', 'map-control geolocate-control group-end')
             .call(uiGeolocate(context));
 
         var background = uiBackground(context);
         controls
             .append('div')
-            .attr('class', 'map-control background-control')
+            .attr('class', 'map-control background-control group-start')
             .call(background.renderToggleButton);
 
         var mapData = uiMapData(context);
@@ -117,7 +117,7 @@ export function uiInit(context) {
         var help = uiHelp(context);
         controls
             .append('div')
-            .attr('class', 'map-control help-control')
+            .attr('class', 'map-control help-control group-end')
             .call(help.renderToggleButton);
 
         content

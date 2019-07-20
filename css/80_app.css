@@ -3264,6 +3264,20 @@ img.tag-reference-wiki-image {
     background: #7092ff;
 }
 
+.map-control.group-start > button {
+    border-radius: 4px 0 0 0;
+}
+[dir='rtl'] .map-control.group-start > button {
+    border-radius: 0 4px 0 0;
+}
+
+.map-control.group-end > button {
+    border-radius: 0 0 0 4px;
+    margin-bottom: 10px;
+}
+[dir='rtl'] .map-control.group-end > button {
+    border-radius: 0 0 4px 0;
+}
 
 /* Fullscreen Button (disabled)
 ------------------------------------------------------- */
@@ -3286,50 +3300,6 @@ div.full-screen > button, div.full-screen > button.active {
 
 div.full-screen > button:hover {
     background-color: rgba(0, 0, 0, .8);
-}
-
-
-/* Zoom Buttons
-------------------------------------------------------- */
-.zoombuttons > button.zoom-in {
-    border-radius: 4px 0 0 0;
-}
-[dir='rtl'] .zoombuttons > button.zoom-in {
-    border-radius: 0 4px 0 0;
-}
-
-
-/* Geolocate Button
-------------------------------------------------------- */
-.geolocate-control {
-    margin-bottom: 10px;
-}
-.geolocate-control > button {
-    border-radius: 0 0 0 4px;
-}
-[dir='rtl'] .geolocate-control > button {
-    border-radius: 0 0 4px 0;
-}
-
-
-/* Background / Map Data / Help Pane buttons
-------------------------------------------------------- */
-.help-control > button {
-    border-radius: 0 0 0 4px;
-}
-[dir='rtl'] .help-control > button {
-    border-radius: 0 0 4px 0;
-}
-
-.map-data-control button {
-    border-radius: 0;
-}
-
-.background-control > button {
-    border-radius: 4px 0 0 0;
-}
-[dir='rtl'] .background-control > button {
-    border-radius: 0 4px 0 0;
 }
 
 
