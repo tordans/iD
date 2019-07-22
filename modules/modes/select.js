@@ -252,8 +252,13 @@ export function modeSelect(context, selectedIDs) {
             var osm = context.connection();
             if (!osm) return;
             var missingMemberIDsArray = Array.from(missingMemberIDs)
+<<<<<<< HEAD
                 .slice(0, 450); // limit number of members downloaded at once to avoid blocking iD
             osm.loadMultiple(missingMemberIDsArray);
+=======
+                .slice(0, 150); // limit number of members downloaded at once to avoid blocking iD
+            context.loadEntities(missingMemberIDsArray);
+>>>>>>> bc7b9b3c1 (Lower the selected relation member download limit to 150 (re: #6668))
         }
     }
 
