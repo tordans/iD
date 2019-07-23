@@ -24,6 +24,11 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
     mode.isContinuing = !!affix;
 
     mode.enter = function() {
+        if (addMode && addMode.addAddedEntityID) {
+            // add in case this draw mode was entered from somewhere besides the add mode itself
+            addMode.addAddedEntityID(wayID);
+        }
+
         behavior
             .nodeIndex(affix === 'prefix' ? 0 : undefined);
 
