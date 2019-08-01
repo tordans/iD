@@ -744,6 +744,8 @@ export function coreContext(this: object): coreContext {
 
     initializeDependents();
 
+    context.isFirstSession = !context.storage('sawSplash');
+
     return context;
 
     // Load variables and properties. No property of `context` should be accessed
