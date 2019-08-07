@@ -107,6 +107,10 @@ export function uiToolNotes(context) {
             .classed('active', function(d) { return context.mode() && context.mode().button === d.button; })
             .attr('aria-pressed', function(d) { return context.mode() && context.mode().button === d.button; });
     }
+    
+    tool.available = function() {
+        return notesEnabled();
+    };
 
     tool.install = function() {
         var debouncedUpdate = debounce(update, 500, { edges: ['leading', 'trailing'] });

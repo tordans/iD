@@ -127,6 +127,10 @@ export function uiToolUndoRedo(context) {
             });
     }
 
+    tool.available = function() {
+        return context.mode().id !== 'save';
+    };
+
     tool.install = function() {
         context.keybinding()
             .on(commands[0].cmd, function(d3_event) {

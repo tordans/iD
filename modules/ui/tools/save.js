@@ -126,6 +126,18 @@ export function uiToolSave(context) {
         updateCount();
     };
 
+    var disallowedModes = new Set([
+        'save',
+        'add-point',
+        'add-line',
+        'add-area',
+        'draw-line',
+        'draw-area'
+    ]);
+
+    tool.available = function() {
+        return !disallowedModes.has(context.mode().id);
+    };
 
     tool.install = function() {
         context.keybinding()
