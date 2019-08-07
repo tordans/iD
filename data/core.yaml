@@ -22,6 +22,8 @@ en:
   toolbar:
     center_zoom:
       title: Center
+      return_tooltip: Undo centering on this.
+    return: Return
     deselect:
       title: Deselect
     inspect: Inspect
