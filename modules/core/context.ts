@@ -579,6 +579,10 @@ export function coreContext(this: object): coreContext {
   } as coreContext['copyLonLat'];
 
 
+  /* Presets */
+  context.presets = () => presetManager;
+
+
   /* Background */
   let _background: ReturnType<typeof rendererBackground>;
   context.background = () => _background;
