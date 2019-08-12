@@ -11,7 +11,8 @@ export function uiToolSave(context) {
 
     var tool = {
         id: 'save',
-        label: t.append('save.title')
+        label: t.html('save.title'),
+        userToggleable: false
     };
 
     var button = null;
@@ -135,7 +136,7 @@ export function uiToolSave(context) {
         'draw-area'
     ]);
 
-    tool.available = function() {
+    tool.allowed = function() {
         return !disallowedModes.has(context.mode().id);
     };
 

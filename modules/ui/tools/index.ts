@@ -9,5 +9,6 @@ export * from './sidebar_toggle';
 export * from './simple_button';
 export * from './structure';
 export * from './stop_draw';
+export * from './toolbox';
 export * from './undo_redo';
 export * from './way_segments';

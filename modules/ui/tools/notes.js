@@ -108,7 +108,7 @@ export function uiToolNotes(context) {
             .attr('aria-pressed', function(d) { return context.mode() && context.mode().button === d.button; });
     }
     
-    tool.available = function() {
+    tool.allowed = function() {
         return notesEnabled();
     };
 
