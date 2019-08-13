@@ -90,7 +90,7 @@ export function uiToolNotes(context) {
             );
 
         buttonsEnter
-            .each(function(d) {
+            .each(function() {
                 d3_select(this)
                     .call(svgIcon('#' + tool.iconName));
             });

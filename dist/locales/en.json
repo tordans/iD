@@ -48,7 +48,8 @@
                 "key": "S"
             },
             "toolbox": {
-                "title": "Tools"
+                "title": "Tools",
+                "tooltip": "Customize the toolbar."
             }
         },
         "title": {
