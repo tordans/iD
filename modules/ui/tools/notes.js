@@ -15,7 +15,8 @@ export function uiToolNotes(context) {
 
     var tool = {
         id: 'notes',
-        label: t.append('modes.add_note.label')
+        label: t.html('modes.add_note.label'),
+        iconName: 'iD-icon-note'
     };
 
     var mode = modeAddNote(context);
@@ -91,7 +92,7 @@ export function uiToolNotes(context) {
         buttonsEnter
             .each(function(d) {
                 d3_select(this)
-                    .call(svgIcon(d.icon || '#iD-icon-' + d.button));
+                    .call(svgIcon('#' + tool.iconName));
             });
 
         // if we are adding/removing the buttons, check if toolbar has overflowed
@@ -107,7 +108,7 @@ export function uiToolNotes(context) {
             .classed('active', function(d) { return context.mode() && context.mode().button === d.button; })
             .attr('aria-pressed', function(d) { return context.mode() && context.mode().button === d.button; });
     }
-    
+
     tool.allowed = function() {
         return notesEnabled();
     };
