@@ -355,10 +355,11 @@ export function presetPreset(
 
   // The geometry type to use when adding a new feature of this preset
   _this.defaultAddGeometry = function(context, allowedGeometries) {
-    let geometry = (_this.geometry || []).slice();
-    if (allowedGeometries) {
-      geometry = geometry.filter(geom => allowedGeometries.indexOf(geom) !== -1);
-    }
+    let geometry = (_this.geometry || []).slice().filter(geom => {
+      if (allowedGeometries && allowedGeometries.indexOf(geom) === -1) return false;
+      if (context.features().isHiddenPreset(_this, geom)) return false;
+      return true;
+    });
     let mostRecentAddGeom = context.storage('preset.' + _this.id + '.addGeom');
     if (mostRecentAddGeom === 'vertex') mostRecentAddGeom = 'point';
     if (mostRecentAddGeom && geometry.indexOf(mostRecentAddGeom) !== -1) {
