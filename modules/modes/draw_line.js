@@ -7,7 +7,8 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
     var mode = {
         button: button,
         id: 'draw-line',
-        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context)
+        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context),
+        geometry: 'line'
     };
 
     mode.addMode = addMode;
@@ -22,6 +23,8 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, addMode)
     mode.wayID = wayID;
 
     mode.isContinuing = !!affix;
+
+    mode.preset = context.presets().match(context.entity(mode.wayID), context.graph());
 
     mode.enter = function() {
         if (addMode && addMode.addAddedEntityID) {

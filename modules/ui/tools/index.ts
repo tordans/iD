@@ -5,6 +5,7 @@ export * from './operation';
 export * from './repeat_add';
 export * from './save';
 export * from './add_feature';
+export * from './adding_geometry';
 export * from './sidebar_toggle';
 export * from './simple_button';
 export * from './structure';

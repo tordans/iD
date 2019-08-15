@@ -582,6 +582,9 @@ export function coreContext(this: object): coreContext {
   /* Presets */
   context.presets = () => presetManager;
 
+  /* Persistence (v3 call sites; 2.18 uses prefs) */
+  context.storage = prefs;
+
 
   /* Background */
   let _background: ReturnType<typeof rendererBackground>;
@@ -748,7 +751,7 @@ export function coreContext(this: object): coreContext {
 
     initializeDependents();
 
-    context.isFirstSession = !context.storage('sawSplash');
+    context.isFirstSession = !prefs('sawSplash') && !prefs('sawPrivacyVersion');
 
     return context;
 

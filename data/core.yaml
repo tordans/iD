@@ -54,11 +54,11 @@ en:
       tooltip: Customize the toolbar.
   assistant:
     mode:
-      adding: Adding
       authenticating: Authenticating
       drawing: Drawing
       editing: Editing
       mapping: Mapping
+      placing: Placing
       saving: Saving
       viewing: Viewing
     instructions:

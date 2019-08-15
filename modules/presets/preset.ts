@@ -353,5 +353,33 @@ export function presetPreset(
     return resolved;
   }
 
+  // The geometry type to use when adding a new feature of this preset
+  _this.defaultAddGeometry = function(context, allowedGeometries) {
+    let geometry = (_this.geometry || []).slice();
+    if (allowedGeometries) {
+      geometry = geometry.filter(geom => allowedGeometries.indexOf(geom) !== -1);
+    }
+    let mostRecentAddGeom = context.storage('preset.' + _this.id + '.addGeom');
+    if (mostRecentAddGeom === 'vertex') mostRecentAddGeom = 'point';
+    if (mostRecentAddGeom && geometry.indexOf(mostRecentAddGeom) !== -1) {
+      return mostRecentAddGeom;
+    }
+    const vertexIndex = geometry.indexOf('vertex');
+    if (vertexIndex !== -1 && geometry.indexOf('point') !== -1) {
+      geometry.splice(vertexIndex, 1);
+    }
+    if (geometry.length) {
+      return geometry[0];
+    }
+    return null;
+  };
+
+  _this.setMostRecentAddGeometry = function(context, geometry) {
+    if ((_this.geometry || []).length > 1 &&
+        _this.geometry.indexOf(geometry) !== -1) {
+      context.storage('preset.' + _this.id + '.addGeom', geometry);
+    }
+  };
+
   return _this;
 }

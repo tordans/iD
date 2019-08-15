@@ -7,7 +7,8 @@ export function modeDrawArea(context, wayID, startGraph, button, addMode) {
     var mode = {
         button: button,
         id: 'draw-area',
-        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context)
+        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context),
+        geometry: 'area'
     };
 
     mode.addMode = addMode;
@@ -20,6 +21,8 @@ export function modeDrawArea(context, wayID, startGraph, button, addMode) {
         });
 
     mode.wayID = wayID;
+
+    mode.preset = context.presets().match(context.entity(mode.wayID), context.graph());
 
     mode.enter = function() {
         context.install(behavior);
