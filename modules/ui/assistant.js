@@ -181,8 +181,13 @@ export function uiAssistant(context) {
         headerMainColEnter.append('div')
             .attr('class', 'mode-label');
 
-        headerMainColEnter.append('div')
+        var subjectTitleArea = headerMainColEnter.append('div')
             .attr('class', 'subject-title');
+
+        subjectTitleArea.append('span');
+
+        subjectTitleArea.append('div')
+            .attr('class', 'controls');
 
         headerMainColEnter.append('div')
             .attr('class', 'header-body');
@@ -217,8 +222,17 @@ export function uiAssistant(context) {
 
         var subjectTitle = headerMainCol.selectAll('.subject-title');
 
-        subjectTitle.attr('class', 'subject-title ' + panel.titleClass || '');
-        subjectTitle.text(panel.title);
+        subjectTitle.attr('class', 'subject-title ' + (panel.titleClass || ''));
+        subjectTitle.selectAll('span').text(panel.title);
+
+        var subjectTitleControls = subjectTitle.selectAll('.controls');
+        subjectTitleControls.text('');
+        if (panel.onClose) {
+            subjectTitleControls.append('button')
+                .attr('class', 'close')
+                .on('click', panel.onClose)
+                .call(svgIcon('#iD-icon-close'));
+        }
 
         iconCol.html('');
         if (panel.headerIcon) {
@@ -375,7 +389,11 @@ export function uiAssistant(context) {
             prominent: true,
             theme: 'light',
             headerIcon: utilGreetingIcon(),
-            title: utilTimeOfDayGreeting()
+            title: utilTimeOfDayGreeting(),
+            onClose: function() {
+                updateDidEditStatus();
+                redraw();
+            }
         };
 
         panel.renderHeaderBody = function(selection) {
@@ -396,6 +414,8 @@ export function uiAssistant(context) {
                     context.container().call(uiIntro(context));
                     redraw();
                 });
+
+            if (!context.isFirstSession) return;
 
             mainFooter.append('button')
                 .attr('class', 'primary')
@@ -872,7 +892,7 @@ export function uiAssistant(context) {
                     redraw();
                 })
                 .append('span')
-                .text(t('assistant.commit.keep_mapping'));
+                .text(t('assistant.commit.continue_mapping'));
         };
 
         panel.renderBody = function(selection) {
