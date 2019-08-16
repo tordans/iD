@@ -151,6 +151,8 @@ export function uiAssistant(context) {
             ' ' +
             (hasBody ? 'has-body' : '') +
             ' ' +
+            (isCollapsible ? 'collapsible' : '') +
+            ' ' +
             (isCollapsible && !isBodyOpen ? 'body-collapsed minimal' : '')
         );
 
@@ -189,10 +191,18 @@ export function uiAssistant(context) {
             .append('div')
             .attr('class', 'control-col')
             .append('button')
-            .call(svgIcon('#iD-icon-' + (isBodyOpen ? 'up' : 'down')))
-            .on('click', function() {
+            .call(svgIcon('#iD-icon-' + (isBodyOpen ? 'up' : 'down')));
+
+        if (isCollapsible) {
+            // make the assistant collapsible by its whole header
+            header.on('click', function() {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
                 toggleBody();
             });
+        } else {
+            header.on('click', null);
+        }
 
         var modeLabel = headerMainCol.selectAll('.mode-label');
         modeLabel.text(panel.modeLabel || '');
