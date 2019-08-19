@@ -93,7 +93,7 @@ export function uiAssistant(context) {
 
                 var x = d3_event.x - dragOffset;
 
-                var targetWidth = (textDirection === 'rtl') ? utilGetDimensions(d3_select('#content')).width - x: x;
+                var targetWidth = (textDirection === 'rtl') ? utilGetDimensions(d3_select('.main-content')).width - x: x;
                 container
                     .style('width', targetWidth + 'px');
             })
@@ -499,6 +499,8 @@ export function uiAssistant(context) {
                 .attr('class', 'primary')
                 .on('click', function() {
                     updateDidEditStatus();
+                    context.container().selectAll('.main-content')
+                        .attr('class', 'main-content active');
                     context.history().restore();
                     redraw();
                 })
@@ -510,6 +512,8 @@ export function uiAssistant(context) {
                 .on('click', function() {
                     // don't show another welcome screen after discarding changes
                     updateDidEditStatus();
+                    context.container().selectAll('.main-content')
+                        .attr('class', 'main-content active');
                     context.history().clearSaved();
                     context.map().pan([0,0]);  // trigger a map redraw
                     redraw();

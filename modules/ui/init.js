@@ -144,7 +144,7 @@ export function uiInit(context) {
 
         var content = container
             .append('div')
-            .attr('class', 'main-content active');
+            .attr('class', 'main-content ' + (context.history().hasRestorableChanges() ? 'inactive' : 'active'));
 
         // Top toolbar
         content
