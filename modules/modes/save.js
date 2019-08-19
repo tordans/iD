@@ -219,6 +219,9 @@ export function modeSave(context) {
             context.ui().sidebar.show(commit);
         }
 
+        // make sure the save UI is initially visible
+        context.storage('assistant.collapsed.save', null);
+
         keybindingOn();
 
         context.container().selectAll('.main-content')
