@@ -42,7 +42,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
     function createDrawNode(loc) {
         // don't make the draw node until we actually need it
-        _drawNode = new osmNode({ loc: loc });
+        _drawNode = new osmNode({ loc: loc, tags: mode.defaultNodeTags || {} });
 
         context.pauseChangeDispatch();
         context.replace(function actionAddDrawNode(graph) {
@@ -443,7 +443,6 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
                 _annotation
             );
         });
-    };
 
 
     // Connect the way to an existing node

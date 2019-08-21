@@ -18,6 +18,7 @@ import { uiToolCenterZoom } from './tools/center_zoom';
 import { uiToolStopDraw } from './tools/stop_draw';
 import { uiToolToolbox } from './tools/toolbox';
 import { uiToolAddingGeometry } from './tools/adding_geometry';
+import { uiToolPowerSupport } from './tools/power_support';
 
 export function uiTopToolbar(context) {
 
@@ -50,6 +51,7 @@ export function uiTopToolbar(context) {
         centerZoom = uiToolCenterZoom(context),
         stopDraw = uiToolStopDraw(context),
         addingGeometry = uiToolAddingGeometry(context),
+        powerSupport = uiToolPowerSupport(context),
         /*
         deselect = uiToolSimpleButton({
             id: 'deselect',
@@ -132,6 +134,7 @@ export function uiTopToolbar(context) {
                 'spacer',
                 structure,
                 waySegments,
+                powerSupport,
                 'spacer',
                 repeatAdd,
                 undoRedo,

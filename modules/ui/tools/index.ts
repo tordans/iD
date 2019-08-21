@@ -3,6 +3,7 @@ export * from './quick_presets_favorites';
 export * from './quick_presets_recent';
 export * from './notes';
 export * from './operation';
+export * from './power_support';
 export * from './repeat_add';
 export * from './save';
 export * from './add_feature';
