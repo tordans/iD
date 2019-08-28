@@ -76,7 +76,7 @@ export function operationCircularize(context, selectedIDs) {
     };
 
 
-    operation.available = function() {
+    operation.available = function(/* situation */) {
         const graph = context.graph();
         return selectedIDs.length > 0 && selectedIDs.every(id => checkActionAllowed(id, graph));
     };
