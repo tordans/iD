@@ -5450,8 +5450,7 @@ img.tile-debug {
     left: 10px;
 }
 .ideditor[dir='rtl'] .map-in-map {
-    right: 10px;
-}
+    right: 10px;}
 
 .map-in-map-tiles {
     transform-origin: 0 0;
