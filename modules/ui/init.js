@@ -284,11 +284,6 @@ export function uiInit(context) {
             .append('div')
             .attr('class', 'main-footer-wrap footer-show');
 
-        footerWrap
-            .append('div')
-            .attr('class', 'scale-block')
-            .call(uiScale(context));
-
         var aboutList = footerWrap
             .append('div')
             .attr('class', 'info-block')
@@ -352,6 +347,11 @@ export function uiInit(context) {
             aboutList
                 .call(uiAccount(context));
         }
+
+        footerWrap
+            .append('div')
+            .attr('class', 'scale-block')
+            .call(uiScale(context));
 
 
         // Setup map dimensions and move map to initial center/zoom.

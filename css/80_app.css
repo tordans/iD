@@ -2365,6 +2365,7 @@ input.date-selector {
 }
 .ideditor[dir='rtl'] .form-field-input-wrap > button:last-of-type {
     border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 0;
 }
 
 
@@ -4216,8 +4217,7 @@ img.tag-reference-wiki-image {
 }
 
 .map-control > button:not(.disabled):focus,
-.map-control > button:not(.disabled):active {
-    background: rgba(0, 0, 0, .8);
+.map-control > button:not(.disabled):active {    background: rgba(0, 0, 0, .8);
 }
 .map-control > button.active,
 .map-control > button.active:active {
@@ -4388,7 +4388,6 @@ div.full-screen > button:focus {
     align-items: center;
     overflow: hidden;
 }
-
 .ideditor[dir='ltr'] .layer-list .indented label {
     padding-left: 24px;
 }
@@ -4423,8 +4422,7 @@ div.full-screen > button:focus {
 .ideditor[dir='rtl'] .map-data-pane .layer-list button,
 .ideditor[dir='rtl'] .background-pane .layer-list button {
     border-left: none;
-    border-right: 1px solid var(--border-color);
-}
+    border-right: 1px solid var(--border-color);}
 
 .map-data-pane .layer-list button .icon,
 .background-pane .layer-list button .icon {
@@ -4436,8 +4434,7 @@ div.full-screen > button:focus {
     border-radius: 0 3px 3px 0;
 }
 .ideditor[dir='rtl'] .map-data-pane .layer-list button:last-of-type,
-.ideditor[dir='rtl'] .background-pane .layer-list button:last-of-type {
-    border-radius: 3px 0 0 3px;
+.ideditor[dir='rtl'] .background-pane .layer-list button:last-of-type {    border-radius: 3px 0 0 3px;
 }
 
 .layer-list select {
@@ -5807,8 +5804,7 @@ img.tile-debug {
     display: inline-block;
     position: absolute;
     color: #ccc;
-    top: 0.45em;
-}
+    top: 0.45em;}
 
 .scale-block .scale path {
     fill: none;
@@ -5843,11 +5839,17 @@ img.tile-debug {
 }
 .ideditor[dir='rtl'] .map-footer-list li:not(:last-child) {
     border-left: 1px solid rgba(255,255,255,.5);
-}
-.map-footer-list li:empty {
+}.map-footer-list li:empty {
     display: none;
 }
 
+.map-footer-list li:last-child {
+    border-left: 0;
+    margin-left: 0;
+    padding-left: 0;
+}
+.ideditor[dir='rtl'] .map-footer-list li:last-child {
+    border-right: none;}
 .map-footer-list a.chip {
     padding: 1px 4px 1px 4px;
     border-radius: 2px;
@@ -6478,8 +6480,7 @@ button.conflicts-button {
 }
 
 .notice .zoom-to:focus,
-.notice .zoom-to:active {
-    background: rgba(0,0,0,0.6);
+.notice .zoom-to:active {    background: rgba(0,0,0,0.6);
 }
 @media (hover: hover) {
     .notice .zoom-to:hover {

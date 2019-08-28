@@ -4,7 +4,7 @@ import { localizer } from '../core/localizer';
 import type { Vec2 } from '../geo/vector';
 
 
-export function uiScale(context: iD.Context) {
+export function uiScale(context: iD.Context, originLeading?: boolean) {
     var projection = context.projection,
         isImperial = !localizer.usesMetric(),
         maxLength = 180,
@@ -51,8 +51,18 @@ export function uiScale(context: iD.Context) {
             loc2 = projection.invert([maxLength, dims[1]]),
             scale = scaleDefs(loc1, loc2);
 
+        var scaleGroupX = originLeading ? 10 : (250 - 10 - scale.px);
+
+        selection.select('#scale-group')
+            .attr('transform', 'translate(' + scaleGroupX + ',11)');
+
         selection.select('.scale-path')
             .attr('d', 'M0.5,0.5v' + tickHeight + 'h' + scale.px + 'v-' + tickHeight);
+
+        var textGroupX = originLeading ? (scale.px + 8) : -8;
+
+        selection.select('.scale-textgroup')
+            .attr('transform', 'translate(' + textGroupX + ',' + tickHeight + ')');
 
         selection.select('.scale-text')
             .style(localizer.textDirection() === 'ltr' ? 'left' : 'right', (scale.px + 16) + 'px')
@@ -67,10 +77,10 @@ export function uiScale(context: iD.Context) {
         }
 
         var scalegroup = selection.append('svg')
-            .attr('class', 'scale')
+            .attr('class', 'scale' + (originLeading ? ' origin-leading' : ' origin-trailing'))
             .on('click', switchUnits)
             .append('g')
-            .attr('transform', 'translate(10,11)');
+            .attr('id', 'scale-group');
 
         scalegroup
             .append('path')
