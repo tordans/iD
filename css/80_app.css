@@ -2169,8 +2169,7 @@ button.preset-reset .label.flash-bg {
     padding: 10px;
     margin: 0 -10px 10px -10px;
     border-radius: 8px;
-    background: var(--bg-color-3);
-}
+    background: var(--bg-color-3);}
 .section .grouped-items-area:empty {
     display: none;
 }
