@@ -139,7 +139,7 @@ export function operationDisconnect(context, selectedIDs) {
     };
 
 
-    operation.available = function() {
+    operation.available = function(situation) {
         if (_actions.length === 0) return false;
         if (_otherIDs.length !== 0) return false;
 
@@ -149,6 +149,11 @@ export function operationDisconnect(context, selectedIDs) {
                 return way.nodes.indexOf(vertexID) !== -1;
             });
         })) return false;
+
+        if (situation === 'toolbar' &&
+            _actions.every(function(action) {
+                return action.disabled(context.graph()) === 'not_connected';
+            })) return false;
 
         return true;
     };

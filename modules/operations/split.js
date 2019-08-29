@@ -52,8 +52,10 @@ export function operationSplit(context, selectedIDs) {
     };
 
 
-    operation.available = function() {
-        return _isAvailable;
+    operation.available = function(situation) {
+        if (!_isAvailable) return false;
+        if (situation === 'toolbar' && _action.disabled(context.graph())) return false;
+        return true;
     };
 
 
