@@ -773,7 +773,6 @@ button.add-note svg.icon {
     max-height: 600px;
     min-width: 160px;
     max-width: 325px;
-    z-index: 300;
     flex-direction: column;
 }
 .poplist.in {
@@ -6792,8 +6791,7 @@ li.hide + li.version .badge .tooltip .popover-arrow {
     flex-direction: column;
     background: var(--bg-color);
     border-radius: 4px;
-    /* padding is set in edit_menu.js */
-}
+    /* padding is set in edit_menu.js */}
 
 .edit-menu .tooltip {
     width: 200px; /* see also edit_menu.js */
