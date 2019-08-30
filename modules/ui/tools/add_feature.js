@@ -23,7 +23,8 @@ export function uiToolAddFeature(context) {
     };
 
     var allowedGeometry = ['point', 'vertex', 'line', 'area'];
-    var presetBrowser = uiPresetBrowser(context, allowedGeometry, browserDidSelectPreset, browserDidClose);
+    var presetBrowser = uiPresetBrowser(context, allowedGeometry, browserDidSelectPreset, browserDidClose)
+        .scrollContainer(context.container().select('.top-toolbar'));
 
     var button = d3_select(null);
 
@@ -60,7 +61,10 @@ export function uiToolAddFeature(context) {
             .call(tooltip()
                 .placement('bottom')
                 .html(true)
-                .title(function() { return uiTooltipHtml(t('modes.add_feature.description'), key); })
+                .title(function() {
+                    return uiTooltipHtml(t('modes.add_feature.description'), key);
+                })
+                .scrollContainer(context.container().select('.top-toolbar'))
             )
             .call(svgIcon('#' + tool.iconName, tool.iconClass));
 
@@ -70,7 +74,7 @@ export function uiToolAddFeature(context) {
 
         button = selection.select('.bar-button');
 
-        presetBrowser.render(selection);
+        selection.call(presetBrowser);
 
         updateEnabledState();
     };

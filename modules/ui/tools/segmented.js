@@ -58,7 +58,8 @@ export function uiToolSegemented(context) {
                 var tooltipBehavior = tooltip()
                     .placement('bottom')
                     .html(true)
-                    .title(title);
+                    .title(title)
+                    .scrollContainer(context.container().select('.top-toolbar'));
                 d3_select(this)
                     .call(tooltipBehavior)
                     .call(svgIcon('#' + d.icon, d.iconClass));

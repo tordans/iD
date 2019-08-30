@@ -134,6 +134,7 @@ export function uiToolQuickPresets(context) {
                 .title(function(d) {
                     return d.key ? uiTooltipHtml(d.description, d.key) : d.description;
                 })
+                .scrollContainer(context.container().select('.top-toolbar'))
             );
 
         buttonsEnter
@@ -186,8 +187,8 @@ export function uiToolQuickPresets(context) {
                 targetData = null;
 
                 var draggingNode = d3_select(this).node();
-                var eventX = d3_event.x + draggingNode.parentNode.parentNode.offsetLeft;
-                var origLeft = draggingNode.offsetLeft + draggingNode.parentNode.offsetLeft + draggingNode.parentNode.parentNode.offsetLeft;
+                var eventX = d3_event.x + draggingNode.parentNode.offsetLeft;
+                var origLeft = draggingNode.offsetLeft;
 
                 d3_selectAll('.top-toolbar button.add-preset')
                     .style('transform', function(d2) {
@@ -199,7 +200,7 @@ export function uiToolQuickPresets(context) {
                         if (deltaY > 50) return null;
 
                         var node = d3_select(this).node(),
-                            nodeLeft = node.offsetLeft + node.parentNode.offsetLeft + node.parentNode.parentNode.offsetLeft,
+                            nodeLeft = node.offsetLeft,
                             nodeRight = nodeLeft + node.offsetWidth;
 
                         if ((ltr && nodeLeft > origLeft && eventX > nodeLeft) ||
