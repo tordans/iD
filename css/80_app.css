@@ -1333,7 +1333,7 @@ summary.hide-toggle::-webkit-details-marker {
     width: 40px;
 }
 .assistant .assistant-header .header-body {
-    margin-top: 10px;
+    margin-top: 8px;
 }
 .assistant .assistant-header .header-body:empty {
     display: none;
@@ -1394,7 +1394,7 @@ summary.hide-toggle::-webkit-details-marker {
     min-width: 225px;
 }
 .assistant .main-footer {
-    margin-top: 12px;
+    margin-top: 15px;
 }
 .assistant button.geocode-item,
 .assistant .main-footer button {
@@ -1504,7 +1504,6 @@ summary.hide-toggle::-webkit-details-marker {
 }
 .assistant.prominent .body-text {
     font-size: 14px;
-    line-height: 1.35em;
 }
 
 /* Success Screen / Community Index
@@ -5834,8 +5833,7 @@ img.tile-debug {
 .map-footer-list li:last-child {
     border-left: 0;
     margin-left: 0;
-    padding-left: 0;
-}
+    padding-left: 0;}
 .ideditor[dir='rtl'] .map-footer-list li:last-child {
     border-right: none;}
 .map-footer-list a.chip {
