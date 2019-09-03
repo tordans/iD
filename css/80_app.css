@@ -523,8 +523,7 @@ button.disabled .icon.operation use,
     vertical-align: text-top;
     display: inline-block;
     width: 1.17em;
-    height: 1.17em;
-    margin: 0px 3px;
+    height: 1.17em;    margin: 0px 3px;
 }
 
 .icon.pre-text {
