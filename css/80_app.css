@@ -1690,8 +1690,7 @@ summary.hide-toggle::-webkit-details-marker {
     overflow-x: hidden;
     position: relative;
     height: 100%;
-    flex: 1 1 100%;}.entity-editor {
-    padding: 20px;
+    flex: 1 1 100%;}.entity-editor {    padding: 20px;
 }
 /* preserve extra space at bottom of inspector to allow for dropdown options - #5280 */
 .entity-editor > div:last-child {
