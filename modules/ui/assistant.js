@@ -458,7 +458,7 @@ export function uiAssistant(context) {
                                       displayName: '<b>' + details.display_name + '</b>'
                                   }) + '<br/>' +
                                   t('assistant.launch.changesets_date', {
-                                      changesets: '<b>' + details.changesets_count + '</b>',
+                                      changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(currentLocale) + '</b>',
                                       joinDate: '<b>' + joinDate.toLocaleDateString(currentLocale, { day: 'numeric', month: 'long', year: 'numeric' }) + '</b>'
                                   });
             bodyTextArea.html(anniversaryInfo);
@@ -494,14 +494,14 @@ export function uiAssistant(context) {
                 var joinDate = new Date(details.account_created);
                 var now = new Date();
 
-                if (details.active_blocks > 0) {
+                if (parseFloat(details.active_blocks) > 0) {
                     // user has been blocked
                     renderBlockedAccountHeader(selection, bodyTextArea, details);
 
                 } else if (joinDate.getDate() === now.getDate() &&
                     joinDate.getMonth() === now.getMonth() &&
                     joinDate.getFullYear() < now.getFullYear() &&
-                    details.changesets_count > 1) {
+                    parseFloat(details.changesets_count) > 1) {
                     // OSM anniversary
                     renderAccountAnniversaryHeader(selection, bodyTextArea, details, joinDate, now);
 
@@ -510,7 +510,7 @@ export function uiAssistant(context) {
                                            displayName: '<b>' + details.display_name + '</b>'
                                        }) + '<br/>' +
                                        t('assistant.launch.changesets', {
-                                           changesets: '<b>' + details.changesets_count + '</b>'
+                                           changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(currentLocale) + '</b>'
                                        });
                     bodyTextArea.html(loggedInInfo);
                 }
