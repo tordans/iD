@@ -922,6 +922,7 @@ button.add-note svg.icon {
 }
 .poplist .subsection {
     background-color: #CBCBCB;
+    display: flex;
 }
 .ideditor[dir='ltr'] .popover .subitems {
     padding-left: 6px;
