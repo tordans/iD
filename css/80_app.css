@@ -1363,7 +1363,7 @@ summary.hide-toggle::-webkit-details-marker {
 }
 .assistant br {
     display: block;
-    margin-top: 12px;
+    margin-top: 8px;
     content: " ";
 }
 .assistant .search-header {
