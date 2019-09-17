@@ -1,5 +1,6 @@
 export * from './quick_presets_addable';
 export * from './quick_presets_favorites';
+export * from './quick_presets_generic';
 export * from './quick_presets_recent';
 export * from './notes';
 export * from './operation';
