@@ -588,7 +588,6 @@ export function uiInit(context) {
     };
 
     ui.togglePanes = function(showPane) {
-        var panesWrap = context.container().selectAll('.map-panes');
         var hidePanes = context.container().selectAll('.map-pane.shown');
 
         var side = localizer.textDirection() === 'ltr' ? 'right' : 'left';
@@ -618,7 +617,6 @@ export function uiInit(context) {
                     .transition()
                     .duration(200)
                     .style(side, '0px');
-                panesWrap.style('width', '100%');
             } else {
                 showPane
                     .style(side, '0px');
@@ -635,7 +633,6 @@ export function uiInit(context) {
                     d3_select(this)
                         .classed('shown', false)
                         .classed('hide', true);
-                    panesWrap.style('width', null);
                 });
         }
     };
