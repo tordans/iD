@@ -410,17 +410,19 @@ export function coreContext(this: object): coreContext {
       }
     }));
 
-    _map.on('drawn.zoomToEntity', () => {
-      if (!entityIDs.every(entityID => context.hasEntity(entityID))) return;
-      _map.on('drawn.zoomToEntity', null);
-      context.on('enter.zoomToEntity', null);
-      context.enter(modeSelect(context, entityIDs));
+    _map.on('drawn.zoomToEntities', () => {
+      if (entityIDs.some(entityID => !context.hasEntity(entityID))) return;
+      _map.on('drawn.zoomToEntities', null);
+      context.on('enter.zoomToEntities', null);
+      const mode = modeSelect(context, entityIDs);
+      context.enter(mode);
+      if (zoomTo !== false && mode.zoomToSelected) mode.zoomToSelected();
     });
 
-    context.on('enter.zoomToEntity', () => {
-      if (_mode.id !== 'browse') {
-        _map.on('drawn.zoomToEntity', null);
-        context.on('enter.zoomToEntity', null);
+    context.on('enter.zoomToEntities', () => {
+      if (_mode && _mode.id !== 'browse') {
+        _map.on('drawn.zoomToEntities', null);
+        context.on('enter.zoomToEntities', null);
       }
     });
   };
@@ -441,7 +443,6 @@ export function coreContext(this: object): coreContext {
       context.enter(modeSelectNote(context, noteId));
     });
   };
-
   let _minEditableZoom = 16;
   context.minEditableZoom = function(val) {
     if (!arguments.length) return _minEditableZoom;
