@@ -394,7 +394,7 @@ export function uiPresetIcon() {
     const imageURL = (showThirdPartyIcons === 'true') && p.imageURL;
     const picon = getIcon(p, geom);
     const isCategory = !p.setTags;
-    const drawPoint = geom === 'point' && !imageURL && (isSmall() || !picon) && !isFallback;
+    const drawPoint = geom === 'point' && (isSmall() || !picon) && !isFallback;
     const drawVertex = picon !== null && geom === 'vertex' && (!isSmall() || !isFallback);
     const drawLine = picon && geom === 'line' && !isFallback && !isCategory;
     const drawArea = picon && geom === 'area' && !isFallback && !isCategory;
@@ -420,7 +420,7 @@ export function uiPresetIcon() {
       .merge(container);
 
     container
-      .classed('showing-img', !!imageURL)
+      .classed('showing-img', false)
       .classed('fallback', isFallback);
 
     renderCategoryBorder(container, isCategory && p);
