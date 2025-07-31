@@ -9,6 +9,8 @@ import { utilRebind } from '../../util';
 import { uiPresetIcon } from '../preset_icon';
 import { uiSection } from '../section';
 import { uiTagReference } from '../tag_reference';
+import { presetShortcuts } from '../../core/preset_shortcuts';
+import { svgIcon } from '../../svg';
 
 
 export function uiSectionFeatureType(context) {
@@ -77,6 +79,8 @@ export function uiSectionFeatureType(context) {
                 .call(_tagReference.body);
         }
 
+
+
         selection.selectAll('.preset-reset')
             .on('click', function() {
                  dispatch.call('choose', this, _presets);
@@ -111,6 +115,215 @@ export function uiSectionFeatureType(context) {
             .attr('class', 'namepart')
             .text('')
             .each(function(d) { d(d3_select(this)); });
+
+        // Add inline shortcut editor for single preset
+        if (_presets.length === 1) {
+            addInlineShortcutEditor(selection, _presets[0]);
+        } else {
+            // Remove shortcut editor if multiple presets
+            selection.selectAll('.shortcut-editor').remove();
+        }
+    }
+
+    function addInlineShortcutEditor(selection, preset) {
+        
+        // Remove any existing shortcut editor
+        selection.selectAll('.shortcut-editor').remove();
+        
+        // Create shortcut editor container
+        const shortcutEditor = selection.selectAll('.shortcut-editor')
+            .data([preset])
+            .enter()
+            .append('div')
+            .attr('class', 'shortcut-editor');
+
+        // Shortcut display/edit row
+        const shortcutRow = shortcutEditor
+            .append('div')
+            .attr('class', 'shortcut-row');
+
+        // Label
+        shortcutRow
+            .append('span')
+            .attr('class', 'shortcut-label')
+            .text(t('preset_shortcut.inline_label'));
+
+        // Current shortcut display or input
+        const shortcutValue = shortcutRow
+            .append('span')
+            .attr('class', 'shortcut-value');
+
+        // Edit button
+        const editButton = shortcutRow
+            .append('button')
+            .attr('class', 'shortcut-edit-btn')
+            .call(svgIcon('#iD-icon-edit'));
+
+        function updateDisplay() {
+            const currentShortcut = presetShortcuts.getShortcut(preset.id);
+            shortcutValue.selectAll('*').remove();
+            
+            // Clear any error messages when switching back to display mode
+            shortcutEditor.selectAll('.shortcut-error-message').remove();
+            
+            // Show the edit button again
+            editButton.style('display', null);
+            
+            if (currentShortcut) {
+                shortcutValue
+                    .append('span')
+                    .attr('class', 'shortcut-display')
+                    .text(currentShortcut);
+                
+                editButton
+                    .call(uiTooltip()
+                        .title(t('preset_shortcut.edit_tooltip'))
+                        .placement('bottom')
+                    );
+            } else {
+                shortcutValue
+                    .append('span')
+                    .attr('class', 'shortcut-none')
+                    .text(t('preset_shortcut.none_display'));
+                
+                editButton
+                    .call(uiTooltip()
+                        .title(t('preset_shortcut.add_tooltip'))
+                        .placement('bottom')
+                    );
+            }
+        }
+
+        function showEditor() {
+            const currentShortcut = presetShortcuts.getShortcut(preset.id);
+            shortcutValue.selectAll('*').remove();
+            
+            // Hide the edit button while in edit mode
+            editButton.style('display', 'none');
+            
+            const input = shortcutValue
+                .append('input')
+                .attr('type', 'number')
+                .attr('min', '8')
+                .attr('max', '999')
+                .attr('class', 'shortcut-input')
+                .attr('placeholder', '8-999')
+                .property('value', currentShortcut || '');
+
+            const buttonGroup = shortcutValue
+                .append('span')
+                .attr('class', 'shortcut-buttons');
+
+            // Helper functions for error handling
+            function showError(message) {
+                input.classed('error', true);
+                errorMessage
+                    .style('display', 'block')
+                    .text(message);
+            }
+
+            function clearError() {
+                input.classed('error', false);
+                errorMessage.style('display', 'none');
+            }
+
+            // Save button
+            buttonGroup
+                .append('button')
+                .attr('class', 'shortcut-save')
+                .call(svgIcon('#iD-icon-apply'))
+                .call(uiTooltip()
+                    .title(t('preset_shortcut.save_tooltip'))
+                    .placement('bottom')
+                )
+                .on('click', function() {
+                    const value = input.property('value').trim();
+                    
+                    // Clear any previous error
+                    clearError();
+                    
+                    if (!value) {
+                        // Remove shortcut
+                        presetShortcuts.removeShortcut(preset.id);
+                        updateDisplay();
+                        return;
+                    }
+                    
+                    const num = parseInt(value, 10);
+                    if (isNaN(num) || num < 8 || num > 999) {
+                        showError(t('preset_shortcut.error_range'));
+                        return;
+                    }
+                    
+                    try {
+                        presetShortcuts.setShortcut(preset.id, value);
+                        updateDisplay();
+                    } catch (error) {
+                        showError(error.message || t('preset_shortcut.error_conflict', { shortcut: value }));
+                    }
+                });
+
+            // Cancel button
+            buttonGroup
+                .append('button')
+                .attr('class', 'shortcut-cancel')
+                .call(svgIcon('#iD-icon-close'))
+                .call(uiTooltip()
+                    .title(t('preset_shortcut.cancel_tooltip'))
+                    .placement('bottom')
+                )
+                .on('click', updateDisplay);
+
+            // Remove button (if shortcut exists)
+            if (currentShortcut) {
+                buttonGroup
+                    .append('button')
+                    .attr('class', 'shortcut-remove')
+                    .call(svgIcon('#iD-operation-delete'))
+                    .call(uiTooltip()
+                        .title(t('preset_shortcut.remove'))
+                        .placement('bottom')
+                    )
+                    .on('click', function() {
+                        presetShortcuts.removeShortcut(preset.id);
+                        updateDisplay();
+                    });
+            }
+
+            // Error message display (appears below the entire shortcut row)
+            const errorMessage = shortcutEditor
+                .append('div')
+                .attr('class', 'shortcut-error-message')
+                .style('display', 'none');
+
+            // Focus input and handle keyboard
+            setTimeout(() => {
+                input.node().focus();
+                input.node().select();
+            }, 50);
+
+            input.on('keydown', function(d3_event) {
+                if (d3_event.keyCode === 13) { // Enter
+                    d3_event.preventDefault();
+                    buttonGroup.select('.shortcut-save').node().click();
+                } else if (d3_event.keyCode === 27) { // Escape
+                    d3_event.preventDefault();
+                    updateDisplay();
+                }
+            });
+
+            input.on('input', function() {
+                clearError();
+            });
+        }
+
+        editButton.on('click', function(d3_event) {
+            d3_event.stopPropagation();
+            d3_event.preventDefault();
+            showEditor();
+        });
+
+        updateDisplay();
     }
 
     section.entityIDs = function(val) {
