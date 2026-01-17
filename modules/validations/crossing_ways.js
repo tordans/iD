@@ -575,12 +575,36 @@ export function validationCrossingWays(context) {
                 }
 
                 var crossingLoc = this.issue.loc;
+                var issueEntityIds = this.issue.entityIds;
+                var issueEdges = this.issue.data.edges;
 
                 var projection = context.projection;
 
                 var action = function actionAddStructure(graph) {
+                    // For crossing type, we need to split the sidewalk way, not necessarily the selected way
+                    var edgeToUse = edge;
+                    var resultWayIDsToUse = resultWayIDs;
 
-                    var edgeNodes = [graph.entity(edge[0]), graph.entity(edge[1])];
+                    if (crossingType === 'crossing') {
+                        var way1 = graph.hasEntity(issueEntityIds[0]);
+                        var way2 = graph.hasEntity(issueEntityIds[1]);
+                        var isSidewalk1 = way1 && (
+                            way1.tags.footway === 'sidewalk' || way1.tags.cycleway === 'sidewalk'
+                        );
+                        var isSidewalk2 = way2 && (
+                            way2.tags.footway === 'sidewalk' || way2.tags.cycleway === 'sidewalk'
+                        );
+
+                        if (isSidewalk1 && !isSidewalk2) {
+                            edgeToUse = issueEdges[0];
+                            resultWayIDsToUse = [issueEntityIds[0]];
+                        } else if (isSidewalk2 && !isSidewalk1) {
+                            edgeToUse = issueEdges[1];
+                            resultWayIDsToUse = [issueEntityIds[1]];
+                        }
+                    }
+
+                    var edgeNodes = [graph.entity(edgeToUse[0]), graph.entity(edgeToUse[1])];
 
                     var crossedWay = graph.hasEntity(crossedWayID);
                     // use the explicit width of the crossed feature as the structure length, if available
@@ -705,21 +729,21 @@ export function validationCrossingWays(context) {
                         if (!newNode) newNode = endNode;
 
                         var splitAction = actionSplit([newNode.id])
-                            .limitWays(resultWayIDs); // only split selected or created ways
+                            .limitWays(resultWayIDsToUse); // only split selected or created ways
 
                         // do the split
                         graph = splitAction(graph);
                         if (splitAction.getCreatedWayIDs().length) {
-                            resultWayIDs.push(splitAction.getCreatedWayIDs()[0]);
+                            resultWayIDsToUse.push(splitAction.getCreatedWayIDs()[0]);
                         }
 
                         return newNode;
                     }
 
-                    var structEndNode1 = determineEndpoint(edge, edgeNodes[1], endpointLocGetter1);
+                    var structEndNode1 = determineEndpoint(edgeToUse, edgeNodes[1], endpointLocGetter1);
                     var structEndNode2 = determineEndpoint([edgeNodes[0].id, structEndNode1.id], edgeNodes[0], endpointLocGetter2);
 
-                    var structureWay = resultWayIDs.map(function(id) {
+                    var structureWay = resultWayIDsToUse.map(function(id) {
                         return graph.entity(id);
                     }).find(function(way) {
                         return way.nodes.indexOf(structEndNode1.id) !== -1 &&
