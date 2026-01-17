@@ -2,6 +2,7 @@ import { isEqual } from 'lodash-es';
 
 import { actionAddMidpoint } from '../actions/add_midpoint';
 import { actionChangeTags } from '../actions/change_tags';
+import { actionJoin } from '../actions/join';
 import { actionMergeNodes } from '../actions/merge_nodes';
 import { actionSplit } from '../actions/split';
 import { modeSelect } from '../modes/select';
@@ -584,10 +585,15 @@ export function validationCrossingWays(context) {
 
                 var projection = context.projection;
 
-                var action = function actionAddStructure(graph) {
-                    // For crossing type, we need to split the sidewalk way, not necessarily the selected way
-                    var edgeToUse = edge;
-                    var resultWayIDsToUse = resultWayIDs;
+                    var action = function actionAddStructure(graph) {
+                        // For crossing type, we need to split the sidewalk way, not necessarily the selected way
+                        var edgeToUse = edge;
+                        var resultWayIDsToUse = resultWayIDs;
+
+                    // Store side path info for later use in crossing logic
+                    var isSidePathWay1 = false;
+                    var isSidePathWay2 = false;
+                    var sidePathWayId = null;
 
                     if (crossingType === 'crossing') {
                         var way1 = graph.hasEntity(issueEntityIds[0]);
@@ -599,15 +605,17 @@ export function validationCrossingWays(context) {
                             const highway = way.tags.highway;
                             return highway && sidePathTypes.includes(highway);
                         };
-                        var isSidePathWay1 = isSidePathWay(way1);
-                        var isSidePathWay2 = isSidePathWay(way2);
+                        isSidePathWay1 = isSidePathWay(way1);
+                        isSidePathWay2 = isSidePathWay(way2);
 
                         if (isSidePathWay1 && !isSidePathWay2) {
                             edgeToUse = issueEdges[0];
                             resultWayIDsToUse = [issueEntityIds[0]];
+                            sidePathWayId = issueEntityIds[0];
                         } else if (isSidePathWay2 && !isSidePathWay1) {
                             edgeToUse = issueEdges[1];
                             resultWayIDsToUse = [issueEntityIds[1]];
+                            sidePathWayId = issueEntityIds[1];
                         }
                     }
 
@@ -685,6 +693,7 @@ export function validationCrossingWays(context) {
                     var minEdgeLengthMeters = 0.55;
 
                     // decide where to bound the structure along the way, splitting as necessary
+                    // For crossings, this first creates the crossing way by splitting at the road
                     function determineEndpoint(edge, endNode, locGetter) {
                         var newNode;
 
@@ -750,12 +759,28 @@ export function validationCrossingWays(context) {
                     var structEndNode1 = determineEndpoint(edgeToUse, edgeNodes[1], endpointLocGetter1);
                     var structEndNode2 = determineEndpoint([edgeNodes[0].id, structEndNode1.id], edgeNodes[0], endpointLocGetter2);
 
+                    // Find the structure way - this is the way segment between structEndNode1 and structEndNode2
+                    // After determineEndpoint splits, this might be a new way or part of the original
                     var structureWay = resultWayIDsToUse.map(function(id) {
                         return graph.entity(id);
                     }).find(function(way) {
-                        return way.nodes.indexOf(structEndNode1.id) !== -1 &&
+                        return way && way.nodes.indexOf(structEndNode1.id) !== -1 &&
                             way.nodes.indexOf(structEndNode2.id) !== -1;
                     });
+
+                    // If not found, the way might have been split - check all ways containing structEndNode1
+                    if (!structureWay && structEndNode1) {
+                        var structEndNode1Entity = graph.entity(structEndNode1.id);
+                        if (structEndNode1Entity) {
+                            var waysFromNode1 = graph.parentWays(structEndNode1Entity);
+                            for (let way of waysFromNode1) {
+                                if (way.nodes.indexOf(structEndNode2.id) !== -1) {
+                                    structureWay = way;
+                                    break;
+                                }
+                            }
+                        }
+                    }
 
                     var tags = Object.assign({}, structureWay.tags); // copy tags
                     if (crossingType === 'bridge'){
@@ -784,11 +809,293 @@ export function validationCrossingWays(context) {
 
                     // for crossing, we also need to join the two lines
                     if (crossingType === 'crossing') {
+                        // Step 1: Create the crossing way by connecting at the road
+                        // The structure way edge connects structEndNode1 to structEndNode2
+                        // The crossed edge is the road edge
                         const edgesToJoin = [
                             [structEndNode1.id, structEndNode2.id],
                             crossedEdge,
                         ];
                         graph = actionConnectCrossingWays(crossingLoc, edgesToJoin, connectionTags)(graph);
+
+                        // After actionConnectCrossingWays, the structure way should have a node added at crossingLoc
+                        // The structure way is the side path way that will become the crossing
+
+                        // Step 2: Handle kerb intersections
+                        // 1. Split the crossing way at the highway
+                        // 2. For each part, find kerb intersections and pick the closest to highway
+                        // 3. Split each part at that kerb intersection
+                        // 4. Tag the way segment closest to highway as the crossing
+                        // 5. Rejoin all parts back together
+
+                        // After actionConnectCrossingWays, find the crossing way
+                        // The issue is that determineEndpoint splits the way, so structureWay is just a segment
+                        // We need to find the full way that contains the original crossing way endpoints
+                        var crossingWay = null;
+
+                        if (sidePathWayId) {
+                            // Find all ways that are part of the original side path way
+                            // After splits, there might be multiple ways
+                            var originalSidePathWay = graph.hasEntity(sidePathWayId);
+                            if (originalSidePathWay) {
+                                // Check if this way has a node near the crossing location
+                                var originalWayNodes = originalSidePathWay.nodes.map(function(id) { return graph.entity(id); });
+                                var hasCrossingNode = originalWayNodes.some(function(n) {
+                                    return geoSphericalDistance(n.loc, crossingLoc) < 0.1;
+                                });
+                                if (hasCrossingNode) {
+                                    crossingWay = originalSidePathWay;
+                                }
+                            }
+
+                            // If not found, the way might have been split - find all ways containing the original endpoints
+                            if (!crossingWay) {
+                                var originalWay = graph.hasEntity(sidePathWayId);
+                                if (originalWay && originalWay.nodes.length > 0) {
+                                    var firstNodeId = originalWay.nodes[0];
+                                    var lastNodeId = originalWay.nodes[originalWay.nodes.length - 1];
+                                    var firstNode = graph.entity(firstNodeId);
+                                    var lastNode = graph.entity(lastNodeId);
+
+                                    if (firstNode && lastNode) {
+                                        var waysFromFirst = graph.parentWays(firstNode);
+                                        var waysFromLast = graph.parentWays(lastNode);
+
+                                        // Find way that contains both endpoints and has crossing node
+                                        for (let way of waysFromFirst) {
+                                            if (waysFromLast.indexOf(way) !== -1 &&
+                                                way.nodes.indexOf(firstNodeId) !== -1 &&
+                                                way.nodes.indexOf(lastNodeId) !== -1) {
+                                                var wayNodesForCheck = way.nodes.map(function(id) { return graph.entity(id); });
+                                                var hasCrossingNode2 = wayNodesForCheck.some(function(n) {
+                                                    return geoSphericalDistance(n.loc, crossingLoc) < 0.1;
+                                                });
+                                                if (hasCrossingNode2) {
+                                                    crossingWay = way;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Final fallback: try structureWay (the segment between structEndNode1 and structEndNode2)
+                        if (!crossingWay && structureWay) {
+                            crossingWay = structureWay;
+                        }
+
+                        // Fallback: try to find by structure way ID
+                        if (!crossingWay) {
+                            crossingWay = graph.entity(structureWay.id);
+                        }
+
+                        // If still not found, look for ways containing structEndNode1 and structEndNode2
+                        if (!crossingWay) {
+                            var structEndNode1EntityForCrossing = graph.entity(structEndNode1.id);
+                            var structEndNode2EntityForCrossing = graph.entity(structEndNode2.id);
+                            if (structEndNode1EntityForCrossing && structEndNode2EntityForCrossing) {
+                                var waysFromEnd1ForCrossing = graph.parentWays(structEndNode1EntityForCrossing);
+                                var waysFromEnd2ForCrossing = graph.parentWays(structEndNode2EntityForCrossing);
+
+                                // Find the way that contains both endpoints and is a footway/cycleway/path
+                                for (let way of waysFromEnd1ForCrossing) {
+                                    if (waysFromEnd2ForCrossing.indexOf(way) !== -1 &&
+                                        way.nodes.indexOf(structEndNode1.id) !== -1 &&
+                                        way.nodes.indexOf(structEndNode2.id) !== -1) {
+                                        var wayTagsForCrossing = way.tags || {};
+                                        if (wayTagsForCrossing.highway === 'footway' || wayTagsForCrossing.highway === 'cycleway' || wayTagsForCrossing.highway === 'path') {
+                                            crossingWay = way;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (crossingWay && crossingWay.nodes.length > 1) {
+                            var crossingWayNodes = crossingWay.nodes.map(function(id) { return graph.entity(id); });
+                            // Find the node closest to crossingLoc (the road intersection) with highway=crossing tag
+                            var crossingNode = crossingWayNodes.find(function(n) {
+                                return geoSphericalDistance(n.loc, crossingLoc) < 0.1 &&
+                                       n.tags && n.tags.highway === 'crossing';
+                            });
+
+                            // If not found by tag, find by location
+                            if (!crossingNode) {
+                                crossingNode = crossingWayNodes.find(function(n) {
+                                    return geoSphericalDistance(n.loc, crossingLoc) < 0.1;
+                                });
+                            }
+
+                            if (crossingNode) {
+                                // Step 2a: Split the crossing way at the highway
+                                var splitAction = actionSplit([crossingNode.id]).limitWays([crossingWay.id]);
+                                graph = splitAction(graph);
+                                var wayPartsAfterHighwaySplit = [crossingWay.id].concat(splitAction.getCreatedWayIDs());
+
+                                // Step 2b: For each part, find kerb intersections and pick the closest to highway
+                                function findClosestKerbIntersection(wayId, currentGraph, highwayLoc, currentTree) {
+                                    var way = currentGraph.hasEntity(wayId);
+                                    if (!way || way.nodes.length < 2) return null;
+                                    var wayNodes = way.nodes.map(function(id) { return currentGraph.entity(id); });
+                                    var closestKerbIntersection = null;
+                                    var minDistToHighway = Infinity;
+
+                                    for (let i = 0; i < wayNodes.length - 1; i++) {
+                                        var nodeA = wayNodes[i];
+                                        var nodeB = wayNodes[i + 1];
+                                        var segExtent = geoExtent([nodeA.loc, nodeB.loc]).padByMeters(5);
+                                        var segInfos = currentTree.waySegments(segExtent, currentGraph);
+
+                                        for (let segInfo of segInfos) {
+                                            let kerbWay = currentGraph.hasEntity(segInfo.wayId);
+                                            if (!kerbWay || kerbWay.tags.barrier !== 'kerb') continue;
+                                            let kerbNodeA = currentGraph.entity(segInfo.nodes[0]);
+                                            let kerbNodeB = currentGraph.entity(segInfo.nodes[1]);
+                                            if (!kerbNodeA || !kerbNodeB) continue;
+
+                                            let intersection = geoLineIntersection([nodeA.loc, nodeB.loc], [kerbNodeA.loc, kerbNodeB.loc]);
+                                            if (intersection) {
+                                                var distToHighway = geoSphericalDistance(intersection, highwayLoc);
+                                                if (distToHighway < minDistToHighway) {
+                                                    minDistToHighway = distToHighway;
+                                                    closestKerbIntersection = {
+                                                        loc: intersection,
+                                                        kerbWayId: segInfo.wayId,
+                                                        kerbEdge: [segInfo.nodes[0], segInfo.nodes[1]],
+                                                        crossingEdge: [nodeA.id, nodeB.id],
+                                                        wayId: wayId
+                                                    };
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return closestKerbIntersection;
+                                }
+
+                                // Step 2c: Process each way part - find closest kerb and split there
+                                var allWayParts = wayPartsAfterHighwaySplit.slice();
+                                var kerbNodesCreated = [];
+                                // Update tree for current graph state
+                                var currentTree = context.history().tree();
+                                for (let wayId of wayPartsAfterHighwaySplit) {
+                                    var wayToCheckForKerb = graph.hasEntity(wayId);
+                                    if (!wayToCheckForKerb) continue; // Way might have been deleted/split
+                                    var kerbIntersection = findClosestKerbIntersection(wayId, graph, crossingLoc, currentTree);
+                                    if (kerbIntersection) {
+                                        // Find the current edge that contains the intersection location
+                                        // After splits, the way structure may have changed
+                                        var currentWayForEdge = graph.hasEntity(wayId);
+                                        if (!currentWayForEdge) continue;
+
+                                        // Find the edge in the current way that contains the intersection
+                                        var currentWayNodesForEdge = [];
+                                        for (let nodeId of currentWayForEdge.nodes) {
+                                            currentWayNodesForEdge.push(graph.entity(nodeId));
+                                        }
+                                        var edgeForIntersection = null;
+                                        for (let j = 0; j < currentWayNodesForEdge.length - 1; j++) {
+                                            var edgeNodeA = currentWayNodesForEdge[j];
+                                            var edgeNodeB = currentWayNodesForEdge[j + 1];
+                                            // Check if intersection is on this edge
+                                            var edgeDist = geoSphericalDistance(edgeNodeA.loc, edgeNodeB.loc);
+                                            var distToA = geoSphericalDistance(kerbIntersection.loc, edgeNodeA.loc);
+                                            var distToB = geoSphericalDistance(kerbIntersection.loc, edgeNodeB.loc);
+                                            // If intersection is roughly on this edge
+                                            if (distToA + distToB <= edgeDist * 1.01) {
+                                                edgeForIntersection = [edgeNodeA.id, edgeNodeB.id];
+                                                break;
+                                            }
+                                        }
+
+                                        if (!edgeForIntersection) continue;
+
+                                        // Create kerb node
+                                        var kerbNode = osmNode({ tags: { barrier: 'kerb' } });
+                                        graph = graph.replace(kerbNode);
+
+                                        // Add to crossing way using the current edge
+                                        graph = actionAddMidpoint({ loc: kerbIntersection.loc, edge: edgeForIntersection }, kerbNode)(graph);
+                                        kerbNode = graph.entity(kerbNode.id);
+
+                                        // Add to kerb way
+                                        var kerbWay = graph.hasEntity(kerbIntersection.kerbWayId);
+                                        if (kerbWay) {
+                                            var kerbEdgeNodes = [graph.entity(kerbIntersection.kerbEdge[0]), graph.entity(kerbIntersection.kerbEdge[1])];
+                                            var nearbyKerbNode = geoSphericalClosestNode(kerbEdgeNodes, kerbIntersection.loc);
+                                            if (nearbyKerbNode.distance < 0.75) {
+                                                var mergedTags = Object.assign({}, nearbyKerbNode.node.tags, { barrier: 'kerb' });
+                                                graph = actionChangeTags(nearbyKerbNode.node.id, mergedTags)(graph);
+                                                graph = actionMergeNodes([kerbNode.id, nearbyKerbNode.node.id], kerbIntersection.loc)(graph);
+                                                kerbNode = graph.entity(nearbyKerbNode.node.id);
+                                            } else {
+                                                graph = actionAddMidpoint({ loc: kerbIntersection.loc, edge: kerbIntersection.kerbEdge }, kerbNode)(graph);
+                                            }
+                                        }
+
+                                        // Split the way at the kerb node - need to find which way contains it now
+                                        var wayContainingKerbNode = null;
+                                        var currentGraphForSplit = graph;
+                                        var allWayPartsForSplit = allWayParts.slice();
+                                        for (let wId of allWayPartsForSplit) {
+                                            var w = currentGraphForSplit.hasEntity(wId);
+                                            if (w && w.nodes.indexOf(kerbNode.id) !== -1) {
+                                                wayContainingKerbNode = w;
+                                                break;
+                                            }
+                                        }
+                                        if (wayContainingKerbNode) {
+                                            var splitAtKerb = actionSplit([kerbNode.id]).limitWays([wayContainingKerbNode.id]);
+                                            graph = splitAtKerb(graph);
+                                            var createdWayIds = splitAtKerb.getCreatedWayIDs();
+                                            allWayParts = allWayParts.concat(createdWayIds);
+                                            kerbNodesCreated.push(kerbNode.id);
+                                        }
+                                    }
+                                }
+
+                                // Step 2d: Find the way segment closest to highway and tag it as crossing
+                                var crossingWaySegmentId = null;
+                                var minDistToHighway = Infinity;
+                                var currentGraphForDistance = graph;
+                                for (let wayId of allWayParts) {
+                                    var way = currentGraphForDistance.hasEntity(wayId);
+                                    if (!way) continue;
+                                    var wayNodes = [];
+                                    for (let i = 0; i < way.nodes.length; i++) {
+                                        wayNodes.push(currentGraphForDistance.entity(way.nodes[i]));
+                                    }
+                                    for (let node of wayNodes) {
+                                        var dist = geoSphericalDistance(node.loc, crossingLoc);
+                                        if (dist < minDistToHighway) {
+                                            minDistToHighway = dist;
+                                            crossingWaySegmentId = wayId;
+                                        }
+                                    }
+                                }
+
+                                if (crossingWaySegmentId) {
+                                    var crossingSegment = graph.entity(crossingWaySegmentId);
+                                    var crossingTags = Object.assign({}, crossingSegment.tags);
+                                    // Find the side path type and set it to crossing
+                                    var sidePathTypes = ['footway', 'cycleway', 'path'];
+                                    for (let type of sidePathTypes) {
+                                        if (crossingTags[type] !== undefined) {
+                                            crossingTags[type] = 'crossing';
+                                            break;
+                                        }
+                                    }
+                                    graph = graph.replace(crossingSegment.update({ tags: crossingTags }));
+                                }
+
+                                // Step 2e: Rejoin all way parts back together
+                                if (allWayParts.length > 1) {
+                                    graph = actionJoin(allWayParts)(graph);
+                                }
+                            }
+                        }
                     }
 
                     return graph;
