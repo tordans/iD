@@ -478,8 +478,10 @@ export function validationCrossingWays(context) {
                     fixes.push(makeChangeLayerFix('higher'));
                     fixes.push(makeChangeLayerFix('lower'));
 
+                }
+
                 // can only add bridge/tunnel if both features are lines
-                } else if (context.graph().geometry(this.entityIds[0]) === 'line' &&
+                if (context.graph().geometry(this.entityIds[0]) === 'line' &&
                     context.graph().geometry(this.entityIds[1]) === 'line') {
 
                     // don't recommend adding bridges to waterways since they're uncommon
