@@ -502,15 +502,17 @@ export function validationCrossingWays(context) {
 
                     // special case: if
                     //  (1) we're about to join these lines with a highway=crossing node; and
-                    //  (2) one of the lines is a sidewalk
-                    // then we will split the sidewalk and create a highway=crossing way
-                    const isSidewalk = (
-                        entities[0].tags.footway === 'sidewalk' ||
-                        entities[1].tags.footway === 'sidewalk' ||
-                        entities[0].tags.cycleway === 'sidewalk' ||
-                        entities[1].tags.cycleway === 'sidewalk'
-                    );
-                    if (connectionTags.highway === 'crossing' && isSidewalk) {
+                    //  (2) one of the lines is a side path type (footway, cycleway, path)
+                    //      where X=crossing is a valid tag combination
+                    // then we will split the side path way and create a highway=crossing way
+                    const sidePathTypes = ['footway', 'cycleway', 'path'];
+                    const isSidePathWay = (tags) => {
+                        const highway = tags.highway;
+                        // Check if highway is a side path type where X=crossing is valid
+                        return highway && sidePathTypes.includes(highway);
+                    };
+                    const isSidePath = isSidePathWay(entities[0].tags) || isSidePathWay(entities[1].tags);
+                    if (connectionTags.highway === 'crossing' && isSidePath) {
                         const newAction = makeAddBridgeOrTunnelFix(
                             'connect_using_crossing',
                             'temaki-pedestrian',
@@ -590,17 +592,20 @@ export function validationCrossingWays(context) {
                     if (crossingType === 'crossing') {
                         var way1 = graph.hasEntity(issueEntityIds[0]);
                         var way2 = graph.hasEntity(issueEntityIds[1]);
-                        var isSidewalk1 = way1 && (
-                            way1.tags.footway === 'sidewalk' || way1.tags.cycleway === 'sidewalk'
-                        );
-                        var isSidewalk2 = way2 && (
-                            way2.tags.footway === 'sidewalk' || way2.tags.cycleway === 'sidewalk'
-                        );
+                        // Check if either way is a side path type where X=crossing is valid
+                        const sidePathTypes = ['footway', 'cycleway', 'path'];
+                        const isSidePathWay = function(way) {
+                            if (!way) return false;
+                            const highway = way.tags.highway;
+                            return highway && sidePathTypes.includes(highway);
+                        };
+                        var isSidePathWay1 = isSidePathWay(way1);
+                        var isSidePathWay2 = isSidePathWay(way2);
 
-                        if (isSidewalk1 && !isSidewalk2) {
+                        if (isSidePathWay1 && !isSidePathWay2) {
                             edgeToUse = issueEdges[0];
                             resultWayIDsToUse = [issueEntityIds[0]];
-                        } else if (isSidewalk2 && !isSidewalk1) {
+                        } else if (isSidePathWay2 && !isSidePathWay1) {
                             edgeToUse = issueEdges[1];
                             resultWayIDsToUse = [issueEntityIds[1]];
                         }
@@ -765,9 +770,13 @@ export function validationCrossingWays(context) {
                         tags.tunnel = tunnelValue;
                         tags.layer = '-1';
                     } else if (crossingType === 'crossing') {
-                        // we know that the line will already have
-                        // `footway=sidewalk` or `cycleway=sidewalk`
-                        tags[tags.footway ? 'footway' : 'cycleway'] = 'crossing';
+                        // we know that the line will already have a side path-type tag (footway, cycleway, or path)
+                        // find which one exists and set it to 'crossing'
+                        const sidePathTypes = ['footway', 'cycleway', 'path'];
+                        const sidePathType = sidePathTypes.find(type => tags[type] !== undefined);
+                        if (sidePathType) {
+                            tags[sidePathType] = 'crossing';
+                        }
                     }
 
                     // apply the structure tags to the way
