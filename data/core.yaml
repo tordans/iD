@@ -25,6 +25,8 @@ en:
     recent: Recent
     favorites: Favorites
     add_feature: Add Feature
+  presets:
+    favorites: Favorites
   title:
     format:
       context: "{base} – {context}"
@@ -1035,6 +1037,15 @@ en:
     title: Preferences
     description: Preferences
     key: P
+    favorite_presets:
+      title: Favorite Presets & Shortcuts
+      empty_message: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut.
+      explanation: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut. You can reassign the shortcuts by reordering this list.
+      add_tooltip: Add to favorites
+      remove_tooltip: Remove from favorites
+      config_tooltip: Open preferences to manage favorites
+      heart_tooltip_active: Remove favorite; Right-click to open preferences
+      heart_tooltip_inactive: Add favorite; Right-click to open preferences
     privacy:
       title: Privacy
       privacy_link: View the iD privacy policy

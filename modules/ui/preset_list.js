@@ -3,6 +3,7 @@ import { select as d3_select } from 'd3-selection';
 import { debounce } from 'es-toolkit';
 
 import { presetManager } from '../presets';
+import { presetFavorites } from '../core/preset_favorites';
 import { t, localizer } from '../core/localizer';
 import { actionChangePreset } from '../actions/change_preset';
 import { svgIcon } from '../svg/index';
@@ -11,6 +12,7 @@ import { geoExtent } from '../geo/extent';
 import { uiPresetIcon } from './preset_icon';
 import { uiTagReference } from './tag_reference';
 import { utilKeybinding, utilNoAuto, utilRebind } from '../util';
+import { favoritesCategoryItem } from './sections/favorites_category_item';
 
 
 export function uiPresetList(context) {
@@ -19,6 +21,7 @@ export function uiPresetList(context) {
     var _currLoc;
     var _currentPresets;
     var _autofocus = false;
+    var _currentSelection;
 
 
     function presetList(selection) {
@@ -98,7 +101,7 @@ export function uiPresetList(context) {
                 results = presetManager.defaults(entityGeometries()[0], 36, !context.inIntro(), _currLoc, entityPresets);
                 messageText = t.addOrUpdate('inspector.choose');
             }
-            list.call(drawList, results);
+            list.call(drawList, results, value.length > 0, false);
             message.call(messageText);
         }
 
@@ -138,16 +141,41 @@ export function uiPresetList(context) {
         var list = listWrap
             .append('div')
             .attr('class', 'preset-list')
-            .call(drawList, presetManager.defaults(entityGeometries()[0], 36, !context.inIntro(), _currLoc, entityPresets));
+            .call(drawList, presetManager.defaults(entityGeometries()[0], 36, !context.inIntro(), _currLoc, entityPresets), false, false);
 
         listWrap.node().scrollTo({ top: 0 });
         context.features().on('change.preset-list', updateForFeatureHiddenState);
+        
+        // Store reference for favorites change events
+        _currentSelection = selection;
+        
+        // Re-render when favorites change
+        presetFavorites.on('favoriteAdded.presetList', function() {
+            if (_currentSelection) presetList(_currentSelection);
+        });
+        presetFavorites.on('favoriteRemoved.presetList', function() {
+            if (_currentSelection) presetList(_currentSelection);
+        });
+        presetFavorites.on('favoriteChanged.presetList', function() {
+            if (_currentSelection) presetList(_currentSelection);
+        });
     }
 
 
-    function drawList(list, presets) {
+    function drawList(list, presets, isSearching, skipFavorites) {
         presets = presets.matchAllGeometry(entityGeometries());
-        var collection = presets.collection.reduce(function(collection, preset) {
+        var collection = [];
+        
+        // Add favorites category at the top when not searching and not in a sublist
+        if (!isSearching && !skipFavorites) {
+            var favoriteIds = presetFavorites.getFavoritesInOrder();
+
+            if (favoriteIds.length > 0) {
+                collection.push(favoritesCategoryItem(drawList, entityGeometries, itemKeydown));
+            }
+        }
+        
+        collection = presets.collection.reduce(function(collection, preset) {
             if (!preset) return collection;
 
             if (preset.members) {
@@ -160,7 +188,7 @@ export function uiPresetList(context) {
                 collection.push(PresetItem(preset));
             }
             return collection;
-        }, []);
+        }, collection);
 
         var items = list.selectChildren('.preset-list-item')
             .data(collection, function(d) { return d.preset.id; });
@@ -257,7 +285,6 @@ export function uiPresetList(context) {
         }
     }
 
-
     function CategoryItem(preset) {
         var box, sublist, shown = false;
 
@@ -352,7 +379,7 @@ export function uiPresetList(context) {
             } else {
                 shown = true;
                 var members = preset.members.matchAllGeometry(entityGeometries());
-                sublist.call(drawList, members);
+                sublist.call(drawList, members, false, true);
                 box.transition()
                     .duration(200)
                     .style('opacity', '1')
@@ -368,24 +395,45 @@ export function uiPresetList(context) {
 
     function PresetItem(preset) {
         function item(selection) {
-            var wrap = selection.append('div')
-                .attr('class', 'preset-list-button-wrap');
+            var wrap = selection.selectAll('.preset-list-button-wrap')
+                .data([0]);
+
+            wrap.exit().remove();
+
+            wrap = wrap.enter()
+                .append('div')
+                .attr('class', 'preset-list-button-wrap')
+                .merge(wrap);
 
             var geometries = entityGeometries();
 
-            var button = wrap.append('button')
+            var button = wrap.selectAll('.preset-list-button')
+                .data([0]);
+
+            button.exit().remove();
+
+            button = button.enter()
+                .append('button')
                 .attr('class', 'preset-list-button')
                 .call(uiPresetIcon()
                     .geometry(geometries.length === 1 && geometries[0])
                     .preset(preset))
                 .on('click', item.choose)
-                .on('keydown', itemKeydown);
+                .on('keydown', itemKeydown)
+                .merge(button);
 
-            var label = button
+            var label = button.selectAll('.label')
+                .data([0]);
+
+            label.exit().remove();
+
+            var labelEnter = label.enter()
                 .append('div')
                 .attr('class', 'label')
                 .append('div')
                 .attr('class', 'label-inner');
+
+            label = labelEnter.merge(label);
 
             var nameparts = [
                 preset.nameLabel(),
@@ -446,7 +494,10 @@ export function uiPresetList(context) {
         // remove existing tooltips
         button.call(uiTooltip().destroyAny);
 
-        button.each(function(item, index) {
+        button.each(function(d, index) {
+            var item = d3_select(this.closest('.preset-list-item')).datum();
+            if (!item || !item.preset) return;
+
             var hiddenPresetFeaturesId;
             for (var i in geometries) {
                 hiddenPresetFeaturesId = context.features().isHiddenPreset(item.preset, geometries[i]);

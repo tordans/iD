@@ -7,7 +7,7 @@ import { prefs } from '../core/preferences';
 import { t, localizer } from '../core/localizer';
 import { presetManager } from '../presets';
 import { behaviorHash } from '../behavior';
-import { behaviorPresetShortcuts } from '../behavior/preset_shortcuts';
+import { behaviorPresetFavorites } from '../behavior/preset_favorites';
 import { modeBrowse } from '../modes/browse';
 import { svgDefs, svgIcon } from '../svg';
 import { utilDetect } from '../util/detect';
@@ -361,9 +361,9 @@ export function uiInit(context) {
             map.centerZoom([0, 0], 2);
         }
 
-        // Setup preset shortcuts behavior
-        ui.presetShortcuts = behaviorPresetShortcuts(context);
-        d3_select(document).call(ui.presetShortcuts);
+        // Setup preset favorites behavior
+        ui.presetFavorites = behaviorPresetFavorites(context);
+        d3_select(document).call(ui.presetFavorites);
 
         // Bind events
         window.onbeforeunload = function() {
