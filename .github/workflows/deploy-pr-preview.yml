@@ -39,7 +39,7 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{secrets.NETLIFY_AUTH_TOKEN}}
           NETLIFY_SITE_ID: ${{secrets.NETLIFY_SITE_ID}}
-        run: ./node_modules/.bin/netlify deploy --no-build --dir=. --alias=pr-${{steps.pr_metadata.outputs.pr}}
+        run: ./node_modules/.bin/netlify deploy --no-build --dir=dist --alias=pr-${{steps.pr_metadata.outputs.pr}}
 
       - name: Run afterDeploy script
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0

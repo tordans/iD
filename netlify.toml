@@ -1,0 +1,4 @@
+# Publish the Vite build output (ideal flow: deploy from dist/)
+[build]
+  publish = "dist"
+  command = "npm run all"
