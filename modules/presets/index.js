@@ -9,6 +9,7 @@ import { presetCategory } from './category';
 import { presetCollection } from './collection';
 import { presetField } from './field';
 import { presetPreset } from './preset';
+import { applyTrafficSignFieldTypes, EXTRA_TRAFFIC_SIGN_FIELDS } from './traffic_sign_fields';
 import { utilArrayUniq, utilRebind } from '../util';
 
 export { presetCategory };
@@ -98,6 +99,8 @@ export function presetIndex() {
 
     // Merge Fields
     if (d.fields) {
+      applyTrafficSignFieldTypes(d.fields);
+
       Object.keys(d.fields).forEach(fieldID => {
         let f = d.fields[fieldID];
 
@@ -110,6 +113,15 @@ export function presetIndex() {
           delete _fields[fieldID];
         }
       });
+
+      Object.keys(EXTRA_TRAFFIC_SIGN_FIELDS).forEach(fieldID => {
+        if (!_fields[fieldID]) {
+          const f = presetField(fieldID, EXTRA_TRAFFIC_SIGN_FIELDS[fieldID], _fields);
+          _fields[fieldID] = f;
+        }
+      });
+
+      applyTrafficSignFieldTypes(_fields);
     }
 
     // Merge Presets

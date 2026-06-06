@@ -1,0 +1,11 @@
+# Fork-local translations until strings are on Transifex (core resource).
+de:
+  traffic_sign_field:
+    order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
+    open_tool: Im Verkehrszeichen-Tool öffnen
+    drag: Zum Umsortieren ziehen
+de-CH:
+  traffic_sign_field:
+    order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
+    open_tool: Im Verkehrszeichen-Tool öffnen
+    drag: Zum Umsortieren ziehen

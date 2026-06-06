@@ -88,6 +88,7 @@ function buildData() {
 
   // Save individual data files
   let tasks = [
+    mergeTrafficSignFieldLocales(),
     minifyJSON('data/address_formats.json', 'dist/data/address_formats.min.json'),
     minifyJSON('data/imagery.json', 'dist/data/imagery.min.json'),
     minifyJSON('data/intro_graph.json', 'dist/data/intro_graph.min.json'),
@@ -262,6 +263,30 @@ function writeFaIcons(faIcons) {
       throw (error);
     }
   });
+}
+
+
+function mergeTrafficSignFieldLocales() {
+  const overridesPath = 'data/traffic_sign_field_locales.yaml';
+  if (!fs.existsSync(overridesPath)) return Promise.resolve();
+
+  const overrides = YAML.load(fs.readFileSync(overridesPath, 'utf8'));
+  for (const locale of Object.keys(overrides)) {
+    const localePath = `dist/locales/${locale}.min.json`;
+    if (!fs.existsSync(localePath)) continue;
+
+    const data = JSON.parse(fs.readFileSync(localePath, 'utf8'));
+    const localeData = data[locale];
+    if (!localeData) continue;
+
+    for (const [key, value] of Object.entries(overrides[locale])) {
+      localeData[key] = Object.assign({}, localeData[key], value);
+    }
+
+    fs.writeFileSync(localePath, JSON.stringify(data));
+  }
+
+  return Promise.resolve();
 }
 
 

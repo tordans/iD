@@ -16,6 +16,8 @@ transifex.auth
 /dist/locales/en.min.json
 /dist/mapillary-js/
 /dist/pannellum/
+/dist/traffic-sign-field/
+/dist/traffic-sign-converter/
 
 /coverage/
 /docs/statistics.html

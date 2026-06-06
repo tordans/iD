@@ -818,6 +818,10 @@ en:
       disable:
         already_set: "This photo is already tagged on the selected map feature"
         too_far: "This photo is too far away from the selected map feature"
+  traffic_sign_field:
+    order_hint: Signs are read top to bottom. The top sign is the main sign.
+    open_tool: Open in Traffic Sign Tool
+    drag: Drag to reorder
   background:
     title: Background
     description: Background Settings
