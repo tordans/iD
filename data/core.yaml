@@ -938,6 +938,12 @@ en:
       upload_description: Add a custom lens from a .css file kept in your browser.
       upload_warning: Only import lenses from sources you trust. A lens's CSS can change the editor's appearance.
       remove: Remove lens
+      shortcut:
+        label: Shortcut letter (activated with Alt + letter)
+        placeholder: key
+        reserved: This letter is reserved by another shortcut.
+        invalid: Enter a single letter (a-z).
+        flash: "Lens: {name}"
     highlight_edits:
       key: G
     map_features: Map Features

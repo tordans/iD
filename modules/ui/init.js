@@ -8,6 +8,7 @@ import { t, localizer } from '../core/localizer';
 import { presetManager } from '../presets';
 import { behaviorHash } from '../behavior';
 import { behaviorPresetFavorites } from '../behavior/preset_favorites';
+import { behaviorLensShortcuts } from '../behavior/lens_shortcuts';
 import { modeBrowse } from '../modes/browse';
 import { svgDefs, svgIcon } from '../svg';
 import { utilDetect } from '../util/detect';
@@ -363,6 +364,10 @@ export function uiInit(context) {
         // Setup preset favorites behavior
         ui.presetFavorites = behaviorPresetFavorites(context);
         d3_select(document).call(ui.presetFavorites);
+
+        // Setup lens shortcuts behavior (⌥+letter activates an imported lens)
+        ui.lensShortcuts = behaviorLensShortcuts(context);
+        d3_select(document).call(ui.lensShortcuts);
 
         // Bind events
         window.onbeforeunload = function() {
