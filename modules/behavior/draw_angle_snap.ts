@@ -182,6 +182,58 @@ export function snapNodeAngleLoc(
     return context.projection.invert(best);
 }
 
+/** A snap guide line to render, as an SVG path in projected screen pixels. */
+export interface SnapGuide {
+    id: string;
+    path: string;
+}
+
+/**
+ * Return the snap guide lines for `nodeID`: one full line per neighbour, passing
+ * through that neighbour along the currently snapped direction and extending
+ * `lengthPx` in both directions. Reuses the same geometry as `snapNodeAngleLoc`,
+ * so the guides show exactly the directions the node will snap to (for an area's
+ * draw node that is two crossing lines whose intersection is the snapped corner).
+ */
+export function snapGuideSegments(
+    context: SnapContext,
+    nodeID: string,
+    loc: LngLat,
+    stepDeg: number,
+    lengthPx: number
+): SnapGuide[] {
+    const node = context.hasEntity(nodeID);
+    if (!node || !node.loc || !(stepDeg > 0)) return [];
+
+    const sides = nodeSides(context, nodeID, node);
+    if (sides.length === 0) return [];
+
+    const cursorPx = context.projection(loc);
+    const stepRad = degToRad(stepDeg);
+    const guides: SnapGuide[] = [];
+
+    sides.forEach(function(side, i) {
+        const anchorPx = context.projection(side.anchor);
+        const refPx = side.reference ? context.projection(side.reference) : null;
+        const snappedPx = snapAnglePx(cursorPx, anchorPx, refPx, stepRad);
+
+        let dx = snappedPx[0] - anchorPx[0];
+        let dy = snappedPx[1] - anchorPx[1];
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 1e-6) return;
+        dx /= len;
+        dy /= len;
+
+        const x1 = anchorPx[0] - dx * lengthPx;
+        const y1 = anchorPx[1] - dy * lengthPx;
+        const x2 = anchorPx[0] + dx * lengthPx;
+        const y2 = anchorPx[1] + dy * lengthPx;
+        guides.push({ id: `snap-guide-${i}`, path: `M${x1} ${y1}L${x2} ${y2}` });
+    });
+
+    return guides;
+}
+
 /**
  * Resolve up to two distinct sides (neighbour + the node beyond it) around
  * `nodeID`, using the first parent way in which the node has a neighbour.

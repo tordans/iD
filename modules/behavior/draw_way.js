@@ -11,6 +11,7 @@ import { actionMoveNode } from '../actions/move_node';
 import { actionNoop } from '../actions/noop';
 import { behaviorDraw } from './draw';
 import { drawAngleSnapStep, snapNodeAngleLoc } from './draw_angle_snap';
+import { drawSnapGuides, clearSnapGuides } from './draw_angle_guide';
 import { geoChooseEdge, geoHasSelfIntersections } from '../geo';
 import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
@@ -89,6 +90,13 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
                 .classed('nope', false)
                 .classed('nope-disabled', true);
         }
+
+        // pressing Shift (or adding Alt) turns angle snapping on; show the guides
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            _angleSnapStep = drawAngleSnapStep(d3_event);
+            refreshSnapGuides();
+        }
     }
 
 
@@ -101,6 +109,25 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             context.surface()
                 .classed('nope-suppressed', false)
                 .classed('nope-disabled', false);
+        }
+
+        // pressing/releasing Shift or Alt changes the snap step, so the guide
+        // lines must appear/update/disappear even if the mouse hasn't moved
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            _angleSnapStep = drawAngleSnapStep(d3_event);
+            refreshSnapGuides();
+        }
+    }
+
+
+    // Show/update the blue snap guide lines while a modifier is held (using the
+    // current cursor unless `loc` is given); clear them otherwise.
+    function refreshSnapGuides(loc) {
+        if (_angleSnapStep && _drawNode) {
+            drawSnapGuides(context, _drawNode.id, loc || context.map().mouseCoordinates(), _angleSnapStep);
+        } else {
+            clearSnapGuides(context);
         }
     }
 
@@ -142,6 +169,8 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             // node, so it can lock onto a perfect corner while drawing
             loc = snapNodeAngleLoc(context, _drawNode.id, loc, _angleSnapStep);
         }
+
+        refreshSnapGuides();
 
         context.replace(actionMoveNode(_drawNode.id, loc), _annotation);
         _drawNode = context.entity(_drawNode.id);
@@ -300,7 +329,11 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.map()
             .dblclickZoomEnable(false)
-            .on('drawn.draw', setActiveElements);
+            .on('drawn.draw', function() {
+                setActiveElements();
+                // keep the guide lines aligned with the map after pan/zoom
+                refreshSnapGuides();
+            });
 
         setActiveElements();
 
@@ -325,6 +358,8 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         _drawNode = undefined;
         _nodeIndex = undefined;
+        _angleSnapStep = null;
+        clearSnapGuides(context);
 
         context.map()
             .on('drawn.draw', null);

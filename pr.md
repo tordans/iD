@@ -90,6 +90,15 @@ The two values and the two modifiers live in one small constant block
   drawing* — placing the fourth corner of a rectangle snaps to a true 90° corner
   before you even click, not only when dragging afterwards. Dragging an existing
   corner node behaves identically.
+- **Blue snap guide lines.** While the modifier is held during drawing, blue
+  dashed guide lines show the directions the node will snap to — extending in
+  both directions through the relevant node(s). A line shows one guide; an area
+  shows two crossing guides that meet at the snapped corner. These reuse the same
+  surface layer and visual language as the auxiliary geometry iD already draws
+  when you hover the **Reflect** or **Circularize** operations
+  (`drawAuxiliaryGeometry` / `g.auxiliary`). They appear/update on mouse move,
+  on pressing/releasing the modifier (even without moving), and stay aligned
+  through pan/zoom; they clear when the modifier is released or drawing ends.
 
 ## How other apps handle angle‑snapping modifiers
 
@@ -168,18 +177,25 @@ behavior change when no modifier is held).
     neighbours it does the "perfect corner" lock.
   - Returns `loc` unchanged if the geometry needed is missing, so callers can use
     it unconditionally.
+  - `snapGuideSegments(context, nodeID, loc, stepDeg, lengthPx)` → the guide
+    lines (one per neighbour) as SVG paths in projected pixels, for rendering.
   - `DRAW_ANGLE_SNAP_COARSE_DEG = 45`, `DRAW_ANGLE_SNAP_FINE_DEG = 10`,
     `NODE_ANGLE_SNAP_RADIUS_PX = 30`.
-- `test/spec/behavior/draw_angle_snap.ts` — unit tests for the modifier mapping
-  and the snap geometry: absolute first segment, relative subsequent segments,
-  distance preservation, fine‑vs‑coarse, the area draw‑node corner lock (and no
-  lock outside the radius), and a dragged corner node. 10 tests, all passing.
+- `modules/behavior/draw_angle_guide.ts` — `drawSnapGuides` / `clearSnapGuides`,
+  which render the guide segments into the shared `.data-layer.osm .auxiliary`
+  surface layer (same mechanism as `drawAuxiliaryGeometry` in `edit_menu.js`),
+  managing only their own `.snap-guide` paths.
+- `test/spec/behavior/draw_angle_snap.ts` — unit tests for the modifier mapping,
+  the snap geometry (absolute first segment, relative subsequent segments,
+  distance preservation, fine‑vs‑coarse, area corner lock and no‑lock, dragged
+  corner) and the guide geometry (one line for a line, two for an area). 12 tests.
 
 **Edited files**
 
-- `modules/behavior/draw_way.js` (+14) — import the helper; track the active step
-  on `move`; snap the draw node in `move()` (only in the existing "no snap target"
-  branch) and again in `drawWay.add` so the placed node matches the preview.
+- `modules/behavior/draw_way.js` — import the helpers; track the active step on
+  `move`; snap the draw node in `move()` and `drawWay.add`; draw/update the guide
+  lines from `move`, `keydown`/`keyup` (so they appear the moment the modifier is
+  pressed) and on map redraw; clear them in `drawWay.off`.
 - `modules/modes/drag_node.js` (+6) — import the helper; in `doMove()`, snap the
   dragged node in the existing "no snap target" branch.
 - `modules/ui/tools/modes.js` (+~12) — pass the new `snapTip` string and render
@@ -188,6 +204,7 @@ behavior change when no modifier is held).
 - `data/core.yaml` (+8 strings) — tooltip tip, shortcut labels, help subsections.
 - `data/shortcuts.json` (+8) — the two Drawing‑section shortcut rows.
 - `css/80_app.css` (+5) — `.tooltip-tip` styling.
+- `css/20_map.css` (+8) — `g.auxiliary path.snap-guide` styling (blue dashed).
 
 The relevant `draw_way.js` hook (all other lines unchanged):
 
@@ -209,17 +226,20 @@ drawing code) and the result is projected back to a location.
 3. Hold **Shift** and move the cursor — segments snap to 45° relative to the
    previous segment (straight, 45°, right angles…).
 4. Hold **Shift + Alt/Option** — segments snap in finer 10° steps.
-5. Release the modifiers to draw at any angle.
-6. With **Shift** alone, hover an existing node/way — it still snaps to the
+5. Note the **blue dashed guide lines** that appear while the modifier is held,
+   showing the snap directions (two crossing lines meeting at the corner for an
+   area); they appear the instant you press the modifier and clear on release.
+6. Release the modifiers to draw at any angle.
+7. With **Shift** alone, hover an existing node/way — it still snaps to the
    geometry (angle snapping only applies in open space).
-7. **Drag test:** draw a triangle, double‑click an edge to add a 4th node, then
+8. **Drag test:** draw a triangle, double‑click an edge to add a 4th node, then
    drag that node toward the missing rectangle corner while holding **Shift** —
    it should lock onto a clean 90° corner once the cursor is within ~30 px.
-8. Hover the **Line**/**Area** toolbar buttons to see the updated tooltip; open
+9. Hover the **Line**/**Area** toolbar buttons to see the updated tooltip; open
    the **?** help → **Lines**/**Areas** → "Snapping to Angles"; and check the
    Keyboard‑shortcuts dialog → **Editing → Drawing** for the two new rows.
 
-Validated locally: `tsc` (typecheck), `eslint`, `vitest` (new spec, 10 passing),
+Validated locally: `tsc` (typecheck), `eslint`, `vitest` (new spec, 12 passing),
 `build:data`, `build:css`, and the esbuild bundle all pass.
 
 ## Open questions for reviewers

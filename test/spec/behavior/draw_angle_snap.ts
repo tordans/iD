@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import {
     drawAngleSnapStep,
     snapNodeAngleLoc,
+    snapGuideSegments,
     DRAW_ANGLE_SNAP_COARSE_DEG,
     DRAW_ANGLE_SNAP_FINE_DEG,
     NODE_ANGLE_SNAP_RADIUS_PX,
@@ -161,6 +162,33 @@ describe('snapNodeAngleLoc', () => {
         const corner: [number, number] = [0, 10];
         expect(geoVecLength(context.projection(snapped), context.projection(corner)))
             .toBeGreaterThan(NODE_ANGLE_SNAP_RADIUS_PX);
+    });
+
+    it('produces one guide line through the anchor for a line draw node', () => {
+        const entities = {
+            head: { id: 'head', loc: [0, 0] as [number, number] },
+            draw: { id: 'draw', loc: [5, 5] as [number, number] },
+        };
+        const context = makeContext(entities, ['head', 'draw'], false);
+        const guides = snapGuideSegments(context as any, 'draw', [10, 8], 45, 1000);
+
+        expect(guides.length).toBe(1);
+        const m = guides[0].path.match(/^M(-?[\d.]+) (-?[\d.]+)L(-?[\d.]+) (-?[\d.]+)$/);
+        expect(m).not.toBeNull();
+        const [x1, y1, x2, y2] = m!.slice(1).map(Number);
+        // the guide passes through the anchor (its midpoint == projected head)
+        const anchorPx = context.projection(locFor(entities, 'head'));
+        expect((x1 + x2) / 2).toBeCloseTo(anchorPx[0], 6);
+        expect((y1 + y2) / 2).toBeCloseTo(anchorPx[1], 6);
+        // and runs along a multiple of the snap step
+        const ang = mod(Math.atan2(y2 - y1, x2 - x1) * RAD2DEG, 45);
+        expect(Math.min(ang, 45 - ang)).toBeLessThan(1e-6);
+    });
+
+    it('produces two crossing guide lines for an area draw node', () => {
+        const context = makeContext(areaEntities, ['n0', 'n1', 'n2', 'draw'], true);
+        const guides = snapGuideSegments(context as any, 'draw', [3, 7], 45, 1000);
+        expect(guides.length).toBe(2);
     });
 
     it('a dragged corner node (two neighbours) also locks onto the perfect corner', () => {
