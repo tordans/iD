@@ -10,6 +10,7 @@ import { actionAddMidpoint } from '../actions/add_midpoint';
 import { actionMoveNode } from '../actions/move_node';
 import { actionNoop } from '../actions/noop';
 import { behaviorDraw } from './draw';
+import { drawAngleSnapStep, snapNodeAngleLoc } from './draw_angle_snap';
 import { geoChooseEdge, geoHasSelfIntersections } from '../geo';
 import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
@@ -33,6 +34,10 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
     var _annotation;
 
     var _pointerHasMoved = false;
+
+    // Active angle-snap step in degrees while a modifier key is held (or null).
+    // Updated on every `move`, then reused when the node is actually placed.
+    var _angleSnapStep = null;
 
     // The osmNode to be placed.
     // This is temporary and just follows the mouse cursor until an "add" event occurs.
@@ -117,6 +122,8 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.surface().classed('nope-disabled', d3_event.altKey);
 
+        _angleSnapStep = drawAngleSnapStep(d3_event);
+
         var targetLoc = datum && datum.properties && datum.properties.entity &&
             allowsVertex(datum.properties.entity) && datum.properties.entity.loc;
         var targetNodes = datum && datum.properties && datum.properties.nodes;
@@ -129,6 +136,11 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             if (choice) {
                 loc = choice.loc;
             }
+        } else if (_angleSnapStep) {   // snap the segment angle - only in open space
+            // snap the draw node relative to its way neighbours; for an area the
+            // draw node already sits between the last node and the closing first
+            // node, so it can lock onto a perfect corner while drawing
+            loc = snapNodeAngleLoc(context, _drawNode.id, loc, _angleSnapStep);
         }
 
         context.replace(actionMoveNode(_drawNode.id, loc), _annotation);
@@ -368,6 +380,11 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
     // Accept the current position of the drawing node
     drawWay.add = function(loc, d) {
+        // `loc` is the raw cursor location; snap it the same way `move` snapped
+        // the preview so the committed node matches what the user sees.
+        if (_angleSnapStep && _drawNode) {
+            loc = snapNodeAngleLoc(context, _drawNode.id, loc, _angleSnapStep);
+        }
         attemptAdd(d, loc, function() {
             // don't need to do anything extra
         });

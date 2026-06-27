@@ -13,6 +13,7 @@ import { actionNoop } from '../actions/noop';
 import { behaviorDrag } from '../behavior/drag';
 import { behaviorEdit } from '../behavior/edit';
 import { behaviorHover } from '../behavior/hover';
+import { drawAngleSnapStep, snapNodeAngleLoc } from '../behavior/draw_angle_snap';
 
 import {
     geoChooseEdge,
@@ -211,6 +212,11 @@ export function modeDragNode(context) {
                 edge = geoChooseEdge(targetNodes, context.map().mouse(), context.projection, end.id);
                 if (edge) {
                     loc = edge.loc;
+                }
+            } else {   // snap the dragged node's angle - only in open space
+                var snapStep = drawAngleSnapStep(d3_event);
+                if (snapStep) {
+                    loc = snapNodeAngleLoc(context, entity.id, loc, snapStep);
                 }
             }
         }
