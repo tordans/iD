@@ -329,11 +329,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.map()
             .dblclickZoomEnable(false)
-            .on('drawn.draw', function() {
-                setActiveElements();
-                // keep the guide lines aligned with the map after pan/zoom
-                refreshSnapGuides();
-            });
+            .on('drawn.draw', setActiveElements);
 
         setActiveElements();
 

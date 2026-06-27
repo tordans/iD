@@ -94,6 +94,11 @@ function degToRad(deg: number): number {
     return (deg * Math.PI) / 180;
 }
 
+/** Guard against a missing/NaN location (e.g. during a mode transition). */
+function isFiniteLngLat(loc: LngLat | null | undefined): loc is LngLat {
+    return !!loc && Number.isFinite(loc[0]) && Number.isFinite(loc[1]);
+}
+
 /**
  * Snap `cursorPx` so the segment `anchorPx → cursorPx` lands on a multiple of
  * `stepRad`, measured relative to `refPx → anchorPx` (the previous segment) or
@@ -146,7 +151,7 @@ export function snapNodeAngleLoc(
     searchRadiusPx: number = NODE_ANGLE_SNAP_RADIUS_PX
 ): LngLat {
     const node = context.hasEntity(nodeID);
-    if (!node || !node.loc || !(stepDeg > 0)) return loc;
+    if (!node || !node.loc || !(stepDeg > 0) || !isFiniteLngLat(loc)) return loc;
 
     const sides = nodeSides(context, nodeID, node);
     if (sides.length === 0) return loc;
@@ -203,7 +208,7 @@ export function snapGuideSegments(
     lengthPx: number
 ): SnapGuide[] {
     const node = context.hasEntity(nodeID);
-    if (!node || !node.loc || !(stepDeg > 0)) return [];
+    if (!node || !node.loc || !(stepDeg > 0) || !isFiniteLngLat(loc)) return [];
 
     const sides = nodeSides(context, nodeID, node);
     if (sides.length === 0) return [];

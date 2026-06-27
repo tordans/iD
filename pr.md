@@ -97,10 +97,11 @@ The two values and the two modifiers live in one small constant block
   two crossing guides that meet at the snapped corner. These reuse the same
   surface layer and visual language as the auxiliary geometry iD already draws
   when you hover the **Reflect** or **Circularize** operations
-  (`drawAuxiliaryGeometry` / `g.auxiliary`). They appear/update on pointer move,
-  on pressing/releasing the modifier (even without moving), and (while drawing)
-  stay aligned through pan/zoom; they clear when the modifier is released or the
-  draw/drag ends.
+  (`drawAuxiliaryGeometry` / `g.auxiliary`). They appear/update on pointer move
+  and on pressing/releasing the modifier (even without moving), and clear when the
+  modifier is released or the draw/drag ends. Guide rendering is deliberately
+  decoupled from the map's redraw event and wrapped so it can never throw — a
+  cosmetic overlay must not be able to disturb the editor's interaction.
 
 ## How other apps handle angle‑snapping modifiers
 

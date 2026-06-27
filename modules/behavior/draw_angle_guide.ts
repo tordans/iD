@@ -33,20 +33,33 @@ function render(context: SnapGuideContext, data: SnapGuide[]): void {
         .attr('d', (d: SnapGuide) => d.path);
 }
 
-/** Draw (or update) the snap guide lines for the node at `nodeID`. */
+/**
+ * Draw (or update) the snap guide lines for the node at `nodeID`.
+ *
+ * This is a purely cosmetic overlay; it must never be able to break the
+ * editor's interaction, so any failure is swallowed (and the guides cleared).
+ */
 export function drawSnapGuides(
     context: SnapGuideContext,
     nodeID: string,
     loc: [number, number],
     stepDeg: number
 ): void {
-    const dims = context.map().dimensions();
-    // long enough to always cross the viewport, whatever the anchor's position
-    const lengthPx = Math.sqrt(dims[0] * dims[0] + dims[1] * dims[1]) + Math.max(dims[0], dims[1]);
-    render(context, snapGuideSegments(context, nodeID, loc, stepDeg, lengthPx));
+    try {
+        const dims = context.map().dimensions();
+        // long enough to always cross the viewport, whatever the anchor's position
+        const lengthPx = Math.sqrt(dims[0] * dims[0] + dims[1] * dims[1]) + Math.max(dims[0], dims[1]);
+        render(context, snapGuideSegments(context, nodeID, loc, stepDeg, lengthPx));
+    } catch {
+        clearSnapGuides(context);
+    }
 }
 
-/** Remove any snap guide lines. */
+/** Remove any snap guide lines. Never throws. */
 export function clearSnapGuides(context: SnapGuideContext): void {
-    render(context, []);
+    try {
+        render(context, []);
+    } catch {
+        // ignore — a cosmetic overlay must never interrupt the editor
+    }
 }
