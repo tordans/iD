@@ -90,15 +90,17 @@ The two values and the two modifiers live in one small constant block
   drawing* — placing the fourth corner of a rectangle snaps to a true 90° corner
   before you even click, not only when dragging afterwards. Dragging an existing
   corner node behaves identically.
-- **Blue snap guide lines.** While the modifier is held during drawing, blue
-  dashed guide lines show the directions the node will snap to — extending in
-  both directions through the relevant node(s). A line shows one guide; an area
-  shows two crossing guides that meet at the snapped corner. These reuse the same
+- **Blue snap guide lines.** While the modifier is held — both when **drawing**
+  and when **dragging a node of an existing line/area** — blue dashed guide lines
+  show the directions the node will snap to, extending in both directions through
+  the relevant node(s). A node with one neighbour shows one guide; a corner shows
+  two crossing guides that meet at the snapped corner. These reuse the same
   surface layer and visual language as the auxiliary geometry iD already draws
   when you hover the **Reflect** or **Circularize** operations
-  (`drawAuxiliaryGeometry` / `g.auxiliary`). They appear/update on mouse move,
-  on pressing/releasing the modifier (even without moving), and stay aligned
-  through pan/zoom; they clear when the modifier is released or drawing ends.
+  (`drawAuxiliaryGeometry` / `g.auxiliary`). They appear/update on pointer move,
+  on pressing/releasing the modifier (even without moving), and (while drawing)
+  stay aligned through pan/zoom; they clear when the modifier is released or the
+  draw/drag ends.
 
 ## How other apps handle angle‑snapping modifiers
 
@@ -196,8 +198,9 @@ behavior change when no modifier is held).
   `move`; snap the draw node in `move()` and `drawWay.add`; draw/update the guide
   lines from `move`, `keydown`/`keyup` (so they appear the moment the modifier is
   pressed) and on map redraw; clear them in `drawWay.off`.
-- `modules/modes/drag_node.js` (+6) — import the helper; in `doMove()`, snap the
-  dragged node in the existing "no snap target" branch.
+- `modules/modes/drag_node.js` — import the helpers; in `doMove()`, snap the
+  dragged node in the existing "no snap target" branch and draw/clear the guide
+  lines; refresh guides from `keydown`/`keyup`; clear them in `mode.exit`.
 - `modules/ui/tools/modes.js` (+~12) — pass the new `snapTip` string and render
   it as a second tooltip line for the Line/Area buttons.
 - `modules/ui/panes/help.js` (+6) — register the two new help keys + headings.
@@ -232,9 +235,10 @@ drawing code) and the result is projected back to a location.
 6. Release the modifiers to draw at any angle.
 7. With **Shift** alone, hover an existing node/way — it still snaps to the
    geometry (angle snapping only applies in open space).
-8. **Drag test:** draw a triangle, double‑click an edge to add a 4th node, then
-   drag that node toward the missing rectangle corner while holding **Shift** —
-   it should lock onto a clean 90° corner once the cursor is within ~30 px.
+8. **Edit test:** select an existing line/area, drag one of its nodes while
+   holding **Shift** — the blue guide lines appear and the node snaps to pretty
+   angles; for a corner it locks onto a clean 90° within ~30 px. (Draw a triangle,
+   double‑click an edge to add a 4th node, then drag it into the rectangle corner.)
 9. Hover the **Line**/**Area** toolbar buttons to see the updated tooltip; open
    the **?** help → **Lines**/**Areas** → "Snapping to Angles"; and check the
    Keyboard‑shortcuts dialog → **Editing → Drawing** for the two new rows.

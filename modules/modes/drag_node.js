@@ -14,6 +14,7 @@ import { behaviorDrag } from '../behavior/drag';
 import { behaviorEdit } from '../behavior/edit';
 import { behaviorHover } from '../behavior/hover';
 import { drawAngleSnapStep, snapNodeAngleLoc } from '../behavior/draw_angle_snap';
+import { drawSnapGuides, clearSnapGuides } from '../behavior/draw_angle_guide';
 
 import {
     geoChooseEdge,
@@ -102,6 +103,19 @@ export function modeDragNode(context) {
     }
 
 
+    // Show/update the snap guide lines for the node being dragged based on the
+    // modifier keys currently held, so they appear/disappear the instant Shift
+    // (or Alt) is pressed even without moving the pointer.
+    function updateDragSnapGuides(d3_event) {
+        var snapStep = drawAngleSnapStep(d3_event);
+        if (snapStep && _activeEntity && !_nudgeInterval) {
+            drawSnapGuides(context, _activeEntity.id, context.map().mouseCoordinates(), snapStep);
+        } else {
+            clearSnapGuides(context);
+        }
+    }
+
+
     function keydown(d3_event) {
         if (d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
             if (context.surface().classed('nope')) {
@@ -111,6 +125,11 @@ export function modeDragNode(context) {
             context.surface()
                 .classed('nope', false)
                 .classed('nope-disabled', true);
+        }
+
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            updateDragSnapGuides(d3_event);
         }
     }
 
@@ -124,6 +143,11 @@ export function modeDragNode(context) {
             context.surface()
                 .classed('nope-suppressed', false)
                 .classed('nope-disabled', false);
+        }
+
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            updateDragSnapGuides(d3_event);
         }
     }
 
@@ -192,12 +216,15 @@ export function modeDragNode(context) {
         var loc = context.projection.invert(currMouse);
 
         var target, edge;
+        var snapStep = null;
+        var cursorLoc = loc;   // raw node location before any snapping
 
         if (!_nudgeInterval) {   // If not nudging at the edge of the viewport, try to snap..
             // related code
             // - `mode/drag_node.js`     `doMove()`
             // - `behavior/draw.js`      `click()`
             // - `behavior/draw_way.js`  `move()`
+            snapStep = drawAngleSnapStep(d3_event);
             var d = datum(d3_event);
             target = d && d.properties && d.properties.entity;
             var targetLoc = target && target.loc;
@@ -213,12 +240,16 @@ export function modeDragNode(context) {
                 if (edge) {
                     loc = edge.loc;
                 }
-            } else {   // snap the dragged node's angle - only in open space
-                var snapStep = drawAngleSnapStep(d3_event);
-                if (snapStep) {
-                    loc = snapNodeAngleLoc(context, entity.id, loc, snapStep);
-                }
+            } else if (snapStep) {   // snap the dragged node's angle - only in open space
+                loc = snapNodeAngleLoc(context, entity.id, loc, snapStep);
             }
+        }
+
+        // show the blue snap guide lines while a modifier is held (as in draw mode)
+        if (snapStep) {
+            drawSnapGuides(context, entity.id, cursorLoc, snapStep);
+        } else {
+            clearSnapGuides(context);
         }
 
         context.replace(
@@ -486,6 +517,8 @@ export function modeDragNode(context) {
             .on('undone.drag-node', null);
 
         _activeEntity = null;
+
+        clearSnapGuides(context);
 
         context.surface()
             .classed('nope', false)
