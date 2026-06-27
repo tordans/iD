@@ -518,8 +518,6 @@ export function modeDragNode(context) {
 
         _activeEntity = null;
 
-        clearSnapGuides(context);
-
         context.surface()
             .classed('nope', false)
             .classed('nope-suppressed', false)
@@ -528,6 +526,9 @@ export function modeDragNode(context) {
             .classed('active', false);
 
         stopNudge();
+
+        // last: purely visual cleanup, so it can never preempt the teardown above
+        clearSnapGuides(context);
     };
 
 

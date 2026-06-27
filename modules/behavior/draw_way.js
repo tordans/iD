@@ -359,7 +359,6 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
         _drawNode = undefined;
         _nodeIndex = undefined;
         _angleSnapStep = null;
-        clearSnapGuides(context);
 
         context.map()
             .on('drawn.draw', null);
@@ -379,6 +378,9 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.history()
             .on('undone.draw', null);
+
+        // last: purely visual cleanup, so it can never preempt the teardown above
+        clearSnapGuides(context);
     };
 
 
