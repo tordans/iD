@@ -16,6 +16,7 @@ transifex.auth
 /dist/locales/en.min.json
 /dist/mapillary-js/
 /dist/pannellum/
+/dist/surface-smoothness-field/
 
 /coverage/
 /docs/statistics.html

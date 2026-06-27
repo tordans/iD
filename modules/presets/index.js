@@ -9,6 +9,7 @@ import { presetCategory } from './category';
 import { presetCollection } from './collection';
 import { presetField } from './field';
 import { presetPreset } from './preset';
+import { applySurfaceSmoothnessFieldType } from './surface_smoothness_fields';
 import { utilArrayUniq, utilRebind } from '../util';
 
 export { presetCategory };
@@ -98,6 +99,7 @@ export function presetIndex() {
 
     // Merge Fields
     if (d.fields) {
+      applySurfaceSmoothnessFieldType(d.fields);
       Object.keys(d.fields).forEach(fieldID => {
         let f = d.fields[fieldID];
 
