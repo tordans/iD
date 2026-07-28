@@ -7,6 +7,9 @@ let _loadFieldPromise;
 
 
 /**
+ * Lazy-loads `@osm-editor-kit/surface-smoothness-id-field` from
+ * `dist/surface-smoothness-field/` (populated by `npm run dist:surface-smoothness-field`).
+ *
  * `import()` needs a `./`-relative or absolute URL; `context.asset()` returns paths like `dist/...`.
  */
 function importableAssetUrl(context, path) {
