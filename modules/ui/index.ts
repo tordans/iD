@@ -52,4 +52,7 @@ export { uiToggle } from './toggle';
 export { uiTooltip } from './tooltip';
 export { uiVersion } from './version';
 export { uiViewOnOSM } from './view_on_osm';
+export { uiViewOnMapRoulette } from './view_on_maproulette';
 export { uiZoom } from './zoom';
+export { uiMapRouletteEditor } from './maproulette_editor';
+export { uiMapRouletteEarmarkToggle } from './maproulette_earmark_toggle';

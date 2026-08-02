@@ -62,14 +62,14 @@ function updateRtree(item, replace) {
 
 // Issues shouldn't obscure each other
 function preventCoincident(loc) {
-  let coincident = false;
-  do {
-    // first time, move marker up. after that, move marker right.
-    let delta = coincident ? [0.00001, 0] : [0, 0.00001];
-    loc = geoVecAdd(loc, delta);
-    let bbox = geoExtent(loc).bbox();
-    coincident = _cache.rtree.search(bbox).length;
-  } while (coincident);
+  // Only nudge when another marker already occupies this spot — the previous
+  // do/while always applied a north offset on the first pass, which pulled
+  // pins off ways/nodes they were meant to sit on.
+  let moved = false;
+  while (_cache.rtree.search(geoExtent(loc).bbox()).length) {
+    loc = geoVecAdd(loc, moved ? [0.00001, 0] : [0, 0.00001]);
+    moved = true;
+  }
 
   return loc;
 }
