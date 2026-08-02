@@ -243,6 +243,7 @@ export function uiPanelElevation(context: iD.Context) {
         .append('div')
         .attr('class', 'elevation-loading')
         .call(t.append('info_panels.elevation.loading'));
+      drawAuxiliary.clear();
       return;
     }
 
