@@ -387,10 +387,7 @@ export function rendererBackground(context) {
     dispatch.call('change');
 
     if (d.id === MAPTERHORN_OVERLAY_ID && context.elevation) {
-      const elevation = context.elevation();
-      if (!elevation.panelActive()) {
-        context.ui().info.toggle('elevation');
-      }
+      context.elevation().ensurePanelOpen();
     }
 
     background.updateImagery();

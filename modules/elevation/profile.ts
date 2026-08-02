@@ -1,5 +1,6 @@
 import { geoSphericalDistance } from '../geo';
 import { DemTileCache } from './tile_cache';
+import { elevationAtTileCoord } from './terrarium';
 import { PROFILE_SAMPLE_STEP_METERS, PROFILE_TILE_ZOOM } from './constants';
 
 export interface ProfilePoint {
@@ -43,6 +44,27 @@ export function densifyLine(
   return samples;
 }
 
+interface SampleTileInfo {
+  sample: { loc: [number, number]; distance: number };
+  tileKey: string;
+  fracX: number;
+  fracY: number;
+}
+
+function tileCoordForLoc(
+  lon: number,
+  lat: number,
+  zoom: number
+): { x: number; y: number; fracX: number; fracY: number } {
+  const n = Math.pow(2, zoom);
+  const xf = (lon + 180) / 360 * n;
+  const latRad = lat * Math.PI / 180;
+  const yf = (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * n;
+  const x = Math.floor(xf);
+  const y = Math.floor(yf);
+  return { x, y, fracX: xf - x, fracY: yf - y };
+}
+
 export async function buildElevationProfile(
   coordinates: [number, number][],
   template: string,
@@ -51,18 +73,40 @@ export async function buildElevationProfile(
   zoom = PROFILE_TILE_ZOOM
 ): Promise<ProfilePoint[]> {
   const samples = densifyLine(coordinates);
-  const profile: ProfilePoint[] = [];
+  const sampleInfos: SampleTileInfo[] = [];
+  const uniqueTiles = new Map<string, { url: string; z: number; x: number; y: number }>();
 
   for (const sample of samples) {
-    const elevation = await cache.getElevation(sample.loc[0], sample.loc[1], template, zoom, tileSize);
-    profile.push({
+    const { x, y, fracX, fracY } = tileCoordForLoc(sample.loc[0], sample.loc[1], zoom);
+    const tileKey = DemTileCache.key(zoom, x, y);
+
+    sampleInfos.push({ sample, tileKey, fracX, fracY });
+
+    if (!uniqueTiles.has(tileKey)) {
+      const url = template
+        .replace(/\{z\}/g, String(zoom))
+        .replace(/\{x\}/g, String(x))
+        .replace(/\{y\}/g, String(y));
+      uniqueTiles.set(tileKey, { url, z: zoom, x, y });
+    }
+  }
+
+  const tiles = new Map<string, Awaited<ReturnType<DemTileCache['fetch']>>>();
+  await Promise.all([...uniqueTiles.entries()].map(async ([key, coord]) => {
+    tiles.set(key, await cache.fetch(coord.url, coord.z, coord.x, coord.y, tileSize));
+  }));
+
+  return sampleInfos.map(({ sample, tileKey, fracX, fracY }) => {
+    const tile = tiles.get(tileKey);
+    const elevation = tile
+      ? elevationAtTileCoord(tile.data, tile.tileSize, fracX, fracY)
+      : null;
+    return {
       loc: sample.loc,
       distance: sample.distance,
       elevation
-    });
-  }
-
-  return profile;
+    };
+  });
 }
 
 /** Find closest profile point to a map location. */

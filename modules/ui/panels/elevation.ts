@@ -1,18 +1,52 @@
-import { select as d3_select } from 'd3-selection';
-
 import { t } from '../../core/localizer';
 import { displayLength } from '../../util/units';
 import { localizer } from '../../core/localizer';
 import { closestPointOnLine } from '../../elevation/geometry';
 import { profilePointAtDistance } from '../../elevation/profile';
+import type { ProfilePoint } from '../../elevation/profile';
 import { svgElevationAuxiliary } from '../../svg/elevation_auxiliary';
 
 const CHART_WIDTH = 226;
 const CHART_HEIGHT = 90;
 const CHART_MARGIN = { top: 8, right: 8, bottom: 20, left: 36 };
 
+interface ChartScales {
+  minDist: number;
+  maxDist: number;
+  xScale: (d: number) => number;
+  yScale: (e: number) => number;
+  innerH: number;
+}
+
+function chartScales(profile: ProfilePoint[]): ChartScales | null {
+  const valid = profile.filter(p => p.elevation !== null);
+  if (valid.length < 2) return null;
+
+  const distances = valid.map(p => p.distance);
+  const elevations = valid.map(p => p.elevation as number);
+  const minDist = distances[0];
+  const maxDist = distances[distances.length - 1];
+  const minEle = Math.min(...elevations);
+  const maxEle = Math.max(...elevations);
+  const elePad = Math.max(5, (maxEle - minEle) * 0.05);
+  const yMin = minEle - elePad;
+  const yMax = maxEle + elePad;
+
+  const innerW = CHART_WIDTH - CHART_MARGIN.left - CHART_MARGIN.right;
+  const innerH = CHART_HEIGHT - CHART_MARGIN.top - CHART_MARGIN.bottom;
+
+  return {
+    minDist,
+    maxDist,
+    innerH,
+    xScale: (d: number) => CHART_MARGIN.left + (d - minDist) / (maxDist - minDist || 1) * innerW,
+    yScale: (e: number) => CHART_MARGIN.top + innerH - (e - yMin) / (yMax - yMin || 1) * innerH
+  };
+}
+
 export function uiPanelElevation(context: iD.Context) {
   let _isImperial = !localizer.usesMetric();
+  let _wayNodeSignature: string | null = null;
   const elevation = context.elevation();
   const drawAuxiliary = svgElevationAuxiliary(context);
 
@@ -23,15 +57,23 @@ export function uiPanelElevation(context: iD.Context) {
     return entity.geometry(context.graph()) === 'line' ? ids[0] : null;
   }
 
+  function wayNodeSignature(wayId: EntityID): string {
+    const entity = context.entity(wayId);
+    return entity.nodes.map((id: EntityID) => {
+      const node = context.entity(id);
+      return `${id}:${node.loc[0].toFixed(7)},${node.loc[1].toFixed(7)}`;
+    }).join('|');
+  }
+
   function drawChart(
     selection: d3.Selection<any>,
-    profile: import('../../elevation/profile').ProfilePoint[],
+    profile: ProfilePoint[],
     hoverDistance: number | null
   ) {
     selection.selectAll('.elevation-chart').remove();
 
-    const valid = profile.filter(p => p.elevation !== null);
-    if (valid.length < 2) {
+    const scales = chartScales(profile);
+    if (!scales) {
       selection
         .append('div')
         .attr('class', 'elevation-chart-empty')
@@ -39,22 +81,9 @@ export function uiPanelElevation(context: iD.Context) {
       return;
     }
 
-    const distances = valid.map(p => p.distance);
-    const elevations = valid.map(p => p.elevation as number);
-    const minDist = distances[0];
-    const maxDist = distances[distances.length - 1];
-    const minEle = Math.min(...elevations);
-    const maxEle = Math.max(...elevations);
-    const elePad = Math.max(5, (maxEle - minEle) * 0.05);
-    const yMin = minEle - elePad;
-    const yMax = maxEle + elePad;
-
+    const { minDist, maxDist, xScale, yScale, innerH } = scales;
+    const valid = profile.filter(p => p.elevation !== null);
     const innerW = CHART_WIDTH - CHART_MARGIN.left - CHART_MARGIN.right;
-    const innerH = CHART_HEIGHT - CHART_MARGIN.top - CHART_MARGIN.bottom;
-
-    const xScale = (d: number) => CHART_MARGIN.left + (d - minDist) / (maxDist - minDist || 1) * innerW;
-    const yScale = (e: number) => CHART_MARGIN.top + innerH - (e - yMin) / (yMax - yMin || 1) * innerH;
-
     const points = valid.map(p => `${xScale(p.distance)},${yScale(p.elevation as number)}`).join(' ');
 
     const chart = selection
@@ -80,7 +109,7 @@ export function uiPanelElevation(context: iD.Context) {
       .on('pointermove.elevation-chart', function(d3_event) {
         const rect = (this as SVGRectElement).getBoundingClientRect();
         const x = d3_event.clientX - rect.left;
-        const ratio = Math.max(0, Math.min(1, (x - CHART_MARGIN.left) / innerW));
+        const ratio = Math.max(0, Math.min(1, x / innerW));
         const distance = minDist + ratio * (maxDist - minDist);
         const point = profilePointAtDistance(profile, distance);
         if (point) {
@@ -95,25 +124,7 @@ export function uiPanelElevation(context: iD.Context) {
         elevation.clearHover();
       });
 
-    if (hoverDistance !== null) {
-      const hoverPoint = profilePointAtDistance(profile, hoverDistance);
-      if (hoverPoint && hoverPoint.elevation !== null) {
-        chart
-          .append('circle')
-          .attr('class', 'elevation-chart-cursor')
-          .attr('cx', xScale(hoverPoint.distance))
-          .attr('cy', yScale(hoverPoint.elevation))
-          .attr('r', 4);
-
-        chart
-          .append('line')
-          .attr('class', 'elevation-chart-crosshair')
-          .attr('x1', xScale(hoverPoint.distance))
-          .attr('x2', xScale(hoverPoint.distance))
-          .attr('y1', CHART_MARGIN.top)
-          .attr('y2', CHART_MARGIN.top + innerH);
-      }
-    }
+    updateChartCursor(chart, profile, hoverDistance);
 
     chart
       .append('text')
@@ -131,6 +142,73 @@ export function uiPanelElevation(context: iD.Context) {
       .text(displayLength(maxDist, _isImperial));
   }
 
+  function updateChartCursor(
+    chart: d3.Selection<any>,
+    profile: ProfilePoint[],
+    hoverDistance: number | null
+  ) {
+    chart.selectAll('.elevation-chart-cursor, .elevation-chart-crosshair').remove();
+
+    if (hoverDistance === null) return;
+
+    const scales = chartScales(profile);
+    if (!scales) return;
+
+    const hoverPoint = profilePointAtDistance(profile, hoverDistance);
+    if (!hoverPoint || hoverPoint.elevation === null) return;
+
+    const { xScale, yScale, innerH } = scales;
+
+    chart
+      .append('circle')
+      .attr('class', 'elevation-chart-cursor')
+      .attr('cx', xScale(hoverPoint.distance))
+      .attr('cy', yScale(hoverPoint.elevation))
+      .attr('r', 4);
+
+    chart
+      .append('line')
+      .attr('class', 'elevation-chart-crosshair')
+      .attr('x1', xScale(hoverPoint.distance))
+      .attr('x2', xScale(hoverPoint.distance))
+      .attr('y1', CHART_MARGIN.top)
+      .attr('y2', CHART_MARGIN.top + innerH);
+  }
+
+  function updateHover(selection: d3.Selection<any>) {
+    const profile = elevation.profile();
+    const hover = elevation.hover();
+
+    const current = selection.select('.elevation-current');
+    if (hover && hover.elevation !== null) {
+      const text = t('info_panels.elevation.at_point', {
+        elevation: Math.round(hover.elevation).toLocaleString(localizer.localeCode())
+      });
+      if (current.empty()) {
+        const chartWrap = selection.select('.elevation-chart-wrap');
+        if (chartWrap.empty()) {
+          selection.append('div').attr('class', 'elevation-current').text(text);
+        } else {
+          selection.insert('div', '.elevation-chart-wrap')
+            .attr('class', 'elevation-current')
+            .text(text);
+        }
+      } else {
+        current.text(text);
+      }
+    } else {
+      current.remove();
+    }
+
+    updateChartCursor(selection.select('.elevation-chart'), profile, hover?.distance ?? null);
+
+    if (hover) {
+      drawAuxiliary.show(hover.loc);
+    } else {
+      drawAuxiliary.clear();
+    }
+  }
+
   function redraw(selection: d3.Selection<any>) {
     const wayId = selectedWayId();
     const profile = elevation.profile();
@@ -140,7 +218,7 @@ export function uiPanelElevation(context: iD.Context) {
 
     selection.html('');
 
-    const layerToggle = selection
+    selection
       .append('button')
       .attr('class', 'button elevation-layer-toggle')
       .attr('type', 'button')
@@ -150,9 +228,6 @@ export function uiPanelElevation(context: iD.Context) {
         elevation.toggleOverlay();
         selection.call(redraw);
       });
-
-    layerToggle
-      .append('span');
 
     if (!wayId) {
       selection
@@ -196,8 +271,10 @@ export function uiPanelElevation(context: iD.Context) {
   function refreshProfile() {
     const wayId = selectedWayId();
     if (wayId) {
+      _wayNodeSignature = wayNodeSignature(wayId);
       elevation.loadProfileForWay(wayId);
     } else {
+      _wayNodeSignature = null;
       elevation.clearProfile();
     }
   }
@@ -230,14 +307,20 @@ export function uiPanelElevation(context: iD.Context) {
     }
   }
 
+  function onMapDrawn() {
+    const hover = elevation.hover();
+    if (hover) {
+      drawAuxiliary.show(hover.loc);
+    }
+  }
+
   const panel = function(selection: d3.Selection<any>) {
     elevation.setMapHoverEnabled(true);
     refreshProfile();
     selection.call(redraw);
 
     context.map()
-      .on('drawn.info-elevation', () => selection.call(redraw))
-      .on('move.info-elevation', onMapPointerMove);
+      .on('drawn.info-elevation', onMapDrawn);
 
     context
       .on('enter.info-elevation', () => {
@@ -248,7 +331,10 @@ export function uiPanelElevation(context: iD.Context) {
     context.history()
       .on('change.info-elevation', () => {
         const wayId = selectedWayId();
-        if (wayId) {
+        if (!wayId) return;
+        const sig = wayNodeSignature(wayId);
+        if (sig !== _wayNodeSignature) {
+          _wayNodeSignature = sig;
           elevation.loadProfileForWay(wayId, { force: true });
         }
       });
@@ -257,7 +343,7 @@ export function uiPanelElevation(context: iD.Context) {
       .on('pointermove.info-elevation', onMapPointerMove);
 
     elevation.on('profile.info-elevation', () => selection.call(redraw));
-    elevation.on('hover.info-elevation', () => selection.call(redraw));
+    elevation.on('hover.info-elevation', () => selection.call(updateHover));
 
     context.background()
       .on('change.info-elevation', () => selection.call(redraw));
@@ -267,7 +353,7 @@ export function uiPanelElevation(context: iD.Context) {
     elevation.setMapHoverEnabled(false);
     elevation.clearHover();
     drawAuxiliary.clear();
-    context.map().on('drawn.info-elevation', null).on('move.info-elevation', null);
+    context.map().on('drawn.info-elevation', null);
     context.on('enter.info-elevation', null);
     context.history().on('change.info-elevation', null);
     context.surface().on('pointermove.info-elevation', null);

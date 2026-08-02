@@ -1,9 +1,39 @@
-import { geoSphericalDistance } from '../geo';
+import { geoLatToMeters, geoLonToMeters, geoMetersToLat, geoMetersToLon, geoSphericalDistance } from '../geo';
 
 export interface ClosestLineResult {
   loc: [number, number];
   distanceAlong: number;
   distanceToLine: number;
+}
+
+function closestPointOnSegment(
+  a: [number, number],
+  b: [number, number],
+  loc: [number, number]
+): { loc: [number, number]; t: number; dist: number } {
+  const midLat = (a[1] + b[1] + loc[1]) / 3;
+  const ax = geoLonToMeters(a[0], midLat);
+  const ay = geoLatToMeters(a[1]);
+  const bx = geoLonToMeters(b[0], midLat);
+  const by = geoLatToMeters(b[1]);
+  const px = geoLonToMeters(loc[0], midLat);
+  const py = geoLatToMeters(loc[1]);
+
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lenSq = dx * dx + dy * dy;
+  let t = lenSq > 0 ? ((px - ax) * dx + (py - ay) * dy) / lenSq : 0;
+  t = Math.max(0, Math.min(1, t));
+
+  const cx = ax + t * dx;
+  const cy = ay + t * dy;
+  const dist = Math.sqrt((px - cx) ** 2 + (py - cy) ** 2);
+
+  return {
+    loc: [geoMetersToLon(cx, midLat), geoMetersToLat(cy)],
+    t,
+    dist
+  };
 }
 
 /** Find the closest point on a polyline to `loc`, in meters. */
@@ -24,27 +54,11 @@ export function closestPointOnLine(
     const segLen = geoSphericalDistance(a, b);
     if (segLen <= 0) continue;
 
-    let t = 0;
-    let minSegDist = Infinity;
+    const { loc: segLoc, t, dist } = closestPointOnSegment(a, b, loc);
 
-    // coarse search along segment
-    const steps = Math.max(4, Math.ceil(segLen / 5));
-    for (let s = 0; s <= steps; s++) {
-      const ratio = s / steps;
-      const candidate: [number, number] = [
-        a[0] + (b[0] - a[0]) * ratio,
-        a[1] + (b[1] - a[1]) * ratio
-      ];
-      const d = geoSphericalDistance(candidate, loc);
-      if (d < minSegDist) {
-        minSegDist = d;
-        t = ratio;
-      }
-    }
-
-    if (minSegDist < bestDist) {
-      bestDist = minSegDist;
-      bestLoc = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestLoc = segLoc;
       bestAlong = total + segLen * t;
     }
 

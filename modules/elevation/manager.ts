@@ -6,6 +6,7 @@ import {
   MAPTERHORN_TILE_TEMPLATE
 } from './constants';
 import { DemTileCache } from './tile_cache';
+import { buildElevationProfile } from './profile';
 import type { ProfilePoint } from './profile';
 
 export interface ElevationHover {
@@ -16,11 +17,12 @@ export interface ElevationHover {
 
 export function elevationManager(context: iD.Context) {
   const dispatch = d3_dispatch('change', 'hover', 'profile');
-  const cache = new DemTileCache();
+  const cache = new DemTileCache(120);
 
   let _profile: ProfilePoint[] = [];
   let _profileWayId: EntityID | null = null;
   let _profileLoading = false;
+  let _loadGeneration = 0;
   let _hover: ElevationHover | null = null;
   let _mapHoverEnabled = false;
 
@@ -43,6 +45,14 @@ export function elevationManager(context: iD.Context) {
     panelActive: () => {
       const ui = context.ui() as unknown as { info?: { isActive?: (id: string) => boolean } };
       return !!(ui.info && ui.info.isActive && ui.info.isActive('elevation'));
+    },
+
+    ensurePanelOpen: () => {
+      if (!manager.panelActive()) {
+        const ui = context.ui() as unknown as { info: { toggle: (id: string) => void } };
+        ui.info.toggle('elevation');
+      }
+      return manager;
     },
 
     setMapHoverEnabled: (val: boolean) => {
@@ -69,9 +79,8 @@ export function elevationManager(context: iD.Context) {
 
       if (shouldShow !== isOn) {
         context.background().toggleOverlayLayer(source);
-        if (shouldShow && !manager.panelActive()) {
-          const ui = context.ui() as unknown as { info: { toggle: (id: string) => void } };
-          ui.info.toggle('elevation');
+        if (shouldShow) {
+          manager.ensurePanelOpen();
         }
       }
       return manager;
@@ -80,14 +89,17 @@ export function elevationManager(context: iD.Context) {
     loadProfileForWay: async (wayId: EntityID, options?: { force?: boolean }) => {
       const entity = context.hasEntity(wayId);
       if (!entity || entity.geometry(context.graph()) !== 'line') {
+        _loadGeneration++;
         _profile = [];
         _profileWayId = null;
+        _profileLoading = false;
         dispatch.call('profile', manager);
         return;
       }
 
       if (!options?.force && _profileWayId === wayId && _profile.length && !_profileLoading) return;
 
+      const generation = ++_loadGeneration;
       _profileWayId = wayId;
       _profileLoading = true;
       dispatch.call('profile', manager);
@@ -97,18 +109,22 @@ export function elevationManager(context: iD.Context) {
         return node.loc as [number, number];
       });
 
-      const { buildElevationProfile } = await import('./profile');
-      _profile = await buildElevationProfile(
+      const profile = await buildElevationProfile(
         coords,
         MAPTERHORN_TILE_TEMPLATE,
         MAPTERHORN_TILE_SIZE,
         cache
       );
+
+      if (generation !== _loadGeneration) return;
+
+      _profile = profile;
       _profileLoading = false;
       dispatch.call('profile', manager);
     },
 
     clearProfile: () => {
+      _loadGeneration++;
       _profile = [];
       _profileWayId = null;
       _profileLoading = false;
