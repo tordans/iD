@@ -1,3 +1,4 @@
+import serviceMapRoulette from './maproulette';
 import serviceOsmose from './osmose';
 import serviceMapillary from './mapillary';
 import serviceMapRules from './maprules';
@@ -18,6 +19,7 @@ import servicePanoramax from './panoramax';
 
 export let services = {
   geocoder: serviceNominatim,
+  maproulette: serviceMapRoulette,
   osmose: serviceOsmose,
   mapillary: serviceMapillary,
   nsi: serviceNsi,
@@ -36,6 +38,7 @@ export let services = {
 };
 
 export {
+  serviceMapRoulette,
   serviceOsmose,
   serviceMapillary,
   serviceMapRules,

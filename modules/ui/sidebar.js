@@ -12,6 +12,7 @@ import { services } from '../services';
 import { uiDataEditor } from './data_editor';
 import { uiFeatureList } from './feature_list';
 import { uiInspector } from './inspector';
+import { uiMapRouletteEditor } from './maproulette_editor';
 import { uiOsmoseEditor } from './osmose_editor';
 import { uiNoteEditor } from './note_editor';
 import { localizer } from '../core/localizer';
@@ -22,6 +23,7 @@ export function uiSidebar(context) {
     var dataEditor = uiDataEditor(context);
     var noteEditor = uiNoteEditor(context);
     var osmoseEditor = uiOsmoseEditor(context);
+    var mapRouletteEditor = uiMapRouletteEditor(context);
     var _current;
     var _wasData = false;
     var _wasNote = false;
@@ -210,11 +212,13 @@ export function uiSidebar(context) {
                     datum = errService.getError(datum.id);
                 }
 
-                // Currently only one possible service
                 var errEditor;
                 if (datum.service === 'osmose') {
                     errEditor = osmoseEditor;
+                } else if (datum.service === 'maproulette') {
+                    errEditor = mapRouletteEditor;
                 }
+                if (!errEditor) return;
 
                 context.container().selectAll('.qaItem.' + datum.service)
                     .classed('hover', function(d) { return d.id === datum.id; });

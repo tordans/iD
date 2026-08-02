@@ -12,6 +12,7 @@ import { t, localizer } from '../core/localizer';
 import { svgIcon } from '../svg/icon';
 import { uiDisclosure } from '../ui/disclosure';
 import { utilRebind } from '../util/rebind';
+import { showMapRouletteResolveProgress } from './success_maproulette';
 
 
 let _oci = null;
@@ -21,6 +22,8 @@ export function uiSuccess(context) {
   const dispatch = d3_dispatch('cancel');
   let _changeset;
   let _location;
+  let _maprouletteEarmarks = [];
+  let _onMapRouletteResolveComplete = function() {};
   ensureOSMCommunityIndex();   // start fetching the data
 
 
@@ -115,7 +118,10 @@ export function uiSuccess(context) {
       .call(t.append('success.help_link_text'));
 
     let osm = context.connection();
-    if (!osm) return;
+    if (!osm) {
+      _onMapRouletteResolveComplete();
+      return;
+    }
 
     let changesetURL = osm.changesetURL(_changeset.id);
 
@@ -158,6 +164,18 @@ export function uiSuccess(context) {
           .attr('href', changesetURL)
           .text(_changeset.id)
       }));
+
+    if (_maprouletteEarmarks && _maprouletteEarmarks.length) {
+      body.call(showMapRouletteResolveProgress, {
+        earmarks: _maprouletteEarmarks,
+        changeset: _changeset,
+        changesetURL: changesetURL,
+        osm: osm,
+        onComplete: _onMapRouletteResolveComplete
+      });
+    } else {
+      _onMapRouletteResolveComplete();
+    }
 
     if (showDonationMessage !== false) {
       // support ask
@@ -451,6 +469,21 @@ export function uiSuccess(context) {
   success.location = function(val) {
     if (!arguments.length) return _location;
     _location = val;
+    return success;
+  };
+
+
+  success.maprouletteEarmarks = function(val) {
+    if (!arguments.length) return _maprouletteEarmarks;
+    _maprouletteEarmarks = val || [];
+    return success;
+  };
+
+
+  success.onMapRouletteResolveComplete = function(callback) {
+    _onMapRouletteResolveComplete = typeof callback === 'function'
+      ? callback
+      : function() {};
     return success;
   };
 

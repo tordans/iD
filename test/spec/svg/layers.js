@@ -29,12 +29,13 @@ describe('iD.svgLayers', function () {
     it('creates default data layers', function () {
         container.call(iD.svgLayers(projection, context));
         var nodes = container.selectAll('svg .data-layer').nodes();
-        expect(nodes.length).toEqual(17);
+        expect(nodes.length).toEqual(18);
         /* eslint-disable no-useless-assignment */
         let i = 0;
         expect(d3_select(nodes[i++]).classed('osm')).toBe(true);
         expect(d3_select(nodes[i++]).classed('notes')).toBe(true);
         expect(d3_select(nodes[i++]).classed('data')).toBe(true);
+        expect(d3_select(nodes[i++]).classed('maproulette')).toBe(true);
         expect(d3_select(nodes[i++]).classed('osmose')).toBe(true);
         expect(d3_select(nodes[i++]).classed('streetside')).toBe(true);
         expect(d3_select(nodes[i++]).classed('mapillary')).toBe(true);

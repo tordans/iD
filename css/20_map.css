@@ -126,6 +126,8 @@ g.note .shadow {
     stroke: #f6634f;
     stroke-width: 16;
     stroke-opacity: 0;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 g.qaItem.hover:not(.selected) .shadow,
@@ -139,6 +141,39 @@ g.qaItem.selected .shadow,
 g.note.selected .shadow,
 g.point.selected .shadow {
     stroke-opacity: 0.7;
+}
+
+/* Blue highlight when an entity-inspector MapRoulette disclosure is open
+   (mirrors path.shadow.highlighted). Red `.selected` stays the active pin. */
+g.qaItem.highlighted:not(.selected) .shadow {
+    stroke-opacity: 0.95;
+    stroke: #7092ff;
+}
+
+g.qaItem.maproulette .qaItem-fill {
+    fill: #d73ba0;
+}
+
+/* Recently resolved (Fixed / Already Fixed / …) — keep visible but muted. */
+g.qaItem.maproulette.resolved .qaItem-fill {
+    fill: #9a9a9a;
+}
+g.qaItem.maproulette.resolved .maproulette-logo {
+    opacity: 0.55;
+}
+g.qaItem.maproulette.resolved:not(.selected) .shadow {
+    stroke: #888;
+    stroke-opacity: 0.25;
+}
+
+/* Earmarked for resolve-with-upload — keep pin visible, distinct from selected. */
+g.qaItem.maproulette.earmarked:not(.selected):not(.resolved) .shadow {
+    stroke-opacity: 0.45;
+    stroke: #62c9d3;
+}
+g.qaItem.maproulette.earmarked:not(.resolved) .qaItem-fill {
+    stroke: #62c9d3;
+    stroke-width: 2;
 }
 
 /* g.note ellipse.stroke, */

@@ -611,6 +611,7 @@ en:
     save: Upload
     cancel: Cancel
     changes: Changes
+    maproulette_earmarks_title: MapRoulette tasks to resolve with this changeset
     download_changes: Download osmChange file
     errors: Errors
     warnings: Warnings
@@ -711,8 +712,11 @@ en:
     last_touched: Last touched {timeago} by {user}
     view_on_osm: View on openstreetmap.org
     view_on_osmose: View on osmose.openstreetmap.fr
+    view_on_maproulette: View on maproulette.org
     feature_type: Feature Type
     fields: Fields
+    maproulette_task: MapRoulette Task
+    maproulette_tasks: MapRoulette Tasks
     tags: Tags
     members: Members
     relations: Relations
@@ -873,6 +877,54 @@ en:
         tooltip: "Drag and drop a data file onto the page, or click the button to setup"
         title: Custom Map Data
         zoom: Zoom to data
+      maproulette:
+        title: MapRoulette Tasks
+        tooltip: Tasks from maproulette.org. You can also enter a comma-separated list of challenge IDs to filter.
+        id_label: Filter by challenge IDs
+        id_placeholder: e.g. 12345, 67890
+        id_open_on_maproulette: "Open {id} on maproulette.org"
+        id_title: Challenge Id / Task Id
+        elems_title: Recognised OSM objects
+        fixed: I fixed it!
+        cantComplete: Can't complete
+        alreadyFixed: Already fixed
+        notAnIssue: Not an issue
+        resolve_with_upload: Resolve with upload
+        resolve_with_upload_tooltip: "This task will be marked Fixed on MapRoulette after your changeset is uploaded."
+        resolved_title: Resolved
+        resolved_message: "This task is already resolved on MapRoulette. It will stay visible here for about 24 hours."
+        resolve_comment: "Resolved by {username} in changeset {url}\n\n{quote}"
+        resolve_progress: "Marking MapRoulette task {num}/{total} as Fixed…"
+        resolve_done: "Finished marking MapRoulette tasks as Fixed ({ok} succeeded{failed_suffix})."
+        resolve_failed_suffix: ", {failed} failed"
+        resolve_task_error: "Could not mark task #{id} as Fixed."
+        comment: Comment for MapRoulette
+        inputPlaceholder: Optional comment (max 1000 chars)
+        cancel: Cancel
+        submit: Submit
+        nearbyTask:
+          title: Go to next nearby task after submit
+          go_to: Go to next nearby…
+        loading_task_details: Loading task details…
+        detail_title: Details
+        instruction_title: Instructions
+        detail_title_for_task: "Details for "
+        instruction_title_for_task: "Instructions for "
+        no_instruction: No instructions for this task.
+        error_loading_task_details: Error loading task details
+        error_submitting: "Unable to submit task update to MapRoulette. Please try again."
+        error_submitting_network: "Could not reach MapRoulette. Check your connection and try again."
+        error_submitting_status: "MapRoulette returned an error (HTTP {status}). Please try again."
+        error_submitting_inflight: "A submission is already in progress. Please wait."
+        error_submitting_timeout: "MapRoulette did not respond in time. Please try again."
+        submitting: Submitting…
+        submitting_status: Sending update to MapRoulette…
+        auth_error_title: "Your MapRoulette API key is invalid or has expired."
+        auth_error_instructions: "To fix this:"
+        auth_error_step2: "Under \"API Key\", click \"Refresh\" to generate a new key"
+        auth_error_step3: "Return here and try submitting again"
+        auth_error_link: "Open MapRoulette API Key Settings"
+
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.
@@ -1791,9 +1843,10 @@ en:
         title: Continue drawing from end
       convert_to_line:
         title: Convert this to a line
+        annotation: Converted an area to a line.
       convert_to_area:
         title: Convert this to an area
-        annotation: Converted an area to a line.
+        annotation: Converted a line to an area.
       delete_feature:
         title: Delete this feature
       extract_point:

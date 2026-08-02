@@ -12,6 +12,7 @@ import { utilCleanTags, utilCombinedTags, utilRebind } from '../util';
 
 import { uiSectionEntityIssues } from './sections/entity_issues';
 import { uiSectionFeatureType } from './sections/feature_type';
+import { uiSectionMapRouletteTask } from './sections/maproulette_task';
 import { uiSectionPresetFields } from './sections/preset_fields';
 import { uiSectionRawMemberEditor } from './sections/raw_member_editor';
 import { uiSectionRawMembershipEditor } from './sections/raw_membership_editor';
@@ -94,6 +95,7 @@ export function uiEntityEditor(context) {
                     dispatch.call('choose', this, presets);
                 }),
                 uiSectionEntityIssues(context),
+                uiSectionMapRouletteTask(context),
                 uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
                 uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags),
                 uiSectionRawMemberEditor(context),

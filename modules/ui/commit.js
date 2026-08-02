@@ -15,6 +15,10 @@ import { uiSectionRawTagEditor } from './sections/raw_tag_editor';
 import { utilArrayGroupBy, utilRebind, utilUniqueDomId } from '../util';
 import { utilDetect } from '../util/detect';
 import { getIncompatibleSources } from '../validations/incompatible_source';
+import {
+    applyMapRouletteDerivedTags,
+    renderMapRouletteEarmarkChecklist
+} from './commit_maproulette';
 
 
 var readOnlyTags = [
@@ -27,6 +31,7 @@ var readOnlyTags = [
     /^warnings:/,
     /^resolved:/,
     /^closed:note$/,
+    /^closed:maproulette$/,
     /^closed:osmose:/
 ];
 
@@ -152,6 +157,9 @@ export function uiCommit(context) {
                 tags['closed:osmose:' + itemType] = context.cleanTagValue(osmoseClosed[itemType].toString());
             }
         }
+
+        // MapRoulette challenge check-in suggestions + closed:maproulette.
+        applyMapRouletteDerivedTags(context, tags);
 
         // remove existing issue counts
         for (var key in tags) {
@@ -410,6 +418,15 @@ export function uiCommit(context) {
                     .placement('top'));
         }
 
+        // MapRoulette earmarks — resolve after this changeset uploads
+        var mrEarmarkSection = body.selectAll('.commit-maproulette-earmarks')
+            .data([0]);
+
+        mrEarmarkSection = mrEarmarkSection.enter()
+            .append('div')
+            .attr('class', 'modal-section commit-maproulette-earmarks')
+            .merge(mrEarmarkSection);
+
         // Raw Tag Editor
         var tagSection = body.selectAll('.tag-section.raw-tag-editor')
             .data([0]);
@@ -424,6 +441,17 @@ export function uiCommit(context) {
                 .tags(Object.assign({}, context.changeset.tags))   // shallow copy
                 .render
             );
+
+        renderMapRouletteEarmarkChecklist(mrEarmarkSection, {
+            onTagsChanged: function() {
+                loadDerivedChangesetTags();
+                tagSection
+                    .call(rawTagEditor
+                        .tags(Object.assign({}, context.changeset.tags))
+                        .render
+                    );
+            }
+        });
 
         var changesSection = body.selectAll('.commit-changes-section')
             .data([0]);
