@@ -42,5 +42,26 @@
         },
         "url": "7586487389962e3f7c24b076dcc8270e6e23a5cb81e890c3fbe9928c5093fa862d8d946ea4a44f02efec19eda9f69b0bc82df4d53b740a5e284aef977eda72de707e354b5b2aa6f1afe22e7c67af90bcb2f8b411c773f6975badf128356ed1bc36fab11bb8fb221958273b22615127e25f52d3b423676a0ae92e2c9293321614e93443ce3b4fd688e8d58f0e9024a515beb7c68a31231802580a3c6507cdc9cb2195380de5bb857dc3049e9fa74be47bbdc78f4e16a08b08c231a2deae3d45c6548bbbf48154d971eb400bc0957f9b48cb9c4d6501",
         "encrypted": true
+    },
+    {
+        "id": "mapterhorn-hillshade",
+        "name": "Mapterhorn Hillshade",
+        "type": "dem",
+        "category": "elevation",
+        "overlay": true,
+        "tileSize": 512,
+        "encoding": "terrarium",
+        "url": "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp",
+        "attribution": {
+            "text": "Mapterhorn",
+            "url": "https://mapterhorn.com/attribution",
+            "required": true
+        },
+        "permission_osm": "explicit",
+        "description": "Global terrain hillshade derived from Mapterhorn elevation tiles.",
+        "extent": {
+            "min_zoom": 0,
+            "max_zoom": 15
+        }
     }
 ]

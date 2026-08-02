@@ -143605,6 +143605,20 @@
     "icon": "https://osmlab.github.io/editor-layer-index/sources/world/MapBoxSatellite.png"
   },
   {
+    "id": "mapterhorn-hillshade",
+    "name": "Mapterhorn Hillshade",
+    "type": "dem",
+    "template": "https://tiles.mapterhorn.com/{z}/{x}/{y}.webp",
+    "category": "elevation",
+    "zoomExtent": [0, 15],
+    "terms_url": "https://mapterhorn.com/attribution",
+    "terms_text": "Mapterhorn",
+    "description": "Global terrain hillshade derived from Mapterhorn elevation tiles.",
+    "encoding": "terrarium",
+    "overlay": true,
+    "tileSize": 512
+  },
+  {
     "id": "Marion_Ortho_2023",
     "name": "Marion County Orthoimagery (2023)",
     "type": "wms",

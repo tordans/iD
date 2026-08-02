@@ -672,6 +672,15 @@ en:
       key: L
       title: Location
       unknown_location: Unknown Location
+    elevation:
+      key: E
+      title: Elevation
+      show_layer: Show Layer
+      hide_layer: Hide Layer
+      select_way: Select a single line to see its elevation profile.
+      loading: Loading elevation profile…
+      no_data: Not enough elevation data for this way.
+      at_point: "Elevation: {elevation} m"
     measurement:
       key: M
       title: Measurement
@@ -846,6 +855,9 @@ en:
     location_panel:
       description: Show Location Panel
       tooltip: Show coordinates and regional details.
+    elevation_panel:
+      description: Show Elevation Panel
+      tooltip: Show elevation profile for the selected way using Mapterhorn tiles.
     fix_misalignment: Imagery Offset
     offset: "Drag anywhere in the gray area below to adjust the imagery offset, or enter the offset values in meters."
     offset_label: "Adjust Imagery Offset"

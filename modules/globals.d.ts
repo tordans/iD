@@ -28,7 +28,9 @@ declare global {
   }
 
   declare namespace iD {
-    export type Context = ReturnType<typeof iD.coreContext>;
+    export type Context = ReturnType<typeof iD.coreContext> & {
+      elevation: () => import('./elevation/manager').ElevationManager;
+    };
 
     export type Graph = import('./core/graph').coreGraph;
     export type OsmNode = import('./osm/node').OsmNode;

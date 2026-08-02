@@ -365,6 +365,12 @@ g.auxiliary path.preview {
     stroke-width: 2;
     stroke-dasharray: 8, 4;
 }
+g.auxiliary circle.elevation-hover-marker {
+    fill: #7092ff;
+    stroke: #fff;
+    stroke-width: 2;
+    pointer-events: none;
+}
 
 /* Visual Diffs
 ------------------

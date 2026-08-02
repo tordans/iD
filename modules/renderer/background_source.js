@@ -186,7 +186,7 @@ export function rendererBackgroundSource(data) {
               }
             });
 
-        } else if (source.type === 'tms') {
+        } else if (source.type === 'tms' || source.type === 'dem') {
             result = result
                 .replace('{x}', coord[0])
                 .replace('{y}', coord[1])

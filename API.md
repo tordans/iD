@@ -42,6 +42,8 @@ of iD (e.g. `https://ideditor-release.netlify.app`), the following parameters ar
   _Example:_ `notes=true`
 * __`offset`__ - Background imagery alignment offset in meters, formatted as `east,north`.<br/>
   _Example:_ `offset=-10,5`
+* __`overlays`__ - Comma-separated list of overlay imagery layer `id` values from iD's imagery list. Multiple overlays can be active at once.<br/>
+  _Example:_ `overlays=mapterhorn-hillshade,openrailwaymap-maxspeeds`
 * __`photo_overlay`__ - The street-level photo overlay layers to enable.<br/>
   _Example:_ `photo_overlay=streetside,mapillary,kartaview`<br/>
   _Available values:_ `streetside` (Microsoft Bing), `mapillary`, `mapillary-signs`, `mapillary-map-features`, `kartaview`

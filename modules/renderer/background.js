@@ -11,6 +11,8 @@ import { fileFetcher } from '../core/file_fetcher';
 import { geoMetersToOffset, geoOffsetToMeters, geoExtent } from '../geo';
 import { rendererBackgroundSource } from './background_source';
 import { rendererTileLayer } from './tile_layer';
+import { rendererHillshadeLayer } from './hillshade_layer';
+import { MAPTERHORN_OVERLAY_ID } from '../elevation/constants';
 import { utilAesDecrypt, utilStringQs } from '../util';
 import { utilRebind } from '../util/rebind';
 import { patchHash } from '../behavior';
@@ -188,8 +190,12 @@ export function rendererBackground(context) {
 
     overlays.enter()
       .insert('div', '.layer-data')
-      .attr('class', 'layer layer-overlay')
       .merge(overlays)
+      .attr('class', d => {
+        const source = d.source && d.source();
+        const extra = source && source.type === 'dem' ? ' layer-overlay-hillshade' : '';
+        return 'layer layer-overlay' + extra;
+      })
       .each((layer, i, nodes) => d3_select(nodes[i]).call(layer));
   }
 
@@ -368,14 +374,25 @@ export function rendererBackground(context) {
       }
     }
 
-    layer = rendererTileLayer(context)
+    layer = d.type === 'dem'
+      ? rendererHillshadeLayer(context)
+      : rendererTileLayer(context);
+
+    layer
       .source(d)
       .projection(context.projection)
-      .dimensions(baseLayer.dimensions()
-    );
+      .dimensions(baseLayer.dimensions());
 
     _overlayLayers.push(layer);
     dispatch.call('change');
+
+    if (d.id === MAPTERHORN_OVERLAY_ID && context.elevation) {
+      const elevation = context.elevation();
+      if (!elevation.panelActive()) {
+        context.ui().info.toggle('elevation');
+      }
+    }
+
     background.updateImagery();
   };
 

@@ -114,6 +114,29 @@ export function uiSectionBackgroundList(context) {
             .call(t.append('background.location_panel.description'));
 
 
+        var elevationPanelLabelEnter = bgExtrasListEnter
+            .append('li')
+            .attr('class', 'elevation-panel-toggle-item')
+            .append('label')
+            .call(uiTooltip()
+                .title(() => t.append('background.elevation_panel.tooltip'))
+                .keys([uiCmd('⌘⇧' + t('info_panels.elevation.key'))])
+                .placement('top')
+            );
+
+        elevationPanelLabelEnter
+            .append('input')
+            .attr('type', 'checkbox')
+            .on('change', function(d3_event) {
+                d3_event.preventDefault();
+                context.ui().info.toggle('elevation');
+            });
+
+        elevationPanelLabelEnter
+            .append('span')
+            .call(t.append('background.elevation_panel.description'));
+
+
         // "Info / Report a Problem" link
         selection.selectAll('.imagery-faq')
             .data([0])
