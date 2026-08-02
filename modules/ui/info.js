@@ -84,6 +84,11 @@ export function uiInfo(context) {
         }
 
 
+        info.isActive = function(which) {
+            return !!active[which];
+        };
+
+
         info.toggle = function(which) {
             var activeids = ids.filter(function(k) { return active[k]; });
 

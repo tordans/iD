@@ -14,6 +14,7 @@ import { geoRawMercator, type Projection } from '../geo/raw_mercator';
 import { modeSelect, modeSelectNote } from '../modes';
 import { presetManager } from '../presets';
 import { rendererBackground, rendererFeatures, rendererMap, rendererPhotos } from '../renderer';
+import { elevationManager } from '../elevation';
 import { services } from '../services';
 import { uiInit } from '../ui/init';
 import { utilKeybinding, utilRebind, utilStringQs, utilCleanOsmString } from '../util';
@@ -530,6 +531,12 @@ export function coreContext(this: object): coreContext {
   context.background = () => _background;
 
 
+  /* Elevation */
+  /** @type {ReturnType<elevationManager>} */
+  let _elevation;
+  context.elevation = () => _elevation;
+
+
   /* Features */
   let _features: ReturnType<typeof rendererFeatures>;
   context.features = () => _features;
@@ -711,6 +718,7 @@ export function coreContext(this: object): coreContext {
       _uploader = coreUploader(context);
 
       _background = rendererBackground(context);
+      _elevation = elevationManager(context);
       _features = rendererFeatures(context);
       _map = rendererMap(context);
       _photos = rendererPhotos(context);
