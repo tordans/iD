@@ -315,7 +315,20 @@ export function uiPanelElevation(context: iD.Context) {
     }
   }
 
+  function detachListeners() {
+    context.map().on('drawn.info-elevation', null);
+    context.on('enter.info-elevation', null);
+    context.history().on('change.info-elevation', null);
+    context.surface().on('pointermove.info-elevation', null);
+    elevation.on('profile.info-elevation', null);
+    elevation.on('hover.info-elevation', null);
+    context.background().on('change.info-elevation', null);
+  }
+
   const panel = function(selection: d3.Selection<any>) {
+    // uiInfo re-invokes active panels on every toggle; detach before re-attach.
+    detachListeners();
+
     elevation.setMapHoverEnabled(true);
     refreshProfile();
     selection.call(redraw);
@@ -354,13 +367,7 @@ export function uiPanelElevation(context: iD.Context) {
     elevation.setMapHoverEnabled(false);
     elevation.clearHover();
     drawAuxiliary.clear();
-    context.map().on('drawn.info-elevation', null);
-    context.on('enter.info-elevation', null);
-    context.history().on('change.info-elevation', null);
-    context.surface().on('pointermove.info-elevation', null);
-    elevation.on('profile.info-elevation', null);
-    elevation.on('hover.info-elevation', null);
-    context.background().on('change.info-elevation', null);
+    detachListeners();
   };
 
   panel.id = 'elevation';

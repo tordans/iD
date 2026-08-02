@@ -11,7 +11,11 @@ export function rendererHillshadeLayer(context) {
 
     var _tileSize = 256;
     var _projection;
-    var _cache = {};
+    // url -> ImageData of rendered hillshade (reusable when canvases are recreated)
+    var _rendered = {};
+    // url -> false when tile fetch failed (for parent-tile lookup)
+    var _failed = {};
+    var _inflight = {};
     var _tileOrigin;
     var _zoom;
     var _source;
@@ -33,7 +37,7 @@ export function rendererHillshadeLayer(context) {
     function lookUp(d) {
         for (var up = -1; up > -d[2]; up--) {
             var tile = atZoom(d, up);
-            if (_cache[_source.url(tile)] !== false) {
+            if (_failed[_source.url(tile)] !== true) {
                 return tile;
             }
         }
@@ -58,25 +62,50 @@ export function rendererHillshadeLayer(context) {
         return d;
     }
 
+    function paintCanvas(canvas, imageData) {
+        var ctx = canvas.getContext('2d');
+        if (!ctx || !imageData) return;
+        canvas.width = imageData.width;
+        canvas.height = imageData.height;
+        ctx.putImageData(imageData, 0, 0);
+    }
+
     function renderHillshadeTile(canvas, d) {
-        return tileCache.fetch(d.url, d[2], d[0], d[1], d.tileSize)
+        if (_inflight[d.url]) {
+            return _inflight[d.url].then(function(imageData) {
+                if (imageData && canvas.__data__ && canvas.__data__.url === d.url) {
+                    paintCanvas(canvas, imageData);
+                }
+                return !!imageData;
+            });
+        }
+
+        var promise = tileCache.fetch(d.url, d[2], d[0], d[1], d.tileSize)
             .then(function(tile) {
+                delete _inflight[d.url];
                 if (!tile) {
-                    _cache[d.url] = false;
-                    return false;
+                    _failed[d.url] = true;
+                    return null;
                 }
 
                 var shaded = hillshadeFromTerrarium(tile.data, tile.tileSize, tile.tileSize);
-                var ctx = canvas.getContext('2d');
-                if (!ctx) return false;
-
                 var imageData = new ImageData(shaded, tile.tileSize, tile.tileSize);
-                canvas.width = tile.tileSize;
-                canvas.height = tile.tileSize;
-                ctx.putImageData(imageData, 0, 0);
-                _cache[d.url] = true;
-                return true;
+                _rendered[d.url] = imageData;
+                delete _failed[d.url];
+
+                // Only paint if this canvas is still bound to the same tile URL
+                if (canvas.__data__ && canvas.__data__.url === d.url) {
+                    paintCanvas(canvas, imageData);
+                }
+                return imageData;
+            }, function() {
+                delete _inflight[d.url];
+                _failed[d.url] = true;
+                return null;
             });
+
+        _inflight[d.url] = promise;
+        return promise.then(function(imageData) { return !!imageData; });
     }
 
     function background(selection) {
@@ -119,13 +148,13 @@ export function rendererHillshadeLayer(context) {
                 if (d.url === '') return;
                 if (typeof d.url !== 'string') return;
                 requests.push(d);
-                if (_cache[d.url] === false && lookUp(d)) {
+                if (_failed[d.url] && lookUp(d)) {
                     requests.push(addSource(lookUp(d)));
                 }
             });
 
             requests = uniqueBy(requests, 'url').filter(function(r) {
-                return _cache[r.url] !== false;
+                return !_failed[r.url] || _rendered[r.url];
             });
         }
 
@@ -163,8 +192,14 @@ export function rendererHillshadeLayer(context) {
             .classed('tile-removing', false)
             .sort(function(a, b) { return a[2] - b[2]; })
             .each(function(d) {
-                if (_cache[d.url] === true) return;
                 var canvasEl = this;
+                // Reuse rendered ImageData when canvases are recreated after pan
+                if (_rendered[d.url]) {
+                    paintCanvas(canvasEl, _rendered[d.url]);
+                    return;
+                }
+                if (_failed[d.url]) return;
+
                 renderHillshadeTile(canvasEl, d).then(function(painted) {
                     if (painted === false) {
                         render(selection);
@@ -189,7 +224,9 @@ export function rendererHillshadeLayer(context) {
         if (!arguments.length) return _source;
         _source = val;
         _tileSize = _source.tileSize;
-        _cache = {};
+        _rendered = {};
+        _failed = {};
+        _inflight = {};
         tiler.tileSize(_source.tileSize).zoomExtent(_source.zoomExtent);
         return background;
     };

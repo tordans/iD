@@ -101,7 +101,10 @@ export function elevationManager(context: iD.Context) {
 
       const generation = ++_loadGeneration;
       _profileWayId = wayId;
+      _profile = [];
       _profileLoading = true;
+      _hover = null;
+      dispatch.call('hover', manager, null);
       dispatch.call('profile', manager);
 
       const coords = entity.nodes.map((nodeId: EntityID) => {
