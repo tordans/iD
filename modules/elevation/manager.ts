@@ -109,18 +109,26 @@ export function elevationManager(context: iD.Context) {
         return node.loc as [number, number];
       });
 
-      const profile = await buildElevationProfile(
-        coords,
-        MAPTERHORN_TILE_TEMPLATE,
-        MAPTERHORN_TILE_SIZE,
-        cache
-      );
+      try {
+        const profile = await buildElevationProfile(
+          coords,
+          MAPTERHORN_TILE_TEMPLATE,
+          MAPTERHORN_TILE_SIZE,
+          cache
+        );
 
-      if (generation !== _loadGeneration) return;
+        if (generation !== _loadGeneration) return;
 
-      _profile = profile;
-      _profileLoading = false;
-      dispatch.call('profile', manager);
+        _profile = profile;
+      } catch {
+        if (generation !== _loadGeneration) return;
+        _profile = [];
+      } finally {
+        if (generation === _loadGeneration) {
+          _profileLoading = false;
+          dispatch.call('profile', manager);
+        }
+      }
     },
 
     clearProfile: () => {
