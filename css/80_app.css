@@ -4718,9 +4718,8 @@ img.tile-debug {
     pointer-events: auto;
 }
 
-.panel-container .elevation-layer-toggle {
-    margin: 0 10px 8px;
-    width: calc(100% - 20px);
+.panel-container .elevation-overlay-toggle {
+    margin: 0 -10px 4px;
 }
 .panel-content-elevation .elevation-hint,
 .panel-content-elevation .elevation-loading,
@@ -4729,13 +4728,24 @@ img.tile-debug {
     color: #ccc;
     font-size: 12px;
 }
+.panel-content-elevation .elevation-chart-wrap {
+    position: relative;
+    margin: 0 -10px 4px;
+    width: calc(100% + 20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-sizing: border-box;
+}
 .panel-content-elevation .elevation-current {
-    padding: 0 10px 6px;
+    position: absolute;
+    left: 8px;
+    bottom: 4px;
+    z-index: 1;
     font-size: 12px;
     color: #ff8;
+    pointer-events: none;
 }
-.panel-content-elevation .elevation-chart-wrap {
-    padding: 0 6px 4px;
+.panel-content-elevation .elevation-chart {
+    display: block;
 }
 .panel-content-elevation .elevation-chart-line {
     stroke: #8cf;
