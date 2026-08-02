@@ -8,7 +8,7 @@ export interface DemTileData {
 }
 
 export class DemTileCache {
-  private _cache = new Map<TileKey, DemTileData | null>();
+  private _cache = new Map<TileKey, DemTileData>();
   private _inflight = new Map<TileKey, Promise<DemTileData | null>>();
   private _maxSize: number;
 
@@ -34,14 +34,18 @@ export class DemTileCache {
 
   async fetch(url: string, z: number, x: number, y: number, tileSize: number): Promise<DemTileData | null> {
     const key = DemTileCache.key(z, x, y);
-    if (this._cache.has(key)) return this._cache.get(key) ?? null;
+    const cached = this._cache.get(key);
+    if (cached) return cached;
 
     let promise = this._inflight.get(key);
     if (!promise) {
       promise = this._load(url, tileSize).then(result => {
         this._inflight.delete(key);
-        this._cache.set(key, result);
-        this._trim();
+        // Only cache successful tiles so transient failures can be retried.
+        if (result) {
+          this._cache.set(key, result);
+          this._trim();
+        }
         return result;
       });
       this._inflight.set(key, promise);
