@@ -1,5 +1,3 @@
-import { select as d3_select } from 'd3-selection';
-
 export function svgElevationAuxiliary(context: iD.Context) {
   const auxiliary = {
     show(loc: [number, number]) {

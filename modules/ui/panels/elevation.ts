@@ -1,6 +1,5 @@
-import { t } from '../../core/localizer';
+import { t, localizer } from '../../core/localizer';
 import { displayLength } from '../../util/units';
-import { localizer } from '../../core/localizer';
 import { closestPointOnLine } from '../../elevation/geometry';
 import { profilePointAtDistance } from '../../elevation/profile';
 import type { ProfilePoint } from '../../elevation/profile';

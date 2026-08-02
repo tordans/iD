@@ -32,10 +32,10 @@ export class DemTileCache {
     }
   }
 
-  async fetch(url: string, z: number, x: number, y: number, tileSize: number): Promise<DemTileData | null> {
+  fetch(url: string, z: number, x: number, y: number, tileSize: number): Promise<DemTileData | null> {
     const key = DemTileCache.key(z, x, y);
     const cached = this._cache.get(key);
-    if (cached) return cached;
+    if (cached) return Promise.resolve(cached);
 
     let promise = this._inflight.get(key);
     if (!promise) {

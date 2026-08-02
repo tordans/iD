@@ -122,12 +122,16 @@ export function elevationManager(context: iD.Context) {
 
         if (generation !== _loadGeneration) return;
 
+        // Generation token already guards against stale completions.
+        // eslint-disable-next-line require-atomic-updates -- guarded by generation check
         _profile = profile;
       } catch {
         if (generation !== _loadGeneration) return;
+        // eslint-disable-next-line require-atomic-updates -- guarded by generation check
         _profile = [];
       } finally {
         if (generation === _loadGeneration) {
+          // eslint-disable-next-line require-atomic-updates -- guarded by generation check
           _profileLoading = false;
           dispatch.call('profile', manager);
         }
