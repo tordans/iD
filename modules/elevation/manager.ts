@@ -8,6 +8,7 @@ import {
 import { DemTileCache } from './tile_cache';
 import { buildElevationProfile } from './profile';
 import type { ProfilePoint } from './profile';
+import { utilRebind } from '../util/rebind';
 
 export interface ElevationHover {
   loc: [number, number];
@@ -149,7 +150,7 @@ export function elevationManager(context: iD.Context) {
     }
   };
 
-  return Object.assign(manager, { on: dispatch.on, off: dispatch.on });
+  return utilRebind(manager, dispatch, 'on');
 }
 
 export type ElevationManager = ReturnType<typeof elevationManager>;
