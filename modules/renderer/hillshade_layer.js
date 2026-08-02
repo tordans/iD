@@ -3,12 +3,11 @@ import { select as d3_select } from 'd3-selection';
 import { geoScaleToZoom } from '../geo';
 import { utilPrefixCSSProperty, utilTiler } from '../util';
 import { hillshadeFromTerrarium } from '../elevation/hillshade';
-import { DemTileCache } from '../elevation/tile_cache';
 
 export function rendererHillshadeLayer(context) {
     var transformProp = utilPrefixCSSProperty('Transform');
     var tiler = utilTiler();
-    var tileCache = new DemTileCache(120);
+    var tileCache = context.elevation().tileCache();
 
     var _tileSize = 256;
     var _projection;
@@ -64,18 +63,19 @@ export function rendererHillshadeLayer(context) {
             .then(function(tile) {
                 if (!tile) {
                     _cache[d.url] = false;
-                    return;
+                    return false;
                 }
 
                 var shaded = hillshadeFromTerrarium(tile.data, tile.tileSize, tile.tileSize);
                 var ctx = canvas.getContext('2d');
-                if (!ctx) return;
+                if (!ctx) return false;
 
                 var imageData = new ImageData(shaded, tile.tileSize, tile.tileSize);
                 canvas.width = tile.tileSize;
                 canvas.height = tile.tileSize;
                 ctx.putImageData(imageData, 0, 0);
                 _cache[d.url] = true;
+                return true;
             });
     }
 
@@ -164,8 +164,11 @@ export function rendererHillshadeLayer(context) {
             .sort(function(a, b) { return a[2] - b[2]; })
             .each(function(d) {
                 if (_cache[d.url] === true) return;
-                renderHillshadeTile(this, d).then(function() {
-                    render(selection);
+                var canvasEl = this;
+                renderHillshadeTile(canvasEl, d).then(function(painted) {
+                    if (painted === false) {
+                        render(selection);
+                    }
                 });
             });
     }
