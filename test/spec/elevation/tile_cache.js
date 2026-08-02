@@ -6,9 +6,9 @@ describe('DemTileCache', function() {
     let calls = 0;
     const originalFetch = globalThis.fetch;
 
-    globalThis.fetch = async function() {
+    globalThis.fetch = function() {
       calls++;
-      return { ok: false };
+      return Promise.resolve({ ok: false });
     };
 
     try {
@@ -20,6 +20,7 @@ describe('DemTileCache', function() {
       expect(second).to.eql(null);
       expect(calls).to.eql(2);
     } finally {
+      // eslint-disable-next-line require-atomic-updates -- restore stub after awaits
       globalThis.fetch = originalFetch;
     }
   });
