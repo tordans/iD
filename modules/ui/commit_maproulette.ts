@@ -3,7 +3,60 @@ import { services } from '../services';
 
 
 /**
+ * Last changeset comment we auto-wrote from MapRoulette check-in suggestions.
+ * Used so later `loadDerivedChangesetTags` / commit re-renders do not fight the
+ * mapper’s edits (see https://github.com/tordans/iD/issues/6).
+ */
+let _lastAutoComment: string | null = null;
+
+
+/** Reset sticky comment state (tests / new editing session). */
+export function resetMapRouletteCommitSuggestions(): void {
+  _lastAutoComment = null;
+}
+
+
+/**
+ * Build a changeset comment from unique check-in strings without exceeding OSM’s
+ * tag-value length (255). Prefer newlines; fall back to packing whole comments.
+ */
+export function buildMapRouletteSuggestedComment(
+  comments: Iterable<string>,
+  maxChars: number = 255,
+): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of comments) {
+    const text = String(raw || '').trim();
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    parts.push(text);
+  }
+  if (!parts.length) return '';
+
+  for (const sep of ['\n', '; '] as const) {
+    const joined = parts.join(sep);
+    if (joined.length <= maxChars) return joined;
+  }
+
+  const kept: string[] = [];
+  for (const part of parts) {
+    const candidate = kept.length ? `${kept.join('; ')}; ${part}` : part;
+    if (candidate.length > maxChars) break;
+    kept.push(part);
+  }
+  if (kept.length) return kept.join('; ');
+  return parts[0].slice(0, maxChars);
+}
+
+
+/**
  * Fold MapRoulette check-in suggestions and closed:maproulette into changeset tags.
+ *
+ * Comment suggestions are applied only while the field is empty or still equal to
+ * the last auto-written value — never re-appended on every keystroke/render.
+ * Suggestions come from tasks closed / earmarked for this upload only (not from
+ * the challenge-ID filter alone).
  */
 export function applyMapRouletteDerivedTags(context: any, tags: Record<string, string>): void {
   if (!services.maproulette) return;
@@ -42,7 +95,10 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
   const earmarked = (typeof mr.getEarmarkedForUpload === 'function')
     ? mr.getEarmarkedForUpload()
     : earmarkedAll.filter(function(e: any) { return e && e.includeInUpload !== false; });
-  earmarkedAll.forEach(function(entry: { challengeID: string }) {
+
+  // Comment / source suggestions only for tasks included in this upload (and
+  // already-closed), not every earmark and not the map-data challenge filter.
+  earmarked.forEach(function(entry: { challengeID: string }) {
     collectChallengeSuggestions(entry.challengeID);
   });
 
@@ -54,30 +110,20 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
     delete tags['closed:maproulette'];
   }
 
-  const activeIds = String(
-    (typeof mr.challengeIDs === 'function' ? mr.challengeIDs() : '') || ''
-  );
-  if (activeIds) {
-    activeIds.split(',').forEach(function(id: string) {
-      collectChallengeSuggestions(id.trim());
-    });
-  }
-
   if (mrComments.size) {
-    // Merge challenge check-in suggestions with the mapper's comment;
-    // never replace what they already typed (same idea as source).
-    const commentParts: string[] = [];
-    const existingComment = (tags.comment || '').trim();
-    if (existingComment) {
-      commentParts.push(existingComment);
+    const maxChars = typeof context.maxCharsForTagValue === 'function'
+      ? context.maxCharsForTagValue()
+      : 255;
+    const suggested = buildMapRouletteSuggestedComment(mrComments, maxChars);
+    const current = tags.comment || '';
+    const isEmpty = !current.trim();
+    const isAutoManaged = _lastAutoComment !== null && current === _lastAutoComment;
+
+    // Only write while empty or still our last suggestion — never fight edits.
+    if (suggested && (isEmpty || isAutoManaged)) {
+      tags.comment = suggested;
+      _lastAutoComment = suggested;
     }
-    mrComments.forEach(function(c) {
-      const text = String(c || '').trim();
-      if (!text) return;
-      if (existingComment && existingComment.indexOf(text) !== -1) return;
-      commentParts.push(text);
-    });
-    tags.comment = commentParts.join('\n');
   }
 
   if (mrSources.size) {
