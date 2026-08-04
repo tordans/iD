@@ -6,6 +6,7 @@ import { json as d3_json } from 'd3-fetch';
 import { geoExtent, geoSphericalDistance } from '../geo';
 import { QAItem } from '../osm';
 import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
+import { snapMapRoulettePinLoc } from '../util/maproulette_pin_loc';
 import { utilRebind, utilStringQs, utilTiler } from '../util';
 
 /** MapRoulette task status codes (see MapRoulette Task Lifecycle). */
@@ -280,6 +281,27 @@ function applyTaskStatusFields(qaItem: any, task: any): void {
 }
 
 /**
+ * Re-place a cached pin if MapRoulette geometries allow snapping onto a line.
+ * Updates the spatial index when the coordinate changes.
+ */
+function applyPinLocFromTask(qaItem: any, taskOrGeometries: any): boolean {
+  if (!_cache || !qaItem || !qaItem.loc) return false;
+  const geometries = (taskOrGeometries && taskOrGeometries.geometries)
+    ? taskOrGeometries.geometries
+    : taskOrGeometries;
+  if (!geometries) return false;
+
+  const prev = qaItem.loc as [number, number];
+  const next = snapMapRoulettePinLoc(prev, geometries);
+  if (next[0] === prev[0] && next[1] === prev[1]) return false;
+
+  updateRtree(encodeIssueRtree(qaItem), false);
+  qaItem.loc = next;
+  updateRtree(encodeIssueRtree(qaItem), true);
+  return true;
+}
+
+/**
  * Keep a task on the map as resolved (gray) instead of removing it.
  * Used after a successful local Fixed / Can’t complete / etc.
  */
@@ -531,9 +553,11 @@ export default {
     if (!Array.isArray(rawTiles)) return;
     const tiles = rawTiles as Array<{ id: string; extent: { rectangle: () => number[] } }>;
 
-    // Pins use MapRoulette task.point. Include recently completed statuses so
-    // Fixed / Already Fixed / etc. can render as gray “resolved” for 24h.
-    // Challenge-ID filtering is applied in getItems / getNearestItem.
+    // Pins start from MapRoulette task.point, then snap onto LineString
+    // geometries when present (see snapMapRoulettePinLoc / issue 2891).
+    // Include recently completed statuses so Fixed / Already Fixed / etc.
+    // can render as gray “resolved” for 24h. Challenge-ID filtering is
+    // applied in getItems / getNearestItem.
     abortUnwantedRequests(_cache, tiles);
 
     tiles.forEach(function(tile: any) {
@@ -545,7 +569,8 @@ export default {
       // rectangle() returns [minLng, minLat, maxLng, maxLat] = left/bottom/right/top.
       const [left, bottom, right, top] = tile.extent.rectangle();
       const bbox = [left, bottom, right, top].join('/');
-      const url = `${_mrUrlRoot}/tasks/box/${bbox}?tStatus=${BOX_STATUSES}`;
+      // includeGeometries so we can snap pins onto ways (MR centerpoint is often off-line).
+      const url = `${_mrUrlRoot}/tasks/box/${bbox}?tStatus=${BOX_STATUSES}&includeGeometries=true`;
       const controller = new AbortController();
       _cache.inflightTile[tile.id] = controller;
 
@@ -564,6 +589,7 @@ export default {
             const existing = _cache.data[taskID];
             if (existing) {
               applyTaskStatusFields(existing, task);
+              applyPinLocFromTask(existing, task);
               if (!shouldDisplayTask(existing)) {
                 unindexTaskElems(taskID);
                 updateRtree(encodeIssueRtree(existing), false);
@@ -587,7 +613,13 @@ export default {
               mappedOn: task.mappedOn || undefined,
               elems: collectOsmEntityIds(task, task.title, task.name),
             };
-            const d = new QAItem(loc, self, 'task', taskID, taskProps as any);
+            const d = new QAItem(
+              snapMapRoulettePinLoc(loc, task.geometries),
+              self,
+              'task',
+              taskID,
+              taskProps as any,
+            );
             applyTaskStatusFields(d, task);
             if (!shouldDisplayTask(d)) return;
 
@@ -979,6 +1011,11 @@ export default {
         // Keep the live QAItem's elems in sync for callers holding qaItem.
         qaItem.elems = cached.elems;
         qaItem.elemsResolved = true;
+        // Snap pin onto line geometry if /task/{id} has features and box did not.
+        if (td && td.geometries && applyPinLocFromTask(cached, td.geometries)) {
+          qaItem.loc = cached.loc;
+          dispatch.call('loaded');
+        }
       }
       return detail;
     });
