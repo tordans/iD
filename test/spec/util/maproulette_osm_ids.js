@@ -1,4 +1,8 @@
-import { collectOsmEntityIds } from '../../../modules/util/maproulette_osm_ids';
+import {
+    collectOsmEntityIds,
+    collectOsmEntityIdsFromGeometries,
+    parseOsmEntityIdFromFeatureProperties
+} from '../../../modules/util/maproulette_osm_ids';
 
 describe('collectOsmEntityIds', function() {
     it('returns empty array for empty or invalid inputs', function() {
@@ -66,7 +70,7 @@ describe('collectOsmEntityIds', function() {
         expect(collectOsmEntityIds(payload).sort()).toEqual(['n222', 'r333', 'w111']);
     });
 
-    it('skips bulky geometry blobs but still reads other properties', function() {
+    it('skips coordinate blobs but still reads feature properties and titles', function() {
         const feature = {
             geometry: {
                 type: 'Point',
@@ -78,6 +82,7 @@ describe('collectOsmEntityIds', function() {
             properties: { osmId: 'w123' },
             title: 'n456@0',
         };
+        // Nested geometry.properties and geometries[{id}] are not V4 feature props.
         expect(collectOsmEntityIds(feature).sort()).toEqual(['n456', 'w123']);
     });
 
@@ -113,5 +118,95 @@ describe('collectOsmEntityIds', function() {
         expect(collectOsmEntityIds(task, feature, 'relation/11').sort()).toEqual(
             ['n77', 'r11', 'r55', 'w42', 'w99']
         );
+    });
+
+    it('reads @id from task.geometries features (V4)', function() {
+        const task = {
+            title: 'unrelated',
+            geometries: {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { '@id': 'way/12345' },
+                    geometry: { type: 'LineString', coordinates: [[0, 0], [1, 1]] }
+                }]
+            }
+        };
+        expect(collectOsmEntityIds(task)).toEqual(['w12345']);
+    });
+
+    it('infers node/way from numeric osmid + geometry type (V4)', function() {
+        expect(collectOsmEntityIds({
+            type: 'Feature',
+            properties: { osmid: 111 },
+            geometry: { type: 'Point', coordinates: [1, 2] }
+        })).toEqual(['n111']);
+
+        expect(collectOsmEntityIds({
+            type: 'Feature',
+            properties: { osm_id: 222 },
+            geometry: { type: 'LineString', coordinates: [[0, 0], [1, 0]] }
+        })).toEqual(['w222']);
+    });
+
+    it('merges title, V4 @id, and body text without duplicates', function() {
+        const task = {
+            title: 'w1@0',
+            instruction: 'Also fix way/1 and check n9',
+            geometries: {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { '@id': 'way/1' },
+                    geometry: { type: 'LineString', coordinates: [[0, 0], [1, 1]] }
+                }]
+            }
+        };
+        expect(collectOsmEntityIds(task).sort()).toEqual(['n9', 'w1']);
+    });
+
+    it('does not invent ids from bare numeric properties.id', function() {
+        expect(collectOsmEntityIds({
+            type: 'Feature',
+            properties: { id: 123 },
+            geometry: { type: 'Point', coordinates: [0, 0] }
+        })).toEqual([]);
+    });
+});
+
+describe('parseOsmEntityIdFromFeatureProperties', function() {
+    it('parses typed @id / id / osm_id strings', function() {
+        expect(parseOsmEntityIdFromFeatureProperties({ '@id': 'way/12345' })).toBe('w12345');
+        expect(parseOsmEntityIdFromFeatureProperties({ id: 'node/1' })).toBe('n1');
+        expect(parseOsmEntityIdFromFeatureProperties({ osm_id: 'relation/789' })).toBe('r789');
+    });
+
+    it('uses explicit @type / osm_type with numeric ids', function() {
+        expect(parseOsmEntityIdFromFeatureProperties({
+            osmid: 111,
+            '@type': 'Node'
+        })).toBe('n111');
+        expect(parseOsmEntityIdFromFeatureProperties({
+            osm_id: 222,
+            osm_type: 'way'
+        })).toBe('w222');
+    });
+
+    it('rejects short forms and bare numeric id for the V4 path', function() {
+        expect(parseOsmEntityIdFromFeatureProperties({ '@id': 'w123' })).toBe(null);
+        expect(parseOsmEntityIdFromFeatureProperties({ id: 123 }, 'Point')).toBe(null);
+        expect(parseOsmEntityIdFromFeatureProperties({ osmid: 0 }, 'Point')).toBe(null);
+    });
+});
+
+describe('collectOsmEntityIdsFromGeometries', function() {
+    it('collects from every feature, not only the first', function() {
+        expect(collectOsmEntityIdsFromGeometries({
+            type: 'FeatureCollection',
+            features: [
+                { type: 'Feature', properties: { '@id': 'way/1' }, geometry: { type: 'LineString', coordinates: [] } },
+                { type: 'Feature', properties: { '@id': 'node/2' }, geometry: { type: 'Point', coordinates: [0, 0] } }
+            ]
+        }).sort()).toEqual(['n2', 'w1']);
     });
 });
