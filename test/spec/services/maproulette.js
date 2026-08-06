@@ -377,6 +377,13 @@ describe('iD.serviceMapRoulette', function() {
             old.mappedOn = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
             expect(maproulette.isRecentlyResolved(old)).toBe(false);
             expect(maproulette.shouldDisplayTask(old)).toBe(false);
+
+            var noDate = makeQAItem({ id: '5', parentId: '2' });
+            noDate.taskStatus = 1;
+            delete noDate.mappedOn;
+            if (noDate.task) delete noDate.task.mappedOn;
+            expect(maproulette.isRecentlyResolved(noDate)).toBe(false);
+            expect(maproulette.shouldDisplayTask(noDate)).toBe(false);
         });
     });
 

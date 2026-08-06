@@ -68,13 +68,14 @@ export function isOpenTask(d: any): boolean {
   return OPEN_STATUSES.has(taskStatusOf(d));
 }
 
-/** Resolved terminal status and mappedOn within the last 24 hours (or unknown age). */
+/** Resolved terminal status and mappedOn within the last 24 hours. */
 export function isRecentlyResolved(d: any): boolean {
   if (!isResolvedStatus(taskStatusOf(d))) return false;
   const raw = mappedOnOf(d);
-  if (!raw) return true;
+  // Missing mappedOn: do not keep the pin forever (stamp on ingest instead).
+  if (!raw) return false;
   const t = Date.parse(raw);
-  if (!Number.isFinite(t)) return true;
+  if (!Number.isFinite(t)) return false;
   return (Date.now() - t) < RESOLVED_VISIBLE_MS;
 }
 
@@ -270,7 +271,11 @@ function applyTaskStatusFields(qaItem: any, task: any): void {
   const status = (task && task.status !== undefined && task.status !== null)
     ? Number(task.status)
     : taskStatusOf(qaItem);
-  const mappedOn = (task && task.mappedOn) || mappedOnOf(qaItem);
+  let mappedOn = (task && task.mappedOn) || mappedOnOf(qaItem);
+  // Resolved tasks without mappedOn would never age out — stamp first sight.
+  if (isResolvedStatus(status) && !mappedOn) {
+    mappedOn = new Date().toISOString();
+  }
   const priority = (task && task.priority !== undefined && task.priority !== null
     && Number.isFinite(Number(task.priority)))
     ? Number(task.priority)

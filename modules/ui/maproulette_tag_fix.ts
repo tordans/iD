@@ -42,7 +42,8 @@ export function uiMapRouletteTagFix(context: any): any {
   let _mode: 'panel' | 'embedded' = 'panel';
   let _focusEntityIds: string[] = [];
   let _onAccepted: (() => void) | null = null;
-  let _onPainted: (() => void) | null = null;
+  let _onPainted: ((info: { taskId: string; hasAccept: boolean }) => void) | null = null;
+  let _loadSeq = 0;
 
   function renderTagDiffTable(parent: any, matched: MapRouletteMatchedTagFix): void {
     const tagDiff = utilTagDiff(matched.currentTags, matched.proposedTags);
@@ -260,13 +261,35 @@ export function uiMapRouletteTagFix(context: any): any {
 
     const mr = services.maproulette;
     const placeholder = root;
+    const requestId = ++_loadSeq;
+    const requestTaskId = String(_qaItem.id);
+    const focusSnapshot = _focusEntityIds.slice().join('\0');
     placeholder.classed('loading', true);
 
+    function stillCurrent(): boolean {
+      if (requestId !== _loadSeq) return false;
+      if (!_qaItem || String(_qaItem.id) !== requestTaskId) return false;
+      if (_focusEntityIds.slice().join('\0') !== focusSnapshot) return false;
+      if (_mode === 'panel') {
+        const selected = context.selectedErrorID && context.selectedErrorID();
+        if (selected !== undefined && selected !== null
+          && String(selected) !== requestTaskId) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     function paint(detail?: any): void {
+      if (!stillCurrent()) return;
       placeholder.classed('loading', false);
       const task = taskPayload(_qaItem, detail);
       renderContent(placeholder, task);
-      if (_onPainted) _onPainted();
+      const hasAccept = isMapRouletteTagFix(task)
+        && matchMapRouletteTagFixes(context, task).matched.length > 0;
+      if (_onPainted) {
+        _onPainted({ taskId: requestTaskId, hasAccept: hasAccept });
+      }
     }
 
     if (mr && typeof mr.loadTaskDetailAsync === 'function') {
@@ -280,6 +303,7 @@ export function uiMapRouletteTagFix(context: any): any {
 
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
+    if (val !== _qaItem) _loadSeq += 1;
     _qaItem = val;
     return render;
   };
@@ -303,7 +327,9 @@ export function uiMapRouletteTagFix(context: any): any {
     return render;
   };
 
-  render.onPainted = function(val?: (() => void) | null) {
+  render.onPainted = function(
+    val?: ((info: { taskId: string; hasAccept: boolean }) => void) | null,
+  ) {
     if (!arguments.length) return _onPainted;
     _onPainted = val || null;
     return render;
