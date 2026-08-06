@@ -187,15 +187,23 @@ export function uiMapRouletteTagFix(context: any): any {
     if (_onAccepted) _onAccepted();
   }
 
+  function setEmbeddedHostVisible(root: any, visible: boolean): void {
+    if (_mode !== 'embedded') return;
+    const host = root.node() && root.node().parentElement;
+    if (host) d3_select(host).classed('hide', !visible);
+  }
+
   function renderContent(root: any, task: any): void {
     root.html('');
 
     if (!isMapRouletteTagFix(task)) {
       root.classed('hide', true);
+      setEmbeddedHostVisible(root, false);
       return;
     }
 
     root.classed('hide', false);
+    setEmbeddedHostVisible(root, true);
     const { matched, unmatched } = matchMapRouletteTagFixes(context, task);
     const focusIds = new Set(_focusEntityIds.filter(Boolean));
 
@@ -265,6 +273,10 @@ export function uiMapRouletteTagFix(context: any): any {
     const requestTaskId = String(_qaItem.id);
     const focusSnapshot = _focusEntityIds.slice().join('\0');
     placeholder.classed('loading', true);
+    if (_mode === 'embedded') {
+      placeholder.classed('hide', true);
+      setEmbeddedHostVisible(placeholder, false);
+    }
 
     function stillCurrent(): boolean {
       if (requestId !== _loadSeq) return false;
