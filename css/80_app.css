@@ -3403,8 +3403,7 @@ img.tag-reference-wiki-image {
     text-transform: uppercase;
     color: var(--muted-text-color, #888);
 }
-.mr-tag-fix,
-.maproulette-task-embed .mr-tag-fix-host {
+.mr-tag-fix {
     margin: 8px 10px;
     padding: 8px 10px;
     border: 1px solid var(--border-color, #ccc);
@@ -3412,7 +3411,8 @@ img.tag-reference-wiki-image {
     background: var(--bg-color-2, #f6f6f6);
     box-sizing: border-box;
 }
-.mr-tag-fix.hide {
+.mr-tag-fix.hide,
+.mr-tag-fix-host.hide {
     display: none;
 }
 .mr-tag-fix .mr-tag-fix-heading {
