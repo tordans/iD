@@ -116,7 +116,7 @@ export function createMapRouletteDataLayerControls(
       })
       .call(function(selection: any) {
         appendMapRoulettePinIcon(selection, {
-          width: 20,
+          width: 15,
           height: 20,
           className: 'icon maproulette-pin-icon'
         });

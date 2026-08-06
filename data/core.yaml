@@ -885,10 +885,11 @@ en:
         id_open_on_maproulette: "Open {id} on maproulette.org"
         id_title: Challenge Id / Task Id
         elems_title: Recognised OSM objects
-        fixed: I fixed it!
-        cantComplete: Can't complete
-        alreadyFixed: Already fixed
-        notAnIssue: Not an issue
+        fixed: Fixed
+        alreadyFixed: Already Fixed
+        notAnIssue: Not an Issue
+        cantComplete: "Can't Complete"
+        completion_heading: "Completion: Set Task Status"
         resolve_with_upload: Resolve with upload
         resolve_with_upload_tooltip: "This task will be marked Fixed on MapRoulette after your changeset is uploaded."
         resolved_title: Resolved

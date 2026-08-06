@@ -7,6 +7,7 @@ import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
 import { modeSelectError } from '../modes/select_error';
 import { svgIcon } from '../svg/icon';
+import { MAPROULETTE_ACTION_ICONS } from '../svg/maproulette_marker';
 import { uiMapRouletteDetails } from './maproulette_details';
 import { uiMapRouletteEarmarkToggle } from './maproulette_earmark_toggle';
 import { uiViewOnMapRoulette } from './view_on_maproulette';
@@ -17,13 +18,14 @@ import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
 /** How long a MapRoulette submit may run before we abort and show a timeout error. */
 const SUBMIT_TIMEOUT_MS = 30000;
 
-type ActionKey = 'fixed' | 'cantComplete' | 'alreadyFixed' | 'notAnIssue';
+type ActionKey = 'fixed' | 'alreadyFixed' | 'notAnIssue' | 'cantComplete';
 
+/** Order matches MapRoulette V4 TaskActions (2×2: Fixed, Already Fixed / Not an Issue, Can't Complete). */
 const ACTIONS: Array<{ key: ActionKey; status: number; className: string }> = [
   { key: 'fixed', status: 1, className: 'fixedIt-button' },
-  { key: 'cantComplete', status: 6, className: 'cantComplete-button' },
   { key: 'alreadyFixed', status: 5, className: 'alreadyFixed-button' },
   { key: 'notAnIssue', status: 2, className: 'notAnIssue-button' },
+  { key: 'cantComplete', status: 6, className: 'cantComplete-button' },
 ];
 
 export function uiMapRouletteEditor(context: any) {
@@ -104,7 +106,7 @@ export function uiMapRouletteEditor(context: any) {
     if (isResolved) {
       saveSection
         .call(resolvedBanner)
-        .selectAll('.mr-earmark-wrap, .nearby-task-toggle, .mr-optional-comment, .buttons.mr-actions, .mr-status-feedback, .mr-auth-warning')
+        .selectAll('.mr-earmark-wrap, .nearby-task-toggle, .mr-optional-comment, .mr-completion-heading, .buttons.mr-actions, .mr-status-feedback, .mr-auth-warning')
         .remove();
       return;
     }
@@ -183,6 +185,17 @@ export function uiMapRouletteEditor(context: any) {
   function mRSaveButtons(selection: any): void {
     const isSelected =
       _qaItem && String(_qaItem.id) === String(context.selectedErrorID());
+
+    let heading = selection
+      .selectAll('.mr-completion-heading')
+      .data(isSelected ? [0] : []);
+    heading.exit().remove();
+    heading
+      .enter()
+      .append('h4')
+      .attr('class', 'mr-completion-heading')
+      .text(t('map_data.layers.maproulette.completion_heading'));
+
     let buttonSection = selection
       .selectAll('.buttons.mr-actions')
       .data(isSelected ? [_qaItem] : [], function(d: any) { return d.id; });
@@ -200,6 +213,10 @@ export function uiMapRouletteEditor(context: any) {
         .attr('class', `button ${action.className} action`)
         .attr('data-action', action.key);
 
+      btn.append('span')
+        .attr('class', 'mr-action-icon')
+        .attr('aria-hidden', 'true')
+        .html(MAPROULETTE_ACTION_ICONS[action.key]);
       btn.append('span').attr('class', 'mr-action-label');
       btn.append('span').attr('class', 'mr-action-spinner').attr('aria-hidden', 'true');
     });

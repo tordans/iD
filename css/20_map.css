@@ -150,30 +150,25 @@ g.qaItem.highlighted:not(.selected) .shadow {
     stroke: #7092ff;
 }
 
-g.qaItem.maproulette .qaItem-fill {
-    fill: #d73ba0;
+g.qaItem.maproulette .shadow {
+    stroke: #8b5cf6;
 }
 
-/* Recently resolved (Fixed / Already Fixed / …) — keep visible but muted. */
-g.qaItem.maproulette.resolved .qaItem-fill {
-    fill: #9a9a9a;
+g.qaItem.maproulette .qaItem-fill {
+    /* Fill is set inline from V4 status palette; fallback for open tasks. */
+    fill: #22d3ee;
 }
-g.qaItem.maproulette.resolved .maproulette-logo {
-    opacity: 0.55;
-}
+
+/* Recently resolved — muted via pin opacity; keep a soft shadow. */
 g.qaItem.maproulette.resolved:not(.selected) .shadow {
     stroke: #888;
     stroke-opacity: 0.25;
 }
 
-/* Earmarked for resolve-with-upload — keep pin visible, distinct from selected. */
+/* Earmarked for resolve-with-upload — green ring is drawn on the pin border. */
 g.qaItem.maproulette.earmarked:not(.selected):not(.resolved) .shadow {
     stroke-opacity: 0.45;
-    stroke: #62c9d3;
-}
-g.qaItem.maproulette.earmarked:not(.resolved) .qaItem-fill {
-    stroke: #62c9d3;
-    stroke-width: 2;
+    stroke: #22c55e;
 }
 
 /* g.note ellipse.stroke, */

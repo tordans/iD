@@ -285,17 +285,25 @@ export function uiMapRouletteDetails(context: any) {
         .append('div')
         .attr('class', 'qa-header-icon');
 
-      appendMapRoulettePinIcon(iconEnter, {
-        width: 20,
-        height: 30,
-        className: 'preset-icon-28',
-      })
-        .attr(
-          'class',
-          function(d: any) {
-            return `preset-icon-28 qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`;
-          },
-        );
+      iconEnter.each(function(this: HTMLElement, d: any) {
+        const status = (d && d.taskStatus !== undefined && d.taskStatus !== null)
+          ? Number(d.taskStatus)
+          : (d && d.task && d.task.status !== undefined && d.task.status !== null
+            ? Number(d.task.status)
+            : 0);
+        const priority = (d && d.taskPriority !== undefined && d.taskPriority !== null)
+          ? Number(d.taskPriority)
+          : (d && d.task && d.task.priority !== undefined && d.task.priority !== null
+            ? Number(d.task.priority)
+            : null);
+        appendMapRoulettePinIcon(d3_select(this), {
+          width: 20,
+          height: 27,
+          className: `preset-icon-28 qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`,
+          status: Number.isFinite(status) ? status : 0,
+          priority: Number.isFinite(priority as number) ? (priority as number) : null,
+        });
+      });
 
       headerEnter.append('div').attr('class', 'qa-header-label');
     }

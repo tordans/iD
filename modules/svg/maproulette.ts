@@ -3,7 +3,15 @@ import { select as d3_select } from 'd3-selection';
 
 import { modeBrowse } from '../modes/browse';
 import { svgPointTransform } from './helpers';
-import { appendMapRouletteLogo, MAPROULETTE_MARKER_LOGO_Y, MAPROULETTE_PIN_POINTS } from './maproulette_logo';
+import {
+  appendMapRouletteV4Pin,
+  MAPROULETTE_DEFAULT_BORDER,
+  MAPROULETTE_EARMARK_BORDER,
+  MAPROULETTE_PIN_TIP,
+  MAPROULETTE_SELECTED_BORDER,
+  MAPROULETTE_SHADOW_PATH,
+  updateMapRouletteV4Pin,
+} from './maproulette_marker';
 import { services } from '../services';
 import { utilStringQs } from '../util';
 
@@ -14,6 +22,34 @@ const _initialHash = utilStringQs(window.location.hash);
 
 let _layerEnabled = !!_initialHash.maproulette;
 let _qaService: any;
+
+function pinBorderColor(d: any, selectedID: string | null, service: any): string {
+  if (d.id === selectedID) return MAPROULETTE_SELECTED_BORDER;
+  if (d.earmarked || (service && service.isEarmarked && service.isEarmarked(d.id))) {
+    return MAPROULETTE_EARMARK_BORDER;
+  }
+  return MAPROULETTE_DEFAULT_BORDER;
+}
+
+function taskStatusOf(d: any): number {
+  if (d && d.taskStatus !== undefined && d.taskStatus !== null
+    && Number.isFinite(Number(d.taskStatus))) {
+    return Number(d.taskStatus);
+  }
+  if (d && d.task && d.task.status !== undefined && d.task.status !== null
+    && Number.isFinite(Number(d.task.status))) {
+    return Number(d.task.status);
+  }
+  return 0;
+}
+
+function taskPriorityOf(d: any): number | null {
+  const raw = (d && d.taskPriority !== undefined && d.taskPriority !== null)
+    ? d.taskPriority
+    : (d && d.task && d.task.priority);
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 export function svgMapRoulette(projection: any, context: any, dispatch: any) {
   const throttledRedraw = throttle(function() {
@@ -26,24 +62,15 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
   let drawLayer: any = d3_select(null);
   let layerVisible = false;
 
-  function markerPath(selection: any, klass: string): void {
-    selection
-      .attr('class', klass)
-      .attr('transform', 'translate(-10, -28)')
-      .attr('points', MAPROULETTE_PIN_POINTS);
-  }
-
-  /** Rounded teardrop for hover/selected glow — same idea as native point pins. */
+  /** Rounded teardrop for hover/selected glow — V4 pin body. */
   function markerShadow(selection: any): void {
     selection
       .attr('class', 'shadow')
-      .attr('transform', 'translate(-10, -28)')
       .attr(
-        'd',
-        // Tip at (10,27) matches the fill polygon tip; curves keep the glow
-        // from reading as a second, oversized pin.
-        'M 18,9 C 18,15 13,24 10,27 C 7,24 2,15 2,9 C 2,4.5 5.5,1.5 10,1.5 C 14.5,1.5 18,4.5 18,9 Z',
-      );
+        'transform',
+        `translate(${-MAPROULETTE_PIN_TIP.x}, ${-MAPROULETTE_PIN_TIP.y})`,
+      )
+      .attr('d', MAPROULETTE_SHADOW_PATH);
   }
 
   function getService() {
@@ -128,12 +155,15 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
       .attr('ry', 2)
       .attr('class', 'stroke');
 
-    markersEnter
-      .append('polygon')
-      .call(markerPath, 'qaItem-fill');
-
-    // Center in the pin head (y≈-16), not at the Osmose icon's top-left (-22).
-    appendMapRouletteLogo(markersEnter, 0.35, 0, MAPROULETTE_MARKER_LOGO_Y);
+    markersEnter.each(function(this: SVGGElement, d: any) {
+      appendMapRouletteV4Pin(d3_select(this), {
+        status: taskStatusOf(d),
+        priority: taskPriorityOf(d),
+        borderColor: pinBorderColor(d, selectedID, service),
+        muted: !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d)),
+        anchorTip: true,
+      });
+    });
 
     markers
       .merge(markersEnter)
@@ -145,7 +175,17 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
       .classed('resolved', function(d: any) {
         return !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d));
       })
-      .attr('transform', getTransform);
+      .attr('transform', getTransform)
+      .each(function(this: SVGGElement, d: any) {
+        const pin = d3_select(this).select('.maproulette-pin');
+        if (pin.empty()) return;
+        updateMapRouletteV4Pin(pin, {
+          status: taskStatusOf(d),
+          priority: taskPriorityOf(d),
+          borderColor: pinBorderColor(d, selectedID, service),
+          muted: !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d)),
+        });
+      });
 
     if (touchLayer.empty()) return;
     const fillClass = context.getDebug('target') ? 'pink ' : 'nocolor ';
@@ -159,10 +199,10 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
     targets
       .enter()
       .append('rect')
-      .attr('width', '20px')
-      .attr('height', '30px')
-      .attr('x', '-10px')
-      .attr('y', '-28px')
+      .attr('width', '27px')
+      .attr('height', '36px')
+      .attr('x', `${-MAPROULETTE_PIN_TIP.x}px`)
+      .attr('y', `${-MAPROULETTE_PIN_TIP.y}px`)
       .merge(targets)
       .sort(sortY)
       .attr(
