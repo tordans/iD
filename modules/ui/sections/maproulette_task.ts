@@ -5,6 +5,7 @@ import { t } from '../../core/localizer';
 import { uiSection } from '../section';
 import { uiMapRouletteDetails } from '../maproulette_details';
 import { uiMapRouletteEarmarkToggle } from '../maproulette_earmark_toggle';
+import { uiMapRouletteTagFix } from '../maproulette_tag_fix';
 
 
 export function uiSectionMapRouletteTask(context: any) {
@@ -135,6 +136,25 @@ export function uiSectionMapRouletteTask(context: any) {
           .text(t('map_data.layers.maproulette.resolved_title'));
         banner.select('p')
           .text(t('map_data.layers.maproulette.resolved_message'));
+
+        let tagFixHost: any = root.selectAll('.mr-tag-fix-host')
+          .data(isResolved ? [] : [d]);
+        tagFixHost.exit().remove();
+        tagFixHost = tagFixHost.enter()
+          .append('div')
+          .attr('class', 'mr-tag-fix-host')
+          .merge(tagFixHost);
+        if (!isResolved) {
+          tagFixHost.call(
+            uiMapRouletteTagFix(context)
+              .mode('embedded')
+              .focusEntityIds(_entityIDs.slice())
+              .task(d)
+              .onAccepted(function() {
+                section.reRender();
+              }),
+          );
+        }
 
         let earmarkHost: any = root.selectAll('.mr-earmark-host')
           .data(isResolved ? [] : [d]);

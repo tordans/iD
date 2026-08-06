@@ -890,6 +890,15 @@ en:
         notAnIssue: Not an Issue
         cantComplete: "Can't Complete"
         completion_heading: "Completion: Set Task Status"
+        tag_fix_heading: "Proposed OSM tag changes"
+        tag_fix_accept: Accept suggested tags
+        tag_fix_annotation: Accepted MapRoulette tag fix
+        tag_fix_unavailable: "Cannot show this cooperative tag fix — the reference object was not found or is not loaded."
+        tag_fix_unmatched: "Not loaded / not found:"
+        tag_fix_also_matched: "Also updates:"
+        tag_fix_other_targets: "This MapRoulette tag fix targets other OSM objects."
+        tag_fix_not_selected_target: "The selected object is not a target of this tag fix."
+        tag_fix_no_changes: "No tag changes relative to the current object."
         resolve_with_upload: Resolve with upload
         resolve_with_upload_tooltip: "This task will be marked Fixed on MapRoulette after your changeset is uploaded."
         resolved_title: Resolved

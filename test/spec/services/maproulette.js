@@ -379,4 +379,58 @@ describe('iD.serviceMapRoulette', function() {
             expect(maproulette.shouldDisplayTask(old)).toBe(false);
         });
     });
+
+    describe('#loadTaskDetailAsync cooperativeWork', function() {
+        it('retains FeatureCollection-root cooperativeWork on the detail and QAItem', async function() {
+            var cw = {
+                meta: { version: 2, type: 1 },
+                operations: [{
+                    operationType: 'modifyElement',
+                    data: {
+                        id: 'way/1',
+                        operations: [{ operation: 'setTags', data: { amenity: 'pharmacy' } }]
+                    }
+                }]
+            };
+            var item = makeQAItem({ id: '501', parentId: '502', elems: ['w1'] });
+            // Seed pin into the service cache via replaceItem if available.
+            if (typeof maproulette.replaceItem === 'function') {
+                maproulette.replaceItem(item);
+            }
+
+            fetchMock.mock(new RegExp(`${MR_API}/challenge/502`), {
+                status: 200,
+                body: JSON.stringify({
+                    id: 502,
+                    name: 'Coop challenge',
+                    enabled: true,
+                    deleted: false,
+                    instruction: 'Fix tags',
+                    description: 'Desc',
+                }),
+            });
+            fetchMock.mock(new RegExp(`${MR_API}/task/501$`), {
+                status: 200,
+                body: JSON.stringify({
+                    id: 501,
+                    parentId: 502,
+                    title: 'w1@0',
+                    geometries: {
+                        type: 'FeatureCollection',
+                        features: [{
+                            type: 'Feature',
+                            geometry: { type: 'LineString', coordinates: [[0, 0], [1, 1]] },
+                            properties: { '@id': 'way/1' }
+                        }],
+                        cooperativeWork: cw,
+                    },
+                }),
+            });
+
+            var detail = await maproulette.loadTaskDetailAsync(item);
+            expect(detail).toBeTruthy();
+            expect(detail.cooperativeWork).toEqual(cw);
+            expect(item.task && item.task.cooperativeWork).toEqual(cw);
+        });
+    });
 });
