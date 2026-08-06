@@ -209,5 +209,17 @@ describe('maproulette_cooperative', function() {
                 amenity: 'pharmacy'
             });
         });
+
+        it('returns empty apply list until cooperativeWork is present (Fixed race guard)', function() {
+            // Box payloads often omit cooperativeWork; Accept must not be assumed yet.
+            const bare = { id: '99', title: 'w1@0' };
+            expect(isMapRouletteTagFix(bare)).toBe(false);
+            expect(tagFixesToApply(context, bare)).toEqual([]);
+
+            const withFix = tagFixTask([
+                modifyElement('way/1', [{ operation: 'setTags', data: { amenity: 'pharmacy' } }])
+            ]);
+            expect(tagFixesToApply(context, withFix).length).toBe(1);
+        });
     });
 });

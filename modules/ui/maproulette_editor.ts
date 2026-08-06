@@ -15,7 +15,6 @@ import { uiViewOnMapRoulette } from './view_on_maproulette';
 
 import { utilNoAuto, utilRebind } from '../util';
 import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
-import { isMapRouletteTagFix, matchMapRouletteTagFixes } from '../util/maproulette_cooperative';
 
 /** How long a MapRoulette submit may run before we abort and show a timeout error. */
 const SUBMIT_TIMEOUT_MS = 30000;
@@ -39,6 +38,10 @@ export function uiMapRouletteEditor(context: any) {
   let _submitError: any = null;
   let _submitting = false;
   let _activeAction: ActionKey | null = null;
+  /** Tag-fix detail load for current task — Fixed stays disabled until ready. */
+  let _tagFixReady = false;
+  let _tagFixHasAccept = false;
+  let _tagFixTaskId: string | null = null;
 
   function editorRoot(): any {
     return context.container().select('.mr-editor');
@@ -128,6 +131,13 @@ export function uiMapRouletteEditor(context: any) {
   }
 
   function tagFixSection(selection: any): void {
+    const taskId = _qaItem ? String(_qaItem.id) : null;
+    if (taskId !== _tagFixTaskId) {
+      _tagFixTaskId = taskId;
+      _tagFixReady = false;
+      _tagFixHasAccept = false;
+    }
+
     selection.call(
       uiMapRouletteTagFix(context)
         .mode('panel')
@@ -136,7 +146,10 @@ export function uiMapRouletteEditor(context: any) {
           editorRoot().call(mRSaveSection);
           dispatch.call('change');
         })
-        .onPainted(function() {
+        .onPainted(function(info: { taskId: string; hasAccept: boolean }) {
+          if (!_qaItem || String(_qaItem.id) !== info.taskId) return;
+          _tagFixReady = true;
+          _tagFixHasAccept = !!info.hasAccept;
           selection.call(mRSaveButtons);
         }),
     );
@@ -241,27 +254,26 @@ export function uiMapRouletteEditor(context: any) {
 
     buttonSection = buttonSection.merge(buttonEnter);
 
-    const taskForFix = _qaItem && (_qaItem.task || _qaItem);
-    const hideFixed = !!(
-      taskForFix
-      && isMapRouletteTagFix(taskForFix)
-      && matchMapRouletteTagFixes(context, taskForFix).matched.length > 0
-    );
+    // Until tag-fix detail loads, keep Fixed disabled so users cannot close
+    // a Tag Fix task before Accept is offered. After load, hide Fixed when Accept applies.
+    const hideFixed = _tagFixReady && _tagFixHasAccept;
+    const waitForTagFix = !_tagFixReady;
 
     ACTIONS.forEach(function(action) {
       const isActive = _submitting && _activeAction === action.key;
-      const disabled = !_qaItem || _submitting;
-      const hide = action.key === 'fixed' && hideFixed;
+      const isFixed = action.key === 'fixed';
+      const hide = isFixed && hideFixed;
+      const disabled = !_qaItem || _submitting || hide || (isFixed && waitForTagFix);
 
       buttonSection
         .select(`.${action.className}`)
         .classed('hide', hide)
-        .attr('disabled', disabled || hide ? true : null)
-        .classed('loading', isActive)
-        .classed('disabled', disabled || hide)
-        .attr('aria-busy', isActive ? 'true' : null)
+        .attr('disabled', disabled ? true : null)
+        .classed('loading', isActive || (isFixed && waitForTagFix && !_submitting))
+        .classed('disabled', disabled)
+        .attr('aria-busy', isActive || (isFixed && waitForTagFix) ? 'true' : null)
         .on(`click.${action.key}`, function(this: HTMLElement, _d3_event: any, d: any) {
-          if (_submitting || hide) return;
+          if (_submitting || hide || (isFixed && waitForTagFix)) return;
           this.blur();
           beginSubmit(d || _qaItem, action);
         })
@@ -269,7 +281,9 @@ export function uiMapRouletteEditor(context: any) {
         .text(
           isActive
             ? t('map_data.layers.maproulette.submitting')
-            : t(`map_data.layers.maproulette.${action.key}`),
+            : (isFixed && waitForTagFix)
+              ? t('map_data.layers.maproulette.tag_fix_checking')
+              : t(`map_data.layers.maproulette.${action.key}`),
         );
     });
   }
@@ -566,6 +580,11 @@ export function uiMapRouletteEditor(context: any) {
 
   render.error = function(val?: any) {
     if (!arguments.length) return _qaItem;
+    if (val !== _qaItem) {
+      _tagFixReady = false;
+      _tagFixHasAccept = false;
+      _tagFixTaskId = val && val.id !== undefined && val.id !== null ? String(val.id) : null;
+    }
     _qaItem = val;
     _submitError = null;
     _submitting = false;

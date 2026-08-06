@@ -892,6 +892,7 @@ en:
         completion_heading: "Completion: Set Task Status"
         tag_fix_heading: "Proposed OSM tag changes"
         tag_fix_accept: Accept suggested tags
+        tag_fix_checking: Checking tag fix…
         tag_fix_annotation: Accepted MapRoulette tag fix
         tag_fix_unavailable: "Cannot show this cooperative tag fix — the reference object was not found or is not loaded."
         tag_fix_unmatched: "Not loaded / not found:"
