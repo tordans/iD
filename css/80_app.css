@@ -3403,6 +3403,48 @@ img.tag-reference-wiki-image {
     text-transform: uppercase;
     color: var(--muted-text-color, #888);
 }
+.mr-tag-fix,
+.maproulette-task-embed .mr-tag-fix-host {
+    margin: 8px 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 6px;
+    background: var(--bg-color-2, #f6f6f6);
+    box-sizing: border-box;
+}
+.mr-tag-fix.hide {
+    display: none;
+}
+.mr-tag-fix .mr-tag-fix-heading {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.mr-tag-fix .mr-tag-fix-entity {
+    margin-bottom: 10px;
+}
+.mr-tag-fix .mr-tag-fix-entity-heading {
+    margin: 0 0 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.mr-tag-fix .mr-tag-fix-note,
+.mr-tag-fix .mr-tag-fix-unavailable,
+.mr-tag-fix .mr-tag-fix-unchanged {
+    margin: 0 0 8px;
+    font-size: 12px;
+}
+.mr-tag-fix .mr-tag-fix-accept {
+    width: 100%;
+    margin-top: 4px;
+}
+.mr-tag-fix .tagDiff-table {
+    width: 100%;
+    margin: 0 0 6px;
+}
+.mr-save .buttons.mr-actions .button.hide {
+    display: none;
+}
 .mr-save .buttons.mr-actions .button {
     position: relative;
     display: inline-flex;

@@ -10,10 +10,12 @@ import { svgIcon } from '../svg/icon';
 import { MAPROULETTE_ACTION_ICONS } from '../svg/maproulette_marker';
 import { uiMapRouletteDetails } from './maproulette_details';
 import { uiMapRouletteEarmarkToggle } from './maproulette_earmark_toggle';
+import { uiMapRouletteTagFix } from './maproulette_tag_fix';
 import { uiViewOnMapRoulette } from './view_on_maproulette';
 
 import { utilNoAuto, utilRebind } from '../util';
 import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
+import { isMapRouletteTagFix, matchMapRouletteTagFixes } from '../util/maproulette_cooperative';
 
 /** How long a MapRoulette submit may run before we abort and show a timeout error. */
 const SUBMIT_TIMEOUT_MS = 30000;
@@ -106,7 +108,7 @@ export function uiMapRouletteEditor(context: any) {
     if (isResolved) {
       saveSection
         .call(resolvedBanner)
-        .selectAll('.mr-earmark-wrap, .nearby-task-toggle, .mr-optional-comment, .mr-completion-heading, .buttons.mr-actions, .mr-status-feedback, .mr-auth-warning')
+        .selectAll('.mr-earmark-wrap, .nearby-task-toggle, .mr-optional-comment, .mr-tag-fix, .mr-completion-heading, .buttons.mr-actions, .mr-status-feedback, .mr-auth-warning')
         .remove();
       return;
     }
@@ -119,9 +121,25 @@ export function uiMapRouletteEditor(context: any) {
       .call(earmarkToggle)
       .call(nearbyTaskToggle)
       .call(optionalComment)
+      .call(tagFixSection)
       .call(mRSaveButtons)
       .call(statusFeedback)
       .call(authWarning);
+  }
+
+  function tagFixSection(selection: any): void {
+    selection.call(
+      uiMapRouletteTagFix(context)
+        .mode('panel')
+        .task(_qaItem)
+        .onAccepted(function() {
+          editorRoot().call(mRSaveSection);
+          dispatch.call('change');
+        })
+        .onPainted(function() {
+          selection.call(mRSaveButtons);
+        }),
+    );
   }
 
   function resolvedBanner(selection: any): void {
@@ -223,18 +241,27 @@ export function uiMapRouletteEditor(context: any) {
 
     buttonSection = buttonSection.merge(buttonEnter);
 
+    const taskForFix = _qaItem && (_qaItem.task || _qaItem);
+    const hideFixed = !!(
+      taskForFix
+      && isMapRouletteTagFix(taskForFix)
+      && matchMapRouletteTagFixes(context, taskForFix).matched.length > 0
+    );
+
     ACTIONS.forEach(function(action) {
       const isActive = _submitting && _activeAction === action.key;
       const disabled = !_qaItem || _submitting;
+      const hide = action.key === 'fixed' && hideFixed;
 
       buttonSection
         .select(`.${action.className}`)
-        .attr('disabled', disabled ? true : null)
+        .classed('hide', hide)
+        .attr('disabled', disabled || hide ? true : null)
         .classed('loading', isActive)
-        .classed('disabled', disabled)
+        .classed('disabled', disabled || hide)
         .attr('aria-busy', isActive ? 'true' : null)
         .on(`click.${action.key}`, function(this: HTMLElement, _d3_event: any, d: any) {
-          if (_submitting) return;
+          if (_submitting || hide) return;
           this.blur();
           beginSubmit(d || _qaItem, action);
         })

@@ -1001,6 +1001,12 @@ export default {
     const getCh = this.getChallengeDetails(chID);
     const getTd = this.getTaskDetails(qaItem.id);
     return Promise.all([getCh, getTd]).then(function([ch, td]: [any, any]) {
+      const cooperativeWork =
+        (td && td.cooperativeWork)
+        || (td && td.geometries && td.geometries.cooperativeWork)
+        || baseTask.cooperativeWork
+        || (baseTask.geometries && baseTask.geometries.cooperativeWork)
+        || undefined;
       const detail = {
         ...baseTask,
         id: qaItem.id,
@@ -1010,10 +1016,22 @@ export default {
         instruction: (ch && ch.instruction) || '',
         description: (ch && ch.description) || '',
         taskFeatures: (td && td.geometries && td.geometries.features) || [],
+        // Keep Tag Fix / OSC cooperative payload for the editor (not dropped).
+        ...(cooperativeWork ? { cooperativeWork } : {}),
       };
+      // Keep Tag Fix payload on the live QAItem even if the pin is not cached yet.
+      if (cooperativeWork) {
+        if (!qaItem.task) qaItem.task = Object.assign({}, baseTask);
+        qaItem.task.cooperativeWork = cooperativeWork;
+      }
       // Strengthen entity↔task links once title / feature props are known.
       const cached = _cache.data[qaItem.id];
       if (cached) {
+        if (cooperativeWork) {
+          if (!cached.task) cached.task = {};
+          cached.task.cooperativeWork = cooperativeWork;
+          qaItem.task = cached.task;
+        }
         mergeTaskElems(
           cached,
           collectOsmEntityIds(
@@ -1021,6 +1039,7 @@ export default {
             detail.taskFeatures,
             td,
             baseTask,
+            cooperativeWork,
           ),
         );
         cached.elemsResolved = true;
