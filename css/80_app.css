@@ -3352,8 +3352,8 @@ img.tag-reference-wiki-image {
     box-sizing: border-box;
 }
 .mr-earmark-button.active .mr-earmark-check {
-    background: #62c9d3;
-    border-color: #62c9d3;
+    background: #22c55e;
+    border-color: #22c55e;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' d='M6.5 11.5 3 8l1.2-1.2 2.3 2.3 5.3-5.3L13 5.2z'/%3E%3C/svg%3E");
     background-size: 14px 14px;
     background-position: center;
@@ -3394,6 +3394,81 @@ img.tag-reference-wiki-image {
 .mr-save > .buttons.mr-actions {
     padding-top: 4px;
 }
+.mr-save .mr-completion-heading {
+    margin: 8px 10px 0;
+    padding: 0;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted-text-color, #888);
+}
+.mr-save .buttons.mr-actions .button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: 8px;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 10px 8px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+.mr-save .buttons.mr-actions .button .mr-action-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    line-height: 0;
+}
+.mr-save .buttons.mr-actions .button .mr-action-icon svg {
+    display: block;
+}
+.mr-save .buttons.mr-actions .fixedIt-button {
+    background: #16a34a;
+}
+.mr-save .buttons.mr-actions .alreadyFixed-button {
+    background: #2563eb;
+}
+.mr-save .buttons.mr-actions .notAnIssue-button {
+    background: #ca8a04;
+}
+.mr-save .buttons.mr-actions .cantComplete-button {
+    background: #ea580c;
+}
+@media (hover: hover) {
+    .mr-save .buttons.mr-actions .fixedIt-button:hover:not(.disabled):not([disabled]) {
+        background: #15803d;
+    }
+    .mr-save .buttons.mr-actions .alreadyFixed-button:hover:not(.disabled):not([disabled]) {
+        background: #1d4ed8;
+    }
+    .mr-save .buttons.mr-actions .notAnIssue-button:hover:not(.disabled):not([disabled]) {
+        background: #a16207;
+    }
+    .mr-save .buttons.mr-actions .cantComplete-button:hover:not(.disabled):not([disabled]) {
+        background: #c2410c;
+    }
+}
+.mr-save .buttons.mr-actions .button.action.disabled,
+.mr-save .buttons.mr-actions .button[disabled].action {
+    background: var(--passive-bg-color);
+    color: var(--passive-text-color);
+    box-shadow: none;
+}
+.mr-save .buttons.mr-actions .button .mr-action-spinner {
+    display: none;
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    background: url(img/mini-loader.gif) center / contain no-repeat;
+}
+.mr-save .buttons.mr-actions .button.loading .mr-action-spinner {
+    display: inline-block;
+}
+.mr-save .buttons.mr-actions .button.loading .mr-action-icon {
+    display: none;
+}
 .commit-maproulette-earmarks-list {
     list-style: none;
     margin: 0;
@@ -3411,23 +3486,6 @@ img.tag-reference-wiki-image {
 .commit-maproulette-earmarks-header {
     padding: 8px 10px 4px;
     font-size: 14px;
-}
-.mr-save .buttons.mr-actions .button {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-}
-.mr-save .buttons.mr-actions .button .mr-action-spinner {
-    display: none;
-    width: 14px;
-    height: 14px;
-    flex: 0 0 14px;
-    background: url(img/mini-loader.gif) center / contain no-repeat;
-}
-.mr-save .buttons.mr-actions .button.loading .mr-action-spinner {
-    display: inline-block;
 }
 .mr-save .mr-submit-status {
     padding: 0 10px 8px;

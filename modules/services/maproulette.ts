@@ -271,12 +271,24 @@ function applyTaskStatusFields(qaItem: any, task: any): void {
     ? Number(task.status)
     : taskStatusOf(qaItem);
   const mappedOn = (task && task.mappedOn) || mappedOnOf(qaItem);
+  const priority = (task && task.priority !== undefined && task.priority !== null
+    && Number.isFinite(Number(task.priority)))
+    ? Number(task.priority)
+    : (qaItem.taskPriority !== undefined && qaItem.taskPriority !== null
+      ? Number(qaItem.taskPriority)
+      : undefined);
   qaItem.taskStatus = status;
   qaItem.mappedOn = mappedOn || undefined;
+  if (priority !== undefined && Number.isFinite(priority)) {
+    qaItem.taskPriority = priority;
+  }
   if (task) qaItem.task = task;
   if (qaItem.task) {
     qaItem.task.status = status;
     if (mappedOn) qaItem.task.mappedOn = mappedOn;
+    if (priority !== undefined && Number.isFinite(priority)) {
+      qaItem.task.priority = priority;
+    }
   }
 }
 
@@ -610,6 +622,10 @@ export default {
               taskStatus: (task.status !== undefined && task.status !== null)
                 ? Number(task.status)
                 : MR_STATUS.CREATED,
+              taskPriority: (task.priority !== undefined && task.priority !== null
+                && Number.isFinite(Number(task.priority)))
+                ? Number(task.priority)
+                : undefined,
               mappedOn: task.mappedOn || undefined,
               elems: collectOsmEntityIds(task, task.title, task.name),
             };
