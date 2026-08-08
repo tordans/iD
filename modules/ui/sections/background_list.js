@@ -414,7 +414,7 @@ export function uiSectionBackgroundList(context) {
     /** Open the settings modal to add a new custom background. */
     function addCustom() {
         context.container()
-            .call(_settingsCustomBackground.forEntry(null));
+            .call(_settingsCustomBackground);
     }
 
 
@@ -425,7 +425,7 @@ export function uiSectionBackgroundList(context) {
     function editCustom(d) {
         const entry = { id: d.id, name: d.customName(), template: d.template() };
         context.container()
-            .call(_settingsCustomBackground.forEntry(entry));
+            .call(_settingsCustomBackground, entry);
     }
 
 
