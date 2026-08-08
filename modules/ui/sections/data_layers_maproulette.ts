@@ -111,7 +111,8 @@ export function createMapRouletteDataLayerControls(
       .on('click', function(this: Element, d3_event: Event) {
         d3_event.preventDefault();
         d3_event.stopPropagation();
-        if (d3_select(this).classed('disabled')) return;
+        const button = d3_select(this);
+        if (button.classed('disabled') || button.classed('loading')) return;
         goToNearbyMapRouletteTask();
       })
       .call(function(selection: any) {
@@ -144,13 +145,20 @@ export function createMapRouletteDataLayerControls(
 
   function updateControls(li: any, liEnter: any): void {
     const mrEnabled = !!(layers.layer('maproulette') && layers.layer('maproulette').enabled());
-    const hasNearby = !!(services.maproulette &&
-      typeof services.maproulette.getNearestItem === 'function' &&
-      services.maproulette.getNearestItem(context.map().center()));
+    const mr = services.maproulette;
+    const zoom = context.map().zoom();
+    const loading = !!(mrEnabled && mr &&
+      typeof mr.isLoadingIssues === 'function' &&
+      mr.isLoadingIssues(context.projection, zoom));
+    const hasNearby = !!(mrEnabled && !loading && mr &&
+      typeof mr.getNearestItem === 'function' &&
+      mr.getNearestItem(context.map().center()));
     li
       .merge(liEnter)
       .selectAll('button.zoom-to-maproulette')
-      .classed('disabled', !mrEnabled || !hasNearby);
+      .classed('loading', loading)
+      .classed('disabled', !mrEnabled || (!loading && !hasNearby))
+      .attr('aria-busy', loading ? 'true' : null);
 
     // Keep the challenge-IDs field in sync with the service (not while typing).
     li

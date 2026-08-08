@@ -129,8 +129,10 @@ export type MapRouletteEarmark = {
 };
 
 const tiler = utilTiler();
-const dispatch = d3_dispatch('loaded', 'earmarked');
+const dispatch = d3_dispatch('loaded', 'loading', 'earmarked');
 const _tileZoom = 14;
+/** Match `modules/svg/maproulette.ts` — tasks are not fetched below this zoom. */
+const _loadMinZoom = 12;
 /** Survives `reset`/flush so failed post-upload resolves can be retried. */
 const EARMARK_STORAGE_KEY = 'iD-maproulette-earmarks';
 
@@ -183,6 +185,40 @@ function abortUnwantedRequests(cache: CacheEntry, tiles: any[]): void {
       abortRequest(cache.inflightTile[k]);
       delete cache.inflightTile[k];
     }
+  });
+}
+
+function getViewportTiles(projection: any): Array<{ id: string }> {
+  const rawTiles = tiler
+    .zoomExtent([_tileZoom, _tileZoom])
+    .getTiles(projection);
+  return Array.isArray(rawTiles) ? rawTiles : [];
+}
+
+/** Challenge metadata still loading for cached tasks (no challenge-ID filter). */
+function hasInflightChallengeBlockingVisibility(): boolean {
+  if (!_cache || _challengeIDs.size > 0) return false;
+  return Object.keys(_cache.inflightChallenge).some(function(chID) {
+    if (_cache.loadedChallenge[chID]) return false;
+    return Object.values(_cache.data).some(function(item) {
+      return item && String(item.parentId) === chID;
+    });
+  });
+}
+
+function isTileFresh(tileId: string, now?: number): boolean {
+  if (!_cache) return false;
+  const loadedAt = _cache.tileLoadedAt[tileId] || 0;
+  const t = now !== undefined ? now : Date.now();
+  return !!_cache.loadedTile[tileId]
+    && (t - loadedAt) < TILE_RELOAD_MS;
+}
+
+/** Viewport tiles that still need a fetch (unloaded, stale, or inflight). */
+function hasPendingViewportTiles(projection: any): boolean {
+  if (!_cache || !projection) return false;
+  return getViewportTiles(projection).some(function(tile) {
+    return !isTileFresh(tile.id);
   });
 }
 
@@ -561,6 +597,20 @@ export default {
     return _cache.challengeDetails[challengeID];
   },
 
+  /**
+   * True while viewport task tiles or blocking challenge metadata are still
+   * loading (zoom must be at least {@link _loadMinZoom}).
+   */
+  isLoadingIssues(projection: any, zoom?: number) {
+    if (!_cache) return false;
+    const z = zoom !== undefined && zoom !== null ? ~~zoom : 0;
+    if (z < _loadMinZoom) return false;
+    if (Object.keys(_cache.inflightTile).length > 0) return true;
+    if (hasInflightChallengeBlockingVisibility()) return true;
+    if (hasPendingViewportTiles(projection)) return true;
+    return false;
+  },
+
   loadIssues(projection: any) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -577,28 +627,33 @@ export default {
     // applied in getItems / getNearestItem.
     abortUnwantedRequests(_cache, tiles);
 
+    const toFetch: Array<{ tile: any; controller: AbortController }> = [];
     tiles.forEach(function(tile: any) {
-      const loadedAt = _cache.tileLoadedAt[tile.id] || 0;
-      const fresh = _cache.loadedTile[tile.id]
-        && (Date.now() - loadedAt) < TILE_RELOAD_MS;
-      if (fresh || _cache.inflightTile[tile.id]) return;
+      if (isTileFresh(tile.id) || _cache.inflightTile[tile.id]) return;
+
+      const controller = new AbortController();
+      _cache.inflightTile[tile.id] = controller;
+      toFetch.push({ tile, controller });
+    });
+    if (toFetch.length) dispatch.call('loading');
+
+    toFetch.forEach(function(entry) {
+      const tile = entry.tile;
+      const controller = entry.controller;
 
       // rectangle() returns [minLng, minLat, maxLng, maxLat] = left/bottom/right/top.
       const [left, bottom, right, top] = tile.extent.rectangle();
       const bbox = [left, bottom, right, top].join('/');
       // includeGeometries so we can snap pins onto ways (MR centerpoint is often off-line).
       const url = `${_mrUrlRoot}/tasks/box/${bbox}?tStatus=${BOX_STATUSES}&includeGeometries=true`;
-      const controller = new AbortController();
-      _cache.inflightTile[tile.id] = controller;
 
       d3_json(url, { signal: controller.signal })
         .then(function(data: any) {
+          if (_cache.inflightTile[tile.id] !== controller) return;
           delete _cache.inflightTile[tile.id];
           _cache.loadedTile[tile.id] = true;
           _cache.tileLoadedAt[tile.id] = Date.now();
           const list = Array.isArray(data) ? data : (data && data.tasks) || [];
-          if (!list.length) return;
-
           const unseenChallenges = new Set<string>();
           list.forEach(function(task: any) {
             const taskID = String(task.id);
@@ -659,8 +714,6 @@ export default {
             }
           });
 
-          dispatch.call('loaded');
-
           unseenChallenges.forEach(function(chID) {
             const urlC = `${_mrUrlRoot}/challenge/${chID}`;
             const cController = new AbortController();
@@ -690,12 +743,19 @@ export default {
                 // loadedChallenge unset lets the next tile load retry, so a
                 // transient network error doesn't hide the challenge's tasks
                 // for the rest of the session.
+                dispatch.call('loaded');
               });
           });
+
+          dispatch.call('loaded');
         })
-        .catch(function() {
+        .catch(function(err: any) {
+          if (_cache.inflightTile[tile.id] !== controller) return;
           delete _cache.inflightTile[tile.id];
+          if (err && err.name === 'AbortError') return;
           _cache.loadedTile[tile.id] = true;
+          _cache.tileLoadedAt[tile.id] = Date.now();
+          dispatch.call('loaded');
         });
     });
   },

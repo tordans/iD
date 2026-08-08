@@ -3889,6 +3889,19 @@ div.full-screen > button:focus {
 .layer-list-qa .zoom-to-maproulette.disabled .icon.maproulette-pin-icon {
     opacity: 0.35;
 }
+.layer-list-qa .zoom-to-maproulette.loading svg {
+    display: none;
+}
+.layer-list-qa .zoom-to-maproulette.loading::after {
+    content: '';
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background-image: url(img/mini-loader.gif);
+    background-position: 0 0;
+    background-size: auto;
+    vertical-align: middle;
+}
 .layer-list-qa .maproulette-challenge-ids {
     flex: 0 0 100%;
     display: flex;

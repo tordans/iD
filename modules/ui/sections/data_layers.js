@@ -5,6 +5,7 @@ import {
 
 import { prefs } from '../../core/preferences';
 import { t, localizer } from '../../core/localizer';
+import { services } from '../../services';
 import { uiTooltip } from '../tooltip';
 import { svgIcon } from '../../svg/icon';
 import { geoExtent } from '../../geo';
@@ -456,6 +457,12 @@ export function uiSectionDataLayers(context) {
     }
 
     context.layers().on('change.uiSectionDataLayers', section.reRender);
+
+    if (services.maproulette && typeof services.maproulette.on === 'function') {
+        services.maproulette
+            .on('loaded.uiSectionDataLayers', section.reRender)
+            .on('loading.uiSectionDataLayers', section.reRender);
+    }
 
     context.map()
         .on('move.uiSectionDataLayers',
