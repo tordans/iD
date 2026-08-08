@@ -79,6 +79,23 @@ describe('iD.uiMapRouletteEarmarkToggle', () => {
     expect(btn.attr('aria-pressed')).toEqual('false');
   });
 
+  it('calls onChange after toggling earmark state', () => {
+    task = { id: '123', parentId: '456', task: { title: 'Fix me' } };
+    let changeCount = 0;
+    container.call(
+      iD.uiMapRouletteEarmarkToggle(context)
+        .task(task)
+        .onChange(function() { changeCount += 1; }),
+    );
+
+    const btn = container.select('button.mr-earmark-button');
+    (btn.node() as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(changeCount).toEqual(1);
+
+    (btn.node() as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(changeCount).toEqual(2);
+  });
+
   it('earmarks via earmarkTask on click and unearmarks via unearmarkTask on second click', () => {
     task = { id: '123', parentId: '456', task: { title: 'Fix me' } };
     renderToggle(task);

@@ -11,6 +11,7 @@ import { uiTooltip } from './tooltip';
  */
 export function uiMapRouletteEarmarkToggle(context: any) {
   let _qaItem: any;
+  let _onChange: (() => void) | null = null;
 
   function render(selection: any): void {
     const mr = services.maproulette;
@@ -76,6 +77,7 @@ export function uiMapRouletteEarmarkToggle(context: any) {
             mr.earmarkTask(d);
           }
           render(selection);
+          if (_onChange) _onChange();
         })
         .select('.mr-earmark-label')
         .text(t('map_data.layers.maproulette.resolve_with_upload'));
@@ -85,6 +87,12 @@ export function uiMapRouletteEarmarkToggle(context: any) {
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
     _qaItem = val;
+    return render;
+  };
+
+  render.onChange = function(val?: (() => void) | null) {
+    if (!arguments.length) return _onChange;
+    _onChange = val || null;
     return render;
   };
 

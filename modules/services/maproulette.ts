@@ -597,6 +597,11 @@ export default {
     return _cache.challengeDetails[challengeID];
   },
 
+  /** Minimum map zoom at which viewport tasks are fetched. */
+  loadMinZoom(): number {
+    return _loadMinZoom;
+  },
+
   /**
    * True while viewport task tiles or blocking challenge metadata are still
    * loading (zoom must be at least {@link _loadMinZoom}).

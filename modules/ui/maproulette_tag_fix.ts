@@ -14,6 +14,13 @@ import {
   type MapRouletteMatchedTagFix,
 } from '../util/maproulette_cooperative';
 
+export type MapRouletteTagFixPaintInfo = {
+  taskId: string;
+  hasAccept: boolean;
+  showGoToNearby: boolean;
+  hasNearby: boolean;
+};
+
 /** Display iD id `w123` as `way/123`. */
 function longFormId(id: string): string {
   return id.replace(/^[wnr]/, function(prefix) {
@@ -33,6 +40,32 @@ function taskPayload(qaItem: any, detail?: any): any {
   return detail || (qaItem && qaItem.task) || qaItem;
 }
 
+function matchedForFocus(
+  matched: MapRouletteMatchedTagFix[],
+  mode: 'panel' | 'embedded',
+  focusIds: Set<string>,
+): MapRouletteMatchedTagFix[] {
+  if (mode === 'embedded' && focusIds.size) {
+    return matched.filter(function(m) { return focusIds.has(m.entityId); });
+  }
+  return matched;
+}
+
+function hasPendingTagDiffs(matched: MapRouletteMatchedTagFix[]): boolean {
+  return matched.some(function(m) {
+    return utilTagDiff(m.currentTags, m.proposedTags).length > 0;
+  });
+}
+
+function entityHasPendingDiffs(m: MapRouletteMatchedTagFix): boolean {
+  return utilTagDiff(m.currentTags, m.proposedTags).length > 0;
+}
+
+function isTaskEarmarked(taskId: string): boolean {
+  const mr = services.maproulette;
+  return !!(mr && typeof mr.isEarmarked === 'function' && mr.isEarmarked(taskId));
+}
+
 /**
  * Shared Tag Fix UI for the MR task panel and entity-inspector embed.
  * Accept applies matched targets locally and earmarks Fixed (no MR /fix/apply).
@@ -42,17 +75,12 @@ export function uiMapRouletteTagFix(context: any): any {
   let _mode: 'panel' | 'embedded' = 'panel';
   let _focusEntityIds: string[] = [];
   let _onAccepted: (() => void) | null = null;
-  let _onPainted: ((info: { taskId: string; hasAccept: boolean }) => void) | null = null;
+  let _onPainted: ((info: MapRouletteTagFixPaintInfo) => void) | null = null;
   let _loadSeq = 0;
 
   function renderTagDiffTable(parent: any, matched: MapRouletteMatchedTagFix): void {
     const tagDiff = utilTagDiff(matched.currentTags, matched.proposedTags);
-    if (!tagDiff.length) {
-      parent.append('p')
-        .attr('class', 'mr-tag-fix-unchanged')
-        .text(t('map_data.layers.maproulette.tag_fix_no_changes'));
-      return;
-    }
+    if (!tagDiff.length) return;
 
     parent
       .append('table')
@@ -96,11 +124,17 @@ export function uiMapRouletteTagFix(context: any): any {
     unmatched: string[],
     focusIds: Set<string>,
   ): void {
-    const showMatched = _mode === 'embedded' && focusIds.size
+    const focusMatched = _mode === 'embedded' && focusIds.size
       ? matched.filter(function(m) { return focusIds.has(m.entityId); })
       : matched;
+    const otherPending = _mode === 'embedded' && focusIds.size
+      ? matched.filter(function(m) {
+        return !focusIds.has(m.entityId) && entityHasPendingDiffs(m);
+      })
+      : [];
+    const showMatched = focusMatched.concat(otherPending);
 
-    if (_mode === 'embedded' && focusIds.size && !showMatched.length && matched.length) {
+    if (_mode === 'embedded' && focusIds.size && !focusMatched.length && matched.length) {
       root.append('p')
         .attr('class', 'mr-tag-fix-note')
         .text(t('map_data.layers.maproulette.tag_fix_other_targets'));
@@ -114,11 +148,15 @@ export function uiMapRouletteTagFix(context: any): any {
         .attr('class', 'mr-tag-fix-entity-link')
         .attr('data-entity-id', m.entityId)
         .text(longFormId(m.entityId));
-      renderTagDiffTable(block, m);
+      if (entityHasPendingDiffs(m)) {
+        renderTagDiffTable(block, m);
+      }
     });
 
     if (matched.length > showMatched.length) {
-      const others = matched.filter(function(m) { return !focusIds.has(m.entityId); });
+      const others = matched.filter(function(m) {
+        return !focusIds.has(m.entityId) && !entityHasPendingDiffs(m);
+      });
       if (others.length) {
         const note = root.append('p').attr('class', 'mr-tag-fix-note mr-tag-fix-other-matched');
         note.append('span').text(t('map_data.layers.maproulette.tag_fix_also_matched') + ' ');
@@ -193,6 +231,28 @@ export function uiMapRouletteTagFix(context: any): any {
     if (host) d3_select(host).classed('hide', !visible);
   }
 
+  function tagFixPaintInfo(
+    task: any,
+    matched: MapRouletteMatchedTagFix[],
+    focusIds: Set<string>,
+    hasNearby: boolean,
+  ): MapRouletteTagFixPaintInfo {
+    const pending = hasPendingTagDiffs(matched);
+    const focusMatched = matchedForFocus(matched, _mode, focusIds);
+    const earmarked = isTaskEarmarked(String(_qaItem.id));
+    const hasAccept = pending && matched.length > 0;
+    const showGoToNearby = _mode === 'embedded'
+      && focusMatched.length > 0
+      && !pending
+      && earmarked;
+    return {
+      taskId: String(_qaItem.id),
+      hasAccept,
+      showGoToNearby,
+      hasNearby,
+    };
+  }
+
   function renderContent(root: any, task: any): void {
     root.html('');
 
@@ -206,6 +266,10 @@ export function uiMapRouletteTagFix(context: any): any {
     setEmbeddedHostVisible(root, true);
     const { matched, unmatched } = matchMapRouletteTagFixes(context, task);
     const focusIds = new Set(_focusEntityIds.filter(Boolean));
+    const pending = hasPendingTagDiffs(matched);
+    const earmarked = isTaskEarmarked(String(_qaItem.id));
+    const showSuccess = !pending && earmarked;
+    const showAlreadyMatches = !pending && !earmarked;
 
     root.append('h4')
       .attr('class', 'mr-tag-fix-heading')
@@ -242,15 +306,29 @@ export function uiMapRouletteTagFix(context: any): any {
       }
     }
 
+    if (showSuccess) {
+      root.append('p')
+        .attr('class', 'mr-tag-fix-applied notice')
+        .text(t('map_data.layers.maproulette.tag_fix_applied'));
+    }
+
+    if (showAlreadyMatches) {
+      root.append('p')
+        .attr('class', 'mr-tag-fix-already-matches notice')
+        .text(t('map_data.layers.maproulette.tag_fix_already_matches'));
+    }
+
     renderMatchSections(root, matched, unmatched, focusIds);
 
-    root.append('button')
-      .attr('class', 'button action mr-tag-fix-accept')
-      .text(t('map_data.layers.maproulette.tag_fix_accept'))
-      .on('click', function(this: HTMLElement) {
-        this.blur();
-        acceptFixes(task);
-      });
+    if (pending) {
+      root.append('button')
+        .attr('class', 'button action mr-tag-fix-accept')
+        .text(t('map_data.layers.maproulette.tag_fix_accept'))
+        .on('click', function(this: HTMLElement) {
+          this.blur();
+          acceptFixes(task);
+        });
+    }
   }
 
   function render(selection: any): void {
@@ -296,11 +374,22 @@ export function uiMapRouletteTagFix(context: any): any {
       if (!stillCurrent()) return;
       placeholder.classed('loading', false);
       const task = taskPayload(_qaItem, detail);
+      const hasNearby = !!(mr && typeof mr.getNearestItem === 'function'
+        && mr.getNearestItem(context.map().center(), requestTaskId));
       renderContent(placeholder, task);
-      const hasAccept = isMapRouletteTagFix(task)
-        && matchMapRouletteTagFixes(context, task).matched.length > 0;
       if (_onPainted) {
-        _onPainted({ taskId: requestTaskId, hasAccept: hasAccept });
+        if (isMapRouletteTagFix(task)) {
+          const { matched } = matchMapRouletteTagFixes(context, task);
+          const focusIds = new Set(_focusEntityIds.filter(Boolean));
+          _onPainted(tagFixPaintInfo(task, matched, focusIds, hasNearby));
+        } else {
+          _onPainted({
+            taskId: requestTaskId,
+            hasAccept: false,
+            showGoToNearby: false,
+            hasNearby: false,
+          });
+        }
       }
     }
 
@@ -340,7 +429,7 @@ export function uiMapRouletteTagFix(context: any): any {
   };
 
   render.onPainted = function(
-    val?: ((info: { taskId: string; hasAccept: boolean }) => void) | null,
+    val?: ((info: MapRouletteTagFixPaintInfo) => void) | null,
   ) {
     if (!arguments.length) return _onPainted;
     _onPainted = val || null;
@@ -352,7 +441,8 @@ export function uiMapRouletteTagFix(context: any): any {
     if (!_qaItem) return false;
     const task = taskPayload(_qaItem);
     if (!isMapRouletteTagFix(task)) return false;
-    return matchMapRouletteTagFixes(context, task).matched.length > 0;
+    const { matched } = matchMapRouletteTagFixes(context, task);
+    return hasPendingTagDiffs(matched);
   };
 
   return render;

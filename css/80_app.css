@@ -3292,6 +3292,19 @@ img.tag-reference-wiki-image {
 .qa-details-subsection:empty {
     display: none;
 }
+.qa-details-loading {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+}
+.qa-details-loading .qa-details-loading-spinner {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    background: url(img/mini-loader.gif) center / contain no-repeat;
+}
 
 /* Rapid parity: details header layout */
 .qa-details-header {
@@ -3317,6 +3330,21 @@ img.tag-reference-wiki-image {
 .mr-save .mr-earmark-wrap,
 .maproulette-task-embed .mr-earmark-wrap {
     padding: 8px 10px 4px;
+}
+.maproulette-task-embed .mr-earmark-wrap {
+    padding-left: 0;
+    padding-right: 0;
+}
+.maproulette-task-embed .mr-tag-fix {
+    margin-left: 0;
+    margin-right: 0;
+}
+.maproulette-task-embed .mr-go-to-nearby-host {
+    padding: 4px 0 8px;
+}
+.maproulette-task-embed .mr-go-to-nearby {
+    width: 100%;
+    box-sizing: border-box;
 }
 .mr-save .mr-resolved-banner,
 .maproulette-task-embed .mr-resolved-banner {
@@ -3430,7 +3458,9 @@ img.tag-reference-wiki-image {
 }
 .mr-tag-fix .mr-tag-fix-note,
 .mr-tag-fix .mr-tag-fix-unavailable,
-.mr-tag-fix .mr-tag-fix-unchanged {
+.mr-tag-fix .mr-tag-fix-unchanged,
+.mr-tag-fix .mr-tag-fix-applied,
+.mr-tag-fix .mr-tag-fix-already-matches {
     margin: 0 0 8px;
     font-size: 12px;
 }
@@ -3948,6 +3978,15 @@ div.full-screen > button:focus {
 }
 .layer-list-qa .maproulette-challenge-links a {
     font-size: 11px;
+}
+.layer-list-qa .maproulette-status {
+    font-size: 11px;
+    line-height: 1.35;
+    color: rgba(0, 0, 0, 0.65);
+}
+.layer-list-qa .maproulette-status a.maproulette-status-zoom {
+    margin-left: 0.25em;
+    white-space: nowrap;
 }
 
 .layer-list label span.localized-text {

@@ -900,6 +900,8 @@ en:
         tag_fix_other_targets: "This MapRoulette tag fix targets other OSM objects."
         tag_fix_not_selected_target: "The selected object is not a target of this tag fix."
         tag_fix_no_changes: "No tag changes relative to the current object."
+        tag_fix_applied: Suggested tags applied.
+        tag_fix_already_matches: Already matches OpenStreetMap.
         resolve_with_upload: Resolve with upload
         resolve_with_upload_tooltip: "This task will be marked Fixed on MapRoulette after your changeset is uploaded."
         resolved_title: Resolved
@@ -913,6 +915,11 @@ en:
         inputPlaceholder: Optional comment (max 1000 chars)
         cancel: Cancel
         submit: Submit
+        status:
+          zoom_in: MapRoulette tasks load when you zoom in further.
+          zoom_in_link: Zoom in to load tasks
+          loading: Loading MapRoulette tasks…
+          none_nearby: No nearby open tasks in this area.
         nearbyTask:
           title: Go to next nearby task after submit
           go_to: Go to next nearby…
