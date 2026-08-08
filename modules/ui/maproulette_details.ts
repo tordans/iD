@@ -3,6 +3,7 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 import { utilHighlightEntities } from '../util';
+import { linkifyOsmReferences } from '../util/maproulette_markdown';
 import { modeSelect } from '../modes';
 import { modeSelectError } from '../modes/select_error';
 import { t } from '../core/localizer';
@@ -118,7 +119,7 @@ export function uiMapRouletteDetails(context: any) {
         // Only linkify well-formed ids; anything else could break out of
         // the attribute context below.
         if (!/^(way|node|relation)\/\d+$/.test(longForm)) return escapeHTML(osmId);
-        return `<a href="#" class="highlight-link" data-osm-id="${longForm}">${osmId}</a>`;
+        return longForm;
       }
       if (allProps.has(propertyName)) {
         const val = allProps.get(propertyName);
@@ -126,37 +127,6 @@ export function uiMapRouletteDetails(context: any) {
       }
       return match;
     });
-  }
-
-  function linkifyOsmReferences(text: string): string {
-    if (!text) return '';
-
-    function wrapLink(osmId: string, label: string): string {
-      return `<a href="#" class="highlight-link" data-osm-id="${osmId}">${label}</a>`;
-    }
-
-    // Avoid linkifying text that is already inside generated highlight links.
-    const segments = text.split(/(<a\b[^>]*class="highlight-link"[^>]*>[\s\S]*?<\/a>)/gi);
-    return segments.map(function(segment, i) {
-      if (i % 2 === 1) return segment;
-      return segment
-        .replace(
-          /\b(way|node|relation)\/(\d+)\b/g,
-          function(_match, type: string, num: string) {
-            const osmId = `${type}/${num}`;
-            return wrapLink(osmId, osmId);
-          },
-        )
-        .replace(
-          /\b([wnr])(\d+)\b/g,
-          function(_match, prefix: string, num: string) {
-            const type = { w: 'way', n: 'node', r: 'relation' }[prefix];
-            if (!type) return _match;
-            const osmId = `${type}/${num}`;
-            return wrapLink(osmId, `${prefix}${num}`);
-          },
-        );
-    }).join('');
   }
 
   function sanitizeHTML(dirty: string): string {
@@ -179,9 +149,9 @@ export function uiMapRouletteDetails(context: any) {
 
   function renderMarkdown(text: string, task: any): string {
     if (!text) return '';
-    const markdown = linkifyOsmReferences(replaceMustacheTags(text, task));
+    const html = marked.parse(replaceMustacheTags(text, task)) as string;
     return sanitizeHTML(
-      generateDynamicContent(marked.parse(markdown) as string),
+      generateDynamicContent(linkifyOsmReferences(html)),
     );
   }
 
@@ -308,24 +278,37 @@ export function uiMapRouletteDetails(context: any) {
       headerEnter.append('div').attr('class', 'qa-header-label');
     }
 
-    detailsEnter
+    const loadingSection = detailsEnter
       .append('div')
-      .attr('class', 'qa-details-subsection')
+      .attr('class', 'qa-details-subsection qa-details-loading loading')
+      .attr('aria-busy', 'true');
+
+    loadingSection
+      .append('span')
+      .attr('class', 'qa-details-loading-spinner')
+      .attr('aria-hidden', 'true');
+
+    loadingSection
+      .append('span')
+      .attr('class', 'qa-details-loading-text')
       .text(t('map_data.layers.maproulette.loading_task_details'));
 
     details = details.merge(detailsEnter);
 
     if (mr && _qaItem) {
+      const thisItem = _qaItem;
       mr.loadTaskDetailAsync(_qaItem)
         .then(function(task: any) {
           if (!task) return;
           // Do nothing if the UI has moved on by the time this resolves
           // (same guard as osmose_details: still selected or still hovered).
           // Embedded inspector mode skips this — the entity editor owns lifetime.
+          const thisTaskId = String(thisItem.id);
+          const selectedId = context.selectedErrorID();
           if (
             !_embedded &&
-            context.selectedErrorID() !== _qaItem.id &&
-            context.container().selectAll(`.qaItem.maproulette.hover.itemId-${_qaItem.id}`).empty()
+            String(selectedId) !== thisTaskId &&
+            context.container().selectAll(`.qaItem.maproulette.hover.itemId-${thisTaskId}`).empty()
           ) return;
 
           const sel = details.selectAll('.qa-details-subsection');
@@ -396,6 +379,7 @@ export function uiMapRouletteDetails(context: any) {
                 d3_event.preventDefault();
                 const taskId = d3_select(this).attr('data-task-id');
                 if (!taskId) return;
+                context.selectedErrorID(taskId);
                 context.enter(modeSelectError(context, taskId, 'maproulette'));
               });
             return;

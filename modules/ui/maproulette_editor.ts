@@ -5,7 +5,7 @@ import { t } from '../core/localizer';
 import { services } from '../services';
 import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
-import { modeSelectError } from '../modes/select_error';
+import { goToNearbyMapRouletteTask } from '../util/maproulette_nearby';
 import { svgIcon } from '../svg/icon';
 import { MAPROULETTE_ACTION_ICONS } from '../svg/maproulette_marker';
 import { uiMapRouletteDetails } from './maproulette_details';
@@ -169,7 +169,13 @@ export function uiMapRouletteEditor(context: any) {
   }
 
   function earmarkToggle(selection: any): void {
-    selection.call(uiMapRouletteEarmarkToggle(context).task(_qaItem));
+    selection.call(
+      uiMapRouletteEarmarkToggle(context)
+        .task(_qaItem)
+        .onChange(function() {
+          editorRoot().call(mRSaveSection);
+        }),
+    );
   }
 
   function optionalComment(selection: any): void {
@@ -216,10 +222,15 @@ export function uiMapRouletteEditor(context: any) {
   function mRSaveButtons(selection: any): void {
     const isSelected =
       _qaItem && String(_qaItem.id) === String(context.selectedErrorID());
+    const mr = services.maproulette;
+    const earmarked = !!(
+      _qaItem && mr && mr.isEarmarked && mr.isEarmarked(_qaItem.id)
+    );
+    const showCompletion = isSelected && !earmarked;
 
     let heading = selection
       .selectAll('.mr-completion-heading')
-      .data(isSelected ? [0] : []);
+      .data(showCompletion ? [0] : []);
     heading.exit().remove();
     heading
       .enter()
@@ -229,7 +240,7 @@ export function uiMapRouletteEditor(context: any) {
 
     let buttonSection = selection
       .selectAll('.buttons.mr-actions')
-      .data(isSelected ? [_qaItem] : [], function(d: any) { return d.id; });
+      .data(showCompletion ? [_qaItem] : [], function(d: any) { return d.id; });
 
     buttonSection.exit().remove();
 
@@ -411,13 +422,9 @@ export function uiMapRouletteEditor(context: any) {
    * associated OSM way/entity still available, else browse with a clear sidebar.
    */
   function afterSuccessfulSubmit(mr: any, closed: any, elems: string[]): void {
-    if (_goToNearbyTask && typeof mr.getNearestItem === 'function') {
-      const next = mr.getNearestItem(context.map().center(), closed && closed.id);
-      if (next && next.id) {
-        context.enter(modeSelectError(context, next.id, 'maproulette'));
-        dispatch.call('change', closed);
-        return;
-      }
+    if (_goToNearbyTask && goToNearbyMapRouletteTask(context, closed && closed.id)) {
+      dispatch.call('change', closed);
+      return;
     }
 
     selectAssociatedOsmEntity(elems, function(didSelect: boolean) {

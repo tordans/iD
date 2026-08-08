@@ -2,10 +2,11 @@ import { select as d3_select } from 'd3-selection';
 
 import { services } from '../../services';
 import { t } from '../../core/localizer';
+import { goToNearbyMapRouletteTask } from '../../util/maproulette_nearby';
 import { uiSection } from '../section';
 import { uiMapRouletteDetails } from '../maproulette_details';
 import { uiMapRouletteEarmarkToggle } from '../maproulette_earmark_toggle';
-import { uiMapRouletteTagFix } from '../maproulette_tag_fix';
+import { uiMapRouletteTagFix, type MapRouletteTagFixPaintInfo } from '../maproulette_tag_fix';
 
 
 export function uiSectionMapRouletteTask(context: any) {
@@ -152,6 +153,34 @@ export function uiSectionMapRouletteTask(context: any) {
               .task(d)
               .onAccepted(function() {
                 section.reRender();
+              })
+              .onPainted(function(info: MapRouletteTagFixPaintInfo) {
+                if (String(d.id) !== info.taskId) return;
+                let goToHost: any = root.selectAll('.mr-go-to-nearby-host')
+                  .data(info.showGoToNearby ? [d] : []);
+                goToHost.exit().remove();
+                goToHost = goToHost.enter()
+                  .append('div')
+                  .attr('class', 'mr-go-to-nearby-host')
+                  .merge(goToHost);
+                if (!info.showGoToNearby) return;
+                let btn = goToHost.selectAll('button.mr-go-to-nearby')
+                  .data([d]);
+                btn = btn.enter()
+                  .append('button')
+                  .attr('type', 'button')
+                  .attr('class', 'button mr-go-to-nearby')
+                  .text(t('map_data.layers.maproulette.nearbyTask.go_to'))
+                  .on('click', function(this: HTMLElement, d3_event: Event) {
+                    d3_event.preventDefault();
+                    this.blur();
+                    if (d3_select(this).classed('disabled')) return;
+                    goToNearbyMapRouletteTask(context, d.id);
+                  })
+                  .merge(btn);
+                btn
+                  .classed('disabled', !info.hasNearby)
+                  .attr('disabled', info.hasNearby ? null : true);
               }),
           );
         }
@@ -165,7 +194,11 @@ export function uiSectionMapRouletteTask(context: any) {
           .merge(earmarkHost);
         if (!isResolved) {
           earmarkHost.call(
-            uiMapRouletteEarmarkToggle(context).task(d)
+            uiMapRouletteEarmarkToggle(context)
+              .task(d)
+              .onChange(function() {
+                section.reRender();
+              }),
           );
         }
       });

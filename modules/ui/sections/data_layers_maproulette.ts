@@ -3,8 +3,8 @@ import { select as d3_select } from 'd3-selection';
 import { patchHash } from '../../behavior/hash';
 import { t, localizer } from '../../core/localizer';
 import { services } from '../../services';
-import { modeSelectError } from '../../modes/select_error';
 import { appendMapRoulettePinIcon } from '../../svg/maproulette_logo';
+import { goToNearbyMapRouletteTask } from '../../util/maproulette_nearby';
 import { uiTooltip } from '../tooltip';
 
 
@@ -58,16 +58,104 @@ export function createMapRouletteDataLayerControls(
   layers: any,
   setLayer: (which: string, enabled: boolean) => void,
 ) {
-  function goToNearbyMapRouletteTask(): void {
+  let _pendingGoToNearbyAfterZoom = false;
+  let _pendingGoToNearbyFlushTimeout: ReturnType<typeof setTimeout> | null = null;
+  let _pendingGoToNearbyAbandonTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  const PENDING_GO_TO_NEARBY_ABANDON_MS = 20000;
+
+  function mapRouletteLoadMinZoom(): number {
     const mr = services.maproulette;
-    if (!mr || typeof mr.getNearestItem !== 'function') return;
+    return (mr && typeof mr.loadMinZoom === 'function') ? mr.loadMinZoom() : 12;
+  }
 
-    const excludeId = context.selectedErrorID && context.selectedErrorID();
-    const next = mr.getNearestItem(context.map().center(), excludeId);
-    if (!next || !next.loc) return;
+  function tryPendingGoToNearbyAfterZoom(
+    mrEnabled: boolean,
+    zoom: number,
+    minZ: number,
+    loading: boolean,
+    hasNearby: boolean,
+  ): void {
+    if (!_pendingGoToNearbyAfterZoom) return;
+    if (!mrEnabled) {
+      _pendingGoToNearbyAfterZoom = false;
+      return;
+    }
+    if (zoom < minZ || loading) return;
+    _pendingGoToNearbyAfterZoom = false;
+    if (hasNearby) {
+      goToNearbyMapRouletteTask(context);
+    }
+  }
 
-    context.map().centerZoomEase(next.loc, Math.max(context.map().zoom(), 17));
-    context.enter(modeSelectError(context, next.id, 'maproulette'));
+  function getMapRouletteControlState() {
+    const mrEnabled = !!(layers.layer('maproulette') && layers.layer('maproulette').enabled());
+    const mr = services.maproulette;
+    const zoom = context.map().zoom();
+    const minZ = mapRouletteLoadMinZoom();
+    const loading = !!(mrEnabled && mr &&
+      typeof mr.isLoadingIssues === 'function' &&
+      mr.isLoadingIssues(context.projection, zoom));
+    const hasNearby = !!(mrEnabled && !loading && mr &&
+      typeof mr.getNearestItem === 'function' &&
+      mr.getNearestItem(context.map().center()));
+    return { mrEnabled, zoom, minZ, loading, hasNearby };
+  }
+
+  function clearPendingGoToNearbyListeners(): void {
+    const mr = services.maproulette as any;
+    if (mr && typeof mr.on === 'function') {
+      mr.on('loading.mrPendingGoTo', null);
+      mr.on('loaded.mrPendingGoTo', null);
+    }
+    context.map().on('move.mrPendingGoTo', null);
+    if (_pendingGoToNearbyFlushTimeout !== null) {
+      clearTimeout(_pendingGoToNearbyFlushTimeout);
+      _pendingGoToNearbyFlushTimeout = null;
+    }
+    if (_pendingGoToNearbyAbandonTimeout !== null) {
+      clearTimeout(_pendingGoToNearbyAbandonTimeout);
+      _pendingGoToNearbyAbandonTimeout = null;
+    }
+  }
+
+  function abandonPendingGoToNearbyAfterZoom(): void {
+    if (!_pendingGoToNearbyAfterZoom) return;
+    _pendingGoToNearbyAfterZoom = false;
+    clearPendingGoToNearbyListeners();
+  }
+
+  function flushPendingGoToNearbyAfterZoom(): void {
+    if (!_pendingGoToNearbyAfterZoom) return;
+    const wasPending = true;
+    const { mrEnabled, zoom, minZ, loading, hasNearby } = getMapRouletteControlState();
+    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNearby);
+    if (wasPending && !_pendingGoToNearbyAfterZoom) {
+      clearPendingGoToNearbyListeners();
+    }
+  }
+
+  function attachPendingGoToNearbyListeners(): void {
+    const mr = services.maproulette as any;
+    if (mr && typeof mr.on === 'function') {
+      mr.on('loading.mrPendingGoTo', flushPendingGoToNearbyAfterZoom);
+      mr.on('loaded.mrPendingGoTo', flushPendingGoToNearbyAfterZoom);
+    }
+    context.map().on('move.mrPendingGoTo', flushPendingGoToNearbyAfterZoom);
+    _pendingGoToNearbyFlushTimeout = setTimeout(flushPendingGoToNearbyAfterZoom, 300);
+  }
+
+  function zoomInToLoadMapRouletteTasks(d3_event: Event): void {
+    d3_event.preventDefault();
+    d3_event.stopPropagation();
+    clearPendingGoToNearbyListeners();
+    _pendingGoToNearbyAfterZoom = true;
+    context.map().zoomEase(mapRouletteLoadMinZoom());
+    attachPendingGoToNearbyListeners();
+    _pendingGoToNearbyAbandonTimeout = setTimeout(
+      abandonPendingGoToNearbyAfterZoom,
+      PENDING_GO_TO_NEARBY_ABANDON_MS,
+    );
   }
 
   function updateMapRouletteHash(): void {
@@ -113,7 +201,7 @@ export function createMapRouletteDataLayerControls(
         d3_event.stopPropagation();
         const button = d3_select(this);
         if (button.classed('disabled') || button.classed('loading')) return;
-        goToNearbyMapRouletteTask();
+        goToNearbyMapRouletteTask(context);
       })
       .call(function(selection: any) {
         appendMapRoulettePinIcon(selection, {
@@ -141,24 +229,73 @@ export function createMapRouletteDataLayerControls(
       .attr('class', 'challenge-ids')
       .attr('placeholder', t('map_data.layers.maproulette.id_placeholder'))
       .on('input change', mapRouletteIDsChanged);
+
+    const statusEnter = mrFilterEnter
+      .append('div')
+      .attr('class', 'maproulette-status')
+      .style('display', 'none');
+
+    statusEnter
+      .append('span')
+      .attr('class', 'maproulette-status-text');
+
+    statusEnter
+      .append('a')
+      .attr('href', '#')
+      .attr('class', 'maproulette-status-zoom')
+      .style('display', 'none')
+      .on('click', zoomInToLoadMapRouletteTasks);
   }
 
   function updateControls(li: any, liEnter: any): void {
-    const mrEnabled = !!(layers.layer('maproulette') && layers.layer('maproulette').enabled());
-    const mr = services.maproulette;
-    const zoom = context.map().zoom();
-    const loading = !!(mrEnabled && mr &&
-      typeof mr.isLoadingIssues === 'function' &&
-      mr.isLoadingIssues(context.projection, zoom));
-    const hasNearby = !!(mrEnabled && !loading && mr &&
-      typeof mr.getNearestItem === 'function' &&
-      mr.getNearestItem(context.map().center()));
+    const { mrEnabled, zoom, minZ, loading, hasNearby } = getMapRouletteControlState();
+    const needsZoom = mrEnabled && zoom < minZ;
+    const wasPending = _pendingGoToNearbyAfterZoom;
+
+    if (!mrEnabled) {
+      _pendingGoToNearbyAfterZoom = false;
+    }
+
+    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNearby);
+
+    if (wasPending && !_pendingGoToNearbyAfterZoom) {
+      clearPendingGoToNearbyListeners();
+    }
+
+    let statusMessage: string | null = null;
+    let showZoomLink = false;
+    if (mrEnabled) {
+      if (needsZoom) {
+        statusMessage = t('map_data.layers.maproulette.status.zoom_in');
+        showZoomLink = true;
+      } else if (loading) {
+        statusMessage = t('map_data.layers.maproulette.status.loading');
+      } else if (!hasNearby) {
+        statusMessage = t('map_data.layers.maproulette.status.none_nearby');
+      }
+    }
+
     li
       .merge(liEnter)
       .selectAll('button.zoom-to-maproulette')
       .classed('loading', loading)
       .classed('disabled', !mrEnabled || (!loading && !hasNearby))
       .attr('aria-busy', loading ? 'true' : null);
+
+    li
+      .merge(liEnter)
+      .filter(function(d: any) { return d.id === 'maproulette'; })
+      .select('.maproulette-status')
+      .style('display', statusMessage ? 'block' : 'none')
+      .select('.maproulette-status-text')
+      .text(statusMessage || '');
+
+    li
+      .merge(liEnter)
+      .filter(function(d: any) { return d.id === 'maproulette'; })
+      .select('.maproulette-status-zoom')
+      .style('display', showZoomLink ? 'inline' : 'none')
+      .text(t('map_data.layers.maproulette.status.zoom_in_link'));
 
     // Keep the challenge-IDs field in sync with the service (not while typing).
     li

@@ -97,6 +97,10 @@ export function modeSelectError(context, selectedErrorID, selectedErrorService) 
         d3_select(document)
             .call(keybinding);
 
+        // Selection must not depend on the pin already being in the DOM
+        // (e.g. go-to-nearby while centerZoomEase is still running).
+        context.selectedErrorID(selectedErrorID);
+
         selectError();
 
         var sidebar = context.ui().sidebar;
