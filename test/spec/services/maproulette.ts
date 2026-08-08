@@ -390,6 +390,137 @@ describe('iD.serviceMapRoulette', () => {
     });
   });
 
+  describe('#isLoadingIssues', () => {
+    const dimensions: [number, number] = [640, 480];
+
+    function testProjection() {
+      return iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([-116508, 0])
+        .clipExtent([[0, 0], dimensions]);
+    }
+
+    beforeEach(() => {
+      maproulette.init();
+    });
+
+    it('is false below the minimum load zoom', () => {
+      const projection = testProjection();
+      expect(maproulette.isLoadingIssues(projection, 11)).toBe(false);
+    });
+
+    it('is true while viewport tiles are unloaded at load zoom', () => {
+      const projection = testProjection();
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+    });
+
+    it('is true synchronously after loadIssues starts a fetch', () => {
+      const projection = testProjection();
+      fetchMock.mock(/tasks\/box\//, () => new Promise(() => {}));
+
+      maproulette.loadIssues(projection);
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+    });
+
+    it('is false after an empty tile response and dispatches loaded', async () => {
+      const projection = testProjection();
+      const loaded = fn();
+      maproulette.on('loaded', loaded);
+
+      fetchMock.mock(/tasks\/box\//, []);
+
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        expect(maproulette.isLoadingIssues(projection, 14)).toBe(false);
+      });
+      expect(loaded).toHaveBeenCalled();
+    });
+
+    it('is false after a tile fetch error and dispatches loaded', async () => {
+      const projection = testProjection();
+      const loaded = fn();
+      maproulette.on('loaded', loaded);
+
+      fetchMock.mock(/tasks\/box\//, { status: 500, body: '{}' });
+
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        expect(maproulette.isLoadingIssues(projection, 14)).toBe(false);
+      });
+      expect(loaded).toHaveBeenCalled();
+    });
+
+    it('is true when viewport tiles are stale and need refetch', async () => {
+      vi.useFakeTimers();
+      try {
+        const projection = testProjection();
+        fetchMock.mock(/tasks\/box\//, []);
+
+        maproulette.loadIssues(projection);
+        await vi.waitFor(() => {
+          expect(maproulette.isLoadingIssues(projection, 14)).toBe(false);
+        });
+
+        vi.advanceTimersByTime(2 * 60 * 1000 + 1);
+        expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('does not mark tiles loaded when a fetch is aborted', async () => {
+      const projection = testProjection();
+      const farProjection = iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([0, 0])
+        .clipExtent([[0, 0], dimensions]);
+
+      fetchMock.mock(/tasks\/box\//, () => new Promise(() => {}));
+
+      maproulette.loadIssues(projection);
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+
+      maproulette.loadIssues(farProjection);
+      await vi.waitFor(() => {
+        expect(maproulette.isLoadingIssues(farProjection, 14)).toBe(true);
+      });
+
+      maproulette.loadIssues(projection);
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+    });
+
+    it('ignores superseded tile fetch responses', async () => {
+      const projection = testProjection();
+      const farProjection = iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([0, 0])
+        .clipExtent([[0, 0], dimensions]);
+
+      let abortResolve!: () => void;
+      const hangingPromise = new Promise((resolve) => {
+        abortResolve = () => resolve([]);
+      });
+
+      fetchMock.mock(/tasks\/box\//, () => hangingPromise);
+
+      maproulette.loadIssues(projection);
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(true);
+
+      maproulette.loadIssues(farProjection);
+      fetchMock.reset();
+      fetchMock.mock(/tasks\/box\//, []);
+
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        expect(maproulette.isLoadingIssues(projection, 14)).toBe(false);
+      });
+
+      abortResolve();
+      await Promise.resolve();
+      expect(maproulette.isLoadingIssues(projection, 14)).toBe(false);
+    });
+  });
+
   describe('#loadTaskDetailAsync cooperativeWork', () => {
     it('retains FeatureCollection-root cooperativeWork on the detail and QAItem', async () => {
       const cw = {
