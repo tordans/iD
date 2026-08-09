@@ -1,5 +1,6 @@
 import { t } from '../core/localizer';
 import { services } from '../services';
+import { closedMapRouletteTagKey, MR_STATUS } from '../services/maproulette';
 
 
 /**
@@ -8,6 +9,13 @@ import { services } from '../services';
  * mapper’s edits (see https://github.com/tordans/iD/issues/6).
  */
 let _lastAutoComment: string | null = null;
+
+const CLOSED_MR_TAG_KEYS = [
+  'closed:maproulette',
+  'closed:maproulette:already_fixed',
+  'closed:maproulette:false_positive',
+  'closed:maproulette:too_hard',
+] as const;
 
 
 /** Reset sticky comment state (tests / new editing session). */
@@ -50,13 +58,50 @@ export function buildMapRouletteSuggestedComment(
 }
 
 
+/** Join task IDs with `;`, truncating whole IDs to stay within OSM’s 255 limit. */
+export function joinMapRouletteTaskIds(
+  ids: Iterable<string>,
+  maxChars: number = 255,
+): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of ids) {
+    const id = String(raw || '').trim();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
+    const candidate = parts.length ? `${parts.join(';')};${id}` : id;
+    if (candidate.length > maxChars) break;
+    parts.push(id);
+  }
+  return parts.join(';');
+}
+
+
+function statusLabelKey(status: number): string {
+  switch (Number(status)) {
+    case MR_STATUS.ALREADY_FIXED:
+      return 'map_data.layers.maproulette.alreadyFixed';
+    case MR_STATUS.FALSE_POSITIVE:
+      return 'map_data.layers.maproulette.notAnIssue';
+    case MR_STATUS.TOO_HARD:
+      return 'map_data.layers.maproulette.cantComplete';
+    case MR_STATUS.FIXED:
+    default:
+      return 'map_data.layers.maproulette.fixed';
+  }
+}
+
+
 /**
- * Fold MapRoulette check-in suggestions and closed:maproulette into changeset tags.
+ * Fold MapRoulette check-in suggestions and closed:maproulette* into changeset tags.
  *
  * Comment suggestions are applied only while the field is empty or still equal to
  * the last auto-written value — never re-appended on every keystroke/render.
  * Suggestions come from tasks closed / earmarked for this upload only (not from
  * the challenge-ID filter alone).
+ *
+ * Session outcomes (immediate API + deferred queue) are written as:
+ * `closed:maproulette`, `closed:maproulette:already_fixed`, etc.
  */
 export function applyMapRouletteDerivedTags(context: any, tags: Record<string, string>): void {
   if (!services.maproulette) return;
@@ -66,6 +111,7 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
   const mrSources = new Set<string>();
   const seenChallenges = new Set<string>();
   let usedMapRoulette = false;
+  const idsByTag: Record<string, string[]> = {};
 
   function collectChallengeSuggestions(challengeID: string): void {
     if (!challengeID || seenChallenges.has(challengeID)) return;
@@ -83,9 +129,25 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
     }
   }
 
+  function addOutcome(taskID: string, status: number): void {
+    if (!taskID) return;
+    const key = closedMapRouletteTagKey(status);
+    if (!idsByTag[key]) idsByTag[key] = [];
+    if (idsByTag[key].indexOf(taskID) === -1) {
+      idsByTag[key].push(taskID);
+    }
+    usedMapRoulette = true;
+  }
+
   if (typeof mr.getClosed === 'function') {
-    mr.getClosed().forEach(function(entry: { challengeID: string }) {
+    mr.getClosed().forEach(function(entry: { challengeID: string; taskID: string; _status?: number }) {
       collectChallengeSuggestions(entry.challengeID);
+      addOutcome(
+        String(entry.taskID),
+        entry._status !== undefined && entry._status !== null
+          ? Number(entry._status)
+          : MR_STATUS.FIXED,
+      );
     });
   }
 
@@ -98,22 +160,31 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
 
   // Comment / source suggestions only for tasks included in this upload (and
   // already-closed), not every earmark and not the map-data challenge filter.
-  earmarked.forEach(function(entry: { challengeID: string }) {
+  earmarked.forEach(function(entry: { challengeID: string; taskID: string; _status?: number }) {
     collectChallengeSuggestions(entry.challengeID);
+    addOutcome(
+      String(entry.taskID),
+      entry._status !== undefined && entry._status !== null
+        ? Number(entry._status)
+        : MR_STATUS.FIXED,
+    );
   });
 
-  if (earmarked.length) {
-    tags['closed:maproulette'] = context.cleanTagValue(
-      earmarked.map(function(e: { taskID: string }) { return e.taskID; }).join(';')
-    );
-  } else {
-    delete tags['closed:maproulette'];
-  }
+  const maxChars = typeof context.maxCharsForTagValue === 'function'
+    ? context.maxCharsForTagValue()
+    : 255;
+
+  CLOSED_MR_TAG_KEYS.forEach(function(key) {
+    delete tags[key];
+  });
+  Object.keys(idsByTag).forEach(function(key) {
+    const joined = joinMapRouletteTaskIds(idsByTag[key], maxChars);
+    if (joined) {
+      tags[key] = context.cleanTagValue(joined);
+    }
+  });
 
   if (mrComments.size) {
-    const maxChars = typeof context.maxCharsForTagValue === 'function'
-      ? context.maxCharsForTagValue()
-      : 255;
     const suggested = buildMapRouletteSuggestedComment(mrComments, maxChars);
     const current = tags.comment || '';
     const isEmpty = !current.trim();
@@ -145,7 +216,7 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
 
 
 /**
- * Commit-screen checklist of earmarked MapRoulette tasks (re-toggleable).
+ * Commit-screen checklist of queued MapRoulette task outcomes (re-toggleable).
  */
 export function renderMapRouletteEarmarkChecklist(
   selection: any,
@@ -220,6 +291,7 @@ export function renderMapRouletteEarmarkChecklist(
   rows.select('.commit-maproulette-earmark-label')
     .text(function(d: any) {
       const name = d.parentName || t('map_data.layers.maproulette.title');
-      return name + ' — #' + d.taskID;
+      const statusText = t(statusLabelKey(d._status));
+      return name + ' — #' + d.taskID + ' (' + statusText + ')';
     });
 }

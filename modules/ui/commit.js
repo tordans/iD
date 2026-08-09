@@ -31,7 +31,7 @@ var readOnlyTags = [
     /^warnings:/,
     /^resolved:/,
     /^closed:note$/,
-    /^closed:maproulette$/,
+    /^closed:maproulette/,
     /^closed:osmose:/
 ];
 

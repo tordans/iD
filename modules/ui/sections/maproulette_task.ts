@@ -132,7 +132,8 @@ export function uiSectionMapRouletteTask(context: any) {
         const root = d3_select(this);
         const mr = services.maproulette;
         const isResolved = !!(mr && mr.isRecentlyResolved && mr.isRecentlyResolved(d));
-        root.classed('mr-resolved', isResolved);
+        const isQueued = !!(mr && mr.isEarmarked && mr.isEarmarked(d.id));
+        root.classed('mr-resolved', isResolved || isQueued);
 
         const details = (uiMapRouletteDetails(context) as any)
           .embedded(true)
@@ -140,7 +141,7 @@ export function uiSectionMapRouletteTask(context: any) {
         details(root);
 
         let banner: any = root.selectAll('.mr-resolved-banner')
-          .data(isResolved ? [d] : []);
+          .data(isResolved && !isQueued ? [d] : []);
         banner.exit().remove();
         const bannerEnter = banner.enter()
           .append('div')
@@ -153,14 +154,28 @@ export function uiSectionMapRouletteTask(context: any) {
         banner.select('p')
           .text(t('map_data.layers.maproulette.resolved_message'));
 
+        let queuedBanner: any = root.selectAll('.mr-queued-banner')
+          .data(isQueued ? [d] : []);
+        queuedBanner.exit().remove();
+        const queuedEnter = queuedBanner.enter()
+          .append('div')
+          .attr('class', 'mr-queued-banner notice');
+        queuedEnter.append('strong');
+        queuedEnter.append('p');
+        queuedBanner = queuedEnter.merge(queuedBanner);
+        queuedBanner.select('strong')
+          .text(t('map_data.layers.maproulette.queued_title'));
+        queuedBanner.select('p')
+          .text(t('map_data.layers.maproulette.queued_message'));
+
         let tagFixHost: any = root.selectAll('.mr-tag-fix-host')
-          .data(isResolved ? [] : [d]);
+          .data(isResolved || isQueued ? [] : [d]);
         tagFixHost.exit().remove();
         tagFixHost = tagFixHost.enter()
           .append('div')
           .attr('class', 'mr-tag-fix-host')
           .merge(tagFixHost);
-        if (!isResolved) {
+        if (!isResolved && !isQueued) {
           tagFixHost.call(
             uiMapRouletteTagFix(context)
               .mode('embedded')
@@ -201,13 +216,13 @@ export function uiSectionMapRouletteTask(context: any) {
         }
 
         let earmarkHost: any = root.selectAll('.mr-earmark-host')
-          .data(isResolved ? [] : [d]);
+          .data(isResolved && !isQueued ? [] : [d]);
         earmarkHost.exit().remove();
         earmarkHost = earmarkHost.enter()
           .append('div')
           .attr('class', 'mr-earmark-host')
           .merge(earmarkHost);
-        if (!isResolved) {
+        if (!isResolved || isQueued) {
           earmarkHost.call(
             uiMapRouletteEarmarkToggle(context)
               .task(d)

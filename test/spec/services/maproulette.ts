@@ -139,6 +139,38 @@ describe('iD.serviceMapRoulette', () => {
       expect(readStoredEarmarks()).toEqual([]);
     });
 
+    it('earmarkTask stores non-Fixed statuses and can mark local done', () => {
+      const item = makeQAItem({ id: '44', parentId: '55' });
+      maproulette.replaceItem(item);
+
+      const earmark = maproulette.earmarkTask(item, 6, { markLocalDone: true });
+
+      expect(earmark?._status).toBe(6);
+      expect(maproulette.isEarmarked('44')).toBe(true);
+      expect(maproulette.isRecentlyResolved(maproulette.getError('44'))).toBe(true);
+
+      maproulette.unearmarkTask('44');
+      expect(maproulette.isEarmarked('44')).toBe(false);
+      expect(maproulette.isRecentlyResolved(maproulette.getError('44'))).toBe(false);
+    });
+
+    it('clearClosed drops session-immediate outcomes after upload', async () => {
+      mockPostUpdateSuccess('999', 1);
+      const payload = {
+        id: '999',
+        parentId: '888',
+        _status: 1,
+        comment: '',
+        mapRouletteApiKey: 'secret',
+      };
+      await new Promise((resolve) => {
+        maproulette.postUpdate(payload, () => resolve(null));
+      });
+      expect(maproulette.getClosed()).toHaveLength(1);
+      maproulette.clearClosed();
+      expect(maproulette.getClosed()).toEqual([]);
+    });
+
     it('setEarmarkedChecked toggles upload inclusion without dropping the earmark', () => {
       maproulette.earmarkTask(makeQAItem({ id: '10' }));
       maproulette.earmarkTask(makeQAItem({ id: '11' }));
@@ -267,6 +299,34 @@ describe('iD.serviceMapRoulette', () => {
       expect(headers.apiKey).toBe('test-key');
     });
 
+    it('posts each earmark’s queued status (not only Fixed)', async () => {
+      mockPostUpdateSuccess('301', 6);
+
+      const earmarks: MapRouletteEarmark[] = [
+        {
+          taskID: '301',
+          challengeID: '401',
+          parentName: '',
+          title: 'Hard',
+          elems: [],
+          loc: null,
+          newComment: '',
+          _status: 6,
+          includeInUpload: true,
+        },
+      ];
+
+      const result = await maproulette.resolveEarmarksAfterChangeset(earmarks, {
+        comment: 'Updated in changeset',
+      });
+
+      expect(result.ok).toBe(1);
+      const statusCalls = fetchMock.calls().filter((call) => {
+        return /\/task\/301\/6$/.test(String(call[0])) && call[1]?.method === 'PUT';
+      });
+      expect(statusCalls).toHaveLength(1);
+    });
+
     it('returns failed earmarks when postUpdate fails', async () => {
       mockPostUpdateSuccess('201');
       mockPostUpdateCommentFailure('202');
@@ -343,6 +403,7 @@ describe('iD.serviceMapRoulette', () => {
       expect(maproulette.getClosed()).toEqual([{
         challengeID: '888',
         taskID: '999',
+        _status: 1,
       }]);
       // Stays on the map as recently resolved (not removed).
       const kept = maproulette.getError('999');
