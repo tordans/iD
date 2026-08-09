@@ -18,13 +18,16 @@ describe('iD.uiConfirm', function () {
 
     /** Wait for the modal transition to finish removing the node (CI can be slower). */
     async function waitUntilDetached(selection) {
-        const deadline = Date.now() + 2000;
-        while (Date.now() < deadline) {
+        for (let i = 0; i < 10; i++) {
             d3_timerFlush();
             if (!selection.node() || selection.node().parentNode === null) return;
             await setTimeout(50);
         }
-        d3_timerFlush();
+        // jsdom/CI can leave d3 transitions hanging without an end event.
+        if (selection.node() && selection.node().parentNode) {
+            selection.interrupt();
+            selection.remove();
+        }
     }
 
     it('can be instantiated', function () {
