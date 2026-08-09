@@ -611,7 +611,7 @@ en:
     save: Upload
     cancel: Cancel
     changes: Changes
-    maproulette_earmarks_title: MapRoulette tasks to resolve with this changeset
+    maproulette_earmarks_title: MapRoulette tasks to update with this changeset
     download_changes: Download osmChange file
     errors: Errors
     warnings: Warnings
@@ -902,15 +902,23 @@ en:
         tag_fix_no_changes: "No tag changes relative to the current object."
         tag_fix_applied: Suggested tags applied.
         tag_fix_already_matches: Already matches OpenStreetMap.
-        resolve_with_upload: Resolve with upload
+        resolve_with_upload: Queue Fixed for save
         resolve_with_upload_tooltip: "This task will be marked Fixed on MapRoulette after your changeset is uploaded."
+        update_timing_label: "Update MapRoulette"
+        update_with_save: With save
+        update_with_save_tooltip: "Queue the status below and update MapRoulette when you upload this OSM changeset."
+        update_right_away: Right away
+        update_right_away_tooltip: "Send the MapRoulette status now. Does not wait for an OSM upload."
+        queued_title: Queued for upload
+        queued_message: "This task will be updated on MapRoulette when you save your changeset."
+        queued_undo: Undo
         resolved_title: Resolved
         resolved_message: "This task is already resolved on MapRoulette. It will stay visible here for about 24 hours."
         resolve_comment: "Resolved by {username} in changeset {url}\n\n{quote}"
-        resolve_progress: "Marking MapRoulette task {num}/{total} as Fixed…"
-        resolve_done: "Finished marking MapRoulette tasks as Fixed ({ok} succeeded{failed_suffix})."
+        resolve_progress: "Updating MapRoulette task {num}/{total}…"
+        resolve_done: "Finished updating MapRoulette tasks ({ok} succeeded{failed_suffix})."
         resolve_failed_suffix: ", {failed} failed"
-        resolve_task_error: "Could not mark task #{id} as Fixed."
+        resolve_task_error: "Could not update task #{id} on MapRoulette."
         comment: Comment for MapRoulette
         inputPlaceholder: Optional comment (max 1000 chars)
         cancel: Cancel

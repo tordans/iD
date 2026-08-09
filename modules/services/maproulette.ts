@@ -101,11 +101,14 @@ interface CacheEntry {
   loadedChallenge: Record<string, { isVisible: boolean }>;
   challengeDetails: Record<string, any>;
   taskDetails: Record<string, any>;
-  /** Tasks successfully submitted this session (for changeset suggestions). */
-  closed: Array<{ challengeID: string; taskID: string }>;
   /**
-   * Tasks marked “Resolve with upload” — Fixed after the OSM changeset lands.
-   * Kept on the map until post-upload resolve (not in `closed` yet).
+   * Tasks successfully submitted this session (immediate API) — for changeset
+   * suggestions and closed:maproulette* tags.
+   */
+  closed: Array<{ challengeID: string; taskID: string; _status: number }>;
+  /**
+   * Deferred outcomes queued until OSM upload — any MR status, then posted
+   * after the changeset lands. Kept until post-upload resolve (not in `closed` yet).
    */
   earmarked: Record<string, MapRouletteEarmark>;
   rtree: RBush<any>;
@@ -119,14 +122,29 @@ export type MapRouletteEarmark = {
   elems: string[];
   loc: [number, number] | null;
   newComment: string;
-  /** Always 1 (Fixed) for resolve-with-upload. */
+  /** MapRoulette status to post after upload (Fixed / Already Fixed / …). */
   _status: number;
   /**
-   * Whether this earmark is included in the next OSM upload / closed:maproulette
-   * tag. Toggled on the commit checklist without dropping the row.
+   * Whether this earmark is included in the next OSM upload / closed:maproulette*
+   * tags. Toggled on the commit checklist without dropping the row.
    */
   includeInUpload: boolean;
 };
+
+/** Changeset tag key for a MapRoulette status code. */
+export function closedMapRouletteTagKey(status: number): string {
+  switch (Number(status)) {
+    case MR_STATUS.FALSE_POSITIVE:
+      return 'closed:maproulette:false_positive';
+    case MR_STATUS.ALREADY_FIXED:
+      return 'closed:maproulette:already_fixed';
+    case MR_STATUS.TOO_HARD:
+      return 'closed:maproulette:too_hard';
+    case MR_STATUS.FIXED:
+    default:
+      return 'closed:maproulette';
+  }
+}
 
 const tiler = utilTiler();
 const dispatch = d3_dispatch('loaded', 'loading', 'earmarked');
@@ -164,6 +182,9 @@ function writePersistedEarmarks(list: MapRouletteEarmark[]): void {
 function applyPersistedEarmarks(): void {
   if (!_cache) return;
   readPersistedEarmarks().forEach(function(entry) {
+    if (entry._status === undefined || entry._status === null) {
+      entry._status = MR_STATUS.FIXED;
+    }
     _cache.earmarked[String(entry.taskID)] = entry;
   });
 }
@@ -357,24 +378,35 @@ function applyPinLocFromTask(qaItem: any, taskOrGeometries: any): boolean {
 /**
  * Keep a task on the map as resolved (gray) instead of removing it.
  * Used after a successful local Fixed / Can’t complete / etc.
+ * @param keepEarmark  When true, leave the deferred queue entry (status button
+ *   “with save” path). When false, drop any earmark (immediate API success).
  */
-function markTaskResolvedInCache(item: any, status: number): void {
+function markTaskResolvedInCache(
+  item: any,
+  status: number,
+  options?: { keepEarmark?: boolean },
+): void {
   if (!_cache || !item || !item.id) return;
   const id = String(item.id);
   const cached = _cache.data[id] || item;
   const mappedOn = new Date().toISOString();
+  const keepEarmark = !!(options && options.keepEarmark);
   cached.taskStatus = status;
   cached.mappedOn = mappedOn;
   if (cached.task) {
     cached.task.status = status;
     cached.task.mappedOn = mappedOn;
   }
-  cached.earmarked = false;
-  if (_cache.earmarked[id]) {
-    delete _cache.earmarked[id];
-    writePersistedEarmarks(
-      Object.keys(_cache.earmarked).map(function(k) { return _cache.earmarked[k]; }),
-    );
+  if (keepEarmark) {
+    cached.earmarked = !!_cache.earmarked[id];
+  } else {
+    cached.earmarked = false;
+    if (_cache.earmarked[id]) {
+      delete _cache.earmarked[id];
+      writePersistedEarmarks(
+        Object.keys(_cache.earmarked).map(function(k) { return _cache.earmarked[k]; }),
+      );
+    }
   }
   _cache.data[id] = cached;
   // Drop from display immediately if somehow already outside the 24h window.
@@ -463,16 +495,23 @@ export default {
     return this;
   },
 
-  /** Tasks submitted this session (Rapid-compatible shape). */
-  getClosed(): Array<{ challengeID: string; taskID: string }> {
+  /** Tasks submitted this session (immediate API). */
+  getClosed(): Array<{ challengeID: string; taskID: string; _status: number }> {
     return _cache ? _cache.closed.slice() : [];
   },
 
   /**
-   * Snapshot a task for resolve-with-upload. Does not call the MapRoulette API
-   * or remove the pin — that happens after the OSM changeset ID is known.
+   * Snapshot a task outcome for post-upload MapRoulette update. Does not call
+   * the MapRoulette API — that happens after the OSM changeset ID is known.
+   * @param status  MR status code (default Fixed).
+   * @param options.markLocalDone  Gray-out the pin for this session (status
+   *   buttons). Tag Fix Accept leaves the pin earmarked without graying.
    */
-  earmarkTask(qaItem: any): MapRouletteEarmark | null {
+  earmarkTask(
+    qaItem: any,
+    status: number = MR_STATUS.FIXED,
+    options?: { markLocalDone?: boolean },
+  ): MapRouletteEarmark | null {
     if (!_cache || !qaItem || !qaItem.id) return null;
     const taskID = String(qaItem.id);
     const challengeID = String(qaItem.parentId || (qaItem.task && qaItem.task.parentId) || '');
@@ -483,15 +522,16 @@ export default {
     const loc = Array.isArray(qaItem.loc) && qaItem.loc.length >= 2
       ? [Number(qaItem.loc[0]), Number(qaItem.loc[1])] as [number, number]
       : null;
+    const resolvedStatus = Number.isFinite(Number(status)) ? Number(status) : MR_STATUS.FIXED;
     const earmark: MapRouletteEarmark = {
       taskID,
       challengeID,
-      parentName: (challenge && challenge.name) || '',
+      parentName: (challenge && challenge.name) || (qaItem.parentName) || '',
       title: (qaItem.task && qaItem.task.title) || '',
       elems,
       loc,
       newComment: (qaItem.newComment || (qaItem.task && qaItem.task.newComment) || '').trim(),
-      _status: 1,
+      _status: resolvedStatus,
       includeInUpload: true,
     };
     _cache.earmarked[taskID] = earmark;
@@ -500,6 +540,9 @@ export default {
     const cached = _cache.data[taskID];
     if (cached) cached.earmarked = true;
     writePersistedEarmarks(this.getEarmarked());
+    if (options && options.markLocalDone) {
+      markTaskResolvedInCache(qaItem, resolvedStatus, { keepEarmark: true });
+    }
     dispatch.call('earmarked');
     dispatch.call('loaded');
     return earmark;
@@ -510,10 +553,30 @@ export default {
     const id = String(taskId);
     delete _cache.earmarked[id];
     const cached = _cache.data[id];
-    if (cached) cached.earmarked = false;
+    if (cached) {
+      cached.earmarked = false;
+      // Undo local “done” from a deferred queue so the task is actionable again.
+      if (isResolvedStatus(taskStatusOf(cached))) {
+        cached.taskStatus = MR_STATUS.CREATED;
+        cached.mappedOn = null;
+        if (cached.task) {
+          cached.task.status = MR_STATUS.CREATED;
+          cached.task.mappedOn = null;
+        }
+      }
+    }
     writePersistedEarmarks(this.getEarmarked());
     dispatch.call('earmarked');
     dispatch.call('loaded');
+  },
+
+  /**
+   * Drop session-immediate outcomes after they have been written into a
+   * successfully uploaded changeset (avoids re-tagging on the next upload).
+   */
+  clearClosed(): void {
+    if (!_cache) return;
+    _cache.closed = [];
   },
 
   isEarmarked(taskId: string): boolean {
@@ -539,7 +602,7 @@ export default {
 
   /**
    * Commit-checklist toggle: keep the earmark (and pin), but include/exclude
-   * from closed:maproulette + post-upload Fixed.
+   * from closed:maproulette* + post-upload status updates.
    */
   setEarmarkedChecked(taskId: string, checked: boolean): void {
     if (!_cache || !taskId) return;
@@ -866,9 +929,9 @@ export default {
   },
 
   /**
-   * After OSM upload: mark each snapshotted earmark Fixed with a changeset
-   * comment. `onProgress({ index, total, taskID, error? })` is called before
-   * each task and once at the end.
+   * After OSM upload: post each snapshotted earmark’s queued status with a
+   * changeset comment. `onProgress({ index, total, taskID, error? })` is
+   * called before each task and once at the end.
    */
   resolveEarmarksAfterChangeset(
     earmarks: MapRouletteEarmark[],
@@ -918,10 +981,13 @@ export default {
         onProgress({ index: current + 1, total, taskID: entry.taskID });
       }
 
+      const status = Number.isFinite(Number(entry._status))
+        ? Number(entry._status)
+        : MR_STATUS.FIXED;
       const payload: any = {
         id: entry.taskID,
         parentId: entry.challengeID,
-        _status: 1,
+        _status: status,
         comment: commentFor(entry),
         mapRouletteApiKey: apiKey,
       };
@@ -1015,16 +1081,17 @@ export default {
     function finishSuccess(): void {
       clearTimeout(timeoutId);
       delete _cache.inflightPost[d.id];
-      if (d.parentId) {
-        _cache.closed.push({
-          challengeID: String(d.parentId),
-          taskID: String(d.id),
-        });
-      }
       // Keep pin as gray “resolved” for 24h instead of removing immediately.
       const status = (d._status !== undefined && d._status !== null)
         ? Number(d._status)
         : MR_STATUS.FIXED;
+      if (d.parentId) {
+        _cache.closed.push({
+          challengeID: String(d.parentId),
+          taskID: String(d.id),
+          _status: status,
+        });
+      }
       markTaskResolvedInCache(d, status);
       dispatch.call('loaded');
       if (callback) callback(null, d);

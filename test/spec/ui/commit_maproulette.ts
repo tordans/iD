@@ -144,5 +144,30 @@ describe('iD.commit_maproulette', () => {
       expect(tags.comment).toBe('Included');
       expect(tags['closed:maproulette']).toBe('1');
     });
+
+    it('writes status-specific closed:maproulette* tags for queued outcomes', () => {
+      serviceMapRoulette.earmarkTask({
+        id: '10',
+        parentId: '100',
+        loc: [0, 0],
+      }, 1);
+      serviceMapRoulette.earmarkTask({
+        id: '11',
+        parentId: '100',
+        loc: [0, 0],
+      }, 6);
+      serviceMapRoulette.earmarkTask({
+        id: '12',
+        parentId: '100',
+        loc: [0, 0],
+      }, 2);
+
+      const tags: Record<string, string> = {};
+      applyMapRouletteDerivedTags(context, tags);
+
+      expect(tags['closed:maproulette']).toBe('10');
+      expect(tags['closed:maproulette:too_hard']).toBe('11');
+      expect(tags['closed:maproulette:false_positive']).toBe('12');
+    });
   });
 });

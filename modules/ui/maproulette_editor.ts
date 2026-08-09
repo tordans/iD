@@ -6,11 +6,16 @@ import { services } from '../services';
 import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
 import { goToNearbyMapRouletteTask } from '../util/maproulette_nearby';
+import {
+  getMapRouletteUpdateTiming,
+  setMapRouletteUpdateTiming,
+  type MapRouletteUpdateTiming,
+} from '../util/maproulette_update_timing';
 import { svgIcon } from '../svg/icon';
 import { MAPROULETTE_ACTION_ICONS } from '../svg/maproulette_marker';
 import { uiMapRouletteDetails } from './maproulette_details';
-import { uiMapRouletteEarmarkToggle } from './maproulette_earmark_toggle';
 import { uiMapRouletteTagFix } from './maproulette_tag_fix';
+import { uiTooltip } from './tooltip';
 import { uiViewOnMapRoulette } from './view_on_maproulette';
 
 import { utilNoAuto, utilRebind } from '../util';
@@ -29,6 +34,9 @@ const ACTIONS: Array<{ key: ActionKey; status: number; className: string }> = [
   { key: 'cantComplete', status: 6, className: 'cantComplete-button' },
 ];
 
+const SAVE_CONTROL_SELECTOR =
+  '.mr-update-timing, .checkbox-section, .mr-optional-comment, .mr-completion-heading, .buttons.mr-actions, .mr-submit-status, .mr-auth-warning, .mr-generic-warning, .mr-queued-banner';
+
 export function uiMapRouletteEditor(context: any) {
   const dispatch = d3_dispatch('change');
 
@@ -42,6 +50,7 @@ export function uiMapRouletteEditor(context: any) {
   let _tagFixReady = false;
   let _tagFixHasAccept = false;
   let _tagFixTaskId: string | null = null;
+  let _updateTiming: MapRouletteUpdateTiming = getMapRouletteUpdateTiming();
   const _details = uiMapRouletteDetails(context);
   const _tagFix = uiMapRouletteTagFix(context);
 
@@ -96,6 +105,9 @@ export function uiMapRouletteEditor(context: any) {
     const isResolved = !!(
       isShown && mr && mr.isRecentlyResolved && mr.isRecentlyResolved(_qaItem)
     );
+    const isQueued = !!(
+      isShown && mr && mr.isEarmarked && mr.isEarmarked(_qaItem.id)
+    );
     let saveSection = sel
       .selectAll('.mr-save')
       .data(isShown ? [_qaItem] : [], function(d: any) { return d.id; });
@@ -108,25 +120,35 @@ export function uiMapRouletteEditor(context: any) {
       .attr('class', 'mr-save save-section cf');
 
     saveSection = saveEnter.merge(saveSection);
-    saveSection.classed('mr-resolved', isResolved);
+    saveSection.classed('mr-resolved', isResolved || isQueued);
+
+    // Prefer queued UI whenever an earmark remains (including with-save +
+    // markLocalDone, which also sets recently-resolved locally).
+    if (isQueued) {
+      saveSection
+        .call(queuedBanner)
+        .selectAll(SAVE_CONTROL_SELECTOR + ', .mr-tag-fix, .mr-earmark-wrap, .mr-resolved-banner')
+        .remove();
+      return;
+    }
 
     if (isResolved) {
       saveSection
         .call(resolvedBanner)
-        .selectAll('.mr-earmark-wrap, .nearby-task-toggle, .mr-optional-comment, .mr-tag-fix, .mr-completion-heading, .buttons.mr-actions, .mr-status-feedback, .mr-auth-warning')
+        .selectAll(SAVE_CONTROL_SELECTOR + ', .mr-tag-fix, .mr-earmark-wrap, .mr-queued-banner')
         .remove();
       return;
     }
 
     saveSection
-      .selectAll('.mr-resolved-banner')
+      .selectAll('.mr-resolved-banner, .mr-queued-banner')
       .remove();
 
     saveSection.call(tagFixSection);
 
     if (!_tagFixReady) {
       saveSection
-        .selectAll('.mr-earmark-wrap, .checkbox-section, .mr-optional-comment, .mr-completion-heading, .buttons.mr-actions, .mr-submit-status, .mr-auth-warning, .mr-generic-warning')
+        .selectAll(SAVE_CONTROL_SELECTOR)
         .remove();
       return;
     }
@@ -136,10 +158,14 @@ export function uiMapRouletteEditor(context: any) {
 
   /** Interactive controls only — must not re-enter tagFixSection (avoids paint→save→paint loop). */
   function renderSaveControls(selection: any): void {
+    const rightAway = _updateTiming === 'right_away';
+    selection.call(updateTimingToggle);
+    if (rightAway) {
+      selection.call(nearbyTaskToggle).call(optionalComment);
+    } else {
+      selection.selectAll('.checkbox-section, .mr-optional-comment').remove();
+    }
     selection
-      .call(earmarkToggle)
-      .call(nearbyTaskToggle)
-      .call(optionalComment)
       .call(mRSaveButtons)
       .call(statusFeedback)
       .call(authWarning);
@@ -158,7 +184,7 @@ export function uiMapRouletteEditor(context: any) {
         .mode('panel')
         .task(_qaItem)
         .onAccepted(function() {
-          renderSaveControls(selection);
+          editorRoot().call(mRSaveSection);
           dispatch.call('change');
         })
         .onPainted(function(info: { taskId: string; hasAccept: boolean }) {
@@ -185,14 +211,96 @@ export function uiMapRouletteEditor(context: any) {
     banner.select('p').text(t('map_data.layers.maproulette.resolved_message'));
   }
 
-  function earmarkToggle(selection: any): void {
-    selection.call(
-      uiMapRouletteEarmarkToggle(context)
-        .task(_qaItem)
-        .onChange(function() {
-          editorRoot().call(mRSaveSection);
-        }),
-    );
+  function queuedBanner(selection: any): void {
+    let banner = selection.selectAll('.mr-queued-banner').data([0]);
+    const enter = banner
+      .enter()
+      .append('div')
+      .attr('class', 'mr-queued-banner notice');
+    enter.append('h3');
+    enter.append('p');
+    enter
+      .append('button')
+      .attr('type', 'button')
+      .attr('class', 'button mr-queued-undo')
+      .text(t('map_data.layers.maproulette.queued_undo'));
+    banner = enter.merge(banner);
+    banner.select('h3').text(t('map_data.layers.maproulette.queued_title'));
+    banner.select('p').text(t('map_data.layers.maproulette.queued_message'));
+    banner.select('.mr-queued-undo')
+      .on('click.mr-queued-undo', function(this: HTMLElement, d3_event: Event) {
+        d3_event.preventDefault();
+        this.blur();
+        const mr = services.maproulette;
+        if (!mr || !_qaItem || typeof mr.unearmarkTask !== 'function') return;
+        mr.unearmarkTask(_qaItem.id);
+        _tagFixReady = false;
+        _tagFixHasAccept = false;
+        editorRoot().call(mRSaveSection);
+        dispatch.call('change');
+      });
+  }
+
+  function updateTimingToggle(selection: any): void {
+    let wrap = selection.selectAll('.mr-update-timing').data([0]);
+    const wrapEnter = wrap
+      .enter()
+      .append('div')
+      .attr('class', 'mr-update-timing');
+
+    wrapEnter.append('div')
+      .attr('class', 'mr-update-timing-label')
+      .text(t('map_data.layers.maproulette.update_timing_label'));
+
+    const groupEnter = wrapEnter
+      .append('div')
+      .attr('class', 'mr-update-timing-group')
+      .attr('role', 'radiogroup')
+      .attr('aria-label', t('map_data.layers.maproulette.update_timing_label'));
+
+    (['with_save', 'right_away'] as MapRouletteUpdateTiming[]).forEach(function(value) {
+      const btn = groupEnter
+        .append('button')
+        .attr('type', 'button')
+        .attr('class', 'mr-update-timing-option')
+        .attr('data-timing', value)
+        .attr('role', 'radio')
+        .call((uiTooltip() as any)
+          .title(() => t.append(
+            value === 'with_save'
+              ? 'map_data.layers.maproulette.update_with_save_tooltip'
+              : 'map_data.layers.maproulette.update_right_away_tooltip',
+          ))
+          .placement('bottom'));
+      btn.append('span')
+        .attr('class', 'mr-update-timing-option-label')
+        .text(t(
+          value === 'with_save'
+            ? 'map_data.layers.maproulette.update_with_save'
+            : 'map_data.layers.maproulette.update_right_away',
+        ));
+    });
+
+    wrap = wrapEnter.merge(wrap);
+
+    wrap.selectAll('.mr-update-timing-option')
+      .classed('active', function(this: Element) {
+        return d3_select(this).attr('data-timing') === _updateTiming;
+      })
+      .attr('aria-checked', function(this: Element) {
+        return d3_select(this).attr('data-timing') === _updateTiming ? 'true' : 'false';
+      })
+      .attr('disabled', _submitting ? true : null)
+      .on('click.mr-timing', function(this: HTMLElement, d3_event: Event) {
+        d3_event.preventDefault();
+        if (_submitting) return;
+        const next = d3_select(this).attr('data-timing') as MapRouletteUpdateTiming;
+        if (next !== 'with_save' && next !== 'right_away') return;
+        if (next === _updateTiming) return;
+        _updateTiming = next;
+        setMapRouletteUpdateTiming(next);
+        editorRoot().call(mRSaveSection);
+      });
   }
 
   function optionalComment(selection: any): void {
@@ -239,11 +347,7 @@ export function uiMapRouletteEditor(context: any) {
   function mRSaveButtons(selection: any): void {
     const isSelected =
       _qaItem && String(_qaItem.id) === String(context.selectedErrorID());
-    const mr = services.maproulette;
-    const earmarked = !!(
-      _qaItem && mr && mr.isEarmarked && mr.isEarmarked(_qaItem.id)
-    );
-    const showCompletion = isSelected && !earmarked && _tagFixReady;
+    const showCompletion = isSelected && _tagFixReady;
 
     let heading = selection
       .selectAll('.mr-completion-heading')
@@ -301,7 +405,7 @@ export function uiMapRouletteEditor(context: any) {
         .on(`click.${action.key}`, function(this: HTMLElement, _d3_event: any, d: any) {
           if (_submitting || hide) return;
           this.blur();
-          beginSubmit(d || _qaItem, action);
+          beginAction(d || _qaItem, action);
         })
         .select('.mr-action-label')
         .text(
@@ -331,8 +435,13 @@ export function uiMapRouletteEditor(context: any) {
       .text(t('map_data.layers.maproulette.submitting_status'));
   }
 
-  function beginSubmit(d: any, action: { key: ActionKey; status: number }): void {
+  function beginAction(d: any, action: { key: ActionKey; status: number }): void {
     if (!d) return;
+
+    if (_updateTiming === 'with_save') {
+      queueOutcome(d, action);
+      return;
+    }
 
     d._status = action.status;
     _activeAction = action.key;
@@ -356,6 +465,20 @@ export function uiMapRouletteEditor(context: any) {
     } else {
       submitTask(d);
     }
+  }
+
+  function queueOutcome(d: any, action: { key: ActionKey; status: number }): void {
+    const mr = services.maproulette;
+    if (!mr || typeof mr.earmarkTask !== 'function') {
+      finishSubmit({ message: 'MapRoulette service unavailable', status: 0 });
+      return;
+    }
+
+    const associatedElems = snapshotAssociatedElems(d);
+    mr.earmarkTask(d, action.status, { markLocalDone: true });
+    _submitError = null;
+    _qaItem = null;
+    afterSuccessfulSubmit(mr, d, associatedElems, { allowNearby: false });
   }
 
   function finishSubmit(err?: any): void {
@@ -419,7 +542,7 @@ export function uiMapRouletteEditor(context: any) {
       // keep showing “Loading task details…” for something that no longer exists.
       _qaItem = null;
 
-      afterSuccessfulSubmit(mr, d, associatedElems);
+      afterSuccessfulSubmit(mr, d, associatedElems, { allowNearby: true });
     }, { timeoutMs: SUBMIT_TIMEOUT_MS });
   }
 
@@ -434,8 +557,15 @@ export function uiMapRouletteEditor(context: any) {
    * After a task is closed: nearby MR task (if enabled), else the first
    * associated OSM way/entity still available, else browse with a clear sidebar.
    */
-  function afterSuccessfulSubmit(mr: any, closed: any, elems: string[]): void {
-    if (_goToNearbyTask && goToNearbyMapRouletteTask(context, closed && closed.id)) {
+  function afterSuccessfulSubmit(
+    mr: any,
+    closed: any,
+    elems: string[],
+    options: { allowNearby: boolean },
+  ): void {
+    if (options.allowNearby
+      && _goToNearbyTask
+      && goToNearbyMapRouletteTask(context, closed && closed.id)) {
       dispatch.call('change', closed);
       return;
     }
@@ -609,6 +739,7 @@ export function uiMapRouletteEditor(context: any) {
     _submitError = null;
     _submitting = false;
     _activeAction = null;
+    _updateTiming = getMapRouletteUpdateTiming();
     return render;
   };
 

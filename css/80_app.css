@@ -3342,6 +3342,64 @@ img.tag-reference-wiki-image {
 .maproulette-task-embed .mr-earmark-wrap {
     padding: 8px 0 4px;
 }
+.mr-save .mr-update-timing {
+    padding: 8px 0 4px;
+}
+.mr-save .mr-update-timing-label {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--muted-text-color, #888);
+}
+.mr-save .mr-update-timing-group {
+    display: flex;
+    width: 100%;
+    gap: 0;
+    border: 1px solid var(--border-color, #ccc);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.mr-save .mr-update-timing-option {
+    flex: 1 1 0;
+    margin: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 0;
+    background: var(--passive-bg-color, #f6f6f6);
+    color: var(--text-color);
+    font-weight: 600;
+    line-height: 1.1;
+    box-shadow: none;
+}
+.mr-save .mr-update-timing-option + .mr-update-timing-option {
+    border-left: 1px solid var(--border-color, #ccc);
+}
+.mr-save .mr-update-timing-option.active {
+    background: rgba(22, 163, 74, 0.18);
+    color: #16a34a;
+}
+.mr-save .mr-update-timing-option:focus,
+.mr-save .mr-update-timing-option:active {
+    background: var(--passive-bg-color, #f6f6f6);
+    color: var(--text-color);
+}
+.mr-save .mr-update-timing-option.active:focus,
+.mr-save .mr-update-timing-option.active:active {
+    background: rgba(22, 163, 74, 0.18);
+    color: #16a34a;
+}
+@media (hover: hover) {
+    .mr-save .mr-update-timing-option:hover {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+    }
+    .mr-save .mr-update-timing-option.active:hover {
+        background: rgba(22, 163, 74, 0.24);
+        color: #16a34a;
+    }
+}
 .maproulette-task-embed .mr-tag-fix {
     margin-left: 0;
     margin-right: 0;
@@ -3354,18 +3412,26 @@ img.tag-reference-wiki-image {
     box-sizing: border-box;
 }
 .mr-save .mr-resolved-banner,
+.mr-save .mr-queued-banner,
 .maproulette-task-embed .mr-resolved-banner {
     margin: 8px 0;
     padding: 8px 10px;
 }
 .mr-save .mr-resolved-banner h3,
+.mr-save .mr-queued-banner h3,
 .maproulette-task-embed .mr-resolved-banner strong {
     margin: 0 0 4px;
     font-size: 14px;
 }
 .mr-save .mr-resolved-banner p,
+.mr-save .mr-queued-banner p,
 .maproulette-task-embed .mr-resolved-banner p {
     margin: 0;
+}
+.mr-save .mr-queued-banner .mr-queued-undo {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-weight: 600;
 }
 .mr-earmark-button {
     width: 100%;

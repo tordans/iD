@@ -7,8 +7,8 @@ import { uiTooltip } from './tooltip';
 
 
 /**
- * Full-width “Resolve with upload” toggle (Fixed-adjacent outline button).
- * Shared by the MapRoulette task panel and the entity-inspector MR section.
+ * Full-width “Queue Fixed for save” toggle for the entity-inspector embed.
+ * The pin panel uses the timing radio + status buttons instead.
  */
 export function uiMapRouletteEarmarkToggle(context: any) {
   let _qaItem: any;
