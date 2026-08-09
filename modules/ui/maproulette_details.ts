@@ -463,7 +463,7 @@ export function uiMapRouletteDetails(context: any) {
           }
 
           attachHighlightLinkHandlers(sel);
-          } catch (err) {
+          } catch {
             clearLoadingState(sel);
             sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
           }
