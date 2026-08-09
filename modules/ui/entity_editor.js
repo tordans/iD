@@ -89,15 +89,20 @@ export function uiEntityEditor(context) {
             .merge(bodyEnter);
 
         if (!_sections) {
+            var mapRouletteSection = uiSectionMapRouletteTask(context);
+            var rawTagEditor = uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags);
+            mapRouletteSection.onPresenceChange(function(present) {
+                rawTagEditor.mapRoulettePresent(present);
+            });
             _sections = [
                 uiSectionSelectionList(context),
                 uiSectionFeatureType(context).on('choose', function(presets) {
                     dispatch.call('choose', this, presets);
                 }),
                 uiSectionEntityIssues(context),
-                uiSectionMapRouletteTask(context),
+                mapRouletteSection,
                 uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
-                uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags),
+                rawTagEditor,
                 uiSectionRawMemberEditor(context),
                 uiSectionRawMembershipEditor(context)
             ];

@@ -48,12 +48,37 @@ export function uiSectionRawTagEditor(id, context) {
     var _tags;
     var _entityIDs;
     var _didInteract = false;
+    var _mapRoulettePresent = false;
+    var _userChoseViewThisVisit = false;
+    var _contentWrap;
 
     function interacted() {
         _didInteract = true;
     }
 
+    function applyTagView(wrap) {
+        wrap.selectAll('.raw-tag-option')
+            .classed('selected', function(datum) { return datum.id === _tagView; })
+            .attr('aria-selected', function(datum) { return datum.id === _tagView; });
+
+        wrap.selectAll('.tag-text')
+            .classed('hide', (_tagView !== 'text'))
+            .each(setTextareaHeight);
+
+        wrap.selectAll('.tag-list, .add-row')
+            .classed('hide', (_tagView !== 'list'));
+    }
+
+    function forceTextView() {
+        _tagView = 'text';
+        prefs('raw-tag-editor-view', 'text');
+        if (_contentWrap) {
+            applyTagView(_contentWrap);
+        }
+    }
+
     function renderDisclosureContent(wrap) {
+        _contentWrap = wrap;
 
         // remove deleted keys
         _orderedKeys = _orderedKeys.filter(function(key) {
@@ -106,17 +131,8 @@ export function uiSectionRawTagEditor(id, context) {
             .on('click', function(d3_event, d) {
                 _tagView = d.id;
                 prefs('raw-tag-editor-view', d.id);
-
-                wrap.selectAll('.raw-tag-option')
-                    .classed('selected', function(datum) { return datum === d; })
-                    .attr('aria-selected', function(datum) { return datum === d; });
-
-                wrap.selectAll('.tag-text')
-                    .classed('hide', (d.id !== 'text'))
-                    .each(setTextareaHeight);
-
-                wrap.selectAll('.tag-list, .add-row')
-                    .classed('hide', (d.id !== 'list'));
+                _userChoseViewThisVisit = true;
+                applyTagView(wrap);
             })
             .each(function(d) {
                 d3_select(this)
@@ -617,6 +633,28 @@ export function uiSectionRawTagEditor(id, context) {
         if (!_entityIDs || !val || !utilArrayIdentical(_entityIDs, val)) {
             _entityIDs = val;
             _orderedKeys = [];
+            _userChoseViewThisVisit = false;
+            if (_mapRoulettePresent) {
+                forceTextView();
+            }
+        }
+        return section;
+    };
+
+
+    section.mapRoulettePresent = function(val) {
+        if (!arguments.length) return _mapRoulettePresent;
+        var wasPresent = _mapRoulettePresent;
+        _mapRoulettePresent = !!val;
+        if (_mapRoulettePresent) {
+            if (!wasPresent) {
+                _userChoseViewThisVisit = false;
+            }
+            if (!_userChoseViewThisVisit) {
+                forceTextView();
+            }
+        } else {
+            _userChoseViewThisVisit = false;
         }
         return section;
     };
