@@ -14,6 +14,8 @@ export function uiSectionMapRouletteTask(context: any) {
   let _tasks: any[] = [];
   let _highlightBound = false;
   let _enriching = false;
+  let _lastPresence = false;
+  const _presenceListeners: Array<(present: boolean) => void> = [];
 
   const section = (uiSection('maproulette-task', context) as any)
     .shouldDisplay(function() {
@@ -28,6 +30,19 @@ export function uiSectionMapRouletteTask(context: any) {
   function mapRouletteLayerEnabled(): boolean {
     const layer = context.layers().layer('maproulette');
     return !!(layer && layer.enabled());
+  }
+
+  function isPresent(): boolean {
+    return mapRouletteLayerEnabled() && _tasks.length > 0;
+  }
+
+  function notifyPresenceChange(): void {
+    const present = isPresent();
+    if (present === _lastPresence) return;
+    _lastPresence = present;
+    _presenceListeners.forEach(function(cb) {
+      cb(present);
+    });
   }
 
   function findTasks(): any[] {
@@ -209,6 +224,7 @@ export function uiSectionMapRouletteTask(context: any) {
     _entityIDs = val || [];
     clearPinHighlights();
     _tasks = findTasks();
+    notifyPresenceChange();
 
     if (mapRouletteLayerEnabled() && !_enriching) {
       enrichVisibleTaskElems().then(function(updated) {
@@ -228,8 +244,15 @@ export function uiSectionMapRouletteTask(context: any) {
       });
     if (!changed) return;
     _tasks = next;
+    notifyPresenceChange();
     section.reRender();
   }
+
+  section.onPresenceChange = function(cb: (present: boolean) => void) {
+    _presenceListeners.push(cb);
+    cb(isPresent());
+    return section;
+  };
 
   if (services.maproulette && typeof (services.maproulette as any).on === 'function') {
     (services.maproulette as any).on('loaded.maproulette_task', function() {
@@ -237,6 +260,8 @@ export function uiSectionMapRouletteTask(context: any) {
       refreshTasksFromIndex();
     });
   }
+
+  context.layers().on('change.uiSectionMapRouletteTask', notifyPresenceChange);
 
   return section;
 }
