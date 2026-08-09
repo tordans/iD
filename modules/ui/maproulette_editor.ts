@@ -38,10 +38,12 @@ export function uiMapRouletteEditor(context: any) {
   let _submitError: any = null;
   let _submitting = false;
   let _activeAction: ActionKey | null = null;
-  /** Tag-fix detail load for current task — Fixed stays disabled until ready. */
+  /** Completion actions hidden until tag-fix/detail paint finishes. */
   let _tagFixReady = false;
   let _tagFixHasAccept = false;
   let _tagFixTaskId: string | null = null;
+  const _details = uiMapRouletteDetails(context);
+  const _tagFix = uiMapRouletteTagFix(context);
 
   function editorRoot(): any {
     return context.container().select('.mr-editor');
@@ -73,7 +75,7 @@ export function uiMapRouletteEditor(context: any) {
       .append('div')
       .attr('class', 'modal-section mr-editor')
       .merge(editor)
-      .call(uiMapRouletteDetails(context).task(_qaItem))
+      .call(_details.task(_qaItem))
       .call(mRSaveSection);
 
     const footer = selection.selectAll('.footer').data([0]);
@@ -120,11 +122,24 @@ export function uiMapRouletteEditor(context: any) {
       .selectAll('.mr-resolved-banner')
       .remove();
 
-    saveSection
+    saveSection.call(tagFixSection);
+
+    if (!_tagFixReady) {
+      saveSection
+        .selectAll('.mr-earmark-wrap, .checkbox-section, .mr-optional-comment, .mr-completion-heading, .buttons.mr-actions, .mr-submit-status, .mr-auth-warning, .mr-generic-warning')
+        .remove();
+      return;
+    }
+
+    renderSaveControls(saveSection);
+  }
+
+  /** Interactive controls only — must not re-enter tagFixSection (avoids paint→save→paint loop). */
+  function renderSaveControls(selection: any): void {
+    selection
       .call(earmarkToggle)
       .call(nearbyTaskToggle)
       .call(optionalComment)
-      .call(tagFixSection)
       .call(mRSaveButtons)
       .call(statusFeedback)
       .call(authWarning);
@@ -139,18 +154,20 @@ export function uiMapRouletteEditor(context: any) {
     }
 
     selection.call(
-      uiMapRouletteTagFix(context)
+      _tagFix
         .mode('panel')
         .task(_qaItem)
         .onAccepted(function() {
-          editorRoot().call(mRSaveSection);
+          renderSaveControls(selection);
           dispatch.call('change');
         })
         .onPainted(function(info: { taskId: string; hasAccept: boolean }) {
           if (!_qaItem || String(_qaItem.id) !== info.taskId) return;
           _tagFixReady = true;
           _tagFixHasAccept = !!info.hasAccept;
-          selection.call(mRSaveButtons);
+          // Only mount controls — calling mRSaveSection here re-ran tagFixSection
+          // and retriggered paint → infinite loop / browser freeze on pin click.
+          renderSaveControls(selection);
         }),
     );
   }
@@ -226,7 +243,7 @@ export function uiMapRouletteEditor(context: any) {
     const earmarked = !!(
       _qaItem && mr && mr.isEarmarked && mr.isEarmarked(_qaItem.id)
     );
-    const showCompletion = isSelected && !earmarked;
+    const showCompletion = isSelected && !earmarked && _tagFixReady;
 
     let heading = selection
       .selectAll('.mr-completion-heading')
@@ -265,26 +282,24 @@ export function uiMapRouletteEditor(context: any) {
 
     buttonSection = buttonSection.merge(buttonEnter);
 
-    // Until tag-fix detail loads, keep Fixed disabled so users cannot close
-    // a Tag Fix task before Accept is offered. After load, hide Fixed when Accept applies.
+    // Completion actions are hidden until detail paint finishes; hide Fixed when Accept applies.
     const hideFixed = _tagFixReady && _tagFixHasAccept;
-    const waitForTagFix = !_tagFixReady;
 
     ACTIONS.forEach(function(action) {
       const isActive = _submitting && _activeAction === action.key;
       const isFixed = action.key === 'fixed';
       const hide = isFixed && hideFixed;
-      const disabled = !_qaItem || _submitting || hide || (isFixed && waitForTagFix);
+      const disabled = !_qaItem || _submitting || hide;
 
       buttonSection
         .select(`.${action.className}`)
         .classed('hide', hide)
         .attr('disabled', disabled ? true : null)
-        .classed('loading', isActive || (isFixed && waitForTagFix && !_submitting))
+        .classed('loading', isActive)
         .classed('disabled', disabled)
-        .attr('aria-busy', isActive || (isFixed && waitForTagFix) ? 'true' : null)
+        .attr('aria-busy', isActive ? 'true' : null)
         .on(`click.${action.key}`, function(this: HTMLElement, _d3_event: any, d: any) {
-          if (_submitting || hide || (isFixed && waitForTagFix)) return;
+          if (_submitting || hide) return;
           this.blur();
           beginSubmit(d || _qaItem, action);
         })
@@ -292,9 +307,7 @@ export function uiMapRouletteEditor(context: any) {
         .text(
           isActive
             ? t('map_data.layers.maproulette.submitting')
-            : (isFixed && waitForTagFix)
-              ? t('map_data.layers.maproulette.tag_fix_checking')
-              : t(`map_data.layers.maproulette.${action.key}`),
+            : t(`map_data.layers.maproulette.${action.key}`),
         );
     });
   }

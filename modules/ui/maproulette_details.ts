@@ -162,6 +162,13 @@ export function uiMapRouletteDetails(context: any) {
       .attr('target', '_blank');
   }
 
+  function clearLoadingState(selection: any): void {
+    selection
+      .classed('loading', false)
+      .classed('qa-details-loading', false)
+      .attr('aria-busy', null);
+  }
+
   function attachHighlightLinkHandlers(selection: any): void {
     selection
       .selectAll('.highlight-link')
@@ -299,19 +306,35 @@ export function uiMapRouletteDetails(context: any) {
       const thisItem = _qaItem;
       mr.loadTaskDetailAsync(_qaItem)
         .then(function(task: any) {
-          if (!task) return;
+          const sel = details.selectAll('.qa-details-subsection');
+          if (sel.empty()) return;
+
           // Do nothing if the UI has moved on by the time this resolves
           // (same guard as osmose_details: still selected or still hovered).
           // Embedded inspector mode skips this — the entity editor owns lifetime.
           const thisTaskId = String(thisItem.id);
           const selectedId = context.selectedErrorID();
-          if (
+          const stale = (
             !_embedded &&
             String(selectedId) !== thisTaskId &&
             context.container().selectAll(`.qaItem.maproulette.hover.itemId-${thisTaskId}`).empty()
-          ) return;
+          );
+          if (stale) {
+            // Panel was replaced for another task — clear spinner if this node is still mounted.
+            if (!details.selectAll('.error-details').empty()) {
+              clearLoadingState(sel);
+            }
+            return;
+          }
 
-          const sel = details.selectAll('.qa-details-subsection');
+          clearLoadingState(sel);
+
+          if (!task) {
+            sel.text(t('map_data.layers.maproulette.no_instruction'));
+            return;
+          }
+
+          try {
           sel.html('');
 
           if (_embedded) {
@@ -440,11 +463,16 @@ export function uiMapRouletteDetails(context: any) {
           }
 
           attachHighlightLinkHandlers(sel);
+          } catch (err) {
+            clearLoadingState(sel);
+            sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
+          }
         })
         .catch(function() {
-          details
-            .selectAll('.qa-details-subsection')
-            .text(t('map_data.layers.maproulette.error_loading_task_details'));
+          const sel = details.selectAll('.qa-details-subsection');
+          if (sel.empty()) return;
+          clearLoadingState(sel);
+          sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
         });
     }
   }
