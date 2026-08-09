@@ -2,11 +2,12 @@ import { select as d3_select } from 'd3-selection';
 
 import { t } from '../core/localizer';
 import { services } from '../services';
+import { MAPROULETTE_ACTION_ICONS } from '../svg/maproulette_marker';
 import { uiTooltip } from './tooltip';
 
 
 /**
- * Full-width “Resolve with upload” toggle (checkbox chrome as a button).
+ * Full-width “Resolve with upload” toggle (Fixed-adjacent outline button).
  * Shared by the MapRoulette task panel and the entity-inspector MR section.
  */
 export function uiMapRouletteEarmarkToggle(context: any) {
@@ -49,8 +50,9 @@ export function uiMapRouletteEarmarkToggle(context: any) {
 
       btnEnter
         .append('span')
-        .attr('class', 'mr-earmark-check')
-        .attr('aria-hidden', 'true');
+        .attr('class', 'mr-earmark-icon')
+        .attr('aria-hidden', 'true')
+        .html(MAPROULETTE_ACTION_ICONS.fixed);
 
       btnEnter
         .append('span')

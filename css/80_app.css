@@ -656,12 +656,13 @@ button.add-note svg.icon {
 }
 
 .spinner {
-    opacity: .5;
+    opacity: .85;
     position: absolute;
     right: 4px;
     bottom: 4px;
     height: 20px;
     width: 20px;
+    z-index: 110;
 }
 .spinner img {
     height: 100%;
@@ -673,6 +674,11 @@ button.add-note svg.icon {
     transform: scaleX(-1);
     filter: FlipH;
     -ms-filter: "FlipH";
+}
+@media (prefers-color-scheme: dark) {
+    .ideditor[dir='ltr'] .spinner img {
+        filter: invert(1);
+    }
 }
 
 
@@ -2732,8 +2738,10 @@ div.combobox:has(.has-description) {
 button.raw-tag-option {
     flex: 0 0 auto;
     padding: 3px;
-    background: var(--muted-text-color);
-    color: var(--bg-color-3);
+    /* Unselected: use passive bg + text so icons stay visible in dark theme
+       (muted-text-color bg + bg-color-3 icon was nearly invisible). */
+    background: var(--passive-bg-color);
+    color: var(--text-color);
     margin: 0 3px;
 }
 button.raw-tag-option:focus,
@@ -3305,6 +3313,9 @@ img.tag-reference-wiki-image {
     height: 16px;
     background: url(img/mini-loader.gif) center / contain no-repeat;
 }
+.qa-details-loading .qa-details-loading-text {
+    color: var(--text-color);
+}
 
 /* Rapid parity: details header layout */
 .qa-details-header {
@@ -3329,11 +3340,7 @@ img.tag-reference-wiki-image {
 
 .mr-save .mr-earmark-wrap,
 .maproulette-task-embed .mr-earmark-wrap {
-    padding: 8px 10px 4px;
-}
-.maproulette-task-embed .mr-earmark-wrap {
-    padding-left: 0;
-    padding-right: 0;
+    padding: 8px 0 4px;
 }
 .maproulette-task-embed .mr-tag-fix {
     margin-left: 0;
@@ -3348,7 +3355,7 @@ img.tag-reference-wiki-image {
 }
 .mr-save .mr-resolved-banner,
 .maproulette-task-embed .mr-resolved-banner {
-    margin: 8px 10px;
+    margin: 8px 0;
     padding: 8px 10px;
 }
 .mr-save .mr-resolved-banner h3,
@@ -3365,37 +3372,62 @@ img.tag-reference-wiki-image {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: 6px;
     text-align: left;
     padding: 8px 10px;
     box-sizing: border-box;
+    border-radius: 8px;
+    border: 1.5px solid #16a34a;
+    background: transparent;
+    color: #16a34a;
+    font-weight: 600;
+    line-height: 1.1;
+    box-shadow: none;
 }
-.mr-earmark-button .mr-earmark-check {
-    flex: 0 0 16px;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--border-color, #aaa);
-    border-radius: 3px;
-    background: var(--bg-color, #fff);
-    box-sizing: border-box;
+.mr-earmark-button:focus,
+.mr-earmark-button:active {
+    background: transparent;
+    color: #16a34a;
 }
-.mr-earmark-button.active .mr-earmark-check {
-    background: #22c55e;
-    border-color: #22c55e;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23fff' d='M6.5 11.5 3 8l1.2-1.2 2.3 2.3 5.3-5.3L13 5.2z'/%3E%3C/svg%3E");
-    background-size: 14px 14px;
-    background-position: center;
-    background-repeat: no-repeat;
+.mr-earmark-button .mr-earmark-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    line-height: 0;
+}
+.mr-earmark-button .mr-earmark-icon svg {
+    display: block;
 }
 .mr-earmark-button .mr-earmark-label {
     flex: 1 1 auto;
     font-weight: bold;
+    line-height: 1.1;
+}
+.mr-earmark-button.active {
+    background: rgba(22, 163, 74, 0.18);
+    border-color: #16a34a;
+    border-width: 2px;
+    color: #16a34a;
+}
+.mr-earmark-button.active:focus,
+.mr-earmark-button.active:active {
+    background: rgba(22, 163, 74, 0.18);
+    color: #16a34a;
+}
+@media (hover: hover) {
+    .mr-earmark-button:hover {
+        background: rgba(22, 163, 74, 0.1);
+        color: #16a34a;
+    }
+    .mr-earmark-button.active:hover {
+        background: rgba(22, 163, 74, 0.24);
+        color: #16a34a;
+    }
 }
 
 /* MapRoulette: nearby-task toggle sits above the action buttons */
 .mr-save .checkbox-section.modal-section {
     border-bottom: 0;
-    padding: 8px 10px 4px;
+    padding: 8px 0 4px;
 }
 .mr-save .checkbox-section.modal-section input[type="checkbox"] {
     vertical-align: middle;
@@ -3404,7 +3436,7 @@ img.tag-reference-wiki-image {
     margin-left: 6px;
 }
 .mr-save .mr-optional-comment {
-    padding: 4px 10px 0;
+    padding: 4px 0 0;
 }
 .mr-save .mr-optional-comment > label {
     display: block;
@@ -3420,10 +3452,10 @@ img.tag-reference-wiki-image {
     box-sizing: border-box;
 }
 .mr-save > .buttons.mr-actions {
-    padding-top: 4px;
+    padding: 4px 0 10px;
 }
 .mr-save .mr-completion-heading {
-    margin: 8px 10px 0;
+    margin: 8px 0 0;
     padding: 0;
     font-size: 11px;
     font-weight: bold;
@@ -3432,7 +3464,7 @@ img.tag-reference-wiki-image {
     color: var(--muted-text-color, #888);
 }
 .mr-tag-fix {
-    margin: 8px 10px;
+    margin: 8px 0;
     padding: 8px 10px;
     border: 1px solid var(--border-color, #ccc);
     border-radius: 6px;
@@ -3485,8 +3517,12 @@ img.tag-reference-wiki-image {
     border: none;
     color: #fff;
     font-weight: 600;
-    padding: 10px 8px;
+    line-height: 1.1;
+    padding: 8px 8px;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+.mr-save .buttons.mr-actions .button .mr-action-label {
+    line-height: 1.1;
 }
 .mr-save .buttons.mr-actions .button .mr-action-icon {
     display: inline-flex;
@@ -3560,7 +3596,7 @@ img.tag-reference-wiki-image {
     font-size: 14px;
 }
 .mr-save .mr-submit-status {
-    padding: 0 10px 8px;
+    padding: 0 0 8px;
     font-size: 12px;
     color: var(--muted-text-color, #999);
 }
@@ -3982,7 +4018,7 @@ div.full-screen > button:focus {
 .layer-list-qa .maproulette-status {
     font-size: 11px;
     line-height: 1.35;
-    color: rgba(0, 0, 0, 0.65);
+    color: var(--muted-text-color);
 }
 .layer-list-qa .maproulette-status a.maproulette-status-zoom {
     margin-left: 0.25em;
@@ -4778,6 +4814,18 @@ li.issue-fix-item button:not(.actionable) .fix-icon {
 .inspector-hover textarea,
 .inspector-hover label {
     background: var(--bg-color-3);
+}
+/* Keep Tags list/text toggles readable: the blanket button rule above
+   used to match unselected icon color (bg-color-3), hiding the list icon. */
+.inspector-hover button.raw-tag-option {
+    background: var(--passive-bg-color);
+    color: var(--text-color);
+}
+.inspector-hover button.raw-tag-option.selected,
+.inspector-hover button.raw-tag-option:focus,
+.inspector-hover button.raw-tag-option.active {
+    background: var(--link-color);
+    color: var(--bg-color);
 }
 .inspector-hover .preset-list-button,
 .inspector-hover .tag-row input {
