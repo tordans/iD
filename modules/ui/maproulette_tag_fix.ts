@@ -77,6 +77,8 @@ export function uiMapRouletteTagFix(context: any): any {
   let _onAccepted: (() => void) | null = null;
   let _onPainted: ((info: MapRouletteTagFixPaintInfo) => void) | null = null;
   let _loadSeq = 0;
+  /** Task id last painted successfully — skip redundant reloads on re-render. */
+  let _paintedTaskId: string | null = null;
 
   function renderTagDiffTable(parent: any, matched: MapRouletteMatchedTagFix): void {
     const tagDiff = utilTagDiff(matched.currentTags, matched.proposedTags);
@@ -345,14 +347,25 @@ export function uiMapRouletteTagFix(context: any): any {
     root = enter.merge(root);
     if (!isShown) return;
 
+    const taskId = String(_qaItem.id);
+    // Same task already painted and not loading — skip another fetch cycle.
+    if (
+      taskId === _paintedTaskId &&
+      !root.classed('loading') &&
+      !root.empty() &&
+      (root.select('.mr-tag-fix-heading').size() > 0 || root.classed('hide'))
+    ) {
+      return;
+    }
+
     const mr = services.maproulette;
     const placeholder = root;
     const requestId = ++_loadSeq;
     const requestTaskId = String(_qaItem.id);
     const focusSnapshot = _focusEntityIds.slice().join('\0');
     placeholder.classed('loading', true);
+    placeholder.classed('hide', true);
     if (_mode === 'embedded') {
-      placeholder.classed('hide', true);
       setEmbeddedHostVisible(placeholder, false);
     }
 
@@ -373,6 +386,7 @@ export function uiMapRouletteTagFix(context: any): any {
     function paint(detail?: any): void {
       if (!stillCurrent()) return;
       placeholder.classed('loading', false);
+      _paintedTaskId = requestTaskId;
       const task = taskPayload(_qaItem, detail);
       const hasNearby = !!(mr && typeof mr.getNearestItem === 'function'
         && mr.getNearestItem(context.map().center(), requestTaskId));
@@ -404,7 +418,11 @@ export function uiMapRouletteTagFix(context: any): any {
 
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
-    if (val !== _qaItem) _loadSeq += 1;
+    if (val !== _qaItem) {
+      _loadSeq += 1;
+      const newId = val && val.id !== undefined && val.id !== null ? String(val.id) : null;
+      if (newId !== _paintedTaskId) _paintedTaskId = null;
+    }
     _qaItem = val;
     return render;
   };
