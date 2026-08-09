@@ -56,6 +56,8 @@ describe('iD.uiMapRouletteEarmarkToggle', () => {
 
     expect(container.selectAll('.mr-earmark-wrap').size()).toEqual(1);
     expect(container.selectAll('button.mr-earmark-button').size()).toEqual(1);
+    expect(container.selectAll('.mr-earmark-icon').size()).toEqual(1);
+    expect(container.select('.mr-earmark-icon svg').size()).toEqual(1);
     expect(container.selectAll('.mr-earmark-label').size()).toEqual(1);
     expect(container.select('.mr-earmark-label').text()).toBeTruthy();
   });
