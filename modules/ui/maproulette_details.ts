@@ -22,6 +22,10 @@ export function uiMapRouletteDetails(context: any) {
   let _done = false;
   /** Session expand overrides for Details/Instructions (keyed by taskId:section). */
   const _sectionExpanded: Record<string, boolean> = {};
+  /** Ignore stale loadTaskDetailAsync results after re-render or navigation away. */
+  let _loadGeneration = 0;
+  /** Task id whose Details/Instructions are already painted in the current host. */
+  let _paintedTaskId: string | null = null;
 
   /**
    * Escape a value for interpolation into HTML text or attribute context.
@@ -190,6 +194,20 @@ export function uiMapRouletteDetails(context: any) {
 
   function taskIdKey(): string | null {
     return _qaItem && _qaItem.id !== undefined && _qaItem.id !== null ? String(_qaItem.id) : null;
+  }
+
+  /** Pin sidebar only: still showing this task in select-error mode. */
+  function shouldApplyAsyncResult(taskId: string): boolean {
+    if (_embedded) return true;
+    const mode = context.mode && context.mode();
+    if (!mode || mode.id !== 'select-error') return false;
+    return String(context.selectedErrorID()) === taskId;
+  }
+
+  function taskBodyAlreadyPainted(detailsSel: any, taskId: string | null): boolean {
+    if (!taskId || taskId !== _paintedTaskId) return false;
+    return !detailsSel.select('.mr-section-disclosure').empty()
+      || !detailsSel.select('.mr-task-load-notice').empty();
   }
 
   function sectionExpandedKey(section: 'detail' | 'instruction'): string | null {
@@ -462,29 +480,24 @@ export function uiMapRouletteDetails(context: any) {
       });
     }
 
-    if (mr && _qaItem) {
-      const thisItem = _qaItem;
+    const thisTaskId = taskIdKey();
+    if (taskBodyAlreadyPainted(details, thisTaskId)) {
+      clearLoadingState(details);
+      details.select('.qa-details-loading').remove();
+      return;
+    }
+
+    if (mr && _qaItem && thisTaskId) {
+      const generation = ++_loadGeneration;
       mr.loadTaskDetailAsync(_qaItem)
         .then(function(task: any) {
+          if (generation !== _loadGeneration) return;
           if (details.empty()) return;
-
-          // Do nothing if the UI has moved on by the time this resolves
-          // (same guard as osmose_details: still selected or still hovered).
-          // Embedded inspector mode skips this — the entity editor owns lifetime.
-          const thisTaskId = String(thisItem.id);
-          const selectedId = context.selectedErrorID();
-          const stale = (
-            !_embedded &&
-            String(selectedId) !== thisTaskId &&
-            context.container().selectAll(`.qaItem.maproulette.hover.itemId-${thisTaskId}`).empty()
-          );
-          if (stale) {
-            clearLoadingState(details);
-            return;
-          }
+          if (!shouldApplyAsyncResult(thisTaskId)) return;
 
           if (!task) {
             showTaskBodyMessage(details, t('map_data.layers.maproulette.no_instruction'));
+            _paintedTaskId = null;
             return;
           }
 
@@ -557,6 +570,7 @@ export function uiMapRouletteDetails(context: any) {
                 context.selectedErrorID(taskId);
                 context.enter(modeSelectError(context, taskId, 'maproulette'));
               });
+            _paintedTaskId = thisTaskId;
             return;
           }
 
@@ -593,12 +607,19 @@ export function uiMapRouletteDetails(context: any) {
           }
 
           attachHighlightLinkHandlers(details);
+          _paintedTaskId = thisTaskId;
           } catch {
+            _paintedTaskId = null;
+            if (generation !== _loadGeneration) return;
+            if (!shouldApplyAsyncResult(thisTaskId)) return;
             showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
           }
         })
         .catch(function() {
+          if (generation !== _loadGeneration) return;
           if (details.empty()) return;
+          if (!shouldApplyAsyncResult(thisTaskId)) return;
+          _paintedTaskId = null;
           showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
         });
     }
@@ -606,6 +627,10 @@ export function uiMapRouletteDetails(context: any) {
 
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
+    if (val && _qaItem && String(val.id) !== String(_qaItem.id)) {
+      _paintedTaskId = null;
+      _loadGeneration++;
+    }
     _qaItem = val;
     return render;
   };

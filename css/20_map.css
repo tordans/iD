@@ -154,10 +154,7 @@ g.qaItem.maproulette .shadow {
     stroke: #8b5cf6;
 }
 
-g.qaItem.maproulette .qaItem-fill {
-    /* Fill is set inline from V4 status palette; fallback for open tasks. */
-    fill: #22d3ee;
-}
+/* Pin body fill comes from inline style in maproulette_marker.ts (V4 status palette). */
 
 /* Recently resolved — gray pin fill; soft neutral shadow (no green earmark glow). */
 g.qaItem.maproulette.resolved:not(.selected) .shadow {

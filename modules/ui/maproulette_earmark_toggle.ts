@@ -7,8 +7,8 @@ import { uiTooltip } from './tooltip';
 
 
 /**
- * Full-width “Queue Fixed for save” toggle for the entity-inspector embed.
- * The pin panel uses the timing radio + status buttons instead.
+ * Full-width “Queue Fixed for save” toggle for the entity-inspector embed
+ * while the task is still open. Once queued, the status banner + Undo replace this.
  */
 export function uiMapRouletteEarmarkToggle(context: any) {
   let _qaItem: any;

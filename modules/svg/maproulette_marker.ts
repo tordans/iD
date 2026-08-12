@@ -157,7 +157,8 @@ export function appendMapRouletteV4Pin(
   g.append('path')
     .attr('class', 'qaItem-fill')
     .attr('d', BG_PATH)
-    .attr('fill', fill);
+    .attr('fill', fill)
+    .style('fill', fill);
 
   if (priorityHex) {
     g.append('polygon')
@@ -203,7 +204,10 @@ export function updateMapRouletteV4Pin(
 ): void {
   const status = options.status ?? 0;
   const muted = !!options.muted;
-  pin.select('.qaItem-fill').attr('fill', maproulettePinFill(status, muted));
+  const fill = maproulettePinFill(status, muted);
+  pin.select('.qaItem-fill')
+    .attr('fill', fill)
+    .style('fill', fill);
   pin.select('.qaItem-border').attr(
     'fill',
     options.borderColor ?? MAPROULETTE_DEFAULT_BORDER,
