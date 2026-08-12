@@ -36,9 +36,7 @@ export function doneTaskStatusOf(mr: any, qaItem: any): number {
   if (mr && qaItem && qaItem.id !== undefined && qaItem.id !== null
     && mr.isEarmarked && mr.isEarmarked(qaItem.id)) {
     const earmark = earmarkForTask(mr, qaItem.id);
-    if (earmark && earmark._status !== undefined && earmark._status !== null) {
-      return Number(earmark._status);
-    }
+    if (earmark) return Number(earmark._status);
     return MR_STATUS.FIXED;
   }
   return taskStatusOf(qaItem);

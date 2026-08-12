@@ -10,6 +10,7 @@ Implementation lives mainly in:
 - [`modules/ui/sections/maproulette_task.ts`](../modules/ui/sections/maproulette_task.ts) — entity inspector embed (same next-task rules; no “Show OSM” there)
 - [`modules/util/maproulette_next_task.ts`](../modules/util/maproulette_next_task.ts) — challenge-scope pool + pickers
 - [`modules/ui/maproulette_details.ts`](../modules/ui/maproulette_details.ts) — collapse instructions when done
+- [`modules/util/maproulette_api_schema.ts`](../modules/util/maproulette_api_schema.ts) — Zod 4 schemas for `/tasks/box`, challenge, task detail, and session earmarks (parse at the service boundary)
 
 ---
 

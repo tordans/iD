@@ -7,8 +7,21 @@ import { geoExtent, geoSphericalDistance } from '../geo';
 import { QAItem } from '../osm';
 import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
 import { snapMapRoulettePinLoc } from '../util/maproulette_pin_loc';
+import {
+  challengeIsVisible,
+  mrTaskPriorityOf,
+  mrTaskStatusOr,
+  parseMrBoxTasks,
+  parseMrChallenge,
+  parseMrEarmarkList,
+  parseMrTaskDetails,
+  type MrBoxTask,
+  type MrEarmark,
+} from '../util/maproulette_api_schema';
 import { utilRebind, utilStringQs, utilTiler } from '../util';
 
+/** @deprecated Prefer MrEarmark from maproulette_api_schema — kept as public alias. */
+export type MapRouletteEarmark = MrEarmark;
 /** MapRoulette task status codes (see MapRoulette Task Lifecycle). */
 export const MR_STATUS = {
   CREATED: 0,
@@ -114,29 +127,6 @@ interface CacheEntry {
   rtree: RBush<any>;
 }
 
-export type MapRouletteEarmark = {
-  taskID: string;
-  challengeID: string;
-  parentName: string;
-  title: string;
-  elems: string[];
-  loc: [number, number] | null;
-  newComment: string;
-  /** MapRoulette status to post after upload (Fixed / Already Fixed / …). */
-  _status: number;
-  /**
-   * Whether this earmark is included in the next OSM upload / closed:maproulette*
-   * tags. Toggled on the commit checklist without dropping the row.
-   */
-  includeInUpload: boolean;
-  /**
-   * When true, the pin is grayed out locally (status buttons / Tag Fix Accept).
-   * Soft “Queue Fixed for save” toggles leave this false so the task stays open
-   * in the pool and keeps a Created pin until upload resolves it.
-   */
-  localDone?: boolean;
-};
-
 /** Changeset tag key for a MapRoulette status code. */
 export function closedMapRouletteTagKey(status: number): string {
   switch (Number(status)) {
@@ -164,10 +154,7 @@ function readPersistedEarmarks(): MapRouletteEarmark[] {
   try {
     const raw = window.sessionStorage.getItem(EARMARK_STORAGE_KEY);
     if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter(function(e) {
-      return e && e.taskID;
-    }) : [];
+    return parseMrEarmarkList(JSON.parse(raw));
   } catch {
     return [];
   }
@@ -187,8 +174,7 @@ function writePersistedEarmarks(list: MapRouletteEarmark[]): void {
 
 function earmarkStatusOf(earmark: MapRouletteEarmark | null | undefined): number {
   if (!earmark) return MR_STATUS.FIXED;
-  if (earmark._status === undefined || earmark._status === null) return MR_STATUS.FIXED;
-  return Number(earmark._status);
+  return earmark._status;
 }
 
 /** Apply earmark terminal status onto a cached QAItem (pin glyph + gray-out). */
@@ -210,10 +196,7 @@ function applyEarmarkResolvedFields(qaItem: any, earmark: MapRouletteEarmark): v
 function applyPersistedEarmarks(): void {
   if (!_cache) return;
   readPersistedEarmarks().forEach(function(entry) {
-    if (entry._status === undefined || entry._status === null) {
-      entry._status = MR_STATUS.FIXED;
-    }
-    const id = String(entry.taskID);
+    const id = entry.taskID;
     _cache.earmarked[id] = entry;
     const cached = _cache.data[id];
     if (cached) applyEarmarkResolvedFields(cached, entry);
@@ -354,15 +337,13 @@ function clearTileCache(): void {
   _cache.rtree = new RBush();
 }
 
-function applyTaskStatusFields(qaItem: any, task: any): void {
+function applyTaskStatusFields(qaItem: any, task: MrBoxTask | { status?: number; priority?: number; mappedOn?: string } | null): void {
   if (!qaItem) return;
   const taskID = qaItem.id !== undefined && qaItem.id !== null ? String(qaItem.id) : '';
   const earmark = _cache && taskID ? _cache.earmarked[taskID] : null;
   const localStatus = taskStatusOf(qaItem);
   const localMappedOn = mappedOnOf(qaItem);
-  const apiStatus = (task && task.status !== undefined && task.status !== null)
-    ? Number(task.status)
-    : undefined;
+  const apiStatus = (task && task.status !== undefined) ? Number(task.status) : undefined;
 
   let status: number;
   let mappedOn: string | null | undefined;
@@ -388,8 +369,7 @@ function applyTaskStatusFields(qaItem: any, task: any): void {
   if (isResolvedStatus(status) && !mappedOn) {
     mappedOn = new Date().toISOString();
   }
-  const priority = (task && task.priority !== undefined && task.priority !== null
-    && Number.isFinite(Number(task.priority)))
+  const priority = (task && task.priority !== undefined)
     ? Number(task.priority)
     : (qaItem.taskPriority !== undefined && qaItem.taskPriority !== null
       ? Number(qaItem.taskPriority)
@@ -579,7 +559,7 @@ export default {
       : null;
     const resolvedStatus = Number.isFinite(Number(status)) ? Number(status) : MR_STATUS.FIXED;
     const localDone = !!(options && options.markLocalDone);
-    const earmark: MapRouletteEarmark = {
+    const earmark = parseMrEarmarkList([{
       taskID,
       challengeID,
       parentName: (challenge && challenge.name) || (qaItem.parentName) || '',
@@ -590,7 +570,8 @@ export default {
       _status: resolvedStatus,
       includeInUpload: true,
       localDone,
-    };
+    }])[0];
+    if (!earmark) return null;
     _cache.earmarked[taskID] = earmark;
     // Keep a flag on the live QAItem for marker classing / UI toggles.
     qaItem.earmarked = true;
@@ -698,12 +679,16 @@ export default {
    */
   restoreEarmarks(list: MapRouletteEarmark[]): void {
     if (!_cache || !Array.isArray(list) || !list.length) return;
-    list.forEach(function(entry) {
-      if (!entry || !entry.taskID) return;
-      const id = String(entry.taskID);
-      if (entry.includeInUpload === undefined) entry.includeInUpload = true;
-      // Post-upload retry: these were already marked done locally.
-      if (entry.localDone === undefined) entry.localDone = true;
+    // Post-upload retry: missing localDone means already marked done locally.
+    const normalized = parseMrEarmarkList(list.map(function(entry) {
+      if (!entry) return entry;
+      if (entry.localDone === undefined) {
+        return Object.assign({}, entry, { localDone: true });
+      }
+      return entry;
+    }));
+    normalized.forEach(function(entry) {
+      const id = entry.taskID;
       _cache.earmarked[id] = entry;
       const cached = _cache.data[id];
       if (cached) applyEarmarkResolvedFields(cached, entry);
@@ -775,16 +760,16 @@ export default {
       const url = `${_mrUrlRoot}/tasks/box/${bbox}?tStatus=${BOX_STATUSES}&includeGeometries=true`;
 
       d3_json(url, { signal: controller.signal })
-        .then(function(data: any) {
+        .then(function(data: unknown) {
           if (_cache.inflightTile[tile.id] !== controller) return;
           delete _cache.inflightTile[tile.id];
           _cache.loadedTile[tile.id] = true;
           _cache.tileLoadedAt[tile.id] = Date.now();
-          const list = Array.isArray(data) ? data : (data && data.tasks) || [];
+          const list = parseMrBoxTasks(data);
           const unseenChallenges = new Set<string>();
-          list.forEach(function(task: any) {
-            const taskID = String(task.id);
-            const parentId = String(task.parentId);
+          list.forEach(function(task: MrBoxTask) {
+            const taskID = task.id;
+            const parentId = task.parentId;
             const existing = _cache.data[taskID];
             if (existing) {
               applyTaskStatusFields(existing, task);
@@ -797,23 +782,14 @@ export default {
               return;
             }
 
-            const loc: [number, number] = [task.point?.lng, task.point?.lat];
-            // Number.isFinite, not truthiness: 0 is a valid lng/lat
-            // (prime meridian / equator).
-            if (!Number.isFinite(loc[0]) || !Number.isFinite(loc[1])) return;
-
+            const loc: [number, number] = [task.point.lng, task.point.lat];
             const taskProps = {
               parentId: parentId,
               severity: 'warning',
               task: task,
-              taskStatus: (task.status !== undefined && task.status !== null)
-                ? Number(task.status)
-                : MR_STATUS.CREATED,
-              taskPriority: (task.priority !== undefined && task.priority !== null
-                && Number.isFinite(Number(task.priority)))
-                ? Number(task.priority)
-                : undefined,
-              mappedOn: task.mappedOn || undefined,
+              taskStatus: mrTaskStatusOr(task, MR_STATUS.CREATED),
+              taskPriority: mrTaskPriorityOf(task),
+              mappedOn: task.mappedOn,
               elems: collectOsmEntityIds(task, task.title, task.name),
             };
             const d = new QAItem(
@@ -850,16 +826,13 @@ export default {
             _cache.inflightChallengePromise[chID] = d3_json(urlC, {
               signal: cController.signal,
             })
-              .then(function(challenge: any) {
+              .then(function(raw: unknown) {
                 delete _cache.inflightChallenge[chID];
                 delete _cache.inflightChallengePromise[chID];
-                const isVisible = !!(
-                  challenge &&
-                  challenge.enabled &&
-                  !challenge.deleted
-                );
+                const challenge = parseMrChallenge(raw) || {};
+                const isVisible = challengeIsVisible(challenge);
                 _cache.loadedChallenge[chID] = { isVisible: isVisible };
-                _cache.challengeDetails[chID] = challenge || {};
+                _cache.challengeDetails[chID] = challenge;
                 Object.values(_cache.data).forEach(function(item) {
                   if (item.parentId === chID) setItemVisibility(item, isVisible);
                 });
@@ -1295,16 +1268,13 @@ export default {
     _cache.inflightChallengePromise[chID] = d3_json(urlC, {
       signal: cController.signal,
     })
-      .then(function(challenge: any) {
+      .then(function(raw: unknown) {
         delete _cache.inflightChallenge[chID];
         delete _cache.inflightChallengePromise[chID];
-        const isVisible = !!(
-          challenge &&
-          challenge.enabled &&
-          !challenge.deleted
-        );
+        const challenge = parseMrChallenge(raw) || {};
+        const isVisible = challengeIsVisible(challenge);
         _cache.loadedChallenge[chID] = { isVisible: isVisible };
-        _cache.challengeDetails[chID] = challenge || {};
+        _cache.challengeDetails[chID] = challenge;
         return _cache.challengeDetails[chID];
       })
       .catch(function() {
@@ -1328,10 +1298,10 @@ export default {
     _cache.inflightTaskPromise[taskID] = d3_json(urlT, {
       signal: tController.signal,
     })
-      .then(function(task: any) {
+      .then(function(raw: unknown) {
         delete _cache.inflightTask[taskID];
         delete _cache.inflightTaskPromise[taskID];
-        _cache.taskDetails[taskID] = task || {};
+        _cache.taskDetails[taskID] = parseMrTaskDetails(raw) || {};
         return _cache.taskDetails[taskID];
       })
       .catch(function() {
