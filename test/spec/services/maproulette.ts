@@ -231,8 +231,9 @@ describe('iD.serviceMapRoulette', () => {
 
       maproulette.restoreEarmarks(list);
 
-      expect(maproulette.getEarmarked()).toEqual(list);
-      expect(readStoredEarmarks()).toEqual(list);
+      const expected = [Object.assign({}, list[0], { localDone: true })];
+      expect(maproulette.getEarmarked()).toEqual(expected);
+      expect(readStoredEarmarks()).toEqual(expected);
     });
   });
 
