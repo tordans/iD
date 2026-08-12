@@ -3251,6 +3251,16 @@ img.tag-reference-wiki-image {
 .qa-details-header+.qa-details-container {
     margin-top: 8px;
 }
+.mr-task-meta .qa-details-header {
+    margin-top: 8px;
+    padding: 0;
+}
+.mr-task-meta .qa-details-header:first-child {
+    margin-top: 4px;
+}
+.mr-task-meta .qa-details-header p {
+    margin: 2px 0 0;
+}
 .qa-details-container {
     background: var(--bg-color-3);
     padding: 10px;
@@ -3340,10 +3350,10 @@ img.tag-reference-wiki-image {
 
 .mr-save .mr-earmark-wrap,
 .maproulette-task-embed .mr-earmark-wrap {
-    padding: 8px 0 4px;
+    padding: 0 0 4px;
 }
 .mr-save .mr-update-timing {
-    padding: 8px 0 4px;
+    padding: 0 0 4px;
 }
 .mr-save .mr-update-timing-label {
     margin: 0 0 6px;
@@ -3413,48 +3423,76 @@ img.tag-reference-wiki-image {
 }
 .mr-editor > .mr-resolved-banner,
 .mr-editor > .mr-queued-banner,
+.mr-editor .error-details > .mr-resolved-banner,
+.mr-editor .error-details > .mr-queued-banner,
 .mr-save .mr-resolved-banner,
 .mr-save .mr-queued-banner,
 .maproulette-task-embed .mr-resolved-banner,
-.maproulette-task-embed .mr-queued-banner {
+.maproulette-task-embed .mr-queued-banner,
+.maproulette-task-embed .error-details > .mr-resolved-banner,
+.maproulette-task-embed .error-details > .mr-queued-banner {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    text-align: left;
     margin: 8px 0;
     padding: 8px 10px;
+    background: var(--bg-color-3);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
 }
 .mr-editor > .mr-resolved-banner h3,
 .mr-editor > .mr-queued-banner h3,
+.mr-editor .error-details > .mr-resolved-banner h3,
+.mr-editor .error-details > .mr-queued-banner h3,
 .mr-save .mr-resolved-banner h3,
 .mr-save .mr-queued-banner h3,
 .maproulette-task-embed .mr-resolved-banner strong,
-.maproulette-task-embed .mr-queued-banner strong {
+.maproulette-task-embed .mr-queued-banner strong,
+.maproulette-task-embed .error-details > .mr-resolved-banner strong,
+.maproulette-task-embed .error-details > .mr-queued-banner strong {
     margin: 0 0 4px;
     font-size: 14px;
 }
 .mr-editor > .mr-resolved-banner p,
 .mr-editor > .mr-queued-banner p,
+.mr-editor .error-details > .mr-resolved-banner p,
+.mr-editor .error-details > .mr-queued-banner p,
 .mr-save .mr-resolved-banner p,
 .mr-save .mr-queued-banner p,
 .maproulette-task-embed .mr-resolved-banner p,
-.maproulette-task-embed .mr-queued-banner p {
+.maproulette-task-embed .mr-queued-banner p,
+.maproulette-task-embed .error-details > .mr-resolved-banner p,
+.maproulette-task-embed .error-details > .mr-queued-banner p {
     margin: 0;
 }
 .mr-editor > .mr-queued-banner .mr-queued-undo,
-.mr-save .mr-queued-banner .mr-queued-undo {
+.mr-editor .error-details > .mr-queued-banner .mr-queued-undo,
+.mr-save .mr-queued-banner .mr-queued-undo,
+.maproulette-task-embed .error-details > .mr-queued-banner .mr-queued-undo {
     margin-top: 8px;
     padding: 6px 10px;
     font-weight: 600;
 }
 .mr-editor > .mr-next-actions,
-.maproulette-task-embed .mr-next-actions {
+.mr-editor .error-details > .mr-next-actions,
+.maproulette-task-embed .mr-next-actions,
+.maproulette-task-embed .error-details > .mr-next-actions {
     margin: 0 0 8px;
 }
 .mr-editor > .mr-next-actions .mr-next-actions-buttons,
-.maproulette-task-embed .mr-next-actions .mr-next-actions-buttons {
+.mr-editor .error-details > .mr-next-actions .mr-next-actions-buttons,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-buttons,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-actions-buttons {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
 .mr-editor > .mr-next-actions .mr-next-action,
-.maproulette-task-embed .mr-next-actions .mr-next-action {
+.mr-editor .error-details > .mr-next-actions .mr-next-action,
+.maproulette-task-embed .mr-next-actions .mr-next-action,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-action {
     width: 100%;
     box-sizing: border-box;
     padding: 8px 10px;
@@ -3462,24 +3500,35 @@ img.tag-reference-wiki-image {
     text-align: left;
 }
 .mr-editor > .mr-next-actions .mr-next-actions-none,
-.maproulette-task-embed .mr-next-actions .mr-next-actions-none {
+.mr-editor .error-details > .mr-next-actions .mr-next-actions-none,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-none,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-actions-none {
     margin: 4px 0 0;
     font-size: 12px;
     opacity: 0.85;
 }
 .mr-editor > .mr-next-actions .mr-next-actions-none.hide,
-.maproulette-task-embed .mr-next-actions .mr-next-actions-none.hide {
+.mr-editor .error-details > .mr-next-actions .mr-next-actions-none.hide,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-none.hide,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-actions-none.hide {
     display: none;
 }
-.error-details .mr-details-toggle {
-    width: 100%;
-    box-sizing: border-box;
-    margin: 4px 0 8px;
-    padding: 6px 10px;
-    text-align: left;
+/* MapRoulette: uniform 12px gap between stacked detail blocks (headers, disclosures, save). */
+.mr-editor .error-details .qa-details-subsection > .qa-details-header,
+.mr-editor .error-details .qa-details-subsection > .mr-section-disclosure,
+.maproulette-task-embed .error-details .qa-details-subsection > .qa-details-header,
+.maproulette-task-embed .error-details .qa-details-subsection > .mr-section-disclosure {
+    margin-top: 0;
 }
-.error-details.mr-details-collapsed .qa-details-subsection.hide {
-    display: none;
+.mr-editor .error-details .qa-details-subsection > * + *,
+.maproulette-task-embed .error-details .qa-details-subsection > * + * {
+    margin-top: 12px;
+}
+.mr-editor > .mr-save {
+    margin-top: 12px;
+}
+.error-details .mr-section-disclosure .qa-details-container {
+    margin-top: 0;
 }
 .mr-earmark-button {
     width: 100%;
