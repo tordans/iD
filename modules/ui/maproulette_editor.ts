@@ -178,7 +178,7 @@ export function uiMapRouletteEditor(context: any) {
     wrap.exit().remove();
     const enter = wrap
       .enter()
-      .insert('div', '.qa-details-subsection')
+      .insert('div', '.qa-details-loading, .mr-section-disclosure')
       .attr('class', 'mr-next-actions');
     enter.append('div').attr('class', 'mr-next-actions-buttons');
     enter.append('p').attr('class', 'mr-next-actions-none');
@@ -302,7 +302,7 @@ export function uiMapRouletteEditor(context: any) {
     const statusTitle = t(statusLabelKey(status));
     const host = doneContentHost(sel);
     // After qa-header, before next-actions / instructions.
-    const before = '.mr-next-actions, .qa-details-subsection';
+    const before = '.mr-next-actions, .qa-details-loading, .mr-section-disclosure';
 
     let resolved = host.selectAll('.mr-resolved-banner').data(showResolved ? [0] : []);
     resolved.exit().remove();
@@ -356,7 +356,7 @@ export function uiMapRouletteEditor(context: any) {
 
     const saveEnter = saveSection
       .enter()
-      .append('div')
+      .append('section')
       .attr('class', 'mr-save save-section cf');
 
     saveSection = saveEnter.merge(saveSection);
@@ -433,7 +433,7 @@ export function uiMapRouletteEditor(context: any) {
       .append('div')
       .attr('class', 'mr-update-timing');
 
-    wrapEnter.append('div')
+    wrapEnter.append('h3')
       .attr('class', 'mr-update-timing-label')
       .text(t('map_data.layers.maproulette.update_timing_label'));
 

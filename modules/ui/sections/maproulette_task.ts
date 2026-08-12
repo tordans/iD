@@ -153,7 +153,7 @@ export function uiSectionMapRouletteTask(context: any) {
 
         const host = root.select('.error-details');
         const panelHost = host.empty() ? root : host;
-        const beforeBanner = '.mr-next-actions, .qa-details-subsection';
+        const beforeBanner = '.mr-next-actions, .qa-details-loading, .mr-section-disclosure';
 
         let banner: any = panelHost.selectAll('.mr-resolved-banner')
           .data(isResolved && !isQueued ? [d] : []);
@@ -202,7 +202,7 @@ export function uiSectionMapRouletteTask(context: any) {
           .data(showNext ? [d] : []);
         nextWrap.exit().remove();
         const nextEnter = nextWrap.enter()
-          .insert('div', '.qa-details-subsection')
+          .insert('div', '.qa-details-loading, .mr-section-disclosure')
           .attr('class', 'mr-next-actions');
         nextEnter.append('div').attr('class', 'mr-next-actions-buttons');
         nextEnter.append('p').attr('class', 'mr-next-actions-none');

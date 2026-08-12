@@ -3357,6 +3357,7 @@ img.tag-reference-wiki-image {
 }
 .mr-save .mr-update-timing-label {
     margin: 0 0 6px;
+    padding: 0;
     font-size: 11px;
     font-weight: bold;
     text-transform: uppercase;
@@ -3549,19 +3550,20 @@ img.tag-reference-wiki-image {
 .maproulette-task-embed .error-details > .mr-next-actions .mr-next-actions-none.hide {
     display: none;
 }
-/* MapRoulette: uniform 12px gap between stacked detail blocks (headers, disclosures, save). */
-.mr-editor .error-details .qa-details-subsection > .qa-details-header,
-.mr-editor .error-details .qa-details-subsection > .mr-section-disclosure,
-.maproulette-task-embed .error-details .qa-details-subsection > .qa-details-header,
-.maproulette-task-embed .error-details .qa-details-subsection > .mr-section-disclosure {
-    margin-top: 0;
-}
-.mr-editor .error-details .qa-details-subsection > * + *,
-.maproulette-task-embed .error-details .qa-details-subsection > * + * {
-    margin-top: 12px;
+/* MapRoulette task body: disclosures and save area spacing. */
+.mr-editor .error-details > .mr-section-disclosure,
+.maproulette-task-embed .error-details > .mr-section-disclosure {
+    margin-top: 8px;
 }
 .mr-editor > .mr-save {
     margin-top: 12px;
+}
+/* Details / Instructions: gap above the toggle; toggle flush with its panel below. */
+.error-details .mr-section-disclosure details.disclosure-wrap[open] summary.hide-toggle {
+    margin-bottom: 0;
+}
+.error-details .mr-section-disclosure .disclosure-content {
+    margin-top: 0;
 }
 .error-details .mr-section-disclosure .qa-details-container {
     margin-top: 0;

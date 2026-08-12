@@ -26,7 +26,7 @@ export function uiOsmoseHeader() {
       .remove();
 
     const headerEnter = header.enter()
-      .append('div')
+      .append('header')
         .attr('class', 'qa-header');
 
     const svgEnter = headerEnter
