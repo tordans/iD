@@ -14,7 +14,7 @@ import {
 } from './maproulette_marker';
 import { services } from '../services';
 import { utilStringQs } from '../util';
-import { doneTaskStatusOf } from '../util/maproulette_status';
+import { pinDisplayStatusOf } from '../util/maproulette_status';
 
 // Restore the layer from the URL hash at startup, following the pattern of
 // svg/notes.js (`notes=`): layer params are startup-only and owned by their
@@ -151,7 +151,7 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
 
     markersEnter.each(function(this: SVGGElement, d: any) {
       appendMapRouletteV4Pin(d3_select(this), {
-        status: doneTaskStatusOf(service, d),
+        status: pinDisplayStatusOf(service, d),
         priority: taskPriorityOf(d),
         borderColor: pinBorderColor(d, selectedID, service),
         muted: isMutedPin(d, service),
@@ -174,7 +174,7 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
         const pin = d3_select(this).select('.maproulette-pin');
         if (pin.empty()) return;
         updateMapRouletteV4Pin(pin, {
-          status: doneTaskStatusOf(service, d),
+          status: pinDisplayStatusOf(service, d),
           priority: taskPriorityOf(d),
           borderColor: pinBorderColor(d, selectedID, service),
           muted: isMutedPin(d, service),

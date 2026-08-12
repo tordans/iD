@@ -101,6 +101,7 @@ describe('iD.serviceMapRoulette', () => {
         newComment: '',
         _status: 1,
         includeInUpload: true,
+        localDone: false,
       }]);
       expect(readStoredEarmarks()).toHaveLength(1);
     });
@@ -146,12 +147,25 @@ describe('iD.serviceMapRoulette', () => {
       const earmark = maproulette.earmarkTask(item, 6, { markLocalDone: true });
 
       expect(earmark?._status).toBe(6);
+      expect(earmark?.localDone).toBe(true);
       expect(maproulette.isEarmarked('44')).toBe(true);
       expect(maproulette.isRecentlyResolved(maproulette.getError('44'))).toBe(true);
 
       maproulette.unearmarkTask('44');
       expect(maproulette.isEarmarked('44')).toBe(false);
       expect(maproulette.isRecentlyResolved(maproulette.getError('44'))).toBe(false);
+    });
+
+    it('soft earmark does not mark the task locally resolved', () => {
+      const item = makeQAItem({ id: '45', parentId: '55' });
+      maproulette.replaceItem(item);
+
+      const earmark = maproulette.earmarkTask(item);
+
+      expect(earmark?.localDone).toBe(false);
+      expect(maproulette.isEarmarked('45')).toBe(true);
+      expect(maproulette.isRecentlyResolved(maproulette.getError('45'))).toBe(false);
+      expect(maproulette.isOpenTask(maproulette.getError('45'))).toBe(true);
     });
 
     it('clearClosed drops session-immediate outcomes after upload', async () => {

@@ -129,6 +129,12 @@ export type MapRouletteEarmark = {
    * tags. Toggled on the commit checklist without dropping the row.
    */
   includeInUpload: boolean;
+  /**
+   * When true, the pin is grayed out locally (status buttons / Tag Fix Accept).
+   * Soft “Queue Fixed for save” toggles leave this false so the task stays open
+   * in the pool and keeps a Created pin until upload resolves it.
+   */
+  localDone?: boolean;
 };
 
 /** Changeset tag key for a MapRoulette status code. */
@@ -188,9 +194,11 @@ function earmarkStatusOf(earmark: MapRouletteEarmark | null | undefined): number
 /** Apply earmark terminal status onto a cached QAItem (pin glyph + gray-out). */
 function applyEarmarkResolvedFields(qaItem: any, earmark: MapRouletteEarmark): void {
   if (!qaItem || !earmark) return;
+  qaItem.earmarked = true;
+  // Soft queue: mark earmarked only — do not stamp Fixed / mappedOn.
+  if (!earmark.localDone) return;
   const status = earmarkStatusOf(earmark);
   const mappedOn = mappedOnOf(qaItem) || new Date().toISOString();
-  qaItem.earmarked = true;
   qaItem.taskStatus = status;
   qaItem.mappedOn = mappedOn;
   if (qaItem.task) {
@@ -348,7 +356,7 @@ function clearTileCache(): void {
 
 function applyTaskStatusFields(qaItem: any, task: any): void {
   if (!qaItem) return;
-  const taskID = qaItem.id != null ? String(qaItem.id) : '';
+  const taskID = qaItem.id !== undefined && qaItem.id !== null ? String(qaItem.id) : '';
   const earmark = _cache && taskID ? _cache.earmarked[taskID] : null;
   const localStatus = taskStatusOf(qaItem);
   const localMappedOn = mappedOnOf(qaItem);
@@ -359,10 +367,11 @@ function applyTaskStatusFields(qaItem: any, task: any): void {
   let status: number;
   let mappedOn: string | null | undefined;
 
-  if (earmark) {
+  if (earmark) qaItem.earmarked = true;
+
+  if (earmark && earmark.localDone) {
     status = earmarkStatusOf(earmark);
     mappedOn = localMappedOn || new Date().toISOString();
-    qaItem.earmarked = true;
   } else if (
     isResolvedStatus(localStatus) &&
     (apiStatus === undefined || OPEN_STATUSES.has(apiStatus))
@@ -569,6 +578,7 @@ export default {
       ? [Number(qaItem.loc[0]), Number(qaItem.loc[1])] as [number, number]
       : null;
     const resolvedStatus = Number.isFinite(Number(status)) ? Number(status) : MR_STATUS.FIXED;
+    const localDone = !!(options && options.markLocalDone);
     const earmark: MapRouletteEarmark = {
       taskID,
       challengeID,
@@ -579,6 +589,7 @@ export default {
       newComment: (qaItem.newComment || (qaItem.task && qaItem.task.newComment) || '').trim(),
       _status: resolvedStatus,
       includeInUpload: true,
+      localDone,
     };
     _cache.earmarked[taskID] = earmark;
     // Keep a flag on the live QAItem for marker classing / UI toggles.
@@ -586,7 +597,7 @@ export default {
     const cached = _cache.data[taskID];
     if (cached) cached.earmarked = true;
     writePersistedEarmarks(this.getEarmarked());
-    if (options && options.markLocalDone) {
+    if (localDone) {
       markTaskResolvedInCache(qaItem, resolvedStatus, { keepEarmark: true });
     }
     dispatch.call('earmarked');
@@ -691,6 +702,8 @@ export default {
       if (!entry || !entry.taskID) return;
       const id = String(entry.taskID);
       if (entry.includeInUpload === undefined) entry.includeInUpload = true;
+      // Post-upload retry: these were already marked done locally.
+      if (entry.localDone === undefined) entry.localDone = true;
       _cache.earmarked[id] = entry;
       const cached = _cache.data[id];
       if (cached) applyEarmarkResolvedFields(cached, entry);
