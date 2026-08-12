@@ -180,7 +180,7 @@ export function uiMapRouletteEditor(context: any) {
       .enter()
       .insert('div', '.qa-details-loading, .mr-section-disclosure')
       .attr('class', 'mr-next-actions');
-    enter.append('div').attr('class', 'mr-next-actions-buttons');
+    enter.append('div').attr('class', 'buttons mr-next-actions-buttons');
     enter.append('p').attr('class', 'mr-next-actions-none');
     wrap = enter.merge(wrap);
     if (!show || !_qaItem) return;
@@ -275,7 +275,7 @@ export function uiMapRouletteEditor(context: any) {
     const btnEnter = buttons.enter()
       .append('button')
       .attr('type', 'button')
-      .attr('class', 'button mr-next-action');
+      .attr('class', 'button action mr-next-action fixedIt-button');
     buttons = btnEnter.merge(buttons);
     buttons
       .attr('data-action', function(d: any) { return d.key; })
@@ -309,33 +309,36 @@ export function uiMapRouletteEditor(context: any) {
     const resolvedEnter = resolved
       .enter()
       .insert('div', before)
-      .attr('class', 'mr-resolved-banner');
+      .attr('class', 'mr-resolved-banner mr-status-notice');
     resolvedEnter.append('h3');
-    resolvedEnter.append('p');
+    resolvedEnter.append('p').attr('class', 'mr-status-notice-message');
     resolved = resolvedEnter.merge(resolved);
     resolved.select('h3').text(statusTitle);
-    resolved.select('p').text(t('map_data.layers.maproulette.resolved_message'));
+    resolved.select('.mr-status-notice-message')
+      .text(t('map_data.layers.maproulette.resolved_message'));
 
     let queued = host.selectAll('.mr-queued-banner').data(showQueued ? [0] : []);
     queued.exit().remove();
     const queuedEnter = queued
       .enter()
       .insert('div', before)
-      .attr('class', 'mr-queued-banner');
+      .attr('class', 'mr-queued-banner mr-status-notice');
     queuedEnter.append('h3');
-    queuedEnter.append('p');
-    queuedEnter
-      .append('button')
-      .attr('type', 'button')
-      .attr('class', 'button mr-queued-undo')
+    const queuedMessage = queuedEnter
+      .append('p')
+      .attr('class', 'mr-status-notice-message');
+    queuedMessage.append('span').attr('class', 'mr-status-notice-text');
+    queuedMessage.append('a')
+      .attr('href', '#')
+      .attr('class', 'mr-queued-undo')
       .text(t('map_data.layers.maproulette.queued_undo'));
     queued = queuedEnter.merge(queued);
     queued.select('h3').text(statusTitle);
-    queued.select('p').text(t('map_data.layers.maproulette.queued_message'));
+    queued.select('.mr-status-notice-text')
+      .text(`${t('map_data.layers.maproulette.queued_message')} `);
     queued.select('.mr-queued-undo')
       .on('click.mr-queued-undo', function(this: HTMLElement, d3_event: Event) {
         d3_event.preventDefault();
-        this.blur();
         const mrService = services.maproulette;
         if (!mrService || !_qaItem || typeof mrService.unearmarkTask !== 'function') return;
         mrService.unearmarkTask(_qaItem.id);

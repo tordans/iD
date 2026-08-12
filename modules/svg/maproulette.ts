@@ -78,6 +78,7 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
     if (services.maproulette && !_qaService) {
       _qaService = services.maproulette;
       _qaService.on('loaded', throttledRedraw);
+      _qaService.on('earmarked', throttledRedraw);
     } else if (!services.maproulette && _qaService) {
       _qaService = null;
     }

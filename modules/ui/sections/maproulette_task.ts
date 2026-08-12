@@ -160,13 +160,13 @@ export function uiSectionMapRouletteTask(context: any) {
         banner.exit().remove();
         const bannerEnter = banner.enter()
           .insert('div', beforeBanner)
-          .attr('class', 'mr-resolved-banner');
-        bannerEnter.append('strong');
-        bannerEnter.append('p');
+          .attr('class', 'mr-resolved-banner mr-status-notice');
+        bannerEnter.append('h3');
+        bannerEnter.append('p').attr('class', 'mr-status-notice-message');
         banner = bannerEnter.merge(banner);
-        banner.select('strong')
+        banner.select('h3')
           .text(statusTitle);
-        banner.select('p')
+        banner.select('.mr-status-notice-message')
           .text(t('map_data.layers.maproulette.resolved_message'));
 
         let queuedBanner: any = panelHost.selectAll('.mr-queued-banner')
@@ -174,23 +174,24 @@ export function uiSectionMapRouletteTask(context: any) {
         queuedBanner.exit().remove();
         const queuedEnter = queuedBanner.enter()
           .insert('div', beforeBanner)
-          .attr('class', 'mr-queued-banner');
-        queuedEnter.append('strong');
-        queuedEnter.append('p');
-        queuedEnter
-          .append('button')
-          .attr('type', 'button')
-          .attr('class', 'button mr-queued-undo')
+          .attr('class', 'mr-queued-banner mr-status-notice');
+        queuedEnter.append('h3');
+        const queuedMessage = queuedEnter
+          .append('p')
+          .attr('class', 'mr-status-notice-message');
+        queuedMessage.append('span').attr('class', 'mr-status-notice-text');
+        queuedMessage.append('a')
+          .attr('href', '#')
+          .attr('class', 'mr-queued-undo')
           .text(t('map_data.layers.maproulette.queued_undo'));
         queuedBanner = queuedEnter.merge(queuedBanner);
-        queuedBanner.select('strong')
+        queuedBanner.select('h3')
           .text(statusTitle);
-        queuedBanner.select('p')
-          .text(t('map_data.layers.maproulette.queued_message'));
+        queuedBanner.select('.mr-status-notice-text')
+          .text(`${t('map_data.layers.maproulette.queued_message')} `);
         queuedBanner.select('.mr-queued-undo')
           .on('click.mr-queued-undo', function(this: HTMLElement, d3_event: Event) {
             d3_event.preventDefault();
-            this.blur();
             if (!mr || typeof mr.unearmarkTask !== 'function') return;
             mr.unearmarkTask(d.id);
             section.reRender();
@@ -204,7 +205,7 @@ export function uiSectionMapRouletteTask(context: any) {
         const nextEnter = nextWrap.enter()
           .insert('div', '.qa-details-loading, .mr-section-disclosure')
           .attr('class', 'mr-next-actions');
-        nextEnter.append('div').attr('class', 'mr-next-actions-buttons');
+        nextEnter.append('div').attr('class', 'buttons mr-next-actions-buttons');
         nextEnter.append('p').attr('class', 'mr-next-actions-none');
         nextWrap = nextEnter.merge(nextWrap);
         if (showNext) {
@@ -269,7 +270,7 @@ export function uiSectionMapRouletteTask(context: any) {
           buttons = buttons.enter()
             .append('button')
             .attr('type', 'button')
-            .attr('class', 'button mr-next-action')
+            .attr('class', 'button action mr-next-action fixedIt-button')
             .merge(buttons);
           buttons
             .text(function(btn: any) { return btn.label; })
@@ -333,13 +334,13 @@ export function uiSectionMapRouletteTask(context: any) {
         }
 
         let earmarkHost: any = root.selectAll('.mr-earmark-host')
-          .data(isResolved && !isQueued ? [] : [d]);
+          .data(isResolved || isQueued ? [] : [d]);
         earmarkHost.exit().remove();
         earmarkHost = earmarkHost.enter()
           .append('div')
           .attr('class', 'mr-earmark-host')
           .merge(earmarkHost);
-        if (!isResolved || isQueued) {
+        if (!isResolved && !isQueued) {
           earmarkHost.call(
             uiMapRouletteEarmarkToggle(context)
               .task(d)
