@@ -252,7 +252,11 @@ export function uiMapRouletteEditor(context: any) {
         label: t('map_data.layers.maproulette.show_osm', { id: displayId }),
         enabled: true,
         onClick: function() {
-          selectAssociatedOsmEntity([osmId], function() { /* leave MR panel */ });
+          selectAssociatedOsmEntity([osmId], function(didSelect: boolean) {
+            if (!didSelect) {
+              context.enter(modeBrowse(context));
+            }
+          });
         },
       });
     }
@@ -470,6 +474,13 @@ export function uiMapRouletteEditor(context: any) {
         if (next === _updateTiming) return;
         _updateTiming = next;
         setMapRouletteUpdateTiming(next);
+        // Drop an over-limit Right away draft so With save cannot queue it.
+        if (next === 'with_save' && _qaItem && _qaItem.newComment
+          && String(_qaItem.newComment).length > COMMENT_MAX_LENGTH) {
+          _qaItem = _qaItem.update({ newComment: undefined });
+          const mr = services.maproulette;
+          if (mr) mr.replaceItem(_qaItem);
+        }
         refreshSaveArea();
       });
   }
@@ -605,7 +616,6 @@ export function uiMapRouletteEditor(context: any) {
   }
 
   function isCommentTooLong(): boolean {
-    if (_updateTiming !== 'right_away') return false;
     const input = editorRoot().select('.new-comment-input');
     if (!input.empty()) {
       return String(input.property('value') || '').length > COMMENT_MAX_LENGTH;

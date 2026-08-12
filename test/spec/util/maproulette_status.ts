@@ -1,5 +1,9 @@
 import serviceMapRoulette, { MR_STATUS } from '../../../modules/services/maproulette';
-import { doneTaskStatusOf, statusLabelKey } from '../../../modules/util/maproulette_status';
+import {
+  doneTaskStatusOf,
+  pinDisplayStatusOf,
+  statusLabelKey,
+} from '../../../modules/util/maproulette_status';
 
 describe('iD.util.maproulette_status', () => {
   beforeEach(() => {
@@ -59,6 +63,36 @@ describe('iD.util.maproulette_status', () => {
         id: '43',
         taskStatus: MR_STATUS.CREATED,
       })).toBe(MR_STATUS.FIXED);
+    });
+  });
+
+  describe('pinDisplayStatusOf', () => {
+    it('keeps soft earmarks visually open', () => {
+      const item = new (iD as any).QAItem([0, 0], serviceMapRoulette, 'task', '50', {
+        parentId: '7',
+        taskStatus: MR_STATUS.CREATED,
+        isVisible: true,
+        task: { id: '50', parentId: '7', status: MR_STATUS.CREATED },
+      });
+      serviceMapRoulette.replaceItem(item);
+      serviceMapRoulette.earmarkTask(item);
+
+      expect(pinDisplayStatusOf(serviceMapRoulette, serviceMapRoulette.getError('50')))
+        .toBe(MR_STATUS.CREATED);
+    });
+
+    it('uses earmark outcome when marked local done', () => {
+      const item = new (iD as any).QAItem([0, 0], serviceMapRoulette, 'task', '51', {
+        parentId: '7',
+        taskStatus: MR_STATUS.CREATED,
+        isVisible: true,
+        task: { id: '51', parentId: '7', status: MR_STATUS.CREATED },
+      });
+      serviceMapRoulette.replaceItem(item);
+      serviceMapRoulette.earmarkTask(item, MR_STATUS.TOO_HARD, { markLocalDone: true });
+
+      expect(pinDisplayStatusOf(serviceMapRoulette, serviceMapRoulette.getError('51')))
+        .toBe(MR_STATUS.TOO_HARD);
     });
   });
 });

@@ -10,7 +10,7 @@ import { t } from '../core/localizer';
 import { services } from '../services';
 import { appendMapRoulettePinIcon } from '../svg/maproulette_logo';
 import { updateMapRouletteV4Pin } from '../svg/maproulette_marker';
-import { doneTaskStatusOf } from '../util/maproulette_status';
+import { pinDisplayStatusOf } from '../util/maproulette_status';
 
 export function uiMapRouletteDetails(context: any) {
   const mr = services.maproulette;
@@ -324,7 +324,7 @@ export function uiMapRouletteDetails(context: any) {
           width: 20,
           height: 27,
           className: `preset-icon-28 qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`,
-          status: doneTaskStatusOf(mr, d),
+          status: pinDisplayStatusOf(mr, d),
           priority: taskPriorityOf(d),
         });
       });
@@ -357,7 +357,7 @@ export function uiMapRouletteDetails(context: any) {
         const pin = d3_select(this).select('svg .maproulette-pin');
         if (pin.empty()) return;
         updateMapRouletteV4Pin(pin, {
-          status: doneTaskStatusOf(mr, d),
+          status: pinDisplayStatusOf(mr, d),
           priority: taskPriorityOf(d),
         });
       });
