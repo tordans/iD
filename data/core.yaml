@@ -919,7 +919,8 @@ en:
         resolve_done: "Finished updating MapRoulette tasks ({ok} succeeded{failed_suffix})."
         resolve_failed_suffix: ", {failed} failed"
         resolve_task_error: "Could not update task #{id} on MapRoulette."
-        comment: Comment for MapRoulette
+        comment: Optional comment for MapRoulette
+        comment_too_long: "Comment is too long (max 1000 characters)."
         inputPlaceholder: Optional comment (max 1000 chars)
         cancel: Cancel
         submit: Submit
@@ -931,6 +932,13 @@ en:
         nearbyTask:
           title: Go to next nearby task after submit
           go_to: Go to next nearby…
+        next_nearest: Next nearest task
+        next_priority: Next priority task
+        next_random: Pick random task nearby
+        show_osm: "Show {id}"
+        none_next: No other open tasks in view.
+        show_instructions: Show instructions
+        hide_instructions: Hide instructions
         loading_task_details: Loading task details…
         detail_title: Details
         instruction_title: Instructions

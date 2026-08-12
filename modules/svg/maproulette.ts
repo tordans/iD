@@ -14,6 +14,7 @@ import {
 } from './maproulette_marker';
 import { services } from '../services';
 import { utilStringQs } from '../util';
+import { doneTaskStatusOf } from '../util/maproulette_status';
 
 // Restore the layer from the URL hash at startup, following the pattern of
 // svg/notes.js (`notes=`): layer params are startup-only and owned by their
@@ -23,24 +24,17 @@ const _initialHash = utilStringQs(window.location.hash);
 let _layerEnabled = !!_initialHash.maproulette;
 let _qaService: any;
 
+function isMutedPin(d: any, service: any): boolean {
+  return !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d));
+}
+
 function pinBorderColor(d: any, selectedID: string | null, service: any): string {
   if (d.id === selectedID) return MAPROULETTE_SELECTED_BORDER;
+  if (isMutedPin(d, service)) return MAPROULETTE_DEFAULT_BORDER;
   if (d.earmarked || (service && service.isEarmarked && service.isEarmarked(d.id))) {
     return MAPROULETTE_EARMARK_BORDER;
   }
   return MAPROULETTE_DEFAULT_BORDER;
-}
-
-function taskStatusOf(d: any): number {
-  if (d && d.taskStatus !== undefined && d.taskStatus !== null
-    && Number.isFinite(Number(d.taskStatus))) {
-    return Number(d.taskStatus);
-  }
-  if (d && d.task && d.task.status !== undefined && d.task.status !== null
-    && Number.isFinite(Number(d.task.status))) {
-    return Number(d.task.status);
-  }
-  return 0;
 }
 
 function taskPriorityOf(d: any): number | null {
@@ -157,10 +151,10 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
 
     markersEnter.each(function(this: SVGGElement, d: any) {
       appendMapRouletteV4Pin(d3_select(this), {
-        status: taskStatusOf(d),
+        status: doneTaskStatusOf(service, d),
         priority: taskPriorityOf(d),
         borderColor: pinBorderColor(d, selectedID, service),
-        muted: !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d)),
+        muted: isMutedPin(d, service),
         anchorTip: true,
       });
     });
@@ -180,10 +174,10 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
         const pin = d3_select(this).select('.maproulette-pin');
         if (pin.empty()) return;
         updateMapRouletteV4Pin(pin, {
-          status: taskStatusOf(d),
+          status: doneTaskStatusOf(service, d),
           priority: taskPriorityOf(d),
           borderColor: pinBorderColor(d, selectedID, service),
-          muted: !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d)),
+          muted: isMutedPin(d, service),
         });
       });
 

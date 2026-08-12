@@ -422,6 +422,107 @@ describe('iD.serviceMapRoulette', () => {
     });
   });
 
+  describe('tile merge status preservation', () => {
+    const dimensions: [number, number] = [640, 480];
+
+    function testProjection() {
+      return iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([-116508, 0])
+        .clipExtent([[0, 0], dimensions]);
+    }
+
+    function mockTileWithTask(task: Record<string, any>) {
+      fetchMock.mock(/tasks\/box\//, [task]);
+      const parentId = String(task.parentId);
+      fetchMock.mock(new RegExp(`${MR_API}/challenge/${parentId}`), {
+        status: 200,
+        body: JSON.stringify({
+          id: Number(parentId),
+          name: 'Test challenge',
+          enabled: true,
+          deleted: false,
+        }),
+      });
+    }
+
+    it('keeps earmarked Fixed when API still returns Created', async () => {
+      const item = makeQAItem({ id: '77', parentId: '88', loc: [10, 0] });
+      item.taskStatus = 0;
+      maproulette.replaceItem(item);
+      maproulette.earmarkTask(item, 1, { markLocalDone: true });
+
+      mockTileWithTask({
+        id: 77,
+        parentId: 88,
+        status: 0,
+        point: { lng: 10, lat: 0 },
+      });
+
+      maproulette.loadIssues(testProjection());
+      await vi.waitFor(() => {
+        const cached = maproulette.getError('77');
+        expect(cached?.taskStatus).toBe(1);
+        expect(maproulette.isRecentlyResolved(cached)).toBe(true);
+      });
+    });
+
+    it('keeps session-resolved Fixed when API still returns Created', async () => {
+      const item = makeQAItem({ id: '78', parentId: '89', loc: [10, 0] });
+      item.taskStatus = 0;
+      maproulette.replaceItem(item);
+      mockPostUpdateSuccess('78', 1);
+
+      await new Promise((resolve) => {
+        maproulette.postUpdate({
+          id: '78',
+          parentId: '89',
+          _status: 1,
+          comment: 'Fixed',
+        }, () => resolve(null));
+      });
+
+      mockTileWithTask({
+        id: 78,
+        parentId: 89,
+        status: 0,
+        point: { lng: 10, lat: 0 },
+      });
+
+      maproulette.loadIssues(testProjection());
+      await vi.waitFor(() => {
+        const cached = maproulette.getError('78');
+        expect(cached?.taskStatus).toBe(1);
+        expect(maproulette.isRecentlyResolved(cached)).toBe(true);
+      });
+    });
+
+    it('restores earmark resolved fields when tasks load after reset', async () => {
+      const item = makeQAItem({ id: '79', parentId: '90', loc: [10, 0] });
+      item.taskStatus = 0;
+      maproulette.replaceItem(item);
+      maproulette.earmarkTask(item, 5, { markLocalDone: true });
+      maproulette.reset();
+
+      expect(maproulette.getEarmarked()).toHaveLength(1);
+      expect(maproulette.getError('79')).toBeUndefined();
+
+      mockTileWithTask({
+        id: 79,
+        parentId: 90,
+        status: 0,
+        point: { lng: 10, lat: 0 },
+      });
+
+      maproulette.loadIssues(testProjection());
+      await vi.waitFor(() => {
+        const cached = maproulette.getError('79');
+        expect(cached?.taskStatus).toBe(5);
+        expect(cached?.earmarked).toBe(true);
+      });
+    });
+  });
+
   describe('resolved visibility', () => {
     it('treats Created as open and Fixed within 24h as recently resolved', () => {
       const open = makeQAItem({ id: '1', parentId: '2' });

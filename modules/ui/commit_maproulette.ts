@@ -1,6 +1,7 @@
 import { t } from '../core/localizer';
 import { services } from '../services';
 import { closedMapRouletteTagKey, MR_STATUS } from '../services/maproulette';
+import { statusLabelKey } from '../util/maproulette_status';
 
 
 /**
@@ -74,21 +75,6 @@ export function joinMapRouletteTaskIds(
     parts.push(id);
   }
   return parts.join(';');
-}
-
-
-function statusLabelKey(status: number): string {
-  switch (Number(status)) {
-    case MR_STATUS.ALREADY_FIXED:
-      return 'map_data.layers.maproulette.alreadyFixed';
-    case MR_STATUS.FALSE_POSITIVE:
-      return 'map_data.layers.maproulette.notAnIssue';
-    case MR_STATUS.TOO_HARD:
-      return 'map_data.layers.maproulette.cantComplete';
-    case MR_STATUS.FIXED:
-    default:
-      return 'map_data.layers.maproulette.fixed';
-  }
 }
 
 

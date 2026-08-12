@@ -3411,27 +3411,75 @@ img.tag-reference-wiki-image {
     width: 100%;
     box-sizing: border-box;
 }
+.mr-editor > .mr-resolved-banner,
+.mr-editor > .mr-queued-banner,
 .mr-save .mr-resolved-banner,
 .mr-save .mr-queued-banner,
-.maproulette-task-embed .mr-resolved-banner {
+.maproulette-task-embed .mr-resolved-banner,
+.maproulette-task-embed .mr-queued-banner {
     margin: 8px 0;
     padding: 8px 10px;
 }
+.mr-editor > .mr-resolved-banner h3,
+.mr-editor > .mr-queued-banner h3,
 .mr-save .mr-resolved-banner h3,
 .mr-save .mr-queued-banner h3,
-.maproulette-task-embed .mr-resolved-banner strong {
+.maproulette-task-embed .mr-resolved-banner strong,
+.maproulette-task-embed .mr-queued-banner strong {
     margin: 0 0 4px;
     font-size: 14px;
 }
+.mr-editor > .mr-resolved-banner p,
+.mr-editor > .mr-queued-banner p,
 .mr-save .mr-resolved-banner p,
 .mr-save .mr-queued-banner p,
-.maproulette-task-embed .mr-resolved-banner p {
+.maproulette-task-embed .mr-resolved-banner p,
+.maproulette-task-embed .mr-queued-banner p {
     margin: 0;
 }
+.mr-editor > .mr-queued-banner .mr-queued-undo,
 .mr-save .mr-queued-banner .mr-queued-undo {
     margin-top: 8px;
     padding: 6px 10px;
     font-weight: 600;
+}
+.mr-editor > .mr-next-actions,
+.maproulette-task-embed .mr-next-actions {
+    margin: 0 0 8px;
+}
+.mr-editor > .mr-next-actions .mr-next-actions-buttons,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.mr-editor > .mr-next-actions .mr-next-action,
+.maproulette-task-embed .mr-next-actions .mr-next-action {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    font-weight: 600;
+    text-align: left;
+}
+.mr-editor > .mr-next-actions .mr-next-actions-none,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-none {
+    margin: 4px 0 0;
+    font-size: 12px;
+    opacity: 0.85;
+}
+.mr-editor > .mr-next-actions .mr-next-actions-none.hide,
+.maproulette-task-embed .mr-next-actions .mr-next-actions-none.hide {
+    display: none;
+}
+.error-details .mr-details-toggle {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 4px 0 8px;
+    padding: 6px 10px;
+    text-align: left;
+}
+.error-details.mr-details-collapsed .qa-details-subsection.hide {
+    display: none;
 }
 .mr-earmark-button {
     width: 100%;
@@ -3516,6 +3564,13 @@ img.tag-reference-wiki-image {
     min-height: 72px;
     max-height: 200px;
     box-sizing: border-box;
+}
+.mr-save .mr-optional-comment .new-comment-input.mr-comment-too-long {
+    border-color: var(--danger-color, #d73027);
+}
+.mr-save .mr-optional-comment-error {
+    margin-top: 4px;
+    font-size: 12px;
 }
 .mr-save > .buttons.mr-actions {
     padding: 4px 0 10px;

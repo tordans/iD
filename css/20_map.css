@@ -159,7 +159,7 @@ g.qaItem.maproulette .qaItem-fill {
     fill: #22d3ee;
 }
 
-/* Recently resolved — muted via pin opacity; keep a soft shadow. */
+/* Recently resolved — gray pin fill; soft neutral shadow (no green earmark glow). */
 g.qaItem.maproulette.resolved:not(.selected) .shadow {
     stroke: #888;
     stroke-opacity: 0.25;
