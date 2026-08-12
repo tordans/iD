@@ -64,7 +64,7 @@ describe('maproulette_cooperative', () => {
       const task = {
         geometries: { type: 'FeatureCollection', features: [], cooperativeWork: cw },
       };
-      expect(extractCooperativeWork(task)).toBe(cw);
+      expect(extractCooperativeWork(task)).toEqual(cw);
       expect(isMapRouletteTagFix(task)).toBe(true);
     });
   });

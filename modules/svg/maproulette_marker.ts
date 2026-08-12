@@ -104,6 +104,8 @@ function maproulettePinFill(
 }
 
 export function maproulettePriorityHex(priority: number | null | undefined): string | null {
+  // null/undefined must not go through Number() — Number(null) === 0 (High / red).
+  if (priority === null || priority === undefined) return null;
   const n = Number(priority);
   if (!Number.isFinite(n) || MAPROULETTE_PRIORITY_HEX[n] === undefined) return null;
   return MAPROULETTE_PRIORITY_HEX[n];

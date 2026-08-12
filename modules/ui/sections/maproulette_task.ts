@@ -145,12 +145,22 @@ export function uiSectionMapRouletteTask(context: any) {
         root.classed('mr-resolved', isResolved || isQueued);
         const statusTitle = t(statusLabelKey(doneTaskStatusOf(mr, d)));
 
-        let banner: any = root.selectAll('.mr-resolved-banner')
+        const details = (uiMapRouletteDetails(context) as any)
+          .embedded(true)
+          .done(isResolved || isQueued)
+          .task(d);
+        details(root);
+
+        const host = root.select('.error-details');
+        const panelHost = host.empty() ? root : host;
+        const beforeBanner = '.mr-next-actions, .qa-details-subsection';
+
+        let banner: any = panelHost.selectAll('.mr-resolved-banner')
           .data(isResolved && !isQueued ? [d] : []);
         banner.exit().remove();
         const bannerEnter = banner.enter()
-          .insert('div', ':first-child')
-          .attr('class', 'mr-resolved-banner notice');
+          .insert('div', beforeBanner)
+          .attr('class', 'mr-resolved-banner');
         bannerEnter.append('strong');
         bannerEnter.append('p');
         banner = bannerEnter.merge(banner);
@@ -159,12 +169,12 @@ export function uiSectionMapRouletteTask(context: any) {
         banner.select('p')
           .text(t('map_data.layers.maproulette.resolved_message'));
 
-        let queuedBanner: any = root.selectAll('.mr-queued-banner')
+        let queuedBanner: any = panelHost.selectAll('.mr-queued-banner')
           .data(isQueued ? [d] : []);
         queuedBanner.exit().remove();
         const queuedEnter = queuedBanner.enter()
-          .insert('div', ':first-child')
-          .attr('class', 'mr-queued-banner notice');
+          .insert('div', beforeBanner)
+          .attr('class', 'mr-queued-banner');
         queuedEnter.append('strong');
         queuedEnter.append('p');
         queuedEnter
@@ -188,11 +198,11 @@ export function uiSectionMapRouletteTask(context: any) {
 
         // Next-task actions under the done banner (no Show OSM — already on entity).
         const showNext = isResolved || isQueued;
-        let nextWrap: any = root.selectAll('.mr-next-actions')
+        let nextWrap: any = panelHost.selectAll('.mr-next-actions')
           .data(showNext ? [d] : []);
         nextWrap.exit().remove();
         const nextEnter = nextWrap.enter()
-          .insert('div', '.error-details, .mr-tag-fix-host, .mr-earmark-host')
+          .insert('div', '.qa-details-subsection')
           .attr('class', 'mr-next-actions');
         nextEnter.append('div').attr('class', 'mr-next-actions-buttons');
         nextEnter.append('p').attr('class', 'mr-next-actions-none');
@@ -272,12 +282,6 @@ export function uiSectionMapRouletteTask(context: any) {
             .text(t('map_data.layers.maproulette.none_next'))
             .classed('hide', buttonDefs.length > 0);
         }
-
-        const details = (uiMapRouletteDetails(context) as any)
-          .embedded(true)
-          .done(isResolved || isQueued)
-          .task(d);
-        details(root);
 
         let tagFixHost: any = root.selectAll('.mr-tag-fix-host')
           .data(isResolved || isQueued ? [] : [d]);

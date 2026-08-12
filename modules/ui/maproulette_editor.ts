@@ -98,9 +98,9 @@ export function uiMapRouletteEditor(context: any) {
       .attr('class', 'modal-section mr-editor')
       .merge(editor)
       .classed('mr-task-done', isDone)
+      .call(_details.task(_qaItem).done(isDone))
       .call(mRStatusBanner)
       .call(mRNextActions)
-      .call(_details.task(_qaItem).done(isDone))
       .call(mRSaveSection);
 
     const footer = selection.selectAll('.footer').data([0]);
@@ -132,9 +132,9 @@ export function uiMapRouletteEditor(context: any) {
     const { isResolved, isQueued } = taskDoneState();
     const isDone = isResolved || isQueued;
     root.classed('mr-task-done', isDone);
+    root.call(_details.task(_qaItem).done(isDone));
     root.call(mRStatusBanner);
     root.call(mRNextActions);
-    root.call(_details.task(_qaItem).done(isDone));
     root.call(mRSaveSection);
   }
 
@@ -164,14 +164,21 @@ export function uiMapRouletteEditor(context: any) {
     return ranked[0] || null;
   }
 
+  /** Banners / next-steps live inside `.error-details` (after the DEU header). */
+  function doneContentHost(sel: any): any {
+    const host = sel.select('.error-details');
+    return host.empty() ? sel : host;
+  }
+
   function mRNextActions(sel: any): void {
     const { isShown, isResolved, isQueued } = taskDoneState();
     const show = isShown && (isResolved || isQueued);
-    let wrap = sel.selectAll('.mr-next-actions').data(show ? [0] : []);
+    const host = doneContentHost(sel);
+    let wrap = host.selectAll('.mr-next-actions').data(show ? [0] : []);
     wrap.exit().remove();
     const enter = wrap
       .enter()
-      .insert('div', '.error-details, .mr-save')
+      .insert('div', '.qa-details-subsection')
       .attr('class', 'mr-next-actions');
     enter.append('div').attr('class', 'mr-next-actions-buttons');
     enter.append('p').attr('class', 'mr-next-actions-none');
@@ -293,25 +300,28 @@ export function uiMapRouletteEditor(context: any) {
     const mr = services.maproulette;
     const status = _qaItem ? doneTaskStatusOf(mr, _qaItem) : MR_STATUS.FIXED;
     const statusTitle = t(statusLabelKey(status));
+    const host = doneContentHost(sel);
+    // After qa-header, before next-actions / instructions.
+    const before = '.mr-next-actions, .qa-details-subsection';
 
-    let resolved = sel.selectAll('.mr-resolved-banner').data(showResolved ? [0] : []);
+    let resolved = host.selectAll('.mr-resolved-banner').data(showResolved ? [0] : []);
     resolved.exit().remove();
     const resolvedEnter = resolved
       .enter()
-      .insert('div', ':first-child')
-      .attr('class', 'mr-resolved-banner notice');
+      .insert('div', before)
+      .attr('class', 'mr-resolved-banner');
     resolvedEnter.append('h3');
     resolvedEnter.append('p');
     resolved = resolvedEnter.merge(resolved);
     resolved.select('h3').text(statusTitle);
     resolved.select('p').text(t('map_data.layers.maproulette.resolved_message'));
 
-    let queued = sel.selectAll('.mr-queued-banner').data(showQueued ? [0] : []);
+    let queued = host.selectAll('.mr-queued-banner').data(showQueued ? [0] : []);
     queued.exit().remove();
     const queuedEnter = queued
       .enter()
-      .insert('div', ':first-child')
-      .attr('class', 'mr-queued-banner notice');
+      .insert('div', before)
+      .attr('class', 'mr-queued-banner');
     queuedEnter.append('h3');
     queuedEnter.append('p');
     queuedEnter

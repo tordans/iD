@@ -1,9 +1,17 @@
 import {
+  asParsedOrNull,
+  buildMrTaskDetailView,
   challengeIsVisible,
+  extractMrCooperativeWork,
+  isMrTagFixCooperativeWork,
   parseMrBoxTasks,
   parseMrChallenge,
   parseMrEarmarkList,
+  parseMrModifyElementOps,
+  parseMrSetTagsData,
   parseMrTaskDetails,
+  parseMrUnsetTagKeys,
+  unwrapMrGeometries,
 } from '../../../modules/util/maproulette_api_schema';
 
 describe('iD.util.maproulette_api_schema', () => {
@@ -85,22 +93,63 @@ describe('iD.util.maproulette_api_schema', () => {
     });
   });
 
-  describe('parseMrEarmarkList', () => {
-    it('fills defaults and coerces ids', () => {
-      const list = parseMrEarmarkList([
-        { taskID: 42, _status: '5', loc: ['1', '2'] },
-        { /* missing taskID */ title: 'x' },
-      ]);
-      expect(list).toHaveLength(1);
-      expect(list[0]).toMatchObject({
-        taskID: '42',
-        challengeID: '',
-        _status: 5,
-        includeInUpload: true,
-        loc: [1, 2],
-        elems: [],
-        newComment: '',
+  describe('cooperativeWork + detail view', () => {
+    it('extracts Tag Fix cooperativeWork and rejects OSC type 2', () => {
+      const tagFix = {
+        cooperativeWork: {
+          meta: { type: 1, version: 2 },
+          operations: [{
+            operationType: 'modifyElement',
+            data: {
+              id: 'way/1',
+              operations: [{ operation: 'setTags', data: { highway: 'path' } }],
+            },
+          }],
+        },
+      };
+      const cw = extractMrCooperativeWork(tagFix);
+      expect(isMrTagFixCooperativeWork(cw)).toBe(true);
+      expect(parseMrModifyElementOps(cw!).map((o) => o.data.id)).toEqual(['way/1']);
+
+      expect(isMrTagFixCooperativeWork(extractMrCooperativeWork({
+        cooperativeWork: { meta: { type: 2 }, operations: [] },
+      }))).toBe(false);
+    });
+
+    it('buildMrTaskDetailView merges challenge + task strings', () => {
+      const detail = buildMrTaskDetailView({
+        id: 9,
+        parentId: 3,
+        baseTask: { title: 'old' },
+        challenge: { name: 'Ch', instruction: 'Do it', description: 'Desc' },
+        taskDetails: {
+          title: 'way/9',
+          geometries: { features: [{ type: 'Feature' }] },
+        },
       });
+      expect(detail).toMatchObject({
+        id: '9',
+        parentId: '3',
+        parentName: 'Ch',
+        title: 'way/9',
+        instruction: 'Do it',
+        description: 'Desc',
+      });
+      expect(detail.taskFeatures).toHaveLength(1);
+    });
+
+    it('parses setTags/unsetTags child data and unwraps geometries', () => {
+      expect(parseMrSetTagsData({ highway: 'path', lanes: 2 })).toEqual({
+        highway: 'path',
+        lanes: 2,
+      });
+      expect(parseMrSetTagsData(['not', 'a', 'map'])).toBeNull();
+      expect(parseMrUnsetTagKeys(['name', 1, ''])).toEqual(['name', '1']);
+      expect(unwrapMrGeometries({
+        geometries: { type: 'FeatureCollection', features: [] },
+      })).toEqual({ type: 'FeatureCollection', features: [] });
+      expect(asParsedOrNull({})).toBeNull();
+      expect(asParsedOrNull({ id: '1' })).toEqual({ id: '1' });
     });
   });
 });

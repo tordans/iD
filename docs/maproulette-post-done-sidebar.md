@@ -52,10 +52,12 @@ In both success cases the panel **does not** auto-select a nearby task or a link
 
 Top to bottom in the pin sidebar:
 
-1. **Status banner** — which outcome was chosen (Fixed, Already Fixed, …). Queued adds **Undo**.
-2. **Next-step buttons** — see tables and trees below.
-3. **Collapsed instructions** — “Show instructions” / “Hide instructions” (session memory per task id).
-4. **Hidden** while done: With save / Right away toggle, optional comment, tag-fix UI, status buttons.
+1. **Challenge header** — pin icon + challenge name (DEU line). Finished pins use the solid status fill (e.g. Fixed green) with no priority wedge.
+2. **Task meta** — challenge/task id and recognised OSM objects (always visible).
+3. **Status banner** — which outcome was chosen (Fixed, Already Fixed, …). Queued adds **Undo**.
+4. **Next-step buttons** — see tables and trees below.
+5. **Details / Instructions** — iD disclosures (blue hide-toggle + arrow). Default **open** while the task is active; default **closed** after a status decision (session memory if the mapper reopens them).
+6. **Hidden** while done: With save / Right away toggle, optional comment, tag-fix UI, status buttons.
 
 The entity inspector MapRoulette section mirrors the banner + next-task buttons (without “Show OSM”, because the mapper is already on an OSM object).
 

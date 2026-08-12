@@ -11,16 +11,17 @@ import { services } from '../services';
 import { appendMapRoulettePinIcon } from '../svg/maproulette_logo';
 import { updateMapRouletteV4Pin } from '../svg/maproulette_marker';
 import { pinDisplayStatusOf } from '../util/maproulette_status';
+import { uiDisclosure } from './disclosure';
 
 export function uiMapRouletteDetails(context: any) {
   const mr = services.maproulette;
   let _qaItem: any;
   /** When true, render for the entity inspector (no pin-selection guard; instructions only). */
   let _embedded = false;
-  /** Task is queued/resolved — collapse instructions unless user reopens. */
+  /** Task is queued/resolved — Details/Instructions default collapsed. */
   let _done = false;
-  /** Session expand overrides while done (keyed by task id). */
-  const _expandedWhenDone: Record<string, boolean> = {};
+  /** Session expand overrides for Details/Instructions (keyed by taskId:section). */
+  const _sectionExpanded: Record<string, boolean> = {};
 
   /**
    * Escape a value for interpolation into HTML text or attribute context.
@@ -179,43 +180,86 @@ export function uiMapRouletteDetails(context: any) {
     return _qaItem && _qaItem.id !== undefined && _qaItem.id !== null ? String(_qaItem.id) : null;
   }
 
-  function isDoneExpanded(): boolean {
+  function sectionExpandedKey(section: 'detail' | 'instruction'): string | null {
     const id = taskIdKey();
-    return !!(id && _expandedWhenDone[id]);
+    return id ? `${id}:${section}` : null;
   }
 
-  /** Collapse / expand instruction blocks when the task is marked done. */
-  function applyDoneCollapse(detailsSel: any): void {
-    const id = taskIdKey();
-    const showToggle = !!(_done && id);
-    let toggle = detailsSel.selectAll('.mr-details-toggle').data(showToggle ? [0] : []);
-    toggle.exit().remove();
-    const toggleEnter = toggle
-      .enter()
-      .insert('button', '.qa-details-subsection')
-      .attr('type', 'button')
-      .attr('class', 'button mr-details-toggle');
-    toggle = toggleEnter.merge(toggle);
-
-    const expanded = !_done || isDoneExpanded();
-    detailsSel.classed('mr-details-collapsed', _done && !expanded);
-    detailsSel.selectAll('.qa-details-subsection')
-      .classed('hide', _done && !expanded);
-
-    if (showToggle) {
-      toggle
-        .text(expanded
-          ? t('map_data.layers.maproulette.hide_instructions')
-          : t('map_data.layers.maproulette.show_instructions'))
-        .attr('aria-expanded', expanded ? 'true' : 'false')
-        .on('click.mr-details-toggle', function(this: HTMLElement, d3_event: Event) {
-          d3_event.preventDefault();
-          this.blur();
-          if (!id) return;
-          _expandedWhenDone[id] = !isDoneExpanded();
-          applyDoneCollapse(detailsSel);
-        });
+  function isSectionExpanded(section: 'detail' | 'instruction'): boolean {
+    const key = sectionExpandedKey(section);
+    if (key && Object.prototype.hasOwnProperty.call(_sectionExpanded, key)) {
+      return !!_sectionExpanded[key];
     }
+    // Open while working the task; closed after a status decision.
+    return !_done;
+  }
+
+  function setSectionExpanded(section: 'detail' | 'instruction', expanded: boolean): void {
+    const key = sectionExpandedKey(section);
+    if (!key) return;
+    _sectionExpanded[key] = expanded;
+  }
+
+  /** Keep existing disclosures in sync when done/active flips before async reload finishes. */
+  function syncSectionDisclosureOpen(detailsSel: any): void {
+    (['detail', 'instruction'] as const).forEach(function(section) {
+      const wrap = detailsSel.select(`.mr-section-${section} details.disclosure-wrap`);
+      if (wrap.empty()) return;
+      const expanded = isSectionExpanded(section);
+      wrap.property('open', expanded);
+      const summary = wrap.select('summary.hide-toggle');
+      summary
+        .classed('expanded', expanded)
+        .attr('title', t(`icons.${expanded ? 'collapse' : 'expand'}`));
+      summary.select('.hide-toggle-icon')
+        .attr('xlink:href', expanded ? '#iD-icon-down' : '#iD-icon-forward');
+    });
+  }
+
+  /** Open statuses may show the priority wedge; done / terminal pins are solid fill only. */
+  function pinPriorityForDisplay(d: any, status: number): number | null {
+    if (_done) return null;
+    if (status !== 0 && status !== 3) return null;
+    return taskPriorityOf(d);
+  }
+
+  /**
+   * Details / Instructions as iD disclosures (blue hide-toggle + arrow).
+   * Default open when the task is active; default closed when done.
+   */
+  function appendSectionDisclosure(
+    parent: any,
+    section: 'detail' | 'instruction',
+    label: string | ((sel: any) => void),
+    html: string,
+  ): void {
+    const id = taskIdKey() || 'unknown';
+    const disclosureKey = `maproulette-${section}-${id}`;
+    const host = parent
+      .append('div')
+      .attr('class', `mr-section-disclosure mr-section-${section}`);
+
+    host.call(
+      (uiDisclosure(context, disclosureKey, !_done) as any)
+        .updatePreference(false)
+        .expanded(isSectionExpanded(section))
+        .label(label)
+        .content(function(contentSel: any) {
+          const box = contentSel
+            .selectAll('.qa-details-container')
+            .data([0]);
+          const boxEnter = box.enter()
+            .append('div')
+            .attr('class', 'qa-details-container');
+          boxEnter.merge(box)
+            .html(html);
+          attachExternalLinkAttrs(contentSel);
+          attachHighlightLinkHandlers(contentSel);
+        })
+        .on('toggled', function(expanded: boolean) {
+          setSectionExpanded(section, expanded);
+        }),
+    );
   }
 
   function attachHighlightLinkHandlers(selection: any): void {
@@ -291,6 +335,41 @@ export function uiMapRouletteDetails(context: any) {
     });
   }
 
+  /**
+   * Challenge/task id + recognised OSM objects sit under the DEU header,
+   * above the status banner / next-step actions.
+   */
+  function renderTaskMeta(detailsSel: any, task: any): void {
+    if (_embedded) return;
+
+    let meta = detailsSel.selectAll('.mr-task-meta').data([0]);
+    meta.exit().remove();
+    meta = meta.enter()
+      .insert('div', '.mr-resolved-banner, .mr-queued-banner, .mr-next-actions, .qa-details-subsection')
+      .attr('class', 'mr-task-meta')
+      .merge(meta);
+
+    meta.html('');
+
+    if (task && task.id) {
+      const titleSection = meta
+        .append('header')
+        .attr('class', 'qa-details-header');
+      titleSection
+        .append('h4')
+        .text(t('map_data.layers.maproulette.id_title'));
+      titleSection
+        .append('p')
+        .text(`${task.parentId} / ${task.id}`);
+    }
+
+    appendRecognisedElems(
+      meta,
+      (_qaItem && _qaItem.elems) || (task && task.elems),
+    );
+    attachHighlightLinkHandlers(meta);
+  }
+
   function taskPriorityOf(d: any): number | null {
     const raw = (d && d.taskPriority !== undefined && d.taskPriority !== null)
       ? d.taskPriority
@@ -320,12 +399,13 @@ export function uiMapRouletteDetails(context: any) {
         .attr('class', 'qa-header-icon');
 
       iconEnter.each(function(this: HTMLElement, d: any) {
+        const status = pinDisplayStatusOf(mr, d);
         appendMapRoulettePinIcon(d3_select(this), {
           width: 20,
           height: 27,
           className: `preset-icon-28 qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`,
-          status: pinDisplayStatusOf(mr, d),
-          priority: taskPriorityOf(d),
+          status,
+          priority: pinPriorityForDisplay(d, status),
         });
       });
 
@@ -349,16 +429,17 @@ export function uiMapRouletteDetails(context: any) {
 
     details = details.merge(detailsEnter);
 
-    // Apply collapse chrome before async load so done tasks don't flash content.
-    applyDoneCollapse(details);
+    // Collapse/expand existing sections immediately when done state flips.
+    syncSectionDisclosureOpen(details);
 
     if (!_embedded) {
       details.select('.qa-header-icon').each(function(this: HTMLElement, d: any) {
         const pin = d3_select(this).select('svg .maproulette-pin');
         if (pin.empty()) return;
+        const status = pinDisplayStatusOf(mr, d);
         updateMapRouletteV4Pin(pin, {
-          status: pinDisplayStatusOf(mr, d),
-          priority: taskPriorityOf(d),
+          status,
+          priority: pinPriorityForDisplay(d, status),
         });
       });
     }
@@ -401,32 +482,31 @@ export function uiMapRouletteDetails(context: any) {
             // pin panel (no action buttons). First section title links to the task.
             let linkedTitleUsed = false;
 
-            function appendEmbeddedTitle(parent: any, kind: 'detail' | 'instruction') {
-              const h4 = parent
-                .append('header')
-                .attr('class', 'qa-details-header')
-                .append('h4');
-
-              if (!linkedTitleUsed && _qaItem && _qaItem.id) {
-                linkedTitleUsed = true;
-                h4.append('span')
-                  .text(
+            function embeddedDisclosureLabel(kind: 'detail' | 'instruction') {
+              return function(labelSel: any) {
+                if (!linkedTitleUsed && _qaItem && _qaItem.id) {
+                  linkedTitleUsed = true;
+                  labelSel
+                    .append('span')
+                    .text(
+                      kind === 'detail'
+                        ? t('map_data.layers.maproulette.detail_title_for_task')
+                        : t('map_data.layers.maproulette.instruction_title_for_task'),
+                    );
+                  labelSel
+                    .append('a')
+                    .attr('href', '#')
+                    .attr('class', 'mr-task-select-link')
+                    .attr('data-task-id', String(_qaItem.id))
+                    .text('#' + _qaItem.id);
+                } else {
+                  labelSel.text(
                     kind === 'detail'
-                      ? t('map_data.layers.maproulette.detail_title_for_task')
-                      : t('map_data.layers.maproulette.instruction_title_for_task'),
+                      ? t('map_data.layers.maproulette.detail_title')
+                      : t('map_data.layers.maproulette.instruction_title'),
                   );
-                h4.append('a')
-                  .attr('href', '#')
-                  .attr('class', 'mr-task-select-link')
-                  .attr('data-task-id', String(_qaItem.id))
-                  .text('#' + _qaItem.id);
-              } else {
-                h4.text(
-                  kind === 'detail'
-                    ? t('map_data.layers.maproulette.detail_title')
-                    : t('map_data.layers.maproulette.instruction_title'),
-                );
-              }
+                }
+              };
             }
 
             const hasDescription = !!task.description;
@@ -434,28 +514,27 @@ export function uiMapRouletteDetails(context: any) {
               task.instruction !== task.description;
 
             if (hasDescription) {
-              const art = sel.append('article');
-              appendEmbeddedTitle(art, 'detail');
-              const descContent = art.append('section')
-                .attr('class', 'qa-details-container')
-                .html(renderMarkdown(task.description, task));
-              attachExternalLinkAttrs(descContent);
+              appendSectionDisclosure(
+                sel,
+                'detail',
+                embeddedDisclosureLabel('detail'),
+                renderMarkdown(task.description, task),
+              );
             }
 
             if (hasInstruction || (!hasDescription && task.instruction)) {
-              const art2 = sel.append('article');
-              appendEmbeddedTitle(art2, 'instruction');
-              const instructionContent = art2.append('article')
-                .attr('class', 'qa-details-container')
-                .html(renderMarkdown(task.instruction, task));
-              attachExternalLinkAttrs(instructionContent);
+              appendSectionDisclosure(
+                sel,
+                'instruction',
+                embeddedDisclosureLabel('instruction'),
+                renderMarkdown(task.instruction, task),
+              );
             }
 
             if (!hasDescription && !task.instruction) {
               sel.text(t('map_data.layers.maproulette.no_instruction'));
             }
 
-            attachHighlightLinkHandlers(sel);
             sel.selectAll('.mr-task-select-link')
               .on('click', function(this: Element, d3_event: Event) {
                 d3_event.preventDefault();
@@ -472,23 +551,7 @@ export function uiMapRouletteDetails(context: any) {
             task.parentName || t('map_data.layers.maproulette.title');
           headerLabel.text(headerText);
 
-          if (task.id) {
-            const titleSection = sel
-              .append('header')
-              .attr('class', 'qa-details-header');
-            titleSection
-              .append('h4')
-              .text(t('map_data.layers.maproulette.id_title'));
-            titleSection
-              .append('p')
-              .text(`${task.parentId} / ${task.id}`);
-          }
-
-          // Prefer elems merged onto the live QAItem during loadTaskDetailAsync.
-          appendRecognisedElems(
-            sel,
-            (_qaItem && _qaItem.elems) || task.elems,
-          );
+          renderTaskMeta(details, task);
 
           const description = renderMarkdown(task.description, task);
           const instruction = renderMarkdown(task.instruction, task);
@@ -498,35 +561,27 @@ export function uiMapRouletteDetails(context: any) {
           );
 
           if (!explicitChallengeIdGiven && task.description) {
-            const art = sel.append('article');
-            art.append('header')
-              .attr('class', 'qa-details-header')
-              .append('h4')
-              .text(t('map_data.layers.maproulette.detail_title'));
-            const descContent = art.append('section')
-              .attr('class', 'qa-details-container')
-              .html(description);
-            attachExternalLinkAttrs(descContent);
+            appendSectionDisclosure(
+              sel,
+              'detail',
+              t('map_data.layers.maproulette.detail_title'),
+              description,
+            );
           }
 
           if (task.instruction && task.instruction !== task.description) {
-            const art2 = sel.append('article');
-            art2.append('header')
-              .attr('class', 'qa-details-header')
-              .append('h4')
-              .text(t('map_data.layers.maproulette.instruction_title'));
-            const instructionContent = art2.append('article')
-              .attr('class', 'qa-details-container')
-              .html(instruction);
-            attachExternalLinkAttrs(instructionContent);
+            appendSectionDisclosure(
+              sel,
+              'instruction',
+              t('map_data.layers.maproulette.instruction_title'),
+              instruction,
+            );
           }
 
           attachHighlightLinkHandlers(sel);
-          applyDoneCollapse(details);
           } catch {
             clearLoadingState(sel);
             sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
-            applyDoneCollapse(details);
           }
         })
         .catch(function() {
@@ -534,7 +589,6 @@ export function uiMapRouletteDetails(context: any) {
           if (sel.empty()) return;
           clearLoadingState(sel);
           sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
-          applyDoneCollapse(details);
         });
     }
   }
@@ -547,7 +601,16 @@ export function uiMapRouletteDetails(context: any) {
 
   render.done = function(val?: boolean) {
     if (!arguments.length) return _done;
-    _done = !!val;
+    const next = !!val;
+    if (next !== _done) {
+      // Reset session overrides so defaults apply (open active / closed done).
+      const id = taskIdKey();
+      if (id) {
+        delete _sectionExpanded[`${id}:detail`];
+        delete _sectionExpanded[`${id}:instruction`];
+      }
+    }
+    _done = next;
     return render;
   };
 
