@@ -179,13 +179,36 @@ function writePersistedEarmarks(list: MapRouletteEarmark[]): void {
   }
 }
 
+function earmarkStatusOf(earmark: MapRouletteEarmark | null | undefined): number {
+  if (!earmark) return MR_STATUS.FIXED;
+  if (earmark._status === undefined || earmark._status === null) return MR_STATUS.FIXED;
+  return Number(earmark._status);
+}
+
+/** Apply earmark terminal status onto a cached QAItem (pin glyph + gray-out). */
+function applyEarmarkResolvedFields(qaItem: any, earmark: MapRouletteEarmark): void {
+  if (!qaItem || !earmark) return;
+  const status = earmarkStatusOf(earmark);
+  const mappedOn = mappedOnOf(qaItem) || new Date().toISOString();
+  qaItem.earmarked = true;
+  qaItem.taskStatus = status;
+  qaItem.mappedOn = mappedOn;
+  if (qaItem.task) {
+    qaItem.task.status = status;
+    qaItem.task.mappedOn = mappedOn;
+  }
+}
+
 function applyPersistedEarmarks(): void {
   if (!_cache) return;
   readPersistedEarmarks().forEach(function(entry) {
     if (entry._status === undefined || entry._status === null) {
       entry._status = MR_STATUS.FIXED;
     }
-    _cache.earmarked[String(entry.taskID)] = entry;
+    const id = String(entry.taskID);
+    _cache.earmarked[id] = entry;
+    const cached = _cache.data[id];
+    if (cached) applyEarmarkResolvedFields(cached, entry);
   });
 }
 const _mrUrlRoot = 'https://maproulette.org/api/v2';
@@ -325,10 +348,33 @@ function clearTileCache(): void {
 
 function applyTaskStatusFields(qaItem: any, task: any): void {
   if (!qaItem) return;
-  const status = (task && task.status !== undefined && task.status !== null)
+  const taskID = qaItem.id != null ? String(qaItem.id) : '';
+  const earmark = _cache && taskID ? _cache.earmarked[taskID] : null;
+  const localStatus = taskStatusOf(qaItem);
+  const localMappedOn = mappedOnOf(qaItem);
+  const apiStatus = (task && task.status !== undefined && task.status !== null)
     ? Number(task.status)
-    : taskStatusOf(qaItem);
-  let mappedOn = (task && task.mappedOn) || mappedOnOf(qaItem);
+    : undefined;
+
+  let status: number;
+  let mappedOn: string | null | undefined;
+
+  if (earmark) {
+    status = earmarkStatusOf(earmark);
+    mappedOn = localMappedOn || new Date().toISOString();
+    qaItem.earmarked = true;
+  } else if (
+    isResolvedStatus(localStatus) &&
+    (apiStatus === undefined || OPEN_STATUSES.has(apiStatus))
+  ) {
+    // Session-resolved or deferred — API may still show Created until sync.
+    status = localStatus;
+    mappedOn = localMappedOn;
+  } else {
+    status = apiStatus !== undefined ? apiStatus : localStatus;
+    mappedOn = (task && task.mappedOn) || localMappedOn;
+  }
+
   // Resolved tasks without mappedOn would never age out — stamp first sight.
   if (isResolvedStatus(status) && !mappedOn) {
     mappedOn = new Date().toISOString();
@@ -505,7 +551,7 @@ export default {
    * the MapRoulette API — that happens after the OSM changeset ID is known.
    * @param status  MR status code (default Fixed).
    * @param options.markLocalDone  Gray-out the pin for this session (status
-   *   buttons). Tag Fix Accept leaves the pin earmarked without graying.
+   *   buttons and Tag Fix Accept).
    */
   earmarkTask(
     qaItem: any,
@@ -647,7 +693,7 @@ export default {
       if (entry.includeInUpload === undefined) entry.includeInUpload = true;
       _cache.earmarked[id] = entry;
       const cached = _cache.data[id];
-      if (cached) cached.earmarked = true;
+      if (cached) applyEarmarkResolvedFields(cached, entry);
     });
     writePersistedEarmarks(this.getEarmarked());
     dispatch.call('earmarked');
@@ -769,7 +815,9 @@ export default {
 
             const chState = _cache.loadedChallenge[parentId];
             setItemVisibility(d, chState ? !!chState.isVisible : false);
-            if (_cache.earmarked[taskID]) (d as any).earmarked = true;
+            if (_cache.earmarked[taskID]) {
+              applyEarmarkResolvedFields(d, _cache.earmarked[taskID]);
+            }
             _cache.data[taskID] = d;
             indexTaskElems(d);
             _cache.rtree.insert(encodeIssueRtree(d));
@@ -846,6 +894,44 @@ export default {
   },
 
   /**
+   * Open (unresolved) cached tasks, optionally limited to challenge ids.
+   * When `challengeIds` is null/empty and `ignoreChallengeFilter` is false,
+   * uses the same visibility rules as getNearestItem (Map Data filter when set,
+   * else isVisible). Set `ignoreChallengeFilter` to widen across challenges
+   * when the preferred scope is empty.
+   */
+  getOpenTasks(options?: {
+    challengeIds?: string[] | null;
+    excludeId?: string | null;
+    ignoreChallengeFilter?: boolean;
+  }): any[] {
+    if (!_cache) return [];
+    const exclude = options && options.excludeId !== undefined && options.excludeId !== null
+      ? String(options.excludeId)
+      : null;
+    const restrict = options && Array.isArray(options.challengeIds)
+      ? options.challengeIds.map(String).filter(Boolean)
+      : null;
+    const ignoreFilter = !!(options && options.ignoreChallengeFilter);
+    const out: any[] = [];
+    Object.keys(_cache.data).forEach(function(id) {
+      const d = _cache.data[id];
+      if (!d || !d.loc) return;
+      if (exclude && String(d.id) === exclude) return;
+      if (!isOpenTask(d)) return;
+      if (restrict && restrict.length) {
+        if (restrict.indexOf(String(d.parentId)) === -1) return;
+      } else if (!ignoreFilter && _challengeIDs.size > 0) {
+        if (!_challengeIDs.has(d.parentId)) return;
+      } else if (!d.isVisible) {
+        return;
+      }
+      out.push(d);
+    });
+    return out;
+  },
+
+  /**
    * Nearest open (unresolved) cached task to `loc`.
    * Used by Map Data “Go to next nearby” and post-submit navigation.
    */
@@ -853,16 +939,7 @@ export default {
     if (!_cache || !loc) return null;
     let best: any = null;
     let bestDist = Infinity;
-    Object.keys(_cache.data).forEach(function(id) {
-      const d = _cache.data[id];
-      if (!d || !d.loc) return;
-      if (excludeId && d.id === excludeId) return;
-      if (!isOpenTask(d)) return;
-      if (_challengeIDs.size > 0) {
-        if (!_challengeIDs.has(d.parentId)) return;
-      } else if (!d.isVisible) {
-        return;
-      }
+    this.getOpenTasks({ excludeId }).forEach(function(d: any) {
       const dist = geoSphericalDistance(loc, d.loc);
       if (dist < bestDist) {
         bestDist = dist;

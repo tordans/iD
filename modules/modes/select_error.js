@@ -43,10 +43,12 @@ export function modeSelectError(context, selectedErrorID, selectedErrorService) 
             errorEditor = uiMapRouletteEditor(context)
             .on('change', function() {
                 context.map().pan([0,0]);
-                // After a successful submit the task is already removed; the
-                // editor owns post-submit navigation (nearby task / OSM entity /
-                // browse). Do not re-show a blank “Loading…” panel for the
-                // closed id — only refresh when the selected task still exists.
+                // After queue/submit the editor navigates away (OSM entity /
+                // nearby / browse). Queued and recently-resolved tasks stay in
+                // cache, so getError still succeeds — only refresh while this
+                // select-error mode is still active for the same task.
+                if (context.mode().id !== 'select-error') return;
+                if (String(context.selectedErrorID()) !== String(selectedErrorID)) return;
                 var error = errorService && errorService.getError(selectedErrorID);
                 if (!error) return;
                 context.ui().sidebar

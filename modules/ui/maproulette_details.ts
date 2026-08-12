@@ -9,12 +9,18 @@ import { modeSelectError } from '../modes/select_error';
 import { t } from '../core/localizer';
 import { services } from '../services';
 import { appendMapRoulettePinIcon } from '../svg/maproulette_logo';
+import { updateMapRouletteV4Pin } from '../svg/maproulette_marker';
+import { doneTaskStatusOf } from '../util/maproulette_status';
 
 export function uiMapRouletteDetails(context: any) {
   const mr = services.maproulette;
   let _qaItem: any;
   /** When true, render for the entity inspector (no pin-selection guard; instructions only). */
   let _embedded = false;
+  /** Task is queued/resolved — collapse instructions unless user reopens. */
+  let _done = false;
+  /** Session expand overrides while done (keyed by task id). */
+  const _expandedWhenDone: Record<string, boolean> = {};
 
   /**
    * Escape a value for interpolation into HTML text or attribute context.
@@ -169,6 +175,49 @@ export function uiMapRouletteDetails(context: any) {
       .attr('aria-busy', null);
   }
 
+  function taskIdKey(): string | null {
+    return _qaItem && _qaItem.id !== undefined && _qaItem.id !== null ? String(_qaItem.id) : null;
+  }
+
+  function isDoneExpanded(): boolean {
+    const id = taskIdKey();
+    return !!(id && _expandedWhenDone[id]);
+  }
+
+  /** Collapse / expand instruction blocks when the task is marked done. */
+  function applyDoneCollapse(detailsSel: any): void {
+    const id = taskIdKey();
+    const showToggle = !!(_done && id);
+    let toggle = detailsSel.selectAll('.mr-details-toggle').data(showToggle ? [0] : []);
+    toggle.exit().remove();
+    const toggleEnter = toggle
+      .enter()
+      .insert('button', '.qa-details-subsection')
+      .attr('type', 'button')
+      .attr('class', 'button mr-details-toggle');
+    toggle = toggleEnter.merge(toggle);
+
+    const expanded = !_done || isDoneExpanded();
+    detailsSel.classed('mr-details-collapsed', _done && !expanded);
+    detailsSel.selectAll('.qa-details-subsection')
+      .classed('hide', _done && !expanded);
+
+    if (showToggle) {
+      toggle
+        .text(expanded
+          ? t('map_data.layers.maproulette.hide_instructions')
+          : t('map_data.layers.maproulette.show_instructions'))
+        .attr('aria-expanded', expanded ? 'true' : 'false')
+        .on('click.mr-details-toggle', function(this: HTMLElement, d3_event: Event) {
+          d3_event.preventDefault();
+          this.blur();
+          if (!id) return;
+          _expandedWhenDone[id] = !isDoneExpanded();
+          applyDoneCollapse(detailsSel);
+        });
+    }
+  }
+
   function attachHighlightLinkHandlers(selection: any): void {
     selection
       .selectAll('.highlight-link')
@@ -242,6 +291,14 @@ export function uiMapRouletteDetails(context: any) {
     });
   }
 
+  function taskPriorityOf(d: any): number | null {
+    const raw = (d && d.taskPriority !== undefined && d.taskPriority !== null)
+      ? d.taskPriority
+      : (d && d.task && d.task.priority);
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  }
+
   function render(selection: any): void {
     let details = selection
       .selectAll('.error-details')
@@ -263,22 +320,12 @@ export function uiMapRouletteDetails(context: any) {
         .attr('class', 'qa-header-icon');
 
       iconEnter.each(function(this: HTMLElement, d: any) {
-        const status = (d && d.taskStatus !== undefined && d.taskStatus !== null)
-          ? Number(d.taskStatus)
-          : (d && d.task && d.task.status !== undefined && d.task.status !== null
-            ? Number(d.task.status)
-            : 0);
-        const priority = (d && d.taskPriority !== undefined && d.taskPriority !== null)
-          ? Number(d.taskPriority)
-          : (d && d.task && d.task.priority !== undefined && d.task.priority !== null
-            ? Number(d.task.priority)
-            : null);
         appendMapRoulettePinIcon(d3_select(this), {
           width: 20,
           height: 27,
           className: `preset-icon-28 qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`,
-          status: Number.isFinite(status) ? status : 0,
-          priority: Number.isFinite(priority as number) ? (priority as number) : null,
+          status: doneTaskStatusOf(mr, d),
+          priority: taskPriorityOf(d),
         });
       });
 
@@ -302,6 +349,20 @@ export function uiMapRouletteDetails(context: any) {
 
     details = details.merge(detailsEnter);
 
+    // Apply collapse chrome before async load so done tasks don't flash content.
+    applyDoneCollapse(details);
+
+    if (!_embedded) {
+      details.select('.qa-header-icon').each(function(this: HTMLElement, d: any) {
+        const pin = d3_select(this).select('svg .maproulette-pin');
+        if (pin.empty()) return;
+        updateMapRouletteV4Pin(pin, {
+          status: doneTaskStatusOf(mr, d),
+          priority: taskPriorityOf(d),
+        });
+      });
+    }
+
     if (mr && _qaItem) {
       const thisItem = _qaItem;
       mr.loadTaskDetailAsync(_qaItem)
@@ -320,10 +381,8 @@ export function uiMapRouletteDetails(context: any) {
             context.container().selectAll(`.qaItem.maproulette.hover.itemId-${thisTaskId}`).empty()
           );
           if (stale) {
-            // Panel was replaced for another task — clear spinner if this node is still mounted.
-            if (!details.selectAll('.error-details').empty()) {
-              clearLoadingState(sel);
-            }
+            // Panel moved on — always drop the loading chrome if this subsection remains.
+            clearLoadingState(sel);
             return;
           }
 
@@ -463,9 +522,11 @@ export function uiMapRouletteDetails(context: any) {
           }
 
           attachHighlightLinkHandlers(sel);
+          applyDoneCollapse(details);
           } catch {
             clearLoadingState(sel);
             sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
+            applyDoneCollapse(details);
           }
         })
         .catch(function() {
@@ -473,6 +534,7 @@ export function uiMapRouletteDetails(context: any) {
           if (sel.empty()) return;
           clearLoadingState(sel);
           sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
+          applyDoneCollapse(details);
         });
     }
   }
@@ -480,6 +542,12 @@ export function uiMapRouletteDetails(context: any) {
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
     _qaItem = val;
+    return render;
+  };
+
+  render.done = function(val?: boolean) {
+    if (!arguments.length) return _done;
+    _done = !!val;
     return render;
   };
 

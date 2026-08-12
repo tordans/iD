@@ -84,12 +84,23 @@ const STATUS_GLYPH: Record<number, string> = {
   6: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><path d="M12 9v4"/><circle cx="12" cy="17" r="0.6" fill="#0f172a" stroke="none"/>',
 };
 
+/** Slate fill for recently resolved / locally done pins. */
+export const MAPROULETTE_MUTED_FILL = MAPROULETTE_STATUS_FILL[9];
+
 export function maprouletteStatusFill(status: number | null | undefined): string {
   const n = Number(status);
   if (Number.isFinite(n) && MAPROULETTE_STATUS_FILL[n]) {
     return MAPROULETTE_STATUS_FILL[n];
   }
   return MAPROULETTE_PIN_COLOR;
+}
+
+function maproulettePinFill(
+  status: number,
+  muted?: boolean,
+): string {
+  if (muted) return MAPROULETTE_MUTED_FILL;
+  return maprouletteStatusFill(status);
 }
 
 export function maproulettePriorityHex(priority: number | null | undefined): string | null {
@@ -116,19 +127,16 @@ export function appendMapRouletteV4Pin(
   options: MapRoulettePinOptions & { anchorTip?: boolean; className?: string } = {},
 ): Selection<any, any, any, any> {
   const status = options.status ?? 0;
-  const fill = maprouletteStatusFill(status);
+  const muted = !!options.muted;
+  const fill = maproulettePinFill(status, muted);
   const border = options.borderColor ?? MAPROULETTE_DEFAULT_BORDER;
-  const priorityHex = maproulettePriorityHex(options.priority);
+  const priorityHex = muted ? null : maproulettePriorityHex(options.priority);
   const tip = options.anchorTip !== false;
   const clipId = `mr-pri-${Math.random().toString(36).slice(2, 9)}`;
 
   const g = selection
     .append('g')
     .attr('class', options.className ?? 'maproulette-pin');
-
-  if (options.muted) {
-    g.style('opacity', 0.55);
-  }
 
   if (tip) {
     g.attr(
@@ -192,18 +200,15 @@ export function updateMapRouletteV4Pin(
   options: MapRoulettePinOptions,
 ): void {
   const status = options.status ?? 0;
-  pin.select('.qaItem-fill').attr('fill', maprouletteStatusFill(status));
+  const muted = !!options.muted;
+  pin.select('.qaItem-fill').attr('fill', maproulettePinFill(status, muted));
   pin.select('.qaItem-border').attr(
     'fill',
     options.borderColor ?? MAPROULETTE_DEFAULT_BORDER,
   );
-  if (options.muted) {
-    pin.style('opacity', 0.55);
-  } else {
-    pin.style('opacity', null as unknown as string);
-  }
+  pin.style('opacity', null as unknown as string);
 
-  const priorityHex = maproulettePriorityHex(options.priority);
+  const priorityHex = muted ? null : maproulettePriorityHex(options.priority);
   const wedge = pin.selectAll('.maproulette-priority').data(priorityHex ? [priorityHex] : []);
   wedge.exit().remove();
   const clipHref = pin.select('clipPath').attr('id');

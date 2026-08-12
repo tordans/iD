@@ -215,7 +215,7 @@ export function uiMapRouletteTagFix(context: any): any {
 
     const mr = services.maproulette;
     if (mr && typeof mr.earmarkTask === 'function') {
-      mr.earmarkTask(_qaItem);
+      mr.earmarkTask(_qaItem, undefined, { markLocalDone: true });
     }
 
     const ids = toApply.map(function(item) { return item.entityId; })
@@ -346,13 +346,14 @@ export function uiMapRouletteTagFix(context: any): any {
 
     root = enter.merge(root);
     if (!isShown) return;
+    // Parent may have been emptied/removed (e.g. queued banner tore down tag-fix).
+    if (root.empty() || !root.node()) return;
 
     const taskId = String(_qaItem.id);
     // Same task already painted and not loading — skip another fetch cycle.
     if (
       taskId === _paintedTaskId &&
       !root.classed('loading') &&
-      !root.empty() &&
       (root.select('.mr-tag-fix-heading').size() > 0 || root.classed('hide'))
     ) {
       return;
@@ -384,7 +385,13 @@ export function uiMapRouletteTagFix(context: any): any {
     }
 
     function paint(detail?: any): void {
-      if (!stillCurrent()) return;
+      if (!stillCurrent()) {
+        // Drop loading chrome if this node is still mounted after navigation.
+        if (!placeholder.empty() && placeholder.node()) {
+          placeholder.classed('loading', false);
+        }
+        return;
+      }
       placeholder.classed('loading', false);
       _paintedTaskId = requestTaskId;
       const task = taskPayload(_qaItem, detail);

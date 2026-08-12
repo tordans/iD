@@ -15,6 +15,17 @@ export function hasNearbyMapRouletteTask(context: any, excludeId?: string): bool
 }
 
 /**
+ * Pan/zoom to a MapRoulette task and open it in the MR editor.
+ * Returns true when navigation started.
+ */
+export function goToMapRouletteTask(context: any, task: any): boolean {
+  if (!task || !task.loc || task.id === undefined || task.id === null) return false;
+  context.map().centerZoomEase(task.loc, Math.max(context.map().zoom(), 17));
+  context.enter(modeSelectError(context, task.id, 'maproulette'));
+  return true;
+}
+
+/**
  * Pan/zoom to the nearest open MapRoulette task and select it in the MR editor.
  * Returns true when navigation started.
  */
@@ -26,9 +37,5 @@ export function goToNearbyMapRouletteTask(context: any, excludeId?: string): boo
     ? String(excludeId)
     : (context.selectedErrorID && context.selectedErrorID());
   const next = mr.getNearestItem(context.map().center(), exclude);
-  if (!next || !next.loc) return false;
-
-  context.map().centerZoomEase(next.loc, Math.max(context.map().zoom(), 17));
-  context.enter(modeSelectError(context, next.id, 'maproulette'));
-  return true;
+  return goToMapRouletteTask(context, next);
 }
