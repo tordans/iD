@@ -169,11 +169,23 @@ export function uiMapRouletteDetails(context: any) {
       .attr('target', '_blank');
   }
 
-  function clearLoadingState(selection: any): void {
-    selection
+  function clearLoadingState(detailsSel: any): void {
+    detailsSel.select('.qa-details-loading')
       .classed('loading', false)
-      .classed('qa-details-loading', false)
       .attr('aria-busy', null);
+  }
+
+  function clearTaskBody(detailsSel: any): void {
+    clearLoadingState(detailsSel);
+    detailsSel.select('.qa-details-loading').remove();
+    detailsSel.selectAll('.mr-section-disclosure, .mr-task-load-notice').remove();
+  }
+
+  function showTaskBodyMessage(detailsSel: any, message: string): void {
+    clearTaskBody(detailsSel);
+    detailsSel.append('p')
+      .attr('class', 'mr-task-load-notice')
+      .text(message);
   }
 
   function taskIdKey(): string | null {
@@ -227,6 +239,12 @@ export function uiMapRouletteDetails(context: any) {
    * Details / Instructions as iD disclosures (blue hide-toggle + arrow).
    * Default open when the task is active; default closed when done.
    */
+  function panelDisclosureTitle(section: 'detail' | 'instruction'): string {
+    return section === 'detail'
+      ? t('map_data.layers.maproulette.detail_title')
+      : t('map_data.layers.maproulette.instruction_title');
+  }
+
   function appendSectionDisclosure(
     parent: any,
     section: 'detail' | 'instruction',
@@ -236,7 +254,7 @@ export function uiMapRouletteDetails(context: any) {
     const id = taskIdKey() || 'unknown';
     const disclosureKey = `maproulette-${section}-${id}`;
     const host = parent
-      .append('div')
+      .append('section')
       .attr('class', `mr-section-disclosure mr-section-${section}`);
 
     host.call(
@@ -312,26 +330,34 @@ export function uiMapRouletteDetails(context: any) {
     });
   }
 
+  /** Shared label + value row for task meta (challenge id, recognised OSM objects, …). */
+  function appendMetaHeader(
+    parent: any,
+    title: string,
+    fill: (section: any) => void,
+  ): void {
+    const section = parent
+      .append('div')
+      .attr('class', 'qa-details-header');
+    section.append('h4').text(title);
+    fill(section);
+  }
+
   /** Render recognised OSM entity links from task.elems (iD ids like w123). */
   function appendRecognisedElems(parent: any, elems: string[] | undefined): void {
     if (!Array.isArray(elems) || !elems.length) return;
 
-    const section = parent
-      .append('header')
-      .attr('class', 'qa-details-header');
-    section
-      .append('h4')
-      .text(t('map_data.layers.maproulette.elems_title'));
-
-    const p = section.append('p').attr('class', 'mr-recognised-elems');
-    elems.forEach(function(entityId, i) {
-      if (i > 0) p.append('span').text(', ');
-      const longForm = longFormId(entityId);
-      p.append('a')
-        .attr('href', '#')
-        .attr('class', 'highlight-link')
-        .attr('data-osm-id', longForm)
-        .text(longForm);
+    appendMetaHeader(parent, t('map_data.layers.maproulette.elems_title'), function(section) {
+      const p = section.append('p').attr('class', 'mr-recognised-elems');
+      elems.forEach(function(entityId, i) {
+        if (i > 0) p.append('span').text(', ');
+        const longForm = longFormId(entityId);
+        p.append('a')
+          .attr('href', '#')
+          .attr('class', 'highlight-link')
+          .attr('data-osm-id', longForm)
+          .text(longForm);
+      });
     });
   }
 
@@ -345,22 +371,16 @@ export function uiMapRouletteDetails(context: any) {
     let meta = detailsSel.selectAll('.mr-task-meta').data([0]);
     meta.exit().remove();
     meta = meta.enter()
-      .insert('div', '.mr-resolved-banner, .mr-queued-banner, .mr-next-actions, .qa-details-subsection')
+      .insert('section', '.mr-resolved-banner, .mr-queued-banner, .mr-next-actions, .qa-details-loading, .mr-section-disclosure')
       .attr('class', 'mr-task-meta')
       .merge(meta);
 
     meta.html('');
 
     if (task && task.id) {
-      const titleSection = meta
-        .append('header')
-        .attr('class', 'qa-details-header');
-      titleSection
-        .append('h4')
-        .text(t('map_data.layers.maproulette.id_title'));
-      titleSection
-        .append('p')
-        .text(`${task.parentId} / ${task.id}`);
+      appendMetaHeader(meta, t('map_data.layers.maproulette.id_title'), function(section) {
+        section.append('p').text(`${task.parentId} / ${task.id}`);
+      });
     }
 
     appendRecognisedElems(
@@ -391,7 +411,7 @@ export function uiMapRouletteDetails(context: any) {
 
     if (!_embedded) {
       const headerEnter = detailsEnter
-        .append('div')
+        .append('header')
         .attr('class', 'qa-header');
 
       const iconEnter = headerEnter
@@ -412,17 +432,15 @@ export function uiMapRouletteDetails(context: any) {
       headerEnter.append('div').attr('class', 'qa-header-label');
     }
 
-    const loadingSection = detailsEnter
+    detailsEnter
       .append('div')
-      .attr('class', 'qa-details-subsection qa-details-loading loading')
-      .attr('aria-busy', 'true');
-
-    loadingSection
+      .attr('class', 'qa-details-loading loading')
+      .attr('aria-busy', 'true')
       .append('span')
       .attr('class', 'qa-details-loading-spinner')
       .attr('aria-hidden', 'true');
 
-    loadingSection
+    detailsEnter.select('.qa-details-loading')
       .append('span')
       .attr('class', 'qa-details-loading-text')
       .text(t('map_data.layers.maproulette.loading_task_details'));
@@ -448,8 +466,7 @@ export function uiMapRouletteDetails(context: any) {
       const thisItem = _qaItem;
       mr.loadTaskDetailAsync(_qaItem)
         .then(function(task: any) {
-          const sel = details.selectAll('.qa-details-subsection');
-          if (sel.empty()) return;
+          if (details.empty()) return;
 
           // Do nothing if the UI has moved on by the time this resolves
           // (same guard as osmose_details: still selected or still hovered).
@@ -462,20 +479,17 @@ export function uiMapRouletteDetails(context: any) {
             context.container().selectAll(`.qaItem.maproulette.hover.itemId-${thisTaskId}`).empty()
           );
           if (stale) {
-            // Panel moved on — always drop the loading chrome if this subsection remains.
-            clearLoadingState(sel);
+            clearLoadingState(details);
             return;
           }
 
-          clearLoadingState(sel);
-
           if (!task) {
-            sel.text(t('map_data.layers.maproulette.no_instruction'));
+            showTaskBodyMessage(details, t('map_data.layers.maproulette.no_instruction'));
             return;
           }
 
           try {
-          sel.html('');
+          clearTaskBody(details);
 
           if (_embedded) {
             // Entity-inspector embed: same Details + Instructions content as the
@@ -515,7 +529,7 @@ export function uiMapRouletteDetails(context: any) {
 
             if (hasDescription) {
               appendSectionDisclosure(
-                sel,
+                details,
                 'detail',
                 embeddedDisclosureLabel('detail'),
                 renderMarkdown(task.description, task),
@@ -524,7 +538,7 @@ export function uiMapRouletteDetails(context: any) {
 
             if (hasInstruction || (!hasDescription && task.instruction)) {
               appendSectionDisclosure(
-                sel,
+                details,
                 'instruction',
                 embeddedDisclosureLabel('instruction'),
                 renderMarkdown(task.instruction, task),
@@ -532,10 +546,10 @@ export function uiMapRouletteDetails(context: any) {
             }
 
             if (!hasDescription && !task.instruction) {
-              sel.text(t('map_data.layers.maproulette.no_instruction'));
+              showTaskBodyMessage(details, t('map_data.layers.maproulette.no_instruction'));
             }
 
-            sel.selectAll('.mr-task-select-link')
+            details.selectAll('.mr-task-select-link')
               .on('click', function(this: Element, d3_event: Event) {
                 d3_event.preventDefault();
                 const taskId = d3_select(this).attr('data-task-id');
@@ -562,33 +576,30 @@ export function uiMapRouletteDetails(context: any) {
 
           if (!explicitChallengeIdGiven && task.description) {
             appendSectionDisclosure(
-              sel,
+              details,
               'detail',
-              t('map_data.layers.maproulette.detail_title'),
+              panelDisclosureTitle('detail'),
               description,
             );
           }
 
           if (task.instruction && task.instruction !== task.description) {
             appendSectionDisclosure(
-              sel,
+              details,
               'instruction',
-              t('map_data.layers.maproulette.instruction_title'),
+              panelDisclosureTitle('instruction'),
               instruction,
             );
           }
 
-          attachHighlightLinkHandlers(sel);
+          attachHighlightLinkHandlers(details);
           } catch {
-            clearLoadingState(sel);
-            sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
+            showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
           }
         })
         .catch(function() {
-          const sel = details.selectAll('.qa-details-subsection');
-          if (sel.empty()) return;
-          clearLoadingState(sel);
-          sel.text(t('map_data.layers.maproulette.error_loading_task_details'));
+          if (details.empty()) return;
+          showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
         });
     }
   }
