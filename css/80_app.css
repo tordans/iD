@@ -3437,10 +3437,11 @@ img.tag-reference-wiki-image {
     right: auto;
     text-align: left;
     margin: 8px 0;
-    padding: 8px 10px;
-    background: var(--bg-color-3);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
+    padding: 10px 12px;
+    background: rgba(22, 163, 74, 0.14);
+    border: 1.5px solid #16a34a;
+    border-radius: 8px;
+    color: #166534;
 }
 .mr-editor > .mr-resolved-banner h3,
 .mr-editor > .mr-queued-banner h3,
@@ -3454,6 +3455,7 @@ img.tag-reference-wiki-image {
 .maproulette-task-embed .error-details > .mr-queued-banner strong {
     margin: 0 0 4px;
     font-size: 14px;
+    color: #166534;
 }
 .mr-editor > .mr-resolved-banner p,
 .mr-editor > .mr-queued-banner p,
@@ -3466,6 +3468,7 @@ img.tag-reference-wiki-image {
 .maproulette-task-embed .error-details > .mr-resolved-banner p,
 .maproulette-task-embed .error-details > .mr-queued-banner p {
     margin: 0;
+    color: #166534;
 }
 .mr-editor > .mr-queued-banner .mr-queued-undo,
 .mr-editor .error-details > .mr-queued-banner .mr-queued-undo,
@@ -3474,6 +3477,10 @@ img.tag-reference-wiki-image {
     margin-top: 8px;
     padding: 6px 10px;
     font-weight: 600;
+    border: 1.5px solid #16a34a;
+    border-radius: 6px;
+    background: #fff;
+    color: #16a34a;
 }
 .mr-editor > .mr-next-actions,
 .mr-editor .error-details > .mr-next-actions,
@@ -3498,6 +3505,35 @@ img.tag-reference-wiki-image {
     padding: 8px 10px;
     font-weight: 600;
     text-align: left;
+    border: 1.5px solid #16a34a;
+    border-radius: 8px;
+    background: rgba(22, 163, 74, 0.12);
+    color: #16a34a;
+    box-shadow: none;
+}
+.mr-editor > .mr-next-actions .mr-next-action:focus,
+.mr-editor > .mr-next-actions .mr-next-action:active,
+.mr-editor .error-details > .mr-next-actions .mr-next-action:focus,
+.mr-editor .error-details > .mr-next-actions .mr-next-action:active,
+.maproulette-task-embed .mr-next-actions .mr-next-action:focus,
+.maproulette-task-embed .mr-next-actions .mr-next-action:active,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-action:focus,
+.maproulette-task-embed .error-details > .mr-next-actions .mr-next-action:active {
+    background: rgba(22, 163, 74, 0.2);
+    color: #16a34a;
+}
+@media (hover: hover) {
+    .mr-editor > .mr-next-actions .mr-next-action:hover,
+    .mr-editor .error-details > .mr-next-actions .mr-next-action:hover,
+    .maproulette-task-embed .mr-next-actions .mr-next-action:hover,
+    .maproulette-task-embed .error-details > .mr-next-actions .mr-next-action:hover,
+    .mr-editor > .mr-queued-banner .mr-queued-undo:hover,
+    .mr-editor .error-details > .mr-queued-banner .mr-queued-undo:hover,
+    .mr-save .mr-queued-banner .mr-queued-undo:hover,
+    .maproulette-task-embed .error-details > .mr-queued-banner .mr-queued-undo:hover {
+        background: rgba(22, 163, 74, 0.22);
+        color: #15803d;
+    }
 }
 .mr-editor > .mr-next-actions .mr-next-actions-none,
 .mr-editor .error-details > .mr-next-actions .mr-next-actions-none,

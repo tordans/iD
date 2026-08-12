@@ -1,11 +1,18 @@
 import nearestPointOnLine from '@turf/nearest-point-on-line';
 
+import { mrGeometryFeatures } from './maproulette_api_schema';
+
 
 type LngLat = [number, number];
 
+type GeoFeature = {
+  type?: string;
+  geometry?: { type?: string; coordinates?: unknown };
+  properties?: Record<string, unknown>;
+};
 
-function featureGeometryType(feature: any): string | null {
-  if (!feature) return null;
+
+function featureGeometryType(feature: GeoFeature): string | null {
   if (feature.type === 'Feature' && feature.geometry) {
     return feature.geometry.type || null;
   }
@@ -17,11 +24,13 @@ function featureGeometryType(feature: any): string | null {
 }
 
 
-function asLineFeature(feature: any): any | null {
-  const geomType = featureGeometryType(feature);
+function asLineFeature(feature: unknown): GeoFeature | null {
+  if (!feature || typeof feature !== 'object') return null;
+  const f = feature as GeoFeature;
+  const geomType = featureGeometryType(f);
   if (geomType !== 'LineString' && geomType !== 'MultiLineString') return null;
-  if (feature.type === 'Feature') return feature;
-  return { type: 'Feature', properties: {}, geometry: feature };
+  if (f.type === 'Feature') return f;
+  return { type: 'Feature', properties: {}, geometry: f as GeoFeature['geometry'] };
 }
 
 
@@ -29,12 +38,9 @@ function asLineFeature(feature: any): any | null {
  * Collect LineString / MultiLineString features from a MapRoulette geometries
  * FeatureCollection (or features array).
  */
-export function mapRouletteLineFeatures(geometries: any): any[] {
-  if (!geometries) return [];
-  const raw = Array.isArray(geometries)
-    ? geometries
-    : (Array.isArray(geometries.features) ? geometries.features : []);
-  const lines: any[] = [];
+export function mapRouletteLineFeatures(geometries: unknown): GeoFeature[] {
+  const raw = mrGeometryFeatures(geometries);
+  const lines: GeoFeature[] = [];
   for (let i = 0; i < raw.length; i++) {
     const line = asLineFeature(raw[i]);
     if (line) lines.push(line);
@@ -55,7 +61,7 @@ export function mapRouletteLineFeatures(geometries: any): any[] {
  * Mixed FeatureCollections: only line features are snap targets (points are
  * ignored for placement). If there are no lines, `loc` is returned unchanged.
  */
-export function snapMapRoulettePinLoc(loc: LngLat, geometries: any): LngLat {
+export function snapMapRoulettePinLoc(loc: LngLat, geometries: unknown): LngLat {
   if (!loc || !Number.isFinite(loc[0]) || !Number.isFinite(loc[1])) return loc;
 
   const lines = mapRouletteLineFeatures(geometries);
@@ -66,7 +72,7 @@ export function snapMapRoulettePinLoc(loc: LngLat, geometries: any): LngLat {
 
   for (let i = 0; i < lines.length; i++) {
     try {
-      const snapped = nearestPointOnLine(lines[i], loc);
+      const snapped = nearestPointOnLine(lines[i] as any, loc);
       const coords = snapped && snapped.geometry && snapped.geometry.coordinates;
       if (!coords || !Number.isFinite(coords[0]) || !Number.isFinite(coords[1])) continue;
       const props = snapped.properties || {};

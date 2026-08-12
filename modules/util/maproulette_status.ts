@@ -1,4 +1,5 @@
 import { MR_STATUS, taskStatusOf } from '../services/maproulette';
+import type { MrEarmark, MrQaStatusLike } from './maproulette_api_schema';
 
 
 /** i18n key for a MapRoulette terminal status label (Fixed, Already Fixed, …). */
@@ -17,12 +18,17 @@ export function statusLabelKey(status: number): string {
 }
 
 
-function earmarkForTask(mr: any, taskId: string | number): any | null {
-  if (!mr || taskId === undefined || taskId === null || typeof mr.getEarmarked !== 'function') {
-    return null;
-  }
+type MrEarmarkService = {
+  isEarmarked?: (id: string) => boolean;
+  getEarmarked?: () => MrEarmark[];
+  isRecentlyResolved?: (d: MrQaStatusLike) => boolean;
+};
+
+
+function earmarkForTask(mr: MrEarmarkService | null | undefined, taskId: string | number): MrEarmark | null {
+  if (!mr || typeof mr.getEarmarked !== 'function') return null;
   const id = String(taskId);
-  return mr.getEarmarked().find(function(e: any) {
+  return mr.getEarmarked().find(function(e) {
     return e && String(e.taskID) === id;
   }) || null;
 }
@@ -32,11 +38,14 @@ function earmarkForTask(mr: any, taskId: string | number): any | null {
  * Terminal status to show for a done/queued banner. Queued earmark `_status`
  * wins (including soft “Queue Fixed for save”) so the notice names the outcome.
  */
-export function doneTaskStatusOf(mr: any, qaItem: any): number {
+export function doneTaskStatusOf(
+  mr: MrEarmarkService | null | undefined,
+  qaItem: MrQaStatusLike | null | undefined,
+): number {
   if (mr && qaItem && qaItem.id !== undefined && qaItem.id !== null
-    && mr.isEarmarked && mr.isEarmarked(qaItem.id)) {
+    && mr.isEarmarked && mr.isEarmarked(String(qaItem.id))) {
     const earmark = earmarkForTask(mr, qaItem.id);
-    if (earmark) return Number(earmark._status);
+    if (earmark) return earmark._status;
     return MR_STATUS.FIXED;
   }
   return taskStatusOf(qaItem);
@@ -47,7 +56,10 @@ export function doneTaskStatusOf(mr: any, qaItem: any): number {
  * Pin fill/glyph status. Soft earmarks stay visually open (API/task status);
  * only local-done / recently-resolved pins use the queued outcome colors.
  */
-export function pinDisplayStatusOf(mr: any, qaItem: any): number {
+export function pinDisplayStatusOf(
+  mr: MrEarmarkService | null | undefined,
+  qaItem: MrQaStatusLike | null | undefined,
+): number {
   if (!qaItem) return MR_STATUS.CREATED;
   if (mr && mr.isRecentlyResolved && mr.isRecentlyResolved(qaItem)) {
     return doneTaskStatusOf(mr, qaItem);

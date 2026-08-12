@@ -24,13 +24,13 @@ const _initialHash = utilStringQs(window.location.hash);
 let _layerEnabled = !!_initialHash.maproulette;
 let _qaService: any;
 
-function isMutedPin(d: any, service: any): boolean {
+function isDonePin(d: any, service: any): boolean {
   return !!(service && service.isRecentlyResolved && service.isRecentlyResolved(d));
 }
 
 function pinBorderColor(d: any, selectedID: string | null, service: any): string {
   if (d.id === selectedID) return MAPROULETTE_SELECTED_BORDER;
-  if (isMutedPin(d, service)) return MAPROULETTE_DEFAULT_BORDER;
+  if (isDonePin(d, service)) return MAPROULETTE_DEFAULT_BORDER;
   if (d.earmarked || (service && service.isEarmarked && service.isEarmarked(d.id))) {
     return MAPROULETTE_EARMARK_BORDER;
   }
@@ -43,6 +43,13 @@ function taskPriorityOf(d: any): number | null {
     : (d && d.task && d.task.priority);
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
+}
+
+/** Priority wedge only for open Created/Skipped pins — finished pins are solid status fill. */
+function pinPriorityForDisplay(d: any, status: number, service?: any): number | null {
+  if (service && isDonePin(d, service)) return null;
+  if (status !== 0 && status !== 3) return null;
+  return taskPriorityOf(d);
 }
 
 export function svgMapRoulette(projection: any, context: any, dispatch: any) {
@@ -150,11 +157,11 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
       .attr('class', 'stroke');
 
     markersEnter.each(function(this: SVGGElement, d: any) {
+      const status = pinDisplayStatusOf(service, d);
       appendMapRouletteV4Pin(d3_select(this), {
-        status: pinDisplayStatusOf(service, d),
-        priority: taskPriorityOf(d),
+        status,
+        priority: pinPriorityForDisplay(d, status, service),
         borderColor: pinBorderColor(d, selectedID, service),
-        muted: isMutedPin(d, service),
         anchorTip: true,
       });
     });
@@ -173,11 +180,11 @@ export function svgMapRoulette(projection: any, context: any, dispatch: any) {
       .each(function(this: SVGGElement, d: any) {
         const pin = d3_select(this).select('.maproulette-pin');
         if (pin.empty()) return;
+        const status = pinDisplayStatusOf(service, d);
         updateMapRouletteV4Pin(pin, {
-          status: pinDisplayStatusOf(service, d),
-          priority: taskPriorityOf(d),
+          status,
+          priority: pinPriorityForDisplay(d, status, service),
           borderColor: pinBorderColor(d, selectedID, service),
-          muted: isMutedPin(d, service),
         });
       });
 

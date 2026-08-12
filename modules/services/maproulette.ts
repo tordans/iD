@@ -8,6 +8,8 @@ import { QAItem } from '../osm';
 import { collectOsmEntityIds } from '../util/maproulette_osm_ids';
 import { snapMapRoulettePinLoc } from '../util/maproulette_pin_loc';
 import {
+  asParsedOrNull,
+  buildMrTaskDetailView,
   challengeIsVisible,
   mrTaskPriorityOf,
   mrTaskStatusOr,
@@ -15,8 +17,13 @@ import {
   parseMrChallenge,
   parseMrEarmarkList,
   parseMrTaskDetails,
+  unwrapMrGeometries,
   type MrBoxTask,
+  type MrChallenge,
   type MrEarmark,
+  type MrQaStatusLike,
+  type MrTaskDetailView,
+  type MrTaskDetails,
 } from '../util/maproulette_api_schema';
 import { utilRebind, utilStringQs, utilTiler } from '../util';
 
@@ -54,19 +61,18 @@ const TILE_RELOAD_MS = 2 * 60 * 1000;
 /** Statuses requested from `/tasks/box` (omit Deleted). */
 const BOX_STATUSES = '0,1,2,3,5,6';
 
-export function taskStatusOf(d: any): number {
+export function taskStatusOf(d: MrQaStatusLike | null | undefined): number {
   if (!d) return MR_STATUS.CREATED;
-  if (d.taskStatus !== undefined && d.taskStatus !== null && Number.isFinite(Number(d.taskStatus))) {
-    return Number(d.taskStatus);
+  if (d.taskStatus != null && Number.isFinite(d.taskStatus)) {
+    return d.taskStatus;
   }
-  if (d.task && d.task.status !== undefined && d.task.status !== null
-    && Number.isFinite(Number(d.task.status))) {
-    return Number(d.task.status);
+  if (d.task && d.task.status != null && Number.isFinite(d.task.status)) {
+    return d.task.status;
   }
   return MR_STATUS.CREATED;
 }
 
-export function mappedOnOf(d: any): string | null {
+export function mappedOnOf(d: MrQaStatusLike | null | undefined): string | null {
   if (!d) return null;
   if (d.mappedOn) return String(d.mappedOn);
   if (d.task && d.task.mappedOn) return String(d.task.mappedOn);
@@ -77,12 +83,12 @@ export function isResolvedStatus(status: number): boolean {
   return RESOLVED_STATUSES.has(Number(status));
 }
 
-export function isOpenTask(d: any): boolean {
+export function isOpenTask(d: MrQaStatusLike | null | undefined): boolean {
   return OPEN_STATUSES.has(taskStatusOf(d));
 }
 
 /** Resolved terminal status and mappedOn within the last 24 hours. */
-export function isRecentlyResolved(d: any): boolean {
+export function isRecentlyResolved(d: MrQaStatusLike | null | undefined): boolean {
   if (!isResolvedStatus(taskStatusOf(d))) return false;
   const raw = mappedOnOf(d);
   // Missing mappedOn: do not keep the pin forever (stamp on ingest instead).
@@ -92,7 +98,7 @@ export function isRecentlyResolved(d: any): boolean {
   return (Date.now() - t) < RESOLVED_VISIBLE_MS;
 }
 
-export function shouldDisplayTask(d: any): boolean {
+export function shouldDisplayTask(d: MrQaStatusLike | null | undefined): boolean {
   if (!d) return false;
   if (isOpenTask(d)) return true;
   return isRecentlyResolved(d);
@@ -112,8 +118,8 @@ interface CacheEntry {
   inflightTask: Record<string, AbortController>;
   inflightTaskPromise: Record<string, Promise<any>>;
   loadedChallenge: Record<string, { isVisible: boolean }>;
-  challengeDetails: Record<string, any>;
-  taskDetails: Record<string, any>;
+  challengeDetails: Record<string, MrChallenge | Record<string, never>>;
+  taskDetails: Record<string, MrTaskDetails | Record<string, never>>;
   /**
    * Tasks successfully submitted this session (immediate API) — for changeset
    * suggestions and closed:maproulette* tags.
@@ -393,14 +399,12 @@ function applyTaskStatusFields(qaItem: any, task: MrBoxTask | { status?: number;
  * Re-place a cached pin if MapRoulette geometries allow snapping onto a line.
  * Updates the spatial index when the coordinate changes.
  */
-function applyPinLocFromTask(qaItem: any, taskOrGeometries: any): boolean {
+function applyPinLocFromTask(qaItem: { loc?: [number, number] | null }, taskOrGeometries: unknown): boolean {
   if (!_cache || !qaItem || !qaItem.loc) return false;
-  const geometries = (taskOrGeometries && taskOrGeometries.geometries)
-    ? taskOrGeometries.geometries
-    : taskOrGeometries;
-  if (!geometries) return false;
+  const geometries = unwrapMrGeometries(taskOrGeometries);
+  if (geometries == null) return false;
 
-  const prev = qaItem.loc as [number, number];
+  const prev = qaItem.loc;
   const next = snapMapRoulettePinLoc(prev, geometries);
   if (next[0] === prev[0] && next[1] === prev[1]) return false;
 
@@ -1194,38 +1198,39 @@ export default {
       });
   },
 
-  loadTaskDetailAsync(qaItem: any) {
-    if (!qaItem || !qaItem.id || !qaItem.parentId) return Promise.resolve(null);
-    const chID = qaItem.parentId;
+  loadTaskDetailAsync(qaItem: MrQaStatusLike & {
+    id?: string | number;
+    parentId?: string | number;
+    task?: Record<string, unknown> | null;
+    elemsResolved?: boolean;
+  }): Promise<MrTaskDetailView | null> {
+    if (!qaItem || qaItem.id === undefined || qaItem.id === null
+      || qaItem.parentId === undefined || qaItem.parentId === null) {
+      return Promise.resolve(null);
+    }
+    const chID = String(qaItem.parentId);
+    const taskId = String(qaItem.id);
     const baseTask = qaItem.task || {};
     const getCh = this.getChallengeDetails(chID);
-    const getTd = this.getTaskDetails(qaItem.id);
-    return Promise.all([getCh, getTd]).then(function([ch, td]: [any, any]) {
-      const cooperativeWork =
-        (td && td.cooperativeWork)
-        || (td && td.geometries && td.geometries.cooperativeWork)
-        || baseTask.cooperativeWork
-        || (baseTask.geometries && baseTask.geometries.cooperativeWork)
-        || undefined;
-      const detail = {
-        ...baseTask,
-        id: qaItem.id,
-        parentId: qaItem.parentId,
-        parentName: (ch && ch.name) || '',
-        title: (td && td.title) || baseTask.title || '',
-        instruction: (ch && ch.instruction) || '',
-        description: (ch && ch.description) || '',
-        taskFeatures: (td && td.geometries && td.geometries.features) || [],
-        // Keep Tag Fix / OSC cooperative payload for the editor (not dropped).
-        ...(cooperativeWork ? { cooperativeWork } : {}),
-      };
+    const getTd = this.getTaskDetails(taskId);
+    return Promise.all([getCh, getTd]).then(function([ch, td]) {
+      const challenge = asParsedOrNull<MrChallenge>(ch);
+      const taskDetails = asParsedOrNull<MrTaskDetails>(td);
+      const detail = buildMrTaskDetailView({
+        id: taskId,
+        parentId: chID,
+        baseTask,
+        challenge,
+        taskDetails,
+      });
+      const cooperativeWork = detail.cooperativeWork;
       // Keep Tag Fix payload on the live QAItem even if the pin is not cached yet.
       if (cooperativeWork) {
         if (!qaItem.task) qaItem.task = Object.assign({}, baseTask);
         qaItem.task.cooperativeWork = cooperativeWork;
       }
       // Strengthen entity↔task links once title / feature props are known.
-      const cached = _cache.data[qaItem.id];
+      const cached = _cache.data[taskId];
       if (cached) {
         if (cooperativeWork) {
           if (!cached.task) cached.task = {};
@@ -1237,7 +1242,7 @@ export default {
           collectOsmEntityIds(
             detail.title,
             detail.taskFeatures,
-            td,
+            taskDetails,
             baseTask,
             cooperativeWork,
           ),
@@ -1247,7 +1252,7 @@ export default {
         qaItem.elems = cached.elems;
         qaItem.elemsResolved = true;
         // Snap pin onto line geometry if /task/{id} has features and box did not.
-        if (td && td.geometries && applyPinLocFromTask(cached, td.geometries)) {
+        if (taskDetails && taskDetails.geometries && applyPinLocFromTask(cached, taskDetails.geometries)) {
           qaItem.loc = cached.loc;
           dispatch.call('loaded');
         }
@@ -1256,7 +1261,7 @@ export default {
     });
   },
 
-  getChallengeDetails(chID: string): Promise<any> {
+  getChallengeDetails(chID: string): Promise<MrChallenge | Record<string, never>> {
     if (!chID) return Promise.resolve({});
     if (chID in _cache.challengeDetails) return Promise.resolve(_cache.challengeDetails[chID]);
     if (chID in _cache.inflightChallengePromise) {
@@ -1286,7 +1291,7 @@ export default {
     return _cache.inflightChallengePromise[chID];
   },
 
-  getTaskDetails(taskID: string): Promise<any> {
+  getTaskDetails(taskID: string): Promise<MrTaskDetails | Record<string, never>> {
     if (!taskID) return Promise.resolve({});
     if (taskID in _cache.taskDetails) return Promise.resolve(_cache.taskDetails[taskID]);
     if (taskID in _cache.inflightTaskPromise) {
