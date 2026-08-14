@@ -1,6 +1,7 @@
 import serviceMapRoulette, { MR_STATUS } from '../../../modules/services/maproulette';
 import {
   getLastWorkedChallengeId,
+  mapDataNextAction,
   nextTaskActionsForPool,
   pickNearest,
   pickPriority,
@@ -149,6 +150,51 @@ describe('iD.util.maproulette_next_task', () => {
       });
       expect(pool.mode).toBe('primary');
       expect(pool.tasks.map((d: any) => String(d.id))).toEqual(['2']);
+    });
+  });
+
+  describe('mapDataNextAction', () => {
+    it('returns nearest for primary pool', () => {
+      seedTask({ id: '1', parentId: '7', loc: [0, 0] });
+      seedTask({ id: '2', parentId: '7', loc: [0.01, 0] });
+      const pool = resolveCandidatePool(serviceMapRoulette, {
+        excludeId: '1',
+        currentChallengeId: '7',
+      });
+      expect(pool.mode).toBe('primary');
+      expect(mapDataNextAction(pool)).toBe('nearest');
+    });
+
+    it('returns random for fallback pool', () => {
+      seedTask({ id: '1', parentId: '7', loc: [0, 0] });
+      seedTask({ id: '2', parentId: '8', loc: [0.01, 0] });
+      const pool = resolveCandidatePool(serviceMapRoulette, {
+        excludeId: '1',
+        currentChallengeId: '7',
+      });
+      expect(pool.mode).toBe('fallback');
+      expect(mapDataNextAction(pool)).toBe('random');
+    });
+
+    it('returns null for empty pool', () => {
+      seedTask({ id: '1', parentId: '7', loc: [0, 0] });
+      const pool = resolveCandidatePool(serviceMapRoulette, {
+        excludeId: '1',
+        currentChallengeId: '7',
+      });
+      expect(pool.mode).toBe('empty');
+      expect(mapDataNextAction(pool)).toBe(null);
+    });
+
+    it('returns random when filter is set but preferred scope is empty', () => {
+      serviceMapRoulette.challengeIDs('7');
+      seedTask({ id: '1', parentId: '7', loc: [0, 0] });
+      seedTask({ id: '2', parentId: '8', loc: [0.01, 0] });
+      const pool = resolveCandidatePool(serviceMapRoulette, {
+        excludeId: '1',
+      });
+      expect(pool.mode).toBe('fallback');
+      expect(mapDataNextAction(pool)).toBe('random');
     });
   });
 
