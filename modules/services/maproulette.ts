@@ -57,6 +57,8 @@ const OPEN_STATUSES = new Set([
 const RESOLVED_VISIBLE_MS = 24 * 60 * 60 * 1000;
 /** Re-fetch a tile after this so remote Fixed/Already Fixed propagate. */
 const TILE_RELOAD_MS = 2 * 60 * 1000;
+/** Back off before retrying a failed `/challenge/{id}` fetch. */
+const CHALLENGE_FETCH_RETRY_MS = 30 * 1000;
 
 /** Statuses requested from `/tasks/box` (omit Deleted). */
 const BOX_STATUSES = '0,1,2,3,5,6';
@@ -118,6 +120,8 @@ interface CacheEntry {
   inflightTask: Record<string, AbortController>;
   inflightTaskPromise: Record<string, Promise<any>>;
   loadedChallenge: Record<string, { isVisible: boolean }>;
+  /** Last failure time per challenge id (ms) when `/challenge/{id}` fetch failed. */
+  challengeFetchFailedAt: Record<string, number>;
   challengeDetails: Record<string, MrChallenge | Record<string, never>>;
   taskDetails: Record<string, MrTaskDetails | Record<string, never>>;
   /**
@@ -331,6 +335,72 @@ function setItemVisibility(item: QAItem, isVisible: boolean): void {
   (item as QAItemVisible).isVisible = isVisible;
 }
 
+function enqueueChallengeFetch(chID: string | number): void {
+  const id = String(chID);
+  if (!_cache || !id) return;
+  if (_cache.loadedChallenge[id]) return;
+  if (_cache.inflightChallenge[id]) return;
+
+  const urlC = `${_mrUrlRoot}/challenge/${id}`;
+  const cController = new AbortController();
+  _cache.inflightChallenge[id] = cController;
+  _cache.inflightChallengePromise[id] = d3_json(urlC, {
+    signal: cController.signal,
+  })
+    .then(function(raw: unknown) {
+      delete _cache.inflightChallenge[id];
+      delete _cache.inflightChallengePromise[id];
+      delete _cache.challengeFetchFailedAt[id];
+      const challenge = parseMrChallenge(raw) || {};
+      const isVisible = challengeIsVisible(challenge);
+      _cache.loadedChallenge[id] = { isVisible: isVisible };
+      _cache.challengeDetails[id] = challenge;
+      Object.values(_cache.data).forEach(function(item) {
+        if (String(item.parentId) === id) setItemVisibility(item, isVisible);
+      });
+      dispatch.call('loaded');
+    })
+    .catch(function() {
+      delete _cache.inflightChallenge[id];
+      delete _cache.inflightChallengePromise[id];
+      _cache.challengeFetchFailedAt[id] = Date.now();
+      // Don't cache a visibility verdict on failure - leaving
+      // loadedChallenge unset lets a later loadIssues retry.
+      dispatch.call('loaded');
+    });
+}
+
+function challengeIdsWithCachedTasks(): Set<string> {
+  const ids = new Set<string>();
+  if (!_cache) return ids;
+  Object.values(_cache.data).forEach(function(item) {
+    if (item && item.parentId !== undefined && item.parentId !== null) {
+      ids.add(String(item.parentId));
+    }
+  });
+  return ids;
+}
+
+function shouldRetryChallengeFetch(chID: string, now: number): boolean {
+  if (!_cache) return false;
+  const id = String(chID);
+  if (_cache.loadedChallenge[id]) return false;
+  if (_cache.inflightChallenge[id]) return false;
+  const failedAt = _cache.challengeFetchFailedAt[id];
+  if (failedAt === undefined) return true;
+  return (now - failedAt) >= CHALLENGE_FETCH_RETRY_MS;
+}
+
+function retryFailedChallengeFetches(): void {
+  if (!_cache) return;
+  const now = Date.now();
+  challengeIdsWithCachedTasks().forEach(function(chID) {
+    if (shouldRetryChallengeFetch(chID, now)) {
+      enqueueChallengeFetch(chID);
+    }
+  });
+}
+
 /** Clear tile cache and in-flight tile requests so the next load uses the current filter. */
 function clearTileCache(): void {
   if (!_cache) return;
@@ -493,6 +563,7 @@ export default {
       inflightTask: {},
       inflightTaskPromise: {},
       loadedChallenge: {},
+      challengeFetchFailedAt: {},
       challengeDetails: {},
       taskDetails: {},
       closed: [],
@@ -831,35 +902,7 @@ export default {
             }
           });
 
-          unseenChallenges.forEach(function(chID) {
-            const urlC = `${_mrUrlRoot}/challenge/${chID}`;
-            const cController = new AbortController();
-            _cache.inflightChallenge[chID] = cController;
-            _cache.inflightChallengePromise[chID] = d3_json(urlC, {
-              signal: cController.signal,
-            })
-              .then(function(raw: unknown) {
-                delete _cache.inflightChallenge[chID];
-                delete _cache.inflightChallengePromise[chID];
-                const challenge = parseMrChallenge(raw) || {};
-                const isVisible = challengeIsVisible(challenge);
-                _cache.loadedChallenge[chID] = { isVisible: isVisible };
-                _cache.challengeDetails[chID] = challenge;
-                Object.values(_cache.data).forEach(function(item) {
-                  if (item.parentId === chID) setItemVisibility(item, isVisible);
-                });
-                dispatch.call('loaded');
-              })
-              .catch(function() {
-                delete _cache.inflightChallenge[chID];
-                delete _cache.inflightChallengePromise[chID];
-                // Don't cache a visibility verdict on failure - leaving
-                // loadedChallenge unset lets the next tile load retry, so a
-                // transient network error doesn't hide the challenge's tasks
-                // for the rest of the session.
-                dispatch.call('loaded');
-              });
-          });
+          unseenChallenges.forEach(enqueueChallengeFetch);
 
           dispatch.call('loaded');
         })
@@ -872,6 +915,8 @@ export default {
           dispatch.call('loaded');
         });
     });
+
+    retryFailedChallengeFetches();
   },
 
   getItems(projection: any, options?: { ignoreChallengeFilter?: boolean }) {
