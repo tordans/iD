@@ -106,6 +106,27 @@ describe('iD.ui.maproulette_details', () => {
       expect(sectionOpen('instruction')).toBe(true);
     });
 
+    it('opens Details on first click after done re-render', async () => {
+      const item = makeItem();
+      context.selectedErrorID(item.id);
+      context.mode = fn(() => ({ id: 'select-error' })) as any;
+      mrStubs.loadTaskDetailAsync = fn(() => Promise.resolve(makeTaskDetail()));
+
+      const details = uiMapRouletteDetails(context).task(item).done(false);
+      selection.call(details);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      details.done(true);
+      selection.call(details);
+      await Promise.resolve();
+
+      expect(sectionOpen('detail')).toBe(false);
+
+      selection.select('.mr-section-detail summary.hide-toggle').dispatch('click');
+      expect(sectionOpen('detail')).toBe(true);
+    });
+
     it('shows Details only when description has no distinct instruction', async () => {
       await mountDetails({
         challengeFilter: '7',
