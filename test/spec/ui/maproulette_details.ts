@@ -205,5 +205,35 @@ describe('iD.ui.maproulette_details', () => {
       expect(container.select('button').empty()).toBe(true);
       expect(container.select('.mr-copyable-btn').attr('data-copy-text')).toBe('secret-code');
     });
+
+    it('keeps instruction select value when done state flips', async () => {
+      const item = makeItem();
+      context.selectedErrorID(item.id);
+      context.mode = fn(() => ({ id: 'select-error' })) as any;
+      mrStubs.loadTaskDetailAsync = fn(() => Promise.resolve(makeTaskDetail({
+        description: undefined,
+        instruction: '[select "Pick" name="myDropdown" values="foo,bar"]',
+      })));
+
+      const details = uiMapRouletteDetails(context).task(item).done(false);
+      selection.call(details);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      const select = selection.select('select[name="myDropdown"]');
+      select.property('value', 'bar');
+      select.dispatch('change');
+      expect(select.property('value')).toBe('bar');
+
+      details.done(true);
+      selection.call(details);
+      await Promise.resolve();
+      expect(selection.select('select[name="myDropdown"]').property('value')).toBe('bar');
+
+      details.done(false);
+      selection.call(details);
+      await Promise.resolve();
+      expect(selection.select('select[name="myDropdown"]').property('value')).toBe('bar');
+    });
   });
 });

@@ -171,7 +171,25 @@ export function uiMapRouletteDetails(context: any) {
       if (!disclosure || host.empty()) return;
       const expanded = isSectionExpanded(section);
       disclosure.expanded(expanded);
-      host.call(disclosure);
+
+      const wrap = host.select('details.disclosure-wrap');
+      if (!wrap.empty()) {
+        wrap.property('open', expanded);
+        const summary = wrap.select('summary.hide-toggle');
+        summary
+          .classed('expanded', expanded)
+          .attr('title', t(`icons.${expanded ? 'collapse' : 'expand'}`));
+        summary.select('.hide-toggle-icon')
+          .attr('xlink:href', expanded ? '#iD-icon-down' : '#iD-icon-forward');
+      }
+
+      if (expanded) {
+        const contentUnpainted = host.select('.disclosure-content .qa-details-container').empty();
+        if (contentUnpainted) {
+          host.call(disclosure);
+          restoreCompletionResponses(detailsSel);
+        }
+      }
     });
   }
 
