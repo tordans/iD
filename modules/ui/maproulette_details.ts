@@ -3,15 +3,40 @@ import { marked } from 'marked';
 import DOMPurify from 'dompurify';
 
 import { utilHighlightEntities } from '../util';
-import { linkifyOsmReferences } from '../util/maproulette_markdown';
+import {
+  applyCompletionResponsesToElement,
+  collectCompletionResponsesFromElement,
+  expandInstructionShortcodes,
+  linkifyOsmReferences,
+} from '../util/maproulette_markdown';
 import { modeSelect } from '../modes';
-import { modeSelectError } from '../modes/select_error';
 import { t } from '../core/localizer';
 import { services } from '../services';
 import { appendMapRoulettePinIcon } from '../svg/maproulette_logo';
 import { updateMapRouletteV4Pin } from '../svg/maproulette_marker';
+import { longFormOsmId } from '../util/maproulette_osm_ids';
+import { replaceMustacheTags } from '../util/maproulette_mustache';
 import { pinDisplayStatusOf } from '../util/maproulette_status';
 import { uiDisclosure } from './disclosure';
+
+/** Pin sidebar: Details default open only when the task is active and no challenge filter. */
+export function isDetailsExpandedByDefault(opts: {
+  done: boolean;
+  challengeFilter: boolean;
+}): boolean {
+  return !opts.done && !opts.challengeFilter;
+}
+
+/** Which task text blocks to show in Details / Instructions panels. */
+function taskGuidanceSections(task: { description?: string; instruction?: string }): {
+  hasDescription: boolean;
+  showInstruction: boolean;
+} {
+  const hasDescription = !!task.description;
+  const showInstruction = !!(task.instruction &&
+    (task.instruction !== task.description || !hasDescription));
+  return { hasDescription, showInstruction };
+}
 
 export function uiMapRouletteDetails(context: any) {
   const mr = services.maproulette;
@@ -27,142 +52,32 @@ export function uiMapRouletteDetails(context: any) {
   /** Task id whose Details/Instructions are already painted in the current host. */
   let _paintedTaskId: string | null = null;
 
-  /**
-   * Escape a value for interpolation into HTML text or attribute context.
-   * Challenge markdown, task titles and task GeoJSON properties are all
-   * arbitrary remote input (any MapRoulette challenge author controls them).
-   */
-  function escapeHTML(value: unknown): string {
-    return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  function generateDropdownHtml(dropdownName: string, options: string[]): string {
-    return `<select name="${escapeHTML(dropdownName)}"><option value=""></option>${options
-      .map(function(option) {
-        return `<option value="${escapeHTML(option.trim())}">${escapeHTML(option.trim())}</option>`;
-      })
-      .join('')}</select>`;
-  }
-
-  function generateDynamicContent(text: string): string {
-    if (!text) return '';
-    const segments = text.split(
-      /\[select\s+&quot;\s*[^\"]*?\s*&quot;\s+name=&quot;/,
-    );
-    let transformedText = segments[0];
-    segments.slice(1).forEach(function(segment) {
-      const endIndex = segment.indexOf('&quot;');
-      const dropdownName = segment.substring(0, endIndex);
-      const valuesStart =
-        segment.indexOf('values=&quot;') + 'values=&quot;'.length;
-      const valuesEnd = segment.indexOf('&quot;', valuesStart);
-      const options = segment
-        .substring(valuesStart, valuesEnd)
-        .split(',');
-      const dropdownHtml = generateDropdownHtml(dropdownName, options);
-      const remainder = segment
-        .substring(valuesEnd + '&quot;'.length)
-        .trim()
-        .replace(/^\]/, '');
-      transformedText += dropdownHtml + remainder;
-    });
-    return transformedText;
-  }
-
-  function replaceMustacheTags(text: string, task: any): string {
-    if (!text) return '';
-    const tagRegex = /\{\{([\w:]+)\}\}/g;
-
-    function buildAllProperties(obj: any): Map<string, any> {
-      const all = new Map<string, any>();
-      if (!obj) return all;
-      if (Array.isArray(obj.taskFeatures)) {
-        obj.taskFeatures
-          .map(function(f: any) { return (f && f.properties) || {}; })
-          .forEach(function(props: any) {
-            Object.keys(props).forEach(function(key) {
-              all.set(key, props[key]);
-            });
-          });
-      }
-      if (obj.properties) {
-        Object.keys(obj.properties).forEach(function(key) {
-          all.set(key, obj.properties[key]);
-        });
-      }
-      const geom = obj.geometries || obj.geojson || obj.geometry;
-      if (geom) {
-        if (geom.properties) {
-          Object.keys(geom.properties).forEach(function(key) {
-            all.set(key, geom.properties[key]);
-          });
-        }
-        if (Array.isArray(geom.features) && geom.features.length) {
-          const featProps =
-            geom.features[0] && geom.features[0].properties;
-          if (featProps) {
-            Object.keys(featProps).forEach(function(key) {
-              all.set(key, featProps[key]);
-            });
-          }
-        }
-      }
-      Object.keys(obj).forEach(function(key) {
-        if (!all.has(key)) all.set(key, obj[key]);
-      });
-      return all;
-    }
-
-    const allProps = buildAllProperties(task);
-
-    return text.replace(tagRegex, function(match, propertyName) {
-      if (propertyName === 'osmIdentifier' && task && task.title) {
-        const osmId = String(task.title).split('@')[0];
-        const longForm = osmId.replace(/^([wnr])(\d+)$/, function(_match, prefix: string, num: string) {
-          const type = { w: 'way', n: 'node', r: 'relation' }[prefix];
-          return type ? `${type}/${num}` : osmId;
-        });
-        // Only linkify well-formed ids; anything else could break out of
-        // the attribute context below.
-        if (!/^(way|node|relation)\/\d+$/.test(longForm)) return escapeHTML(osmId);
-        return longForm;
-      }
-      if (allProps.has(propertyName)) {
-        const val = allProps.get(propertyName);
-        return val !== undefined && val !== null ? escapeHTML(val) : '';
-      }
-      return match;
-    });
-  }
-
   function sanitizeHTML(dirty: string): string {
     return DOMPurify.sanitize(dirty, {
       ALLOWED_TAGS: [
         'a', 'b', 'br', 'code', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-        'hr', 'i', 'img', 'li', 'mark', 'ol', 'option', 'p', 'pre', 'select',
-        'small', 'span', 'strong', 'sub', 'sup', 'table', 'tbody', 'td', 'th',
-        'thead', 'tr', 'u', 'ul',
+        'hr', 'i', 'img', 'input', 'label', 'li', 'mark', 'ol', 'option', 'p',
+        'pre', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'table',
+        'tbody', 'td', 'th', 'thead', 'tr', 'u', 'ul',
       ],
       ALLOWED_ATTR: [
         'class', 'href', 'id', 'name', 'rel', 'src', 'target', 'title', 'alt',
-        'value', 'data-osm-id',
+        'value', 'data-osm-id', 'data-copy-text', 'type', 'checked', 'for',
+        'role', 'tabindex',
       ],
       ALLOW_DATA_ATTR: false,
-      FORBID_TAGS: ['style', 'script', 'iframe', 'form', 'input', 'button'],
+      FORBID_TAGS: ['style', 'script', 'iframe', 'form', 'button'],
       FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'style'],
     });
   }
 
   function renderMarkdown(text: string, task: any): string {
     if (!text) return '';
-    const html = marked.parse(replaceMustacheTags(text, task)) as string;
+    const html = marked.parse(replaceMustacheTags(text, task, { htmlEscape: true })) as string;
     return sanitizeHTML(
-      generateDynamicContent(linkifyOsmReferences(html)),
+      expandInstructionShortcodes(linkifyOsmReferences(html), {
+        copyLabel: t('map_data.layers.maproulette.copyable'),
+      }),
     );
   }
 
@@ -182,7 +97,7 @@ export function uiMapRouletteDetails(context: any) {
   function clearTaskBody(detailsSel: any): void {
     clearLoadingState(detailsSel);
     detailsSel.select('.qa-details-loading').remove();
-    detailsSel.selectAll('.mr-section-disclosure, .mr-task-load-notice').remove();
+    detailsSel.selectAll('.mr-section-disclosure, .mr-embedded-body, .mr-task-load-notice').remove();
   }
 
   function showTaskBodyMessage(detailsSel: any, message: string): void {
@@ -207,6 +122,7 @@ export function uiMapRouletteDetails(context: any) {
   function taskBodyAlreadyPainted(detailsSel: any, taskId: string | null): boolean {
     if (!taskId || taskId !== _paintedTaskId) return false;
     return !detailsSel.select('.mr-section-disclosure').empty()
+      || !detailsSel.select('.mr-embedded-body').empty()
       || !detailsSel.select('.mr-task-load-notice').empty();
   }
 
@@ -215,12 +131,22 @@ export function uiMapRouletteDetails(context: any) {
     return id ? `${id}:${section}` : null;
   }
 
+  function isChallengeFilterActive(): boolean {
+    return Boolean(mr && mr.challengeIDs && mr.challengeIDs());
+  }
+
   function isSectionExpanded(section: 'detail' | 'instruction'): boolean {
     const key = sectionExpandedKey(section);
     if (key && Object.prototype.hasOwnProperty.call(_sectionExpanded, key)) {
       return !!_sectionExpanded[key];
     }
-    // Open while working the task; closed after a status decision.
+    if (section === 'detail') {
+      return isDetailsExpandedByDefault({
+        done: _done,
+        challengeFilter: isChallengeFilterActive(),
+      });
+    }
+    // Instructions: open while working the task; closed after a status decision.
     return !_done;
   }
 
@@ -275,11 +201,17 @@ export function uiMapRouletteDetails(context: any) {
       .append('section')
       .attr('class', `mr-section-disclosure mr-section-${section}`);
 
+    // uiDisclosure invokes `_label()`: strings become text, functions are d3 renderers.
+    const disclosureLabel = typeof label === 'function'
+      ? function() { return label; }
+      : label;
+
+    const expandedDefault = isSectionExpanded(section);
     host.call(
-      (uiDisclosure(context, disclosureKey, !_done) as any)
+      (uiDisclosure(context, disclosureKey, expandedDefault) as any)
         .updatePreference(false)
-        .expanded(isSectionExpanded(section))
-        .label(label)
+        .expanded(expandedDefault)
+        .label(disclosureLabel)
         .content(function(contentSel: any) {
           const box = contentSel
             .selectAll('.qa-details-container')
@@ -296,6 +228,46 @@ export function uiMapRouletteDetails(context: any) {
           setSectionExpanded(section, expanded);
         }),
     );
+  }
+
+  function syncCompletionResponses(detailsSel: any): void {
+    if (!_qaItem) return;
+    const collected = collectCompletionResponsesFromElement(detailsSel.node());
+    const hasKeys = Object.keys(collected).length > 0;
+    const next = hasKeys ? collected : undefined;
+    const current = _qaItem.completionResponses;
+    if (JSON.stringify(current || {}) === JSON.stringify(collected)) return;
+    _qaItem = _qaItem.update({ completionResponses: next });
+    if (mr && typeof mr.replaceItem === 'function') mr.replaceItem(_qaItem);
+  }
+
+  function bindCompletionResponseHandlers(detailsSel: any): void {
+    detailsSel
+      .on('change.mr-completion', function(d3_event: Event) {
+        const target = d3_event.target as HTMLElement;
+        if (!target || !target.getAttribute('name')) return;
+        const tag = target.tagName;
+        if (tag !== 'SELECT' && tag !== 'INPUT') return;
+        syncCompletionResponses(detailsSel);
+      })
+      .on('click.mr-copyable', function(d3_event: Event) {
+        const target = d3_event.target as HTMLElement;
+        if (!target || !target.classList.contains('mr-copyable-btn')) return;
+        d3_event.preventDefault();
+        const text = target.getAttribute('data-copy-text');
+        if (!text || !navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') return;
+        navigator.clipboard.writeText(text).catch(function() { /* ignore */ });
+      });
+  }
+
+  function restoreCompletionResponses(detailsSel: any): void {
+    if (!_qaItem || !_qaItem.completionResponses) return;
+    detailsSel.selectAll('.qa-details-container').each(function(this: HTMLElement) {
+      applyCompletionResponsesToElement(this, _qaItem.completionResponses);
+    });
+    detailsSel.selectAll('.mr-embedded-body .qa-details-container').each(function(this: HTMLElement) {
+      applyCompletionResponsesToElement(this, _qaItem.completionResponses);
+    });
   }
 
   function attachHighlightLinkHandlers(selection: any): void {
@@ -336,18 +308,6 @@ export function uiMapRouletteDetails(context: any) {
     }) as import('../osm').EntityId;
   }
 
-  /** Transform iD-style "w123" to display form "way/123". */
-  function longFormId(id: string): string {
-    return id.replace(/^[wnr]/, function(prefix) {
-      switch (prefix) {
-        case 'w': return 'way/';
-        case 'n': return 'node/';
-        case 'r': return 'relation/';
-        default: return prefix;
-      }
-    });
-  }
-
   /** Shared label + value row for task meta (challenge id, recognised OSM objects, …). */
   function appendMetaHeader(
     parent: any,
@@ -369,7 +329,7 @@ export function uiMapRouletteDetails(context: any) {
       const p = section.append('p').attr('class', 'mr-recognised-elems');
       elems.forEach(function(entityId, i) {
         if (i > 0) p.append('span').text(', ');
-        const longForm = longFormId(entityId);
+        const longForm = longFormOsmId(entityId);
         p.append('a')
           .attr('href', '#')
           .attr('class', 'highlight-link')
@@ -406,6 +366,42 @@ export function uiMapRouletteDetails(context: any) {
       (_qaItem && _qaItem.elems) || (task && task.elems),
     );
     attachHighlightLinkHandlers(meta);
+  }
+
+  function appendEmbeddedMarkdown(parent: any, html: string): void {
+    const box = parent.append('div').attr('class', 'qa-details-container');
+    box.html(html);
+    attachExternalLinkAttrs(box);
+    attachHighlightLinkHandlers(box);
+  }
+
+  /**
+   * Entity inspector: the section is already a disclosure, so paint Details /
+   * Instructions as plain content (plus a pin link) instead of nested toggles.
+   */
+  function renderEmbeddedTaskBody(detailsSel: any, task: any): void {
+    const { hasDescription, showInstruction } = taskGuidanceSections(task);
+
+    if (!hasDescription && !task.instruction) {
+      showTaskBodyMessage(detailsSel, t('map_data.layers.maproulette.no_instruction'));
+      return;
+    }
+
+    const body = detailsSel.append('div').attr('class', 'mr-embedded-body');
+
+    const showBoth = hasDescription && showInstruction;
+    if (hasDescription) {
+      if (showBoth) {
+        body.append('h4').text(t('map_data.layers.maproulette.detail_title'));
+      }
+      appendEmbeddedMarkdown(body, renderMarkdown(task.description, task));
+    }
+    if (showInstruction) {
+      if (showBoth) {
+        body.append('h4').text(t('map_data.layers.maproulette.instruction_title'));
+      }
+      appendEmbeddedMarkdown(body, renderMarkdown(task.instruction, task));
+    }
   }
 
   function taskPriorityOf(d: any): number | null {
@@ -505,71 +501,9 @@ export function uiMapRouletteDetails(context: any) {
           clearTaskBody(details);
 
           if (_embedded) {
-            // Entity-inspector embed: same Details + Instructions content as the
-            // pin panel (no action buttons). First section title links to the task.
-            let linkedTitleUsed = false;
-
-            function embeddedDisclosureLabel(kind: 'detail' | 'instruction') {
-              return function(labelSel: any) {
-                if (!linkedTitleUsed && _qaItem && _qaItem.id) {
-                  linkedTitleUsed = true;
-                  labelSel
-                    .append('span')
-                    .text(
-                      kind === 'detail'
-                        ? t('map_data.layers.maproulette.detail_title_for_task')
-                        : t('map_data.layers.maproulette.instruction_title_for_task'),
-                    );
-                  labelSel
-                    .append('a')
-                    .attr('href', '#')
-                    .attr('class', 'mr-task-select-link')
-                    .attr('data-task-id', String(_qaItem.id))
-                    .text('#' + _qaItem.id);
-                } else {
-                  labelSel.text(
-                    kind === 'detail'
-                      ? t('map_data.layers.maproulette.detail_title')
-                      : t('map_data.layers.maproulette.instruction_title'),
-                  );
-                }
-              };
-            }
-
-            const hasDescription = !!task.description;
-            const hasInstruction = !!task.instruction &&
-              task.instruction !== task.description;
-
-            if (hasDescription) {
-              appendSectionDisclosure(
-                details,
-                'detail',
-                embeddedDisclosureLabel('detail'),
-                renderMarkdown(task.description, task),
-              );
-            }
-
-            if (hasInstruction || (!hasDescription && task.instruction)) {
-              appendSectionDisclosure(
-                details,
-                'instruction',
-                embeddedDisclosureLabel('instruction'),
-                renderMarkdown(task.instruction, task),
-              );
-            }
-
-            if (!hasDescription && !task.instruction) {
-              showTaskBodyMessage(details, t('map_data.layers.maproulette.no_instruction'));
-            }
-
-            details.selectAll('.mr-task-select-link')
-              .on('click', function(this: Element, d3_event: Event) {
-                d3_event.preventDefault();
-                const taskId = d3_select(this).attr('data-task-id');
-                if (!taskId) return;
-                context.selectedErrorID(taskId);
-                context.enter(modeSelectError(context, taskId, 'maproulette'));
-              });
+            renderEmbeddedTaskBody(details, task);
+            bindCompletionResponseHandlers(details);
+            restoreCompletionResponses(details);
             _paintedTaskId = thisTaskId;
             return;
           }
@@ -581,14 +515,11 @@ export function uiMapRouletteDetails(context: any) {
 
           renderTaskMeta(details, task);
 
+          const { hasDescription, showInstruction } = taskGuidanceSections(task);
           const description = renderMarkdown(task.description, task);
           const instruction = renderMarkdown(task.instruction, task);
 
-          const explicitChallengeIdGiven = Boolean(
-            mr && mr.challengeIDs && mr.challengeIDs(),
-          );
-
-          if (!explicitChallengeIdGiven && task.description) {
+          if (hasDescription) {
             appendSectionDisclosure(
               details,
               'detail',
@@ -597,7 +528,7 @@ export function uiMapRouletteDetails(context: any) {
             );
           }
 
-          if (task.instruction && task.instruction !== task.description) {
+          if (showInstruction) {
             appendSectionDisclosure(
               details,
               'instruction',
@@ -607,19 +538,23 @@ export function uiMapRouletteDetails(context: any) {
           }
 
           attachHighlightLinkHandlers(details);
+          bindCompletionResponseHandlers(details);
+          restoreCompletionResponses(details);
           _paintedTaskId = thisTaskId;
-          } catch {
+          } catch (err) {
             _paintedTaskId = null;
             if (generation !== _loadGeneration) return;
             if (!shouldApplyAsyncResult(thisTaskId)) return;
+            console.error('MapRoulette: failed to render task details', err); // eslint-disable-line no-console
             showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
           }
         })
-        .catch(function() {
+        .catch(function(err: unknown) {
           if (generation !== _loadGeneration) return;
           if (details.empty()) return;
           if (!shouldApplyAsyncResult(thisTaskId)) return;
           _paintedTaskId = null;
+          console.error('MapRoulette: failed to load task details', err); // eslint-disable-line no-console
           showTaskBodyMessage(details, t('map_data.layers.maproulette.error_loading_task_details'));
         });
     }
