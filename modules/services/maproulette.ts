@@ -63,10 +63,10 @@ const BOX_STATUSES = '0,1,2,3,5,6';
 
 export function taskStatusOf(d: MrQaStatusLike | null | undefined): number {
   if (!d) return MR_STATUS.CREATED;
-  if (d.taskStatus != null && Number.isFinite(d.taskStatus)) {
+  if (d.taskStatus !== null && d.taskStatus !== undefined && Number.isFinite(d.taskStatus)) {
     return d.taskStatus;
   }
-  if (d.task && d.task.status != null && Number.isFinite(d.task.status)) {
+  if (d.task && d.task.status !== null && d.task.status !== undefined && Number.isFinite(d.task.status)) {
     return d.task.status;
   }
   return MR_STATUS.CREATED;
@@ -402,7 +402,7 @@ function applyTaskStatusFields(qaItem: any, task: MrBoxTask | { status?: number;
 function applyPinLocFromTask(qaItem: { loc?: [number, number] | null }, taskOrGeometries: unknown): boolean {
   if (!_cache || !qaItem || !qaItem.loc) return false;
   const geometries = unwrapMrGeometries(taskOrGeometries);
-  if (geometries == null) return false;
+  if (geometries === null || geometries === undefined) return false;
 
   const prev = qaItem.loc;
   const next = snapMapRoulettePinLoc(prev, geometries);
@@ -970,8 +970,8 @@ export default {
 
   isOpenTask,
   isRecentlyResolved,
-  taskStatusOf,
   shouldDisplayTask,
+  taskStatusOf,
 
   // NOTE: Don't change method name until UI v3 is merged
   getError(id: string) {
@@ -1037,7 +1037,7 @@ export default {
     let index = 0;
     const failedEarmarks: MapRouletteEarmark[] = [];
 
-    function commentFor(_entry: MapRouletteEarmark): string {
+    function commentFor(): string {
       return comment;
     }
 
@@ -1060,7 +1060,7 @@ export default {
         id: entry.taskID,
         parentId: entry.challengeID,
         _status: status,
-        comment: commentFor(entry),
+        comment: commentFor(),
         mapRouletteApiKey: apiKey,
       };
       if (entry.completionResponses

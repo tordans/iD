@@ -136,7 +136,7 @@ export function createMapRouletteDataLayerControls(
     const nextAction = (mrEnabled && !loading && mr)
       ? mapDataNextAction(resolveMapDataPool())
       : null;
-    const hasNext = nextAction != null;
+    const hasNext = nextAction !== null && nextAction !== undefined;
     return { mrEnabled, zoom, minZ, loading, nextAction, hasNext };
   }
 
