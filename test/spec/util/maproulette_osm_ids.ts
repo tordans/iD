@@ -1,8 +1,17 @@
 import {
   collectOsmEntityIds,
   collectOsmEntityIdsFromGeometries,
+  longFormOsmId,
   parseOsmEntityIdFromFeatureProperties,
 } from '../../../modules/util/maproulette_osm_ids';
+
+describe('longFormOsmId', () => {
+  it('converts iD-style ids to way/node/relation display form', () => {
+    expect(longFormOsmId('w123')).toBe('way/123');
+    expect(longFormOsmId('n456')).toBe('node/456');
+    expect(longFormOsmId('r789')).toBe('relation/789');
+  });
+});
 
 describe('collectOsmEntityIds', () => {
   it('returns empty array for empty or invalid inputs', () => {

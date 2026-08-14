@@ -13,6 +13,7 @@ import {
   tagFixesToApply,
   type MapRouletteMatchedTagFix,
 } from '../util/maproulette_cooperative';
+import { longFormOsmId } from '../util/maproulette_osm_ids';
 
 export type MapRouletteTagFixPaintInfo = {
   taskId: string;
@@ -20,18 +21,6 @@ export type MapRouletteTagFixPaintInfo = {
   showGoToNearby: boolean;
   hasNearby: boolean;
 };
-
-/** Display iD id `w123` as `way/123`. */
-function longFormId(id: string): string {
-  return id.replace(/^[wnr]/, function(prefix) {
-    switch (prefix) {
-      case 'w': return 'way/';
-      case 'n': return 'node/';
-      case 'r': return 'relation/';
-      default: return prefix;
-    }
-  });
-}
 
 function taskPayload(qaItem: any, detail?: any): any {
   if (detail && extractCooperativeWork(detail)) return detail;
@@ -149,7 +138,7 @@ export function uiMapRouletteTagFix(context: any): any {
         .attr('href', '#')
         .attr('class', 'mr-tag-fix-entity-link')
         .attr('data-entity-id', m.entityId)
-        .text(longFormId(m.entityId));
+        .text(longFormOsmId(m.entityId));
       if (entityHasPendingDiffs(m)) {
         renderTagDiffTable(block, m);
       }
@@ -168,7 +157,7 @@ export function uiMapRouletteTagFix(context: any): any {
             .attr('href', '#')
             .attr('class', 'mr-tag-fix-entity-link')
             .attr('data-entity-id', m.entityId)
-            .text(longFormId(m.entityId));
+            .text(longFormOsmId(m.entityId));
         });
       }
     }
@@ -182,7 +171,7 @@ export function uiMapRouletteTagFix(context: any): any {
           .attr('href', '#')
           .attr('class', 'mr-tag-fix-entity-link')
           .attr('data-entity-id', id)
-          .text(longFormId(id));
+          .text(longFormOsmId(id));
       });
     }
 
@@ -289,7 +278,7 @@ export function uiMapRouletteTagFix(context: any): any {
             .attr('href', '#')
             .attr('class', 'mr-tag-fix-entity-link')
             .attr('data-entity-id', id)
-            .text(longFormId(id));
+            .text(longFormOsmId(id));
         });
         attachEntityJump(msg);
       }
@@ -459,15 +448,6 @@ export function uiMapRouletteTagFix(context: any): any {
     if (!arguments.length) return _onPainted;
     _onPainted = val || null;
     return render;
-  };
-
-  /** Whether Accept is available for the current task + graph (sync, needs cooperativeWork on task). */
-  render.hasAcceptableFixes = function(): boolean {
-    if (!_qaItem) return false;
-    const task = taskPayload(_qaItem);
-    if (!isMapRouletteTagFix(task)) return false;
-    const { matched } = matchMapRouletteTagFixes(context, task);
-    return hasPendingTagDiffs(matched);
   };
 
   return render;

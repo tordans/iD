@@ -232,6 +232,7 @@ export const MrTaskDetailsSchema = z.object({
   id: IdLike.optional(),
   parentId: IdLike.optional(),
   title: OptionalString,
+  instruction: OptionalString,
   status: OptionalFiniteInt,
   priority: OptionalFiniteInt,
   mappedOn: OptionalString,
@@ -278,13 +279,25 @@ export function buildMrTaskDetailView(input: {
     || extractMrCooperativeWork(base)
     || undefined;
 
+  function firstNonEmptyInstruction(...values: unknown[]): string {
+    for (let i = 0; i < values.length; i++) {
+      const v = values[i];
+      if (typeof v === 'string' && v.trim()) return v;
+    }
+    return '';
+  }
+
   const detail: MrTaskDetailView = {
     ...base,
     id: String(input.id),
     parentId: String(input.parentId),
     parentName: (ch && ch.name) || '',
     title: (td && td.title) || (typeof base.title === 'string' ? base.title : '') || '',
-    instruction: (ch && ch.instruction) || '',
+    instruction: firstNonEmptyInstruction(
+      td && td.instruction,
+      base.instruction,
+      ch && ch.instruction,
+    ),
     description: (ch && ch.description) || '',
     taskFeatures: (td && td.geometries && Array.isArray(td.geometries.features))
       ? td.geometries.features
@@ -398,6 +411,10 @@ export const MrEarmarkSchema = z.object({
     z.boolean(),
   ),
   localDone: z.boolean().optional(),
+  completionResponses: z.record(
+    z.string(),
+    z.union([z.string(), z.boolean()]),
+  ).optional(),
 });
 
 export type MrEarmark = z.infer<typeof MrEarmarkSchema>;

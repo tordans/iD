@@ -1,3 +1,5 @@
+import { marked } from 'marked';
+
 /**
  * Post-markdown HTML helpers for MapRoulette task instructions: turn OSM
  * entity references into highlight links without breaking markdown code spans
@@ -174,4 +176,127 @@ export function linkifyOsmReferences(html: string): string {
       return linkifyOutsidePre(segment);
     })
     .join('');
+}
+
+const Q = '(?:&quot;|")';
+const NOT_Q = '(?:(?!&quot;|").)*?';
+const NOT_Q_GREEDY = '(?:(?!&quot;|").)*';
+const NOT_MD_LINK = '(?!\\()';
+
+const INSTRUCTION_SELECT_RE = new RegExp(
+  `(?:\\[|\\{\\{\\{)select[/ ]?${Q}(${NOT_Q})${Q}\\s+name=${Q}(${NOT_Q})${Q}\\s+values=${Q}(${NOT_Q})${Q}\\s*(?:\\]|\\}\\}\\})${NOT_MD_LINK}`,
+  'gi',
+);
+
+const INSTRUCTION_CHECKBOX_RE = new RegExp(
+  `(?:\\[|\\{\\{\\{)checkbox[/ ]?${Q}(${NOT_Q})${Q}\\s+name=${Q}(${NOT_Q})${Q}\\s*(?:\\]|\\}\\}\\})${NOT_MD_LINK}`,
+  'gi',
+);
+
+const INSTRUCTION_COPYABLE_RE = new RegExp(
+  `(?:\\[|\\{\\{\\{)copyable[/ ]?${Q}(${NOT_Q_GREEDY})${Q}\\s*(?:\\]|\\}\\}\\})${NOT_MD_LINK}`,
+  'gi',
+);
+
+function escapeHTMLText(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function renderInstructionLabelHtml(label: string): string {
+  if (!label) return '';
+  return marked.parseInline(label) as string;
+}
+
+function buildSelectHtml(name: string, label: string, valuesRaw: string): string {
+  const labelHtml = renderInstructionLabelHtml(label);
+  const options = valuesRaw
+    .split(',')
+    .map(function(v) { return v.trim(); })
+    .filter(Boolean)
+    .map(function(option) {
+      const escaped = escapeHTMLAttr(option);
+      return `<option value="${escaped}">${escaped}</option>`;
+    })
+    .join('');
+  const labelSuffix = labelHtml ? ` ${labelHtml}` : '';
+  return `<label class="mr-instruction-label"><select class="mr-instruction-select" name="${escapeHTMLAttr(name)}"><option value=""></option>${options}</select>${labelSuffix}</label>`;
+}
+
+function buildCheckboxHtml(name: string, label: string): string {
+  const labelHtml = renderInstructionLabelHtml(label);
+  const labelSuffix = labelHtml ? ` ${labelHtml}` : '';
+  return `<label class="mr-instruction-label"><input type="checkbox" class="mr-instruction-checkbox" name="${escapeHTMLAttr(name)}">${labelSuffix}</label>`;
+}
+
+function buildCopyableHtml(text: string, copyLabel: string): string {
+  const escaped = escapeHTMLAttr(text);
+  const display = escapeHTMLText(text);
+  return `<span class="mr-copyable"><span class="mr-copyable-text">${display}</span><a href="#" class="mr-copyable-btn" data-copy-text="${escaped}" title="${escapeHTMLAttr(copyLabel)}">${escapeHTMLText(copyLabel)}</a></span>`;
+}
+
+/**
+ * Expand MapRoulette instruction shortcodes (`[select …]`, `[checkbox …]`,
+ * `[copyable …]`, and deprecated `{{{…}}}`) in post-markdown HTML.
+ */
+export function expandInstructionShortcodes(
+  html: string,
+  opts?: { copyLabel?: string },
+): string {
+  if (!html) return '';
+  const copyLabel = opts?.copyLabel || 'Copy';
+
+  return html
+    .replace(INSTRUCTION_SELECT_RE, function(_match, label: string, name: string, values: string) {
+      return buildSelectHtml(name, label, values);
+    })
+    .replace(INSTRUCTION_CHECKBOX_RE, function(_match, label: string, name: string) {
+      return buildCheckboxHtml(name, label);
+    })
+    .replace(INSTRUCTION_COPYABLE_RE, function(_match, text: string) {
+      if (!text) return '';
+      return buildCopyableHtml(text, copyLabel);
+    });
+}
+
+/** Read painted instruction form fields into completionResponses. */
+export function collectCompletionResponsesFromElement(
+  root: ParentNode | null | undefined,
+): Record<string, string | boolean> {
+  const out: Record<string, string | boolean> = {};
+  if (!root || typeof (root as Element).querySelectorAll !== 'function') return out;
+  (root as Element).querySelectorAll('select[name]').forEach(function(sel) {
+    const name = sel.getAttribute('name');
+    const value = (sel as HTMLSelectElement).value;
+    if (name && value && value.trim()) out[name] = value.trim();
+  });
+  (root as Element).querySelectorAll('input[type="checkbox"][name]').forEach(function(input) {
+    const name = input.getAttribute('name');
+    if (name) out[name] = (input as HTMLInputElement).checked;
+  });
+  return out;
+}
+
+/** Apply stored completion responses onto painted instruction form fields. */
+export function applyCompletionResponsesToElement(
+  root: ParentNode | null | undefined,
+  responses: Record<string, string | boolean> | null | undefined,
+): void {
+  if (!root || !responses || typeof responses !== 'object') return;
+  if (typeof (root as Element).querySelectorAll !== 'function') return;
+  (root as Element).querySelectorAll('select[name]').forEach(function(sel) {
+    const name = sel.getAttribute('name');
+    if (!name) return;
+    const value = responses[name];
+    if (typeof value === 'string' && value) {
+      (sel as HTMLSelectElement).value = value;
+    }
+  });
+  (root as Element).querySelectorAll('input[type="checkbox"][name]').forEach(function(input) {
+    const name = input.getAttribute('name');
+    if (!name) return;
+    (input as HTMLInputElement).checked = responses[name] === true;
+  });
 }

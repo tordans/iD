@@ -909,6 +909,7 @@ en:
         update_with_save_tooltip: "Queue the status below and update MapRoulette when you upload this OSM changeset."
         update_right_away: Right away
         update_right_away_tooltip: "Send the MapRoulette status now. Does not wait for an OSM upload."
+        update_timing_tag_fix_tooltip: "This kind of task can only be resolved when you upload the OSM changeset."
         queued_title: Queued for upload
         queued_message: "This task will be updated on MapRoulette when you save your changeset."
         queued_undo: Undo
@@ -942,6 +943,7 @@ en:
         loading_task_details: Loading task details…
         detail_title: Details
         instruction_title: Instructions
+        copyable: Copy
         detail_title_for_task: "Details for "
         instruction_title_for_task: "Instructions for "
         no_instruction: No instructions for this task.
