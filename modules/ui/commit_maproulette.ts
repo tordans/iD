@@ -1,6 +1,10 @@
 import { t } from '../core/localizer';
 import { services } from '../services';
 import { closedMapRouletteTagKey, MR_STATUS } from '../services/maproulette';
+import {
+  mustacheContextFromCachedTask,
+  replaceMustacheTags,
+} from '../util/maproulette_mustache';
 import { statusLabelKey } from '../util/maproulette_status';
 
 
@@ -95,23 +99,35 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
   const mr = services.maproulette;
   const mrComments = new Set<string>();
   const mrSources = new Set<string>();
-  const seenChallenges = new Set<string>();
   let usedMapRoulette = false;
   const idsByTag: Record<string, string[]> = {};
 
-  function collectChallengeSuggestions(challengeID: string): void {
-    if (!challengeID || seenChallenges.has(challengeID)) return;
-    seenChallenges.add(challengeID);
+  function collectTaskSuggestions(challengeID: string, taskID: string): void {
+    if (!challengeID || !taskID) return;
     const challenge = typeof mr.getChallenge === 'function'
       ? mr.getChallenge(challengeID)
       : null;
     if (!challenge) return;
     usedMapRoulette = true;
+
+    const qaItem = typeof mr.getError === 'function' ? mr.getError(taskID) : null;
+    const taskLike = mustacheContextFromCachedTask(qaItem);
+
     if (challenge.checkinComment) {
-      mrComments.add(challenge.checkinComment);
+      const resolved = replaceMustacheTags(
+        challenge.checkinComment,
+        taskLike,
+        { htmlEscape: false },
+      ).trim();
+      if (resolved) mrComments.add(resolved);
     }
     if (challenge.checkinSource) {
-      mrSources.add(challenge.checkinSource);
+      const resolved = replaceMustacheTags(
+        challenge.checkinSource,
+        taskLike,
+        { htmlEscape: false },
+      ).trim();
+      if (resolved) mrSources.add(resolved);
     }
   }
 
@@ -127,7 +143,7 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
 
   if (typeof mr.getClosed === 'function') {
     mr.getClosed().forEach(function(entry: { challengeID: string; taskID: string; _status?: number }) {
-      collectChallengeSuggestions(entry.challengeID);
+      collectTaskSuggestions(entry.challengeID, String(entry.taskID));
       addOutcome(
         String(entry.taskID),
         entry._status !== undefined && entry._status !== null
@@ -147,7 +163,7 @@ export function applyMapRouletteDerivedTags(context: any, tags: Record<string, s
   // Comment / source suggestions only for tasks included in this upload (and
   // already-closed), not every earmark and not the map-data challenge filter.
   earmarked.forEach(function(entry: { challengeID: string; taskID: string; _status?: number }) {
-    collectChallengeSuggestions(entry.challengeID);
+    collectTaskSuggestions(entry.challengeID, String(entry.taskID));
     addOutcome(
       String(entry.taskID),
       entry._status !== undefined && entry._status !== null
@@ -227,7 +243,7 @@ export function renderMapRouletteEarmarkChecklist(
     .append('h3')
     .attr('class', 'commit-maproulette-earmarks-header')
     .merge(header);
-  header.call(t.append('commit.maproulette_earmarks_title'));
+  header.call(t.addOrUpdate('commit.maproulette_earmarks_title'));
 
   let list = selection.selectAll('ul.commit-maproulette-earmarks-list')
     .data([0]);

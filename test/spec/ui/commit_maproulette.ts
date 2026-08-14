@@ -44,6 +44,26 @@ describe('iD.commit_maproulette', () => {
     });
   }
 
+  function cacheTask(
+    taskID: string | number,
+    challengeID: string | number,
+    taskOverrides: Record<string, unknown> = {},
+  ) {
+    const id = String(taskID);
+    const parentId = String(challengeID);
+    const item = new iD.QAItem([0, 0], serviceMapRoulette, 'task', id, {
+      parentId,
+      task: Object.assign({
+        id,
+        parentId,
+        title: 'Test task',
+      }, taskOverrides),
+      elems: ['w1'],
+    } as any);
+    serviceMapRoulette.replaceItem(item);
+    return item;
+  }
+
   describe('buildMapRouletteSuggestedComment', () => {
     it('joins unique comments with newlines when they fit', () => {
       expect(buildMapRouletteSuggestedComment(['One', 'Two'], 255))
@@ -168,6 +188,69 @@ describe('iD.commit_maproulette', () => {
       expect(tags['closed:maproulette']).toBe('10');
       expect(tags['closed:maproulette:too_hard']).toBe('11');
       expect(tags['closed:maproulette:false_positive']).toBe('12');
+    });
+
+    it('resolves mustache tags in check-in comments from cached task properties', () => {
+      challenges['100'] = {
+        id: '100',
+        checkinComment: 'Removed a duplicate feature: {{violation_description}}',
+      };
+      cacheTask('1', '100', {
+        taskFeatures: [{
+          properties: { violation_description: 'parking on sidewalk' },
+        }],
+      });
+      earmark('1', '100', 'Challenge A');
+
+      const tags: Record<string, string> = {};
+      applyMapRouletteDerivedTags(context, tags);
+
+      expect(tags.comment).toBe('Removed a duplicate feature: parking on sidewalk');
+    });
+
+    it('does not HTML-escape resolved check-in comment values', () => {
+      challenges['100'] = {
+        id: '100',
+        checkinComment: 'Note: {{violation_description}}',
+      };
+      cacheTask('1', '100', {
+        taskFeatures: [{
+          properties: { violation_description: '<sidewalk> & curb' },
+        }],
+      });
+      earmark('1', '100', 'Challenge A');
+
+      const tags: Record<string, string> = {};
+      applyMapRouletteDerivedTags(context, tags);
+
+      expect(tags.comment).toBe('Note: <sidewalk> & curb');
+    });
+
+    it('resolves the same template separately for each earmarked task', () => {
+      challenges['100'] = {
+        id: '100',
+        checkinComment: 'Removed a duplicate feature: {{violation_description}}',
+      };
+      cacheTask('1', '100', {
+        taskFeatures: [{
+          properties: { violation_description: 'parking on sidewalk' },
+        }],
+      });
+      cacheTask('2', '100', {
+        taskFeatures: [{
+          properties: { violation_description: 'blocking crosswalk' },
+        }],
+      });
+      earmark('1', '100', 'Challenge A');
+      earmark('2', '100', 'Challenge A');
+
+      const tags: Record<string, string> = {};
+      applyMapRouletteDerivedTags(context, tags);
+
+      expect(tags.comment).toBe(
+        'Removed a duplicate feature: parking on sidewalk\n'
+        + 'Removed a duplicate feature: blocking crosswalk',
+      );
     });
   });
 });
