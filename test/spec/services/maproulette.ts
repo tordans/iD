@@ -653,6 +653,69 @@ describe('iD.serviceMapRoulette', () => {
     });
   });
 
+  describe('challenge fetch retry', () => {
+    const dimensions: [number, number] = [640, 480];
+
+    function testProjection() {
+      return iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([-116508, 0])
+        .clipExtent([[0, 0], dimensions]);
+    }
+
+    it('retries failed challenge metadata after backoff', async () => {
+      const parentId = '300';
+      const projection = testProjection();
+
+      fetchMock.mock(/tasks\/box\//, [{
+        id: 501,
+        parentId: Number(parentId),
+        status: 0,
+        point: { lng: 10, lat: 0 },
+      }]);
+      fetchMock.mock(new RegExp(`${MR_API}/challenge/${parentId}`), {
+        status: 500,
+      });
+
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        const cached = maproulette.getError('501');
+        expect(cached).toBeDefined();
+        expect(cached.isVisible).toBe(false);
+      });
+
+      const failedAt = Date.now();
+      const callsAfterFailure = fetchMock.calls().filter((call) => {
+        return new RegExp(`/challenge/${parentId}`).test(String(call[0]));
+      }).length;
+
+      fetchMock.mock(new RegExp(`${MR_API}/challenge/${parentId}`), {
+        status: 200,
+        body: JSON.stringify({
+          id: Number(parentId),
+          name: 'Retry challenge',
+          enabled: true,
+          deleted: false,
+        }),
+      }, { overwriteRoutes: true });
+
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        const callsBeforeBackoff = fetchMock.calls().filter((call) => {
+          return new RegExp(`/challenge/${parentId}`).test(String(call[0]));
+        }).length;
+        expect(callsBeforeBackoff).toBe(callsAfterFailure);
+      });
+
+      vi.spyOn(Date, 'now').mockReturnValue(failedAt + 31_000);
+      maproulette.loadIssues(projection);
+      await vi.waitFor(() => {
+        expect(maproulette.getError('501').isVisible).toBe(true);
+      });
+      vi.restoreAllMocks();
+    });
+  });
+
   describe('resolved visibility', () => {
     it('treats Created as open and Fixed within 24h as recently resolved', () => {
       const open = makeQAItem({ id: '1', parentId: '2' });
