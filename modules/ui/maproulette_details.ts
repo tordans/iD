@@ -522,6 +522,14 @@ export function uiMapRouletteDetails(context: any) {
           const description = renderMarkdown(task.description, task);
           const instruction = renderMarkdown(task.instruction, task);
 
+          if (!hasDescription && !showInstruction) {
+            showTaskBodyMessage(details, t('map_data.layers.maproulette.no_instruction'));
+            bindCompletionResponseHandlers(details);
+            restoreCompletionResponses(details);
+            _paintedTaskId = thisTaskId;
+            return;
+          }
+
           if (hasDescription) {
             appendSectionDisclosure(
               details,

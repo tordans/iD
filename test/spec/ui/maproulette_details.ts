@@ -148,6 +148,34 @@ describe('iD.ui.maproulette_details', () => {
     });
   });
 
+  describe('empty pin sidebar task body', () => {
+    it('does not refetch task detail on re-render when guidance is empty', async () => {
+      const item = makeItem();
+      context.selectedErrorID(item.id);
+      context.mode = fn(() => ({ id: 'select-error' })) as any;
+
+      mrStubs.loadTaskDetailAsync = fn(() => Promise.resolve({
+        id: '42',
+        parentId: '7',
+        description: undefined,
+        instruction: undefined,
+      }));
+
+      const details = uiMapRouletteDetails(context).task(item);
+      selection.call(details);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(selection.select('.mr-task-load-notice').empty()).toBe(false);
+      expect(mrStubs.loadTaskDetailAsync).toHaveBeenCalledTimes(1);
+
+      selection.call(details);
+      await Promise.resolve();
+
+      expect(mrStubs.loadTaskDetailAsync).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('instruction shortcodes', () => {
     it('paints select and checkbox widgets from instruction markdown', async () => {
       await mountDetails({
