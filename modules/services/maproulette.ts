@@ -874,7 +874,7 @@ export default {
     });
   },
 
-  getItems(projection: any) {
+  getItems(projection: any, options?: { ignoreChallengeFilter?: boolean }) {
     const viewport = projection.clipExtent();
     const min = [viewport[0][0], viewport[1][1]];
     const max = [viewport[1][0], viewport[0][1]];
@@ -884,8 +884,10 @@ export default {
     ).bbox();
 
     const items = _cache.rtree.search(bbox).map(function(d: any) { return d.data; });
+    const ignoreFilter = !!(options && options.ignoreChallengeFilter);
     return items.filter(function(d: any) {
       if (!shouldDisplayTask(d)) return false;
+      if (ignoreFilter) return d.isVisible;
       if (_challengeIDs.size > 0) return _challengeIDs.has(d.parentId);
       return d.isVisible;
     });
