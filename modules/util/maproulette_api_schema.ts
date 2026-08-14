@@ -127,7 +127,7 @@ export function unwrapMrGeometries(taskOrGeometries: unknown): unknown {
   const wrapped = z.object({
     geometries: z.unknown().optional(),
   }).passthrough().safeParse(taskOrGeometries);
-  if (wrapped.success && wrapped.data.geometries != null) {
+  if (wrapped.success && wrapped.data.geometries !== null && wrapped.data.geometries !== undefined) {
     return wrapped.data.geometries;
   }
   return taskOrGeometries;
