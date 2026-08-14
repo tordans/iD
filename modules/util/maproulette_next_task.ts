@@ -1,6 +1,6 @@
 /**
  * Post-done next-task challenge scope + pickers.
- * Product rules: docs/maproulette-post-done-sidebar.md
+ * Overview: docs/maproulette.md — pool detail: docs/maproulette-post-done-sidebar.md
  */
 import { geoSphericalDistance } from '../geo/geo';
 

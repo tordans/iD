@@ -1,5 +1,7 @@
 # MapRoulette sidebar: after you mark a task done
 
+**See also:** [`maproulette.md`](./maproulette.md) — product overview for all MapRoulette UI, finish flow, rendering, and APIs.
+
 **Audience:** contributors and reviewers who need to understand what the MapRoulette task sidebar does **after** a status decision (Fixed, Already Fixed, Not an Issue, Can’t Complete).
 
 **Intent:** The mapper should stay oriented on the task they just finished, see a clear outcome, then **choose** how to continue—nearest work, priority work, a random fallback when the preferred challenge is empty, or the linked OSM object—without the app auto-jumping away.
