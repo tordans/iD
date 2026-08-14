@@ -210,3 +210,13 @@ export function nextTaskActionsForPool(pool: NextTaskPool): {
   }
   return { showNearest: false, showPriority: false, showRandom: false };
 }
+
+export type MapDataNextAction = 'nearest' | 'random';
+
+/** Single Map Data pin action derived from the post-done pool tree. */
+export function mapDataNextAction(pool: NextTaskPool): MapDataNextAction | null {
+  const actions = nextTaskActionsForPool(pool);
+  if (actions.showNearest) return 'nearest';
+  if (actions.showRandom) return 'random';
+  return null;
+}

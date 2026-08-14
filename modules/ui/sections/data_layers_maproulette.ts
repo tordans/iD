@@ -4,7 +4,14 @@ import { patchHash } from '../../behavior/hash';
 import { t, localizer } from '../../core/localizer';
 import { services } from '../../services';
 import { appendMapRoulettePinIcon } from '../../svg/maproulette_logo';
-import { goToNearbyMapRouletteTask } from '../../util/maproulette_nearby';
+import { goToMapRouletteTask } from '../../util/maproulette_nearby';
+import {
+  getLastWorkedChallengeId,
+  mapDataNextAction,
+  pickNearest,
+  pickRandomNearby,
+  resolveCandidatePool,
+} from '../../util/maproulette_next_task';
 import { uiTooltip } from '../tooltip';
 
 
@@ -69,12 +76,42 @@ export function createMapRouletteDataLayerControls(
     return (mr && typeof mr.loadMinZoom === 'function') ? mr.loadMinZoom() : 12;
   }
 
+  function resolveMapDataPool() {
+    const mr = services.maproulette;
+    if (!mr) {
+      return { mode: 'empty' as const, tasks: [], preferredChallengeIds: [] };
+    }
+    return resolveCandidatePool(mr, {
+      lastChallengeId: getLastWorkedChallengeId(),
+    });
+  }
+
+  function liveViewportOpenTasks() {
+    const mr = services.maproulette;
+    if (!mr || typeof mr.getItems !== 'function') return [];
+    return (mr.getItems(context.projection) || []).filter(function(d: any) {
+      return mr.isOpenTask ? mr.isOpenTask(d) : true;
+    });
+  }
+
+  function goToNextMapDataTask(): boolean {
+    const pool = resolveMapDataPool();
+    const action = mapDataNextAction(pool);
+    if (!action) return false;
+    const center = context.map().center();
+    const next = action === 'nearest'
+      ? pickNearest(pool.tasks, center)
+      : pickRandomNearby(pool.tasks, liveViewportOpenTasks());
+    if (!next) return false;
+    return goToMapRouletteTask(context, next);
+  }
+
   function tryPendingGoToNearbyAfterZoom(
     mrEnabled: boolean,
     zoom: number,
     minZ: number,
     loading: boolean,
-    hasNearby: boolean,
+    hasNext: boolean,
   ): void {
     if (!_pendingGoToNearbyAfterZoom) return;
     if (!mrEnabled) {
@@ -83,8 +120,8 @@ export function createMapRouletteDataLayerControls(
     }
     if (zoom < minZ || loading) return;
     _pendingGoToNearbyAfterZoom = false;
-    if (hasNearby) {
-      goToNearbyMapRouletteTask(context);
+    if (hasNext) {
+      goToNextMapDataTask();
     }
   }
 
@@ -96,10 +133,11 @@ export function createMapRouletteDataLayerControls(
     const loading = !!(mrEnabled && mr &&
       typeof mr.isLoadingIssues === 'function' &&
       mr.isLoadingIssues(context.projection, zoom));
-    const hasNearby = !!(mrEnabled && !loading && mr &&
-      typeof mr.getNearestItem === 'function' &&
-      mr.getNearestItem(context.map().center()));
-    return { mrEnabled, zoom, minZ, loading, hasNearby };
+    const nextAction = (mrEnabled && !loading && mr)
+      ? mapDataNextAction(resolveMapDataPool())
+      : null;
+    const hasNext = nextAction != null;
+    return { mrEnabled, zoom, minZ, loading, nextAction, hasNext };
   }
 
   function clearPendingGoToNearbyListeners(): void {
@@ -128,8 +166,8 @@ export function createMapRouletteDataLayerControls(
   function flushPendingGoToNearbyAfterZoom(): void {
     if (!_pendingGoToNearbyAfterZoom) return;
     const wasPending = true;
-    const { mrEnabled, zoom, minZ, loading, hasNearby } = getMapRouletteControlState();
-    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNearby);
+    const { mrEnabled, zoom, minZ, loading, hasNext } = getMapRouletteControlState();
+    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNext);
     if (wasPending && !_pendingGoToNearbyAfterZoom) {
       clearPendingGoToNearbyListeners();
     }
@@ -193,7 +231,16 @@ export function createMapRouletteDataLayerControls(
       .append('button')
       .attr('class', 'zoom-to-maproulette')
       .call((uiTooltip() as any)
-        .title(() => t.append('map_data.layers.maproulette.nearbyTask.go_to'))
+        .title(function() {
+          const { nextAction } = getMapRouletteControlState();
+          if (nextAction === 'nearest') {
+            return t.append('map_data.layers.maproulette.next_nearest');
+          }
+          if (nextAction === 'random') {
+            return t.append('map_data.layers.maproulette.next_random');
+          }
+          return t.append('map_data.layers.maproulette.none_next');
+        })
         .placement((localizer.textDirection() === 'rtl') ? 'right' : 'left')
       )
       .on('click', function(this: Element, d3_event: Event) {
@@ -201,7 +248,7 @@ export function createMapRouletteDataLayerControls(
         d3_event.stopPropagation();
         const button = d3_select(this);
         if (button.classed('disabled') || button.classed('loading')) return;
-        goToNearbyMapRouletteTask(context);
+        goToNextMapDataTask();
       })
       .call(function(selection: any) {
         appendMapRoulettePinIcon(selection, {
@@ -248,7 +295,7 @@ export function createMapRouletteDataLayerControls(
   }
 
   function updateControls(li: any, liEnter: any): void {
-    const { mrEnabled, zoom, minZ, loading, hasNearby } = getMapRouletteControlState();
+    const { mrEnabled, zoom, minZ, loading, hasNext } = getMapRouletteControlState();
     const needsZoom = mrEnabled && zoom < minZ;
     const wasPending = _pendingGoToNearbyAfterZoom;
 
@@ -256,7 +303,7 @@ export function createMapRouletteDataLayerControls(
       _pendingGoToNearbyAfterZoom = false;
     }
 
-    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNearby);
+    tryPendingGoToNearbyAfterZoom(mrEnabled, zoom, minZ, loading, hasNext);
 
     if (wasPending && !_pendingGoToNearbyAfterZoom) {
       clearPendingGoToNearbyListeners();
@@ -270,8 +317,8 @@ export function createMapRouletteDataLayerControls(
         showZoomLink = true;
       } else if (loading) {
         statusMessage = t('map_data.layers.maproulette.status.loading');
-      } else if (!hasNearby) {
-        statusMessage = t('map_data.layers.maproulette.status.none_nearby');
+      } else if (!hasNext) {
+        statusMessage = t('map_data.layers.maproulette.none_next');
       }
     }
 
@@ -279,7 +326,7 @@ export function createMapRouletteDataLayerControls(
       .merge(liEnter)
       .selectAll('button.zoom-to-maproulette')
       .classed('loading', loading)
-      .classed('disabled', !mrEnabled || (!loading && !hasNearby))
+      .classed('disabled', !mrEnabled || (!loading && !hasNext))
       .attr('aria-busy', loading ? 'true' : null);
 
     li
