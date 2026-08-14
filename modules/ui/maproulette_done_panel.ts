@@ -132,7 +132,7 @@ function renderNextActions(sel: any, deps: DonePanelDeps): void {
   function liveViewportOpenTasks() {
     const svc = services.maproulette;
     if (!svc || typeof svc.getItems !== 'function') return [];
-    return (svc.getItems(deps.context.projection) || []).filter(function(d: any) {
+    return (svc.getItems(deps.context.projection, { ignoreChallengeFilter: true }) || []).filter(function(d: any) {
       return svc.isOpenTask ? svc.isOpenTask(d) : true;
     });
   }

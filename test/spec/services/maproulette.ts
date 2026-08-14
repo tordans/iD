@@ -624,6 +624,35 @@ describe('iD.serviceMapRoulette', () => {
     });
   });
 
+  describe('getItems challenge filter', () => {
+    const dimensions: [number, number] = [640, 480];
+
+    function testProjection() {
+      return iD.geoRawMercator()
+        .scale(iD.geoZoomToScale(14))
+        .translate([-116508, 0])
+        .clipExtent([[0, 0], dimensions]);
+    }
+
+    it('excludes other-challenge viewport tasks unless ignoreChallengeFilter is set', () => {
+      maproulette.challengeIDs('100');
+
+      const inFilter = makeQAItem({ id: '10', parentId: '100', loc: [10, 0] });
+      const outOfFilter = makeQAItem({ id: '11', parentId: '200', loc: [10, 0] });
+      inFilter.isVisible = true;
+      outOfFilter.isVisible = true;
+      maproulette.replaceItem(inFilter);
+      maproulette.replaceItem(outOfFilter);
+
+      const projection = testProjection();
+      const filtered = maproulette.getItems(projection);
+      expect(filtered.map((d: any) => String(d.id))).toEqual(['10']);
+
+      const widened = maproulette.getItems(projection, { ignoreChallengeFilter: true });
+      expect(widened.map((d: any) => String(d.id)).sort()).toEqual(['10', '11']);
+    });
+  });
+
   describe('resolved visibility', () => {
     it('treats Created as open and Fixed within 24h as recently resolved', () => {
       const open = makeQAItem({ id: '1', parentId: '2' });

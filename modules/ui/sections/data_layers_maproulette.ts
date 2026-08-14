@@ -89,7 +89,7 @@ export function createMapRouletteDataLayerControls(
   function liveViewportOpenTasks() {
     const mr = services.maproulette;
     if (!mr || typeof mr.getItems !== 'function') return [];
-    return (mr.getItems(context.projection) || []).filter(function(d: any) {
+    return (mr.getItems(context.projection, { ignoreChallengeFilter: true }) || []).filter(function(d: any) {
       return mr.isOpenTask ? mr.isOpenTask(d) : true;
     });
   }
