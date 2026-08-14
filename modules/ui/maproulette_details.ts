@@ -51,6 +51,11 @@ export function uiMapRouletteDetails(context: any) {
   let _loadGeneration = 0;
   /** Task id whose Details/Instructions are already painted in the current host. */
   let _paintedTaskId: string | null = null;
+  /** Pin sidebar Details/Instructions disclosure widgets (sync expanded state on re-render). */
+  const _sectionDisclosures: {
+    detail?: ReturnType<typeof uiDisclosure>;
+    instruction?: ReturnType<typeof uiDisclosure>;
+  } = {};
 
   function sanitizeHTML(dirty: string): string {
     return DOMPurify.sanitize(dirty, {
@@ -98,6 +103,8 @@ export function uiMapRouletteDetails(context: any) {
     clearLoadingState(detailsSel);
     detailsSel.select('.qa-details-loading').remove();
     detailsSel.selectAll('.mr-section-disclosure, .mr-embedded-body, .mr-task-load-notice').remove();
+    _sectionDisclosures.detail = undefined;
+    _sectionDisclosures.instruction = undefined;
   }
 
   function showTaskBodyMessage(detailsSel: any, message: string): void {
@@ -159,16 +166,12 @@ export function uiMapRouletteDetails(context: any) {
   /** Keep existing disclosures in sync when done/active flips before async reload finishes. */
   function syncSectionDisclosureOpen(detailsSel: any): void {
     (['detail', 'instruction'] as const).forEach(function(section) {
-      const wrap = detailsSel.select(`.mr-section-${section} details.disclosure-wrap`);
-      if (wrap.empty()) return;
+      const disclosure = _sectionDisclosures[section];
+      const host = detailsSel.select(`.mr-section-${section}`);
+      if (!disclosure || host.empty()) return;
       const expanded = isSectionExpanded(section);
-      wrap.property('open', expanded);
-      const summary = wrap.select('summary.hide-toggle');
-      summary
-        .classed('expanded', expanded)
-        .attr('title', t(`icons.${expanded ? 'collapse' : 'expand'}`));
-      summary.select('.hide-toggle-icon')
-        .attr('xlink:href', expanded ? '#iD-icon-down' : '#iD-icon-forward');
+      disclosure.expanded(expanded);
+      host.call(disclosure);
     });
   }
 
@@ -207,27 +210,27 @@ export function uiMapRouletteDetails(context: any) {
       : label;
 
     const expandedDefault = isSectionExpanded(section);
-    host.call(
-      (uiDisclosure(context, disclosureKey, expandedDefault) as any)
-        .updatePreference(false)
-        .expanded(expandedDefault)
-        .label(disclosureLabel)
-        .content(function(contentSel: any) {
-          const box = contentSel
-            .selectAll('.qa-details-container')
-            .data([0]);
-          const boxEnter = box.enter()
-            .append('div')
-            .attr('class', 'qa-details-container');
-          boxEnter.merge(box)
-            .html(html);
-          attachExternalLinkAttrs(contentSel);
-          attachHighlightLinkHandlers(contentSel);
-        })
-        .on('toggled', function(expanded: boolean) {
-          setSectionExpanded(section, expanded);
-        }),
-    );
+    const disclosure = (uiDisclosure(context, disclosureKey, expandedDefault) as any)
+      .updatePreference(false)
+      .expanded(expandedDefault)
+      .label(disclosureLabel)
+      .content(function(contentSel: any) {
+        const box = contentSel
+          .selectAll('.qa-details-container')
+          .data([0]);
+        const boxEnter = box.enter()
+          .append('div')
+          .attr('class', 'qa-details-container');
+        boxEnter.merge(box)
+          .html(html);
+        attachExternalLinkAttrs(contentSel);
+        attachHighlightLinkHandlers(contentSel);
+      })
+      .on('toggled', function(expanded: boolean) {
+        setSectionExpanded(section, expanded);
+      });
+    _sectionDisclosures[section] = disclosure;
+    host.call(disclosure);
   }
 
   function syncCompletionResponses(detailsSel: any): void {
