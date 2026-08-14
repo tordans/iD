@@ -242,6 +242,18 @@ function walk(found: Set<string>, value: unknown, depth: number): void {
   }
 }
 
+/** Display iD id `w123` as `way/123`. */
+export function longFormOsmId(id: string): string {
+  return String(id).replace(/^[wnr]/, function(prefix) {
+    switch (prefix) {
+      case 'w': return 'way/';
+      case 'n': return 'node/';
+      case 'r': return 'relation/';
+      default: return prefix;
+    }
+  });
+}
+
 /** Return deduped iD entity ids found in any of the given values. */
 export function collectOsmEntityIds(...values: unknown[]): string[] {
   const found = new Set<string>();

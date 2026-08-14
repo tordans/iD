@@ -53,6 +53,24 @@ export function doneTaskStatusOf(
 
 
 /**
+ * Whether a task is locally resolved or queued (earmarked). Callers gate with
+ * selection / embed visibility before using the flags in UI.
+ */
+export function taskDoneStateOf(
+  mr: MrEarmarkService | null | undefined,
+  qaItem: MrQaStatusLike | null | undefined,
+): { isResolved: boolean; isQueued: boolean } {
+  if (!qaItem) return { isResolved: false, isQueued: false };
+  const isResolved = !!(mr && mr.isRecentlyResolved && mr.isRecentlyResolved(qaItem));
+  const isQueued = !!(
+    qaItem.id !== undefined && qaItem.id !== null
+    && mr && mr.isEarmarked && mr.isEarmarked(String(qaItem.id))
+  );
+  return { isResolved, isQueued };
+}
+
+
+/**
  * Pin fill/glyph status. Soft earmarks stay visually open (API/task status);
  * only local-done / recently-resolved pins use the queued outcome colors.
  */

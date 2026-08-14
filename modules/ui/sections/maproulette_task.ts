@@ -2,20 +2,11 @@ import { select as d3_select } from 'd3-selection';
 
 import { services } from '../../services';
 import { t } from '../../core/localizer';
-import { goToMapRouletteTask, goToNearbyMapRouletteTask } from '../../util/maproulette_nearby';
-import {
-  nextTaskActionsForPool,
-  pickNearest,
-  pickPriority,
-  pickRandomNearby,
-  resolveCandidatePool,
-  setLastWorkedChallengeId,
-} from '../../util/maproulette_next_task';
-import { doneTaskStatusOf, statusLabelKey } from '../../util/maproulette_status';
+import { modeSelectError } from '../../modes/select_error';
+import { taskDoneStateOf } from '../../util/maproulette_status';
 import { uiSection } from '../section';
 import { uiMapRouletteDetails } from '../maproulette_details';
-import { uiMapRouletteEarmarkToggle } from '../maproulette_earmark_toggle';
-import { uiMapRouletteTagFix, type MapRouletteTagFixPaintInfo } from '../maproulette_tag_fix';
+import { uiMapRouletteCompletion } from '../maproulette_completion';
 
 
 export function uiSectionMapRouletteTask(context: any) {
@@ -25,13 +16,35 @@ export function uiSectionMapRouletteTask(context: any) {
   let _enriching = false;
   let _lastPresence = false;
   const _presenceListeners: Array<(present: boolean) => void> = [];
+  /** Reuse details widgets so async paint state survives inspector re-renders. */
+  const _detailsByTaskId: Record<string, any> = {};
+  /** Reuse completion widgets so tag-fix / submit state survives re-renders. */
+  const _completionByTaskId: Record<string, any> = {};
 
   const section = (uiSection('maproulette-task', context) as any)
     .shouldDisplay(function() {
       return mapRouletteLayerEnabled() && _tasks.length > 0;
     })
     .label(function() {
-      return t.append('inspector.maproulette_task');
+      return function(sel: any) {
+        sel.call(t.append('inspector.maproulette_task'));
+        const taskId = _tasks.length === 1 ? String(_tasks[0].id) : null;
+        let link = sel.selectAll('a.mr-task-select-link')
+          .data(taskId ? [taskId] : []);
+        link.exit().remove();
+        link = link.enter()
+          .append('a')
+          .attr('href', '#')
+          .attr('class', 'mr-task-select-link')
+          .text(function(id: string) { return '#' + id; })
+          .merge(link);
+        link.on('click', function(d3_event: Event, id: string) {
+          d3_event.preventDefault();
+          d3_event.stopPropagation();
+          context.selectedErrorID(id);
+          context.enter(modeSelectError(context, id, 'maproulette'));
+        });
+      };
     })
     .expandedByDefault(false)
     .disclosureContent(renderDisclosureContent);
@@ -123,13 +136,19 @@ export function uiSectionMapRouletteTask(context: any) {
 
   function renderDisclosureContent(selection: any): void {
     bindDisclosureHighlight();
-    // Content only renders while expanded — keep the pin highlighted.
     setPinHighlights(true);
 
     const containers = selection.selectAll('.maproulette-task-embed')
       .data(_tasks, function(d: any) { return d.id; });
 
     containers.exit()
+      .each(function(d: any) {
+        if (d && d.id !== undefined && d.id !== null) {
+          const taskId = String(d.id);
+          delete _detailsByTaskId[taskId];
+          delete _completionByTaskId[taskId];
+        }
+      })
       .remove();
 
     const containersEnter = containers.enter()
@@ -140,215 +159,29 @@ export function uiSectionMapRouletteTask(context: any) {
       .each(function(this: Element, d: any) {
         const root = d3_select(this);
         const mr = services.maproulette;
-        const isResolved = !!(mr && mr.isRecentlyResolved && mr.isRecentlyResolved(d));
-        const isQueued = !!(mr && mr.isEarmarked && mr.isEarmarked(d.id));
+        const { isResolved, isQueued } = taskDoneStateOf(mr, d);
         root.classed('mr-resolved', isResolved || isQueued);
-        const statusTitle = t(statusLabelKey(doneTaskStatusOf(mr, d)));
 
-        const details = (uiMapRouletteDetails(context) as any)
-          .embedded(true)
+        const taskId = String(d.id);
+        if (!_detailsByTaskId[taskId]) {
+          _detailsByTaskId[taskId] = (uiMapRouletteDetails(context) as any).embedded(true);
+        }
+        if (!_completionByTaskId[taskId]) {
+          _completionByTaskId[taskId] = uiMapRouletteCompletion(context);
+        }
+
+        _detailsByTaskId[taskId]
           .done(isResolved || isQueued)
-          .task(d);
-        details(root);
+          .task(d)(root);
 
-        const host = root.select('.error-details');
-        const panelHost = host.empty() ? root : host;
-        const beforeBanner = '.mr-next-actions, .qa-details-loading, .mr-section-disclosure';
-
-        let banner: any = panelHost.selectAll('.mr-resolved-banner')
-          .data(isResolved && !isQueued ? [d] : []);
-        banner.exit().remove();
-        const bannerEnter = banner.enter()
-          .insert('div', beforeBanner)
-          .attr('class', 'mr-resolved-banner mr-status-notice');
-        bannerEnter.append('h3');
-        bannerEnter.append('p').attr('class', 'mr-status-notice-message');
-        banner = bannerEnter.merge(banner);
-        banner.select('h3')
-          .text(statusTitle);
-        banner.select('.mr-status-notice-message')
-          .text(t('map_data.layers.maproulette.resolved_message'));
-
-        let queuedBanner: any = panelHost.selectAll('.mr-queued-banner')
-          .data(isQueued ? [d] : []);
-        queuedBanner.exit().remove();
-        const queuedEnter = queuedBanner.enter()
-          .insert('div', beforeBanner)
-          .attr('class', 'mr-queued-banner mr-status-notice');
-        queuedEnter.append('h3');
-        const queuedMessage = queuedEnter
-          .append('p')
-          .attr('class', 'mr-status-notice-message');
-        queuedMessage.append('span').attr('class', 'mr-status-notice-text');
-        queuedMessage.append('a')
-          .attr('href', '#')
-          .attr('class', 'mr-queued-undo')
-          .text(t('map_data.layers.maproulette.queued_undo'));
-        queuedBanner = queuedEnter.merge(queuedBanner);
-        queuedBanner.select('h3')
-          .text(statusTitle);
-        queuedBanner.select('.mr-status-notice-text')
-          .text(`${t('map_data.layers.maproulette.queued_message')} `);
-        queuedBanner.select('.mr-queued-undo')
-          .on('click.mr-queued-undo', function(this: HTMLElement, d3_event: Event) {
-            d3_event.preventDefault();
-            if (!mr || typeof mr.unearmarkTask !== 'function') return;
-            mr.unearmarkTask(d.id);
+        _completionByTaskId[taskId]
+          .task(d)
+          .mode('embedded')
+          .focusEntityIds(_entityIDs.slice())
+          .onChange(function() {
             section.reRender();
           });
-
-        // Next-task actions under the done banner (no Show OSM — already on entity).
-        const showNext = isResolved || isQueued;
-        let nextWrap: any = panelHost.selectAll('.mr-next-actions')
-          .data(showNext ? [d] : []);
-        nextWrap.exit().remove();
-        const nextEnter = nextWrap.enter()
-          .insert('div', '.qa-details-loading, .mr-section-disclosure')
-          .attr('class', 'mr-next-actions');
-        nextEnter.append('div').attr('class', 'buttons mr-next-actions-buttons');
-        nextEnter.append('p').attr('class', 'mr-next-actions-none');
-        nextWrap = nextEnter.merge(nextWrap);
-        if (showNext) {
-          const excludeId = d.id;
-          const currentChallengeId = d.parentId || (d.task && d.task.parentId);
-          const poolForVisibility = resolveCandidatePool(mr, {
-            excludeId,
-            currentChallengeId,
-          });
-          const actions = nextTaskActionsForPool(poolForVisibility);
-
-          function livePool() {
-            return resolveCandidatePool(services.maproulette, {
-              excludeId,
-              currentChallengeId,
-            });
-          }
-
-          function liveViewportOpenTasks() {
-            const svc = services.maproulette;
-            if (!svc || typeof svc.getItems !== 'function') return [];
-            return (svc.getItems(context.projection) || []).filter(function(item: any) {
-              return svc.isOpenTask ? svc.isOpenTask(item) : true;
-            });
-          }
-
-          const buttonDefs: Array<{ key: string; label: string; onClick: () => void }> = [];
-          if (actions.showNearest) {
-            buttonDefs.push({
-              key: 'nearest',
-              label: t('map_data.layers.maproulette.next_nearest'),
-              onClick: function() {
-                const next = pickNearest(livePool().tasks, context.map().center());
-                if (next) goToMapRouletteTask(context, next);
-              },
-            });
-          }
-          if (actions.showPriority) {
-            buttonDefs.push({
-              key: 'priority',
-              label: t('map_data.layers.maproulette.next_priority'),
-              onClick: function() {
-                const next = pickPriority(livePool().tasks, context.map().center());
-                if (next) goToMapRouletteTask(context, next);
-              },
-            });
-          }
-          if (actions.showRandom) {
-            buttonDefs.push({
-              key: 'random',
-              label: t('map_data.layers.maproulette.next_random'),
-              onClick: function() {
-                const next = pickRandomNearby(livePool().tasks, liveViewportOpenTasks());
-                if (next) goToMapRouletteTask(context, next);
-              },
-            });
-          }
-          let buttons = nextWrap.select('.mr-next-actions-buttons')
-            .selectAll('button.mr-next-action')
-            .data(buttonDefs, function(btn: any) { return btn.key; });
-          buttons.exit().remove();
-          buttons = buttons.enter()
-            .append('button')
-            .attr('type', 'button')
-            .attr('class', 'button action mr-next-action fixedIt-button')
-            .merge(buttons);
-          buttons
-            .text(function(btn: any) { return btn.label; })
-            .on('click.mr-next', function(this: HTMLElement, d3_event: Event, btn: any) {
-              d3_event.preventDefault();
-              this.blur();
-              if (btn && btn.onClick) btn.onClick();
-            });
-          nextWrap.select('.mr-next-actions-none')
-            .text(t('map_data.layers.maproulette.none_next'))
-            .classed('hide', buttonDefs.length > 0);
-        }
-
-        let tagFixHost: any = root.selectAll('.mr-tag-fix-host')
-          .data(isResolved || isQueued ? [] : [d]);
-        tagFixHost.exit().remove();
-        tagFixHost = tagFixHost.enter()
-          .append('div')
-          .attr('class', 'mr-tag-fix-host')
-          .merge(tagFixHost);
-        if (!isResolved && !isQueued) {
-          tagFixHost.call(
-            uiMapRouletteTagFix(context)
-              .mode('embedded')
-              .focusEntityIds(_entityIDs.slice())
-              .task(d)
-              .onAccepted(function() {
-                const ch = d.parentId || (d.task && d.task.parentId);
-                if (ch !== undefined && ch !== null && ch !== '') setLastWorkedChallengeId(String(ch));
-                section.reRender();
-              })
-              .onPainted(function(info: MapRouletteTagFixPaintInfo) {
-                if (String(d.id) !== info.taskId) return;
-                let goToHost: any = root.selectAll('.mr-go-to-nearby-host')
-                  .data(info.showGoToNearby ? [d] : []);
-                goToHost.exit().remove();
-                goToHost = goToHost.enter()
-                  .append('div')
-                  .attr('class', 'mr-go-to-nearby-host')
-                  .merge(goToHost);
-                if (!info.showGoToNearby) return;
-                let btn = goToHost.selectAll('button.mr-go-to-nearby')
-                  .data([d]);
-                btn = btn.enter()
-                  .append('button')
-                  .attr('type', 'button')
-                  .attr('class', 'button mr-go-to-nearby')
-                  .text(t('map_data.layers.maproulette.nearbyTask.go_to'))
-                  .on('click', function(this: HTMLElement, d3_event: Event) {
-                    d3_event.preventDefault();
-                    this.blur();
-                    if (d3_select(this).classed('disabled')) return;
-                    goToNearbyMapRouletteTask(context, d.id);
-                  })
-                  .merge(btn);
-                btn
-                  .classed('disabled', !info.hasNearby)
-                  .attr('disabled', info.hasNearby ? null : true);
-              }),
-          );
-        }
-
-        let earmarkHost: any = root.selectAll('.mr-earmark-host')
-          .data(isResolved || isQueued ? [] : [d]);
-        earmarkHost.exit().remove();
-        earmarkHost = earmarkHost.enter()
-          .append('div')
-          .attr('class', 'mr-earmark-host')
-          .merge(earmarkHost);
-        if (!isResolved && !isQueued) {
-          earmarkHost.call(
-            uiMapRouletteEarmarkToggle(context)
-              .task(d)
-              .onChange(function() {
-                section.reRender();
-              }),
-          );
-        }
+        _completionByTaskId[taskId](root);
       });
   }
 

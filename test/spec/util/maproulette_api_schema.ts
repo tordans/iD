@@ -138,6 +138,38 @@ describe('iD.util.maproulette_api_schema', () => {
       expect(detail.taskFeatures).toHaveLength(1);
     });
 
+    it('buildMrTaskDetailView prefers task instruction over challenge', () => {
+      const detail = buildMrTaskDetailView({
+        id: 9,
+        parentId: 3,
+        baseTask: { instruction: 'Base task text' },
+        challenge: { name: 'Ch', instruction: 'Challenge text', description: 'Desc' },
+        taskDetails: {
+          title: 'way/9',
+          instruction: 'Task-specific text',
+        },
+      });
+      expect(detail.instruction).toBe('Task-specific text');
+      expect(detail.description).toBe('Desc');
+    });
+
+    it('parses earmarks with boolean completionResponses', () => {
+      const earmarks = parseMrEarmarkList([
+        {
+          taskID: '1',
+          challengeID: '2',
+          parentName: '',
+          title: 't',
+          elems: [],
+          loc: null,
+          newComment: '',
+          completionResponses: { box: true },
+        },
+      ]);
+      expect(earmarks).toHaveLength(1);
+      expect(earmarks[0].completionResponses).toEqual({ box: true });
+    });
+
     it('parses setTags/unsetTags child data and unwraps geometries', () => {
       expect(parseMrSetTagsData({ highway: 'path', lanes: 2 })).toEqual({
         highway: 'path',

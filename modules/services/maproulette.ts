@@ -563,7 +563,13 @@ export default {
       : null;
     const resolvedStatus = Number.isFinite(Number(status)) ? Number(status) : MR_STATUS.FIXED;
     const localDone = !!(options && options.markLocalDone);
-    const earmark = parseMrEarmarkList([{
+    const completionResponses = qaItem.completionResponses
+      && typeof qaItem.completionResponses === 'object'
+      && !Array.isArray(qaItem.completionResponses)
+      && Object.keys(qaItem.completionResponses).length
+      ? qaItem.completionResponses
+      : undefined;
+    const earmarkRow: Record<string, unknown> = {
       taskID,
       challengeID,
       parentName: (challenge && challenge.name) || (qaItem.parentName) || '',
@@ -574,7 +580,9 @@ export default {
       _status: resolvedStatus,
       includeInUpload: true,
       localDone,
-    }])[0];
+    };
+    if (completionResponses) earmarkRow.completionResponses = completionResponses;
+    const earmark = parseMrEarmarkList([earmarkRow])[0];
     if (!earmark) return null;
     _cache.earmarked[taskID] = earmark;
     // Keep a flag on the live QAItem for marker classing / UI toggles.
@@ -1029,11 +1037,8 @@ export default {
     let index = 0;
     const failedEarmarks: MapRouletteEarmark[] = [];
 
-    function commentFor(entry: MapRouletteEarmark): string {
-      const extra = (entry.newComment || '').trim();
-      if (!extra) return comment;
-      if (!comment) return extra;
-      return `${comment}\n\n${extra}`;
+    function commentFor(_entry: MapRouletteEarmark): string {
+      return comment;
     }
 
     function next(): Promise<void> {
@@ -1058,6 +1063,12 @@ export default {
         comment: commentFor(entry),
         mapRouletteApiKey: apiKey,
       };
+      if (entry.completionResponses
+        && typeof entry.completionResponses === 'object'
+        && !Array.isArray(entry.completionResponses)
+        && Object.keys(entry.completionResponses).length) {
+        payload.completionResponses = entry.completionResponses;
+      }
 
       return new Promise<void>(function(resolve) {
         self.postUpdate(payload, function(err: any) {
@@ -1177,7 +1188,17 @@ export default {
     }
 
     doComment()
-      .then(function() { return checkedFetch(updateTaskUrl, { method: 'PUT', headers }); })
+      .then(function() {
+        const hasResponses = d.completionResponses
+          && typeof d.completionResponses === 'object'
+          && !Array.isArray(d.completionResponses)
+          && Object.keys(d.completionResponses).length > 0;
+        const updateOpts: RequestInit = { method: 'PUT', headers };
+        if (hasResponses) {
+          updateOpts.body = JSON.stringify(d.completionResponses);
+        }
+        return checkedFetch(updateTaskUrl, updateOpts);
+      })
       // Release is best-effort: the status update above is what marks the task
       // done. A failed release should not undo a successful submission (HAR
       // showed PUT 204 followed by a browser-level release failure).

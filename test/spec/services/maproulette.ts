@@ -168,6 +168,19 @@ describe('iD.serviceMapRoulette', () => {
       expect(maproulette.isOpenTask(maproulette.getError('45'))).toBe(true);
     });
 
+    it('earmarkTask stores completionResponses when present', () => {
+      const item = makeQAItem({ id: '46', parentId: '56' });
+      item.completionResponses = { source: 'survey' };
+      const earmark = maproulette.earmarkTask(item);
+      expect(earmark?.completionResponses).toEqual({ source: 'survey' });
+    });
+
+    it('earmarkTask omits completionResponses when absent', () => {
+      const item = makeQAItem({ id: '47', parentId: '57' });
+      const earmark = maproulette.earmarkTask(item);
+      expect(earmark).not.toHaveProperty('completionResponses');
+    });
+
     it('clearClosed drops session-immediate outcomes after upload', async () => {
       mockPostUpdateSuccess('999', 1);
       const payload = {
@@ -254,7 +267,7 @@ describe('iD.serviceMapRoulette', () => {
   });
 
   describe('#resolveEarmarksAfterChangeset', () => {
-    it('resolves earmarks as Fixed with merged comments and progress callbacks', async () => {
+    it('resolves earmarks with auto changeset comment and progress callbacks', async () => {
       mockPostUpdateSuccess('101');
       mockPostUpdateSuccess('102');
 
@@ -300,7 +313,7 @@ describe('iD.serviceMapRoulette', () => {
       });
       expect(commentCalls).toHaveLength(2);
       expect(JSON.parse(String(commentCalls[0][1]?.body))).toEqual({
-        comment: 'Fixed in OSM changeset 123\n\nPer-task note',
+        comment: 'Fixed in OSM changeset 123',
       });
       expect(JSON.parse(String(commentCalls[1][1]?.body))).toEqual({
         comment: 'Fixed in OSM changeset 123',
@@ -312,6 +325,37 @@ describe('iD.serviceMapRoulette', () => {
       expect(statusCalls).toHaveLength(2);
       const headers = statusCalls[0][1]?.headers as Record<string, string>;
       expect(headers.apiKey).toBe('test-key');
+    });
+
+    it('sends earmarked completionResponses in status PUT body', async () => {
+      mockPostUpdateSuccess('501');
+
+      const earmarks: MapRouletteEarmark[] = [
+        {
+          taskID: '501',
+          challengeID: '601',
+          parentName: '',
+          title: 'With responses',
+          elems: [],
+          loc: null,
+          newComment: '',
+          _status: 1,
+          includeInUpload: true,
+          completionResponses: { myDropdown: 'bar' },
+        },
+      ];
+
+      const result = await maproulette.resolveEarmarksAfterChangeset(earmarks, {
+        comment: 'Fixed in OSM changeset 456',
+      });
+
+      expect(result).toEqual({ ok: 1, failed: 0, failedEarmarks: [] });
+
+      const statusCalls = fetchMock.calls().filter((call) => {
+        return /\/task\/501\/1$/.test(String(call[0])) && call[1]?.method === 'PUT';
+      });
+      expect(statusCalls).toHaveLength(1);
+      expect(JSON.parse(String(statusCalls[0][1]?.body))).toEqual({ myDropdown: 'bar' });
     });
 
     it('posts each earmark’s queued status (not only Fixed)', async () => {
@@ -434,6 +478,48 @@ describe('iD.serviceMapRoulette', () => {
         [expect.stringMatching(/\/task\/999\/1$/), 'PUT'],
         [expect.stringMatching(/\/task\/999\/release/), 'GET'],
       ]));
+    });
+
+    it('sends completionResponses as JSON body on status PUT', async () => {
+      mockPostUpdateSuccess('777', 1);
+
+      const err = await new Promise((resolve) => {
+        maproulette.postUpdate({
+          id: '777',
+          parentId: '666',
+          _status: 1,
+          completionResponses: { myDropdown: 'foo' },
+        }, (e: unknown) => { resolve(e); });
+      });
+
+      expect(err).toBeNull();
+
+      const statusCalls = fetchMock.calls().filter((call) => {
+        return /\/task\/777\/1$/.test(String(call[0])) && call[1]?.method === 'PUT';
+      });
+      expect(statusCalls).toHaveLength(1);
+      expect(JSON.parse(String(statusCalls[0][1]?.body))).toEqual({ myDropdown: 'foo' });
+    });
+
+    it('sends boolean completionResponses in status PUT body', async () => {
+      mockPostUpdateSuccess('778', 1);
+
+      const err = await new Promise((resolve) => {
+        maproulette.postUpdate({
+          id: '778',
+          parentId: '666',
+          _status: 1,
+          completionResponses: { myCheckbox: true },
+        }, (e: unknown) => { resolve(e); });
+      });
+
+      expect(err).toBeNull();
+
+      const statusCalls = fetchMock.calls().filter((call) => {
+        return /\/task\/778\/1$/.test(String(call[0])) && call[1]?.method === 'PUT';
+      });
+      expect(statusCalls).toHaveLength(1);
+      expect(JSON.parse(String(statusCalls[0][1]?.body))).toEqual({ myCheckbox: true });
     });
   });
 

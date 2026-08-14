@@ -3,6 +3,7 @@ import {
   doneTaskStatusOf,
   pinDisplayStatusOf,
   statusLabelKey,
+  taskDoneStateOf,
 } from '../../../modules/util/maproulette_status';
 
 describe('iD.util.maproulette_status', () => {
@@ -63,6 +64,31 @@ describe('iD.util.maproulette_status', () => {
         id: '43',
         taskStatus: MR_STATUS.CREATED,
       })).toBe(MR_STATUS.FIXED);
+    });
+  });
+
+  describe('taskDoneStateOf', () => {
+    it('returns false when qa item is missing', () => {
+      expect(taskDoneStateOf(serviceMapRoulette, null)).toEqual({
+        isResolved: false,
+        isQueued: false,
+      });
+    });
+
+    it('detects recently resolved and earmarked tasks', () => {
+      const item = new (iD as any).QAItem([0, 0], serviceMapRoulette, 'task', '60', {
+        parentId: '7',
+        taskStatus: MR_STATUS.CREATED,
+        isVisible: true,
+        task: { id: '60', parentId: '7', status: MR_STATUS.CREATED },
+      });
+      serviceMapRoulette.replaceItem(item);
+      serviceMapRoulette.earmarkTask(item);
+
+      expect(taskDoneStateOf(serviceMapRoulette, serviceMapRoulette.getError('60'))).toEqual({
+        isResolved: false,
+        isQueued: true,
+      });
     });
   });
 

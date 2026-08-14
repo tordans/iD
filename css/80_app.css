@@ -3295,6 +3295,39 @@ img.tag-reference-wiki-image {
     text-decoration: underline;
 }
 
+.qa-details-container .mr-instruction-select {
+    display: inline-block;
+    max-width: 100%;
+    margin: 0 4px 0 0;
+    font-size: inherit;
+    vertical-align: baseline;
+}
+.qa-details-container .mr-instruction-checkbox {
+    margin: 0 4px 0 0;
+    vertical-align: middle;
+    width: auto;
+    height: auto;
+}
+.qa-details-container .mr-instruction-label {
+    display: inline;
+    margin: 0 8px 0 0;
+    font-size: inherit;
+    font-weight: inherit;
+    vertical-align: baseline;
+}
+.qa-details-container .mr-copyable {
+    display: inline;
+    white-space: nowrap;
+}
+.qa-details-container .mr-copyable-text {
+    font-family: monospace;
+    font-size: 0.95em;
+}
+.qa-details-container .mr-copyable-btn {
+    margin-left: 4px;
+    font-size: 0.9em;
+}
+
 .qa-details-description-text::first-letter {
     text-transform: capitalize;
 }
@@ -3348,10 +3381,6 @@ img.tag-reference-wiki-image {
     transform-origin: center center;
 }
 
-.mr-save .mr-earmark-wrap,
-.maproulette-task-embed .mr-earmark-wrap {
-    padding: 0 0 4px;
-}
 .mr-save .mr-update-timing {
     padding: 0 0 4px;
 }
@@ -3410,6 +3439,37 @@ img.tag-reference-wiki-image {
         background: rgba(22, 163, 74, 0.24);
         color: #16a34a;
     }
+}
+.mr-save .mr-update-timing-option:disabled,
+.mr-save .mr-update-timing-option[disabled] {
+    cursor: not-allowed;
+    opacity: 0.65;
+    color: var(--muted-text-color, #888);
+    background: var(--passive-bg-color, #f6f6f6);
+}
+.mr-save .mr-update-timing-option.active:disabled,
+.mr-save .mr-update-timing-option.active[disabled] {
+    opacity: 0.85;
+    color: #16a34a;
+    background: rgba(22, 163, 74, 0.14);
+}
+@media (hover: hover) {
+    .mr-save .mr-update-timing-option:disabled:hover,
+    .mr-save .mr-update-timing-option[disabled]:hover,
+    .mr-save .mr-update-timing-option.active:disabled:hover,
+    .mr-save .mr-update-timing-option.active[disabled]:hover {
+        background: var(--passive-bg-color, #f6f6f6);
+        color: var(--muted-text-color, #888);
+    }
+    .mr-save .mr-update-timing-option.active:disabled:hover,
+    .mr-save .mr-update-timing-option.active[disabled]:hover {
+        background: rgba(22, 163, 74, 0.14);
+        color: #16a34a;
+    }
+}
+.maproulette-task-embed .mr-tag-fix-host {
+    margin-left: 0;
+    margin-right: 0;
 }
 .maproulette-task-embed .mr-tag-fix {
     margin-left: 0;
@@ -3496,10 +3556,28 @@ img.tag-reference-wiki-image {
 }
 /* MapRoulette task body: disclosures and save area spacing. */
 .mr-editor .error-details > .mr-section-disclosure,
-.maproulette-task-embed .error-details > .mr-section-disclosure {
+.maproulette-task-embed .error-details > .mr-section-disclosure,
+.maproulette-task-embed .error-details > .mr-embedded-body {
     margin-top: 8px;
 }
+.maproulette-task-embed .mr-embedded-body > h4 {
+    margin: 8px 0 4px;
+    padding: 0;
+    font-size: 12px;
+}
+.maproulette-task-embed .mr-embedded-body > h4:first-of-type {
+    margin-top: 0;
+}
+.maproulette-task-embed .mr-embedded-body .qa-details-container {
+    margin-top: 0;
+}
+.maproulette-task-embed .mr-embedded-body .qa-details-container + h4 {
+    margin-top: 12px;
+}
 .mr-editor > .mr-save {
+    margin-top: 12px;
+}
+.maproulette-task-embed > .mr-save {
     margin-top: 12px;
 }
 /* Details / Instructions: gap above the toggle; toggle flush with its panel below. */
@@ -3512,61 +3590,20 @@ img.tag-reference-wiki-image {
 .error-details .mr-section-disclosure .qa-details-container {
     margin-top: 0;
 }
-.mr-earmark-button {
-    width: 100%;
+
+.section-maproulette-task summary.hide-toggle {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 6px;
-    text-align: left;
-    padding: 8px 10px;
+    width: 100%;
     box-sizing: border-box;
-    border-radius: 8px;
-    border: 1.5px solid #16a34a;
-    background: transparent;
-    color: #16a34a;
-    font-weight: 600;
-    line-height: 1.1;
-    box-shadow: none;
 }
-.mr-earmark-button:focus,
-.mr-earmark-button:active {
-    background: transparent;
-    color: #16a34a;
-}
-.mr-earmark-button .mr-earmark-icon {
-    display: inline-flex;
-    flex: 0 0 auto;
-    line-height: 0;
-}
-.mr-earmark-button .mr-earmark-icon svg {
-    display: block;
-}
-.mr-earmark-button .mr-earmark-label {
-    flex: 1 1 auto;
-    font-weight: bold;
-    line-height: 1.1;
-}
-.mr-earmark-button.active {
-    background: rgba(22, 163, 74, 0.18);
-    border-color: #16a34a;
-    border-width: 2px;
-    color: #16a34a;
-}
-.mr-earmark-button.active:focus,
-.mr-earmark-button.active:active {
-    background: rgba(22, 163, 74, 0.18);
-    color: #16a34a;
-}
-@media (hover: hover) {
-    .mr-earmark-button:hover {
-        background: rgba(22, 163, 74, 0.1);
-        color: #16a34a;
-    }
-    .mr-earmark-button.active:hover {
-        background: rgba(22, 163, 74, 0.24);
-        color: #16a34a;
-    }
+.section-maproulette-task .hide-toggle-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 8px;
 }
 
 /* MapRoulette: nearby-task toggle sits above the action buttons */
@@ -3606,15 +3643,6 @@ img.tag-reference-wiki-image {
 .mr-save > .buttons.mr-actions {
     padding: 4px 0 10px;
 }
-.mr-save .mr-completion-heading {
-    margin: 8px 0 0;
-    padding: 0;
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--muted-text-color, #888);
-}
 .mr-tag-fix {
     margin: 8px 0;
     padding: 8px 10px;
@@ -3642,7 +3670,6 @@ img.tag-reference-wiki-image {
 }
 .mr-tag-fix .mr-tag-fix-note,
 .mr-tag-fix .mr-tag-fix-unavailable,
-.mr-tag-fix .mr-tag-fix-unchanged,
 .mr-tag-fix .mr-tag-fix-applied,
 .mr-tag-fix .mr-tag-fix-already-matches {
     margin: 0 0 8px;
