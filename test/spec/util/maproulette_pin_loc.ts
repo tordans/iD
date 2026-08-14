@@ -38,8 +38,8 @@ describe('maproulette_pin_loc', () => {
       };
       const lines = mapRouletteLineFeatures(mixed);
       expect(lines).toHaveLength(2);
-      expect(lines[0].geometry.type).toBe('LineString');
-      expect(lines[1].geometry.type).toBe('MultiLineString');
+      expect(lines[0]?.geometry.type).toBe('LineString');
+      expect(lines[1]?.geometry.type).toBe('MultiLineString');
     });
 
     it('returns empty when there are no line features', () => {
