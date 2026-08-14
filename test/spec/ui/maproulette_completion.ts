@@ -100,4 +100,26 @@ describe('iD.ui.maproulette_completion', () => {
     expect(osmStubs.loadMapRouletteKey).toHaveBeenCalled();
     expect(mrStubs.postUpdate).not.toHaveBeenCalled();
   });
+
+  it('keeps in-flight Right away submit across inspector redraws', async () => {
+    setMapRouletteUpdateTiming('right_away');
+    mrStubs.postUpdate = fn();
+
+    const item = makeItem();
+    const completion = await mountAndPaint(item);
+
+    selection.select('.fixedIt-button').dispatch('click');
+    await Promise.resolve();
+
+    expect(mrStubs.postUpdate).toHaveBeenCalled();
+    expect(selection.select('.fixedIt-button').attr('disabled')).toBe('true');
+    expect(selection.select('.mr-submit-status').empty()).toBe(false);
+
+    completion.task(item);
+    selection.call(completion);
+    await Promise.resolve();
+
+    expect(selection.select('.fixedIt-button').attr('disabled')).toBe('true');
+    expect(selection.select('.mr-submit-status').empty()).toBe(false);
+  });
 });

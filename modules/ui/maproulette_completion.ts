@@ -404,15 +404,21 @@ export function uiMapRouletteCompletion(context: any) {
 
   render.task = function(val?: any) {
     if (!arguments.length) return _qaItem;
+    const prevId = _qaItem && _qaItem.id !== undefined && _qaItem.id !== null
+      ? String(_qaItem.id)
+      : null;
+    const nextId = val && val.id !== undefined && val.id !== null ? String(val.id) : null;
     if (val !== _qaItem) {
       _tagFixReady = false;
       _tagFixHasAccept = false;
-      _tagFixTaskId = val && val.id !== undefined && val.id !== null ? String(val.id) : null;
+      _tagFixTaskId = nextId;
+    }
+    if (nextId !== prevId) {
+      _submitError = null;
+      _submitting = false;
+      _activeAction = null;
     }
     _qaItem = val;
-    _submitError = null;
-    _submitting = false;
-    _activeAction = null;
     _updateTiming = getMapRouletteUpdateTiming();
     return render;
   };
