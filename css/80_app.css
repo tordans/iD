@@ -5825,6 +5825,12 @@ button.conflicts-button {
     font-size: 14px;
 }
 
+.tooltip-tip {
+    margin-top: 7px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
 .keyhint-wrap {
     background: var(--bg-color-2);
     padding: 10px;

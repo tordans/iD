@@ -37,10 +37,12 @@ en:
     add_area:
       title: Area
       description: "Add parks, buildings, lakes or other areas to the map."
+      snap_tip: "Hold Shift while drawing to snap edges to 45° angles, or Shift + Alt for 10°."
       filter_tooltip: areas
     add_line:
       title: Line
       description: "Add highways, streets, pedestrian paths, canals or other lines to the map."
+      snap_tip: "Hold Shift while drawing to snap segments to 45° angles, or Shift + Alt for 10°."
       filter_tooltip: lines
     add_point:
       title: Point
@@ -1337,6 +1339,8 @@ en:
       add_line_draw: "Next, mark the line's starting location. With a mouse, position the cursor where the line should begin and {leftclick} left-click to place a node. On a touchscreen, {tap_icon} tap the location. Alternatively, you can also press the `{space}` key while pointing the mouse cursor at the desired position."
       add_line_continue: "Continue placing nodes along the shape of the line by {leftclick} clicking, {tap_icon} tapping, or pressing the `{space}` key. While drawing, you can zoom in or drag the map in order to add more detail."
       add_line_finish: "To finish a line, click or tap on the last node again or press `{return}`."
+      snap_angles_h: "Snapping to Angles"
+      snap_angles: "While drawing, hold `{shift}` to constrain each new segment to 45° steps, or hold `{shift}` + `{alt}` for finer 10° steps. Release the keys to draw at any angle again. The angle is measured relative to the previous segment, so snapping keeps working no matter how the line is oriented (the very first segment snaps relative to the horizontal). Snapping only applies in open space — to attach a segment to an existing node or way, simply hover over it as usual."
       modify_line_h: "Modifying Lines"
       modify_line_dragnode: "Often you'll see lines that aren't shaped correctly, for example a road that does not match up with the background imagery. To adjust the shape of a line, first select it. All nodes of the line will be drawn as small circles. You can then drag the nodes to better locations."
       modify_line_addnode: "You can also create new nodes along a line by {leftclick}**x2** double-clicking or {doubletap_icon} double-tapping the line, or by dragging the small triangles at the midpoints between nodes."
@@ -1363,6 +1367,8 @@ en:
       add_area_draw: "Next, place the first corner of the area. With a mouse, position the cursor over any corner and {leftclick} left-click to place a node. On a touchscreen, {tap_icon} tap the location. Alternatively, you can also press the `{space}` key while pointing the mouse cursor at the desired position."
       add_area_continue: "Continue placing nodes along the edge of the area by {leftclick} clicking, {tap_icon} tapping, or pressing the `{space}` key. While drawing, you can zoom in or drag the map in order to add more detail."
       add_area_finish: "To finish an area, click or tap on the first or last node again or press `{return}`."
+      snap_angles_h: "Snapping to Angles"
+      snap_angles: "While drawing, hold `{shift}` to constrain each new edge to 45° steps relative to the previous edge — handy for square building corners — or hold `{shift}` + `{alt}` for finer 10° steps. Release the keys to draw at any angle again. Because the angle is measured relative to the previous edge, snapping keeps working no matter how the area is oriented. Snapping only applies in open space — to attach an edge to an existing node or way, simply hover over it as usual."
       square_area_h: "Square Corners"
       square_area_command: "Many area features like buildings have square corners. To square the corners of an area, {rightclick} right-click or {longpress_icon} long-press the edge of the area and choose the {orthogonalize_icon} **{orthogonalize}** operation from the edit menu."
       modify_area_h: "Modifying Areas"
@@ -2237,6 +2243,8 @@ en:
         add_note: "'Add note' mode"
         place_point: "Place a point or note"
         disable_snap: "Hold to disable point snapping"
+        snap_angles_45: "Hold to snap drawing to 45° angles"
+        snap_angles_10: "Hold to snap drawing to 10° angles"
         stop_line: "Finish drawing a line or area"
       operations:
         title: "Operations"

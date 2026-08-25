@@ -365,6 +365,15 @@ g.auxiliary path.preview {
     stroke-width: 2;
     stroke-dasharray: 8, 4;
 }
+/* Snap guide lines shown while drawing with the angle-snap modifier held */
+g.auxiliary path.snap-guide {
+    stroke: #7092ff;
+    stroke-width: 1.5;
+    stroke-dasharray: 6, 5;
+    stroke-linecap: round;
+    opacity: 0.9;
+    pointer-events: none;
+}
 
 /* Visual Diffs
 ------------------
