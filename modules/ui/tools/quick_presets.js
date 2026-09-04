@@ -1,7 +1,7 @@
 import _debounce from 'lodash-es/debounce';
 
 import { drag as d3_drag } from 'd3-drag';
-import { event as d3_event, select as d3_select, selectAll as d3_selectAll } from 'd3-selection';
+import { select as d3_select, selectAll as d3_selectAll } from 'd3-selection';
 
 import { modeAddArea, modeAddLine, modeAddPoint, modeBrowse } from '../../modes';
 import { t, localizer } from '../../util/locale';
@@ -168,7 +168,7 @@ export function uiToolQuickPresets(context) {
         buttonsEnter
             .filter('.add-favorite, .add-recent')
             .call(d3_drag()
-            .on('start', function() {
+            .on('start', function(d3_event) {
                 var node = d3_select(this).node();
                 dragOrigin = {
                     x: d3_event.x,
@@ -179,7 +179,7 @@ export function uiToolQuickPresets(context) {
                 targetData = null;
                 dragMoved = false;
             })
-            .on('drag', function(d) {
+            .on('drag', function(d3_event, d) {
                 dragMoved = true;
 
                 var deltaX = d3_event.x - dragOrigin.x,
@@ -250,7 +250,7 @@ export function uiToolQuickPresets(context) {
                         return null;
                     });
             })
-            .on('end', function(d) {
+            .on('end', function(d3_event, d) {
 
                 if (dragMoved && !d3_select(this).classed('dragging')) {
                     // didn't move, interpret as a click

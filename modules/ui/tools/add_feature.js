@@ -1,7 +1,6 @@
 import _debounce from 'lodash-es/debounce';
 
 import {
-    event as d3_event,
     select as d3_select,
 } from 'd3-selection';
 
@@ -39,11 +38,11 @@ export function uiToolAddFeature(context) {
             .append('button')
             .attr('class', 'bar-button')
             .attr('tabindex', -1)
-            .on('mousedown', function() {
+            .on('mousedown', function(d3_event) {
                 d3_event.preventDefault();
                 d3_event.stopPropagation();
             })
-            .on('mouseup', function() {
+            .on('mouseup', function(d3_event) {
                 d3_event.preventDefault();
                 d3_event.stopPropagation();
             })
@@ -83,7 +82,7 @@ export function uiToolAddFeature(context) {
 
     tool.install = function() {
 
-        context.keybinding().on(keys, function() {
+        context.keybinding().on(keys, function(d3_event) {
             button.classed('active', true);
 
             presetBrowser.show();

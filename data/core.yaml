@@ -719,7 +719,8 @@ en:
     save: Upload
     cancel: Cancel
     change: "1 Change"
-    changes: Changes    download_changes: Download osmChange file
+    changes: Changes
+    download_changes: Download osmChange file
     errors: Errors
     warnings: Warnings
     suggestions: Suggestions

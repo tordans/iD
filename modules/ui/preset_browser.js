@@ -1,5 +1,4 @@
 import {
-    event as d3_event,
     select as d3_select,
     selectAll as d3_selectAll
 } from 'd3-selection';
@@ -66,7 +65,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
                 .enter()
                 .append('div')
                 .attr('class', 'poplist-content')
-                .on('mousedown', function() {
+                .on('mousedown', function(d3_event) {
                     // don't blur the search input (and thus close results)
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
@@ -79,7 +78,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
                 .enter()
                 .append('div')
                 .attr('class', 'poplist-footer')
-                .on('mousedown', function() {
+                .on('mousedown', function(d3_event) {
                     // don't blur the search input (and thus close results)
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
@@ -196,7 +195,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
             });
     }
 
-    function keypress() {
+    function keypress(d3_event) {
         if (d3_event.keyCode === utilKeybinding.keyCodes.enter) {
             poplistContent.selectAll('.list .list-item.focused button.choose')
                 .each(function(d) { d.choose.call(this); });
@@ -205,7 +204,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
         }
     }
 
-    function keydown() {
+    function keydown(d3_event) {
 
         var nextFocus,
             priorFocus,

@@ -1,8 +1,7 @@
 import _debounce from 'lodash-es/debounce';
 import { drag as d3_drag } from 'd3-drag';
 import {
-    select as d3_select,
-    event as d3_event
+    select as d3_select
 } from 'd3-selection';
 import { svgIcon } from '../svg/icon';
 import { t, localizer } from '../util/locale';
@@ -82,7 +81,7 @@ export function uiAssistant(context) {
 
         resizer.call(d3_drag()
             .container(d3_select('#id-container').node())
-            .on('start', function() {
+            .on('start', function(d3_event) {
                 resizer.classed('dragging', true);
 
                 dragOffset = d3_event.sourceEvent.offsetX;
@@ -90,7 +89,7 @@ export function uiAssistant(context) {
                 // account for from the assistant wrap's padding
                 dragOffset += 10;
             })
-            .on('drag', function() {
+            .on('drag', function(d3_event) {
 
                 var x = d3_event.x - dragOffset;
 
@@ -210,7 +209,7 @@ export function uiAssistant(context) {
 
         if (isCollapsible) {
             // make the assistant collapsible by its whole header
-            header.on('click', function() {
+            header.on('click', function(d3_event) {
                 d3_event.preventDefault();
                 d3_event.stopPropagation();
                 toggleBody(panel.collapseCategory);
@@ -233,7 +232,7 @@ export function uiAssistant(context) {
         if (panel.onClose) {
             subjectTitleControls.append('button')
                 .attr('class', 'close')
-                .on('click', function() {
+                .on('click', function(d3_event) {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
                     panel.onClose();
@@ -421,7 +420,7 @@ export function uiAssistant(context) {
             bodyTextArea.html(firstTimeInfo);
             bodyTextArea.selectAll('a')
                 .attr('href', '#')
-                .on('click', function() {
+                .on('click', function(d3_event) {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
 
@@ -436,7 +435,7 @@ export function uiAssistant(context) {
                 .attr('class', 'main-footer')
                 .append('button')
                 .attr('class', 'primary')
-                .on('click', function() {
+                .on('click', function(d3_event) {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
 
@@ -599,7 +598,7 @@ export function uiAssistant(context) {
 
             mainFooter.append('button')
                 .attr('class', 'primary')
-                .on('click', function() {
+                .on('click', function(d3_event) {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
 
@@ -614,7 +613,7 @@ export function uiAssistant(context) {
 
             mainFooter.append('button')
                 .attr('class', 'destructive')
-                .on('click', function() {
+                .on('click', function(d3_event) {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
 

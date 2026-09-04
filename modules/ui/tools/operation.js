@@ -1,5 +1,4 @@
 import {
-    event as d3_event,
     select as d3_select
 } from 'd3-selection';
 
@@ -36,7 +35,7 @@ export function uiToolOperation(context, operationClass, tool) {
             .attr('class', 'bar-button wide')
             .attr('tabindex', -1)
             .call(tooltipBehavior)
-            .on('click', function() {
+            .on('click', function(d3_event) {
                 d3_event.stopPropagation();
                 if (!operation || operation.disabled()) return;
                 button.call(tooltipBehavior.hide);

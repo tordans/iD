@@ -1,5 +1,4 @@
 import {
-    event as d3_event,
     select as d3_select
 } from 'd3-selection';
 
@@ -31,7 +30,7 @@ export function uiPresetFavoriteButton(preset, geom, context, klass) {
             .merge(_button);
 
         _button
-            .on('click', function () {
+            .on('click', function (d3_event) {
                 d3_event.stopPropagation();
                 d3_event.preventDefault();
 

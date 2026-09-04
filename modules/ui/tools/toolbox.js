@@ -1,5 +1,4 @@
 import {
-    event as d3_event,
     select as d3_select,
 } from 'd3-selection';
 
@@ -65,7 +64,7 @@ export function uiToolToolbox(context) {
             var poplistEnter = poplistContent.enter()
                 .append('div')
                 .attr('class', 'poplist-content')
-                .on('mousedown', function() {
+                .on('mousedown', function(d3_event) {
                     // don't blur the search input (and thus close results)
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
@@ -114,7 +113,7 @@ export function uiToolToolbox(context) {
 
         row.append('button')
             .attr('class', 'choose')
-            .on('click', function(d) {
+            .on('click', function(d3_event, d) {
                 d3_event.preventDefault();
                 d3_event.stopPropagation();
 
