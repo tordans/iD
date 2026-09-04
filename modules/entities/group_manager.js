@@ -1,5 +1,5 @@
 
-import { data } from '../../data/index';
+import { groups } from '../../data/presets/groups.json';
 import { t } from '../util/locale';
 
 function entityGroup(id, group) {
@@ -216,8 +216,8 @@ function entityGroupManager() {
 
     var nestedRuleKeys = ['nearby', 'vertexOf'];
 
-    for (var id in data.groups) {
-        var group = entityGroup(id, data.groups[id]);
+    for (var id in groups) {
+        var group = entityGroup(id, groups[id]);
         _groups[id] = group;
         _groupsArray.push(group);
 

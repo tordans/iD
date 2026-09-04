@@ -15,7 +15,7 @@ import { uiFeatureList } from './feature_list';
 import { uiSectionSelectionList } from './sections/selection_list';
 import { uiNoteEditor } from './note_editor';
 import { uiKeepRightEditor } from './keepRight_editor';
-import { uiImproveOsmEditor } from './improveOSM_editor';
+import { uiOsmoseEditor } from './osmose_editor';
 import { uiDataEditor } from './data_editor';
 import { uiCommit } from './commit';
 import { geoRawMercator } from '../geo/raw_mercator';
@@ -318,8 +318,8 @@ export function uiAssistant(context) {
         } else if (mode.id === 'select-error') {
             if (mode.selectedErrorService() === 'keepRight') {
                 return panelSelectKeepRightError(context, mode.selectedErrorID());
-            } else if (mode.selectedErrorService() === 'improveOSM') {
-                return panelSelectImproveOSMError(context, mode.selectedErrorID());
+            } else if (mode.selectedErrorService() === 'osmose') {
+                return panelSelectOsmoseError(context, mode.selectedErrorID());
             }
         } else if (mode.id === 'select-data') {
             return panelSelectCustomData(context, mode.selectedDatum());
@@ -700,30 +700,26 @@ export function uiAssistant(context) {
         return panel;
     }
 
-    function panelSelectImproveOSMError(context, errorID) {
+    function panelSelectOsmoseError(context, errorID) {
 
-        var error = services.improveOSM.getError(errorID);
+        var error = services.osmose && services.osmose.getError(errorID);
 
         function errorTitle(d) {
             var unknown = t('inspector.unknown');
-
-            if (!d) return unknown;
-            var errorType = d.error_key;
-            if (errorType) {
-                return t('QA.improveOSM.error_types.' + errorType + '.title');
-            } else {
-                return unknown;
-            }
+            if (!d || !services.osmose) return unknown;
+            var s = services.osmose.getStrings(d.itemType);
+            return ('title' in s) ? s.title : unknown;
         }
 
         var panel = {
             theme: 'light',
-            modeLabel: t('QA.improveOSM.title'),
+            modeLabel: t('QA.osmose.title'),
             title: errorTitle(error),
             collapseCategory: 'inspect'
         };
 
         panel.renderHeaderIcon = function(selection) {
+            if (!error) return;
 
             var iconEnter = selection
                 .append('div')
@@ -736,41 +732,29 @@ export function uiAssistant(context) {
                 .attr('height', '30px')
                 .attr('viewbox', '0 0 20 30')
                 .attr('class', [
-                    'qa_error',
+                    'qaItem',
                     error.service,
-                    'error_id-' + error.id,
-                    'error_type-' + error.error_type,
-                    'category-' + error.category
+                    'itemId-' + error.id,
+                    'itemType-' + error.itemType
                 ].join(' '));
 
             svgEnter
                 .append('polygon')
-                .attr('fill', 'currentColor')
-                .attr('class', 'qa_error-fill')
+                .attr('fill', services.osmose.getColor(error.item))
+                .attr('class', 'qaItem-fill')
                 .attr('points', '16,3 4,3 1,6 1,17 4,20 7,20 10,27 13,20 16,20 19,17.033 19,6');
-
-            var getIcon = function(d) {
-                var picon = d.icon;
-
-                if (!picon) {
-                    return '';
-                } else {
-                    var isMaki = /^maki-/.test(picon);
-                    return '#' + picon + (isMaki ? '-11' : '');
-                }
-            };
 
             svgEnter
                 .append('use')
                 .attr('class', 'icon-annotation')
-                .attr('width', '11px')
-                .attr('height', '11px')
-                .attr('transform', 'translate(4.5, 7)')
-                .attr('xlink:href', getIcon(error));
+                .attr('width', '12px')
+                .attr('height', '12px')
+                .attr('transform', 'translate(4, 5.5)')
+                .attr('xlink:href', error.icon ? '#' + error.icon : '');
         };
 
         panel.renderBody = function(selection) {
-            var editor = uiImproveOsmEditor(context)
+            var editor = uiOsmoseEditor(context)
                 .error(error);
             selection.call(editor);
         };
