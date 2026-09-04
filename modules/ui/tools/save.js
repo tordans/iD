@@ -11,7 +11,7 @@ export function uiToolSave(context) {
 
     var tool = {
         id: 'save',
-        label: t.html('save.title'),
+        label: t.append('save.title'),
         userToggleable: false
     };
 

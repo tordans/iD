@@ -4397,11 +4397,15 @@ img.tag-reference-wiki-image {
 
 .over-map {
     position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
     height: 100%;
     pointer-events: none;
     display: flex;
     flex-direction: row-reverse;
-    align-items: flex-end;
+    align-items: flex-start;
     overflow: hidden;
 }
 .over-map > * {

@@ -2,7 +2,6 @@ import {
     select as d3_select
 } from 'd3-selection';
 import { t } from '../util/locale';
-import { utilFunctor } from '../util/util';
 import { modeBrowse } from '../modes/browse';
 import { debounce } from 'es-toolkit';
 import { operationCircularize, operationContinue, operationDelete, operationDisconnect,
@@ -269,8 +268,17 @@ export function uiTopToolbar(context) {
                 });
 
             toolbarItems.selectAll('.item-label')
-                .html(function(d) {
-                    return utilFunctor(d.label)();
+                .each(function(d) {
+                    var sel = d3_select(this);
+                    sel.text('');
+                    sel.selectAll('*').remove();
+                    if (!d || typeof d === 'string') return;
+                    var label = d.label;
+                    if (typeof label === 'function') {
+                        label(sel);
+                    } else if (label != null) {
+                        sel.text(label);
+                    }
                 });
         }
 

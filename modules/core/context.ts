@@ -8,6 +8,7 @@ import type { EntityId, NoteId, osmChangeset, OsmEntity } from '../osm';
 import { t, localizer } from './localizer';
 import { fileFetcher, type AssetMap } from './file_fetcher';
 import { coreHistory } from './history';
+import { prefs } from './preferences';
 import { coreValidator } from './validator';
 import { coreUploader } from './uploader';
 import { geoRawMercator, type Projection } from '../geo/raw_mercator';
@@ -124,6 +125,10 @@ export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
     copyGraph(): coreGraph;
     copyIDs: GetSet<coreContext, EntityId[]>;
     copyLonLat: GetSet<coreContext, Vec2>;
+
+    presets(): typeof presetManager;
+    storage: typeof prefs;
+    isFirstSession: boolean;
 
     background(): ReturnType<typeof rendererBackground>;
 
