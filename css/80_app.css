@@ -169,22 +169,6 @@ code {
     background: rgba(174, 174, 174, 0.25);
     padding: 1px 2px;
 }
-kbd {
-    display: inline-block;
-    text-align: center;
-    padding: 3px 5px;
-    font-size: 11px;
-    line-height: 12px;
-    min-width: 12px;
-    vertical-align: baseline;
-    color: #333;
-    background-color: #fcfcfc;
-    border: solid 1px #ccc;
-    margin: 0 2px;
-    border-bottom-color: #bbb;
-    border-radius: 3px;
-    box-shadow: inset 0 -1px 0 #bbb;
-}
 
 /* Forms
 ------------------------------------------------------- */
@@ -388,20 +372,20 @@ button.active {
 }
 button.primary {
     color: #fff;
-    background: #7092ff;
+    background: var(--link-color);
 }
 button.secondary {
-    color: #7092ff;
+    color: var(--link-color);
     background: transparent;
-    border: 1px solid #7092ff;
+    border: 1px solid var(--link-color);
 }
 button.primary:hover,
 button.secondary:hover {
-    background: #88a4ff;
+    background: var(--link-focus-color);
 }
 button.primary:active,
 button.secondary:active {
-    background: #597be7;
+    background: var(--link-focus-color);
 }
 button.secondary:hover {
     color: #fff;
@@ -673,7 +657,7 @@ button.bar-button .label {
 }
 .toolbar-item button.bar-button .disclosure-icon {
     width: 18px;
-    color: rgba(0, 0, 0, 0.5);
+    color: var(--passive-text-color);
 }
 [dir='ltr'] .toolbar-item .disclosure-icon {
     margin-left: 6px;
@@ -833,14 +817,14 @@ button.add-note svg.icon {
     top: 50%;
     right: -5px;
     margin-top: -5px;
-    border-left-color: #fff;
+    border-left-color: var(--bg-color);
     border-width: 5px 0 5px 5px;
 }
 
 .tail div {
     border-radius: 3px;
     padding: 10px;
-    background: #fff;
+    background: var(--bg-color);
     position: absolute;
     top: 180px;
     left: 0;
@@ -858,7 +842,7 @@ button.add-note svg.icon {
     top: 50%;
     left: -5px;
     margin-top: -5px;
-    border-right-color: #fff;
+    border-right-color: var(--bg-color);
     border-width: 5px 5px 5px 0;
 }
 .popover-arrow {
@@ -872,28 +856,28 @@ button.add-note svg.icon {
     bottom: -5px;
     left: 50%;
     margin-left: -5px;
-    border-top-color: #fff;
+    border-top-color: var(--bg-color);
     border-width: 5px 5px 0;
 }
 .popover.right .popover-arrow {
     top: 50%;
     left: -5px;
     margin-top: -5px;
-    border-right-color: #fff;
+    border-right-color: var(--bg-color);
     border-width: 5px 5px 5px 0;
 }
 .popover.left .popover-arrow {
     top: 50%;
     right: -5px;
     margin-top: -5px;
-    border-left-color: #fff;
+    border-left-color: var(--bg-color);
     border-width: 5px 0 5px 5px;
 }
 .popover.bottom .popover-arrow {
     top: -5px;
     left: 50%;
     margin-left: -5px;
-    border-bottom-color: #fff;
+    border-bottom-color: var(--bg-color);
     border-width: 0 5px 5px;
 }
 .popover:not(.arrowed) > .popover-arrow {
@@ -904,7 +888,7 @@ button.add-note svg.icon {
 /* Tooltips
 ------------------------------------------------------- */
 .tooltip {
-    color: #333;
+    color: var(--text-color);
     font-size: 12px;
     white-space: initial;
 }
@@ -935,12 +919,12 @@ button.add-note svg.icon {
     min-width: 80px;
     padding: 10px;
     font-weight: normal;
-    background-color: #fff;
+    background-color: var(--bg-color);
     overflow: hidden;
 }
 .tooltip-heading {
     font-weight: bold;
-    background: #f6f6f6;
+    background: var(--bg-color-2);
     padding: 10px;
     margin: -10px -10px 10px -10px;
     border-radius: 3px 3px 0 0;
@@ -948,7 +932,7 @@ button.add-note svg.icon {
 }
 
 .keyhint-wrap {
-    background: #f6f6f6;
+    background: var(--bg-color-2);
     padding: 10px;
     margin: -10px -10px -10px -10px;
     border-radius: 0 0 3px 3px;
@@ -969,19 +953,19 @@ button.add-note svg.icon {
 /* dark tooltips for sidebar / panels */
 .tooltip.dark.top .popover-arrow,
 .map-pane .tooltip.top .popover-arrow {
-    border-top-color: #000;
+    border-top-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.bottom .popover-arrow,
 .map-pane .tooltip.bottom .popover-arrow {
-    border-bottom-color: #000;
+    border-bottom-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.left .popover-arrow,
 .map-pane .tooltip.left .popover-arrow {
-    border-left-color: #000;
+    border-left-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.right .popover-arrow,
 .map-pane .tooltip.right .popover-arrow {
-    border-right-color: #000;
+    border-right-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark .popover-inner,
 .tooltip.dark .tooltip-heading,
@@ -989,8 +973,8 @@ button.add-note svg.icon {
 .map-pane .popover-inner,
 .map-pane .tooltip-heading,
 .map-pane .keyhint-wrap {
-    background: #000;
-    color: #ccc;
+    background: var(--dark-tooltip-bg-color);
+    color: var(--dark-tooltip-text-color);
 }
 
 /* Exceptions for tooltip layouts */
@@ -1025,7 +1009,7 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 /* Poplist
 ------------------------------------------------------- */
 .poplist {
-    border: 0.5px solid #DCDCDC;
+    border: 0.5px solid var(--border-color);
     border-radius: 6px;
     max-height: 600px;
     min-width: 160px;
@@ -1054,10 +1038,10 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 }
 .poplist input[type='search'],
 .poplist input[type='search']:focus {
-    background: #f6f6f6;
+    background: var(--bg-color-2);
 }
 .poplist .search-icon {
-    color: #333;
+    color: var(--text-color);
     display: block;
     position: absolute;
     left: 10px;
@@ -1105,7 +1089,7 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 }
 .poplist .list-item:not(:last-of-type) .row,
 .poplist .subsection.subitems .list-item .row {
-    border-bottom: 1px solid #DCDCDC;
+    border-bottom: 1px solid var(--border-color);
 }
 .poplist .list-item .item-icon {
     flex: 0 0 auto;
@@ -1152,13 +1136,13 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 }
 .poplist .list-item button.choose:hover,
 .poplist .list-item button.choose:focus {
-    background: #fff;
+    background: var(--active-bg-color);
 }
 .poplist .list-item.focused:not(.disabled) button.choose {
-    background: #e8ebff;
+    background: var(--selected-bg-color);
 }
 .poplist .list-item button.choose.disabled {
-    background-color: #ececec;
+    background-color: var(--bg-color-3);
 }
 .poplist .subsection .list-item button.choose {
     opacity: 0.85;
@@ -1166,20 +1150,20 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 .poplist .list-item .accessory {
     position: relative;
     flex: 0 0 auto;
-    color: #808080;
+    color: var(--passive-text-color);
     background: transparent;
     padding-right: 3px;
     padding-left: 3px;
 }
 .poplist .list-item button.accessory:hover {
-    color: #666;
+    color: var(--text-color);
 }
 .poplist .list-item .checkmark {
-    color: #7092ff;
+    color: var(--link-color);
     padding: 0 3px;
 }
 .poplist .subsection {
-    background-color: #CBCBCB;
+    background-color: var(--bg-color-3);
     display: flex;
     flex-direction: column;
 }
@@ -1216,45 +1200,45 @@ li.hide + li.version .badge .tooltip .popover-arrow {
 }
 .preset-browser .poplist-header {
     height: 40px;
-    border-bottom: 2px solid #DCDCDC;
+    border-bottom: 2px solid var(--border-color);
     flex: 0 0 auto;
 }
 .preset-browser .poplist-footer {
     padding: 5px 10px 5px 10px;
-    background: #f6f6f6;
-    border-top: 1px solid #DCDCDC;
+    background: var(--bg-color-2);
+    border-top: 1px solid var(--border-color);
     flex: 0 0 auto;
     display: flex;
     border-bottom-left-radius: 6px;
     border-bottom-right-radius: 6px;
 }
 .preset-browser .poplist-footer .message {
-    color: #666666;
+    color: var(--passive-text-color);
     flex-grow: 1;
 }
 .preset-browser .poplist-footer button.filter {
     height: 20px;
     background: transparent;
-    color: #666;
+    color: var(--passive-text-color);
 }
 .preset-browser .poplist-footer button.filter.active {
-    color: #7092ff;
+    color: var(--link-color);
 }
 .preset-browser .poplist-footer button.filter:hover {
-    color: #333;
+    color: var(--text-color);
 }
 .preset-browser .poplist-footer button.filter.active:hover {
-    color: #597be7;
+    color: var(--link-focus-color);
 }
 .preset-browser .subsection .tag-reference-body {
-    background: rgba(255, 255, 255, 0.85);
+    background: var(--transparent-bg-color);
     padding: 10px;
 }
 .preset-browser .list-item button.tag-reference-open path {
-    fill: #000;
+    fill: var(--text-color);
 }
 .preset-browser .subsection > .tag-reference-body  {
-    border-bottom: 1px solid #DCDCDC;
+    border-bottom: 1px solid var(--border-color);
 }
 
 /* Add a preset mode buttons
@@ -1457,12 +1441,12 @@ summary.hide-toggle::-webkit-details-marker {
     max-height: 100%;
     position: relative;
 
-    background: rgba(45, 41, 41, 0.90);
-    color: #fff;
+    background: var(--transparent-bg-color);
+    color: var(--text-color);
 
-    -webkit-box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.5);
-    -moz-box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.5);
-    box-shadow: 0px 0px 6px 0px rgba(0,0,0,0.5);
+    -webkit-box-shadow: 0px 0px 6px 0px var(--shadow-color);
+    -moz-box-shadow: 0px 0px 6px 0px var(--shadow-color);
+    box-shadow: 0px 0px 6px 0px var(--shadow-color);
 
     -webkit-backdrop-filter: blur(2.5px);
     backdrop-filter: blur(2.5px);
@@ -1474,11 +1458,11 @@ summary.hide-toggle::-webkit-details-marker {
     */
 }
 .assistant.light:not(.body-collapsed) {
-    background: rgba(246, 246, 246, 0.98);
-    color: #333;
+    background: var(--bg-color-2);
+    color: var(--text-color);
 }
 .assistant .sep-top {
-    border-top: 1px solid rgba(127, 127, 127, 0.5);
+    border-top: 1px solid var(--transparent-border-color);
 }
 .assistant .assistant-row {
     display: flex;
@@ -1514,7 +1498,7 @@ summary.hide-toggle::-webkit-details-marker {
     border-top-right-radius: inherit;
 }
 .assistant.light:not(.body-collapsed) .assistant-header {
-    background: #fff;
+    background: var(--bg-color);
 }
 .assistant.collapsible .assistant-header {
     cursor: pointer;
@@ -1576,22 +1560,22 @@ summary.hide-toggle::-webkit-details-marker {
     margin-bottom: -10px
 }
 .assistant .subject-title .controls button {
-    color: #999;
+    color: var(--muted-text-color);
     background: transparent;
     border-radius: 100%;
     height: 30px;
     width: 30px;
 }
 .assistant .subject-title .controls button:hover {
-    color: #666;
-    background: rgba(0, 0, 0, 0.1);
+    color: var(--text-color);
+    background: var(--transparent-button-color);
 }
 .assistant .control-col {
     flex: 0 0 auto;
 }
 .assistant .control-col button {
     background: transparent;
-    color: #808080;
+    color: var(--passive-text-color);
     height: 100%;
     width: 40px;
 }
@@ -1652,8 +1636,8 @@ summary.hide-toggle::-webkit-details-marker {
     border-width: 0;
     text-indent: 25px;
     font-size: 12px;
-    background: rgba(18, 18, 18, 0.97);
-    color: #fff;
+    background: var(--bg-color-3);
+    color: var(--text-color);
     min-width: 225px;
 }
 .assistant .main-footer {
@@ -1704,19 +1688,19 @@ summary.hide-toggle::-webkit-details-marker {
     border-width: 0;
     text-indent: 25px;
     font-size: 12px;
-    background: rgba(18, 18, 18, 0.97);
-    color: #fff;
+    background: var(--bg-color-3);
+    color: var(--text-color);
     min-width: 225px;
 }
 .assistant .no-results-item,
 .assistant .feature-list-item {
     width: 100%;
     background: transparent;
-    border-bottom: 1px solid #444;
-    color: #fff;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
 }
 .assistant .feature-list-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--active-bg-color);
 }
 .assistant .feature-list > *:nth-last-child(2) {
     border-bottom: none;
@@ -1744,7 +1728,7 @@ summary.hide-toggle::-webkit-details-marker {
     padding-top: 5px;
 }
 .assistant.light.prominent:not(.has-body) {
-    background: rgba(255, 255, 255, 0.97);
+    background: var(--bg-color);
 }
 .assistant.light.prominent:not(.has-body) .assistant-header {
     background: transparent;
@@ -1822,7 +1806,7 @@ summary.hide-toggle::-webkit-details-marker {
 
 .community-event,
 .community-more {
-    background-color: #4c4c4c;
+    background-color: var(--bg-color-2);
     padding: 8px;
     border-radius: 4px;
     margin-bottom: 5px;
@@ -6847,14 +6831,14 @@ button.conflicts-button {
     top: 50%;
     right: -5px;
     margin-top: -5px;
-    border-left-color: #fff;
+    border-left-color: var(--bg-color);
     border-width: 5px 0 5px 5px;
 }
 
 .tail div {
     border-radius: 3px;
     padding: 10px;
-    background: #fff;
+    background: var(--bg-color);
     position: absolute;
     top: 180px;
     left: 0;
@@ -6872,7 +6856,7 @@ button.conflicts-button {
     top: 50%;
     left: -5px;
     margin-top: -5px;
-    border-right-color: #fff;
+    border-right-color: var(--bg-color);
     border-width: 5px 5px 5px 0;
 }.popover-arrow {
     position: absolute;
@@ -6944,24 +6928,28 @@ button.conflicts-button {
 .tooltip.dark.top .popover-arrow,
 .map-pane .tooltip.top .popover-arrow,
 .sidebar .tooltip.top .popover-arrow,
+.assistant .tooltip.top .popover-arrow,
 .modal .tooltip.top .popover-arrow {
     border-top-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.bottom .popover-arrow,
 .map-pane .tooltip.bottom .popover-arrow,
 .sidebar .tooltip.bottom .popover-arrow,
+.assistant .tooltip.bottom .popover-arrow,
 .modal .tooltip.bottom .popover-arrow {
     border-bottom-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.left .popover-arrow,
 .map-pane .tooltip.left .popover-arrow,
 .sidebar .tooltip.left .popover-arrow,
+.assistant .tooltip.left .popover-arrow,
 .modal .tooltip.left .popover-arrow {
     border-left-color: var(--dark-tooltip-bg-color);
 }
 .tooltip.dark.right .popover-arrow,
 .map-pane .tooltip.right .popover-arrow,
 .sidebar .tooltip.right .popover-arrow,
+.assistant .tooltip.right .popover-arrow,
 .modal .tooltip.right .popover-arrow {
     border-right-color: var(--dark-tooltip-bg-color);
 }.tooltip.dark .popover-inner,.tooltip.dark .tooltip-heading,
@@ -6972,12 +6960,16 @@ button.conflicts-button {
 .sidebar .popover-inner,
 .sidebar .tooltip-heading,
 .sidebar .keyhint-wrap,
+.assistant .tooltip .popover-inner,
+.assistant .tooltip-heading,
+.assistant .keyhint-wrap,
 .modal .popover-inner {
     background: var(--dark-tooltip-bg-color);
     color: var(--dark-tooltip-text-color);}
 .tooltip.dark kbd,
 .map-pane .tooltip kbd,
-.sidebar .tooltip kbd {
+.sidebar .tooltip kbd,
+.assistant .tooltip kbd {
     background-color: #666;
     border: solid 1px #444;
     border-bottom-color: #333;
