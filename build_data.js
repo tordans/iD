@@ -890,6 +890,8 @@ function handleTheNounProjectResponse(err, resp, body) {
 
 
 function writeFileProm(path, content) {
+  // Node 24+ fs.writeFile no longer accepts a string array (Font Awesome `.html`).
+  if (Array.isArray(content)) content = content.join('');
   return new Promise((resolve, reject) => {
     fs.writeFile(path, content, (err) => {
       if (err) return reject(err);
