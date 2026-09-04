@@ -1,4 +1,6 @@
 export { uiInit } from './init';
+export { uiAssistant } from './assistant';
+export * from './tools';
 export { uiAccount } from './account';
 export { uiAttribution } from './attribution';
 export { uiChangesetEditor } from './changeset_editor';
