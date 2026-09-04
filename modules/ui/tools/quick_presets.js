@@ -1,4 +1,4 @@
-import _debounce from 'lodash-es/debounce';
+import { debounce } from 'es-toolkit';
 
 import { drag as d3_drag } from 'd3-drag';
 import { select as d3_select, selectAll as d3_selectAll } from 'd3-selection';
@@ -322,7 +322,7 @@ export function uiToolQuickPresets(context) {
                     .classed('active', function(mode) { return entered.button === mode.button; });
             });
 
-        var debouncedUpdate = _debounce(update, 500, { leading: true, trailing: true });
+        var debouncedUpdate = debounce(update, 500, { edges: ['leading', 'trailing'] });
 
         context.map()
             .on('move.' + tool.id, debouncedUpdate)

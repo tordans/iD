@@ -88,7 +88,7 @@ export function uiPresetIcon() {
 
 
   function renderCircleFill(container, drawVertex) {
-    const vertexFill = container.selectAll('.preset-icon-fill-vertex')
+    let vertexFill = container.selectAll('.preset-icon-fill-vertex')
       .data(drawVertex ? [0] : []);
 
     vertexFill.exit()

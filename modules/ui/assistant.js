@@ -1,4 +1,4 @@
-import _debounce from 'lodash-es/debounce';
+import { debounce } from 'es-toolkit';
 import { drag as d3_drag } from 'd3-drag';
 import {
     select as d3_select
@@ -14,7 +14,6 @@ import { uiEntityEditor } from './entity_editor';
 import { uiFeatureList } from './feature_list';
 import { uiSectionSelectionList } from './sections/selection_list';
 import { uiNoteEditor } from './note_editor';
-import { uiKeepRightEditor } from './keepRight_editor';
 import { uiOsmoseEditor } from './osmose_editor';
 import { uiDataEditor } from './data_editor';
 import { uiCommit } from './commit';
@@ -316,9 +315,7 @@ export function uiAssistant(context) {
                 return panelSelectNote(context, note);
             }
         } else if (mode.id === 'select-error') {
-            if (mode.selectedErrorService() === 'keepRight') {
-                return panelSelectKeepRightError(context, mode.selectedErrorID());
-            } else if (mode.selectedErrorService() === 'osmose') {
+            if (mode.selectedErrorService() === 'osmose') {
                 return panelSelectOsmoseError(context, mode.selectedErrorID());
             }
         } else if (mode.id === 'select-data') {
@@ -364,7 +361,7 @@ export function uiAssistant(context) {
         });
     }
 
-    var debouncedGetLocation = _debounce(getLocation, 250);
+    var debouncedGetLocation = debounce(getLocation, 250);
     function getLocation(loc, zoom, completionHandler) {
 
         if (!services.geocoder || (zoom && zoom < 9)) {
@@ -647,54 +644,6 @@ export function uiAssistant(context) {
                 .append('div')
                 .attr('class', 'feature-list-pane')
                 .call(featureSearch);
-        };
-
-        return panel;
-    }
-
-    function panelSelectKeepRightError(context, errorID) {
-
-        var error = services.keepRight.getError(errorID);
-
-        function errorTitle(d) {
-            var unknown = t('inspector.unknown');
-
-            if (!d) return unknown;
-            var errorType = d.error_type;
-            var parentErrorType = d.parent_error_type;
-
-            if (errorType) {
-                return t('QA.keepRight.errorTypes.' + errorType + '.title');
-            } else if (parentErrorType) {
-                return t('QA.keepRight.errorTypes.' + parentErrorType + '.title');
-            } else {
-                return unknown;
-            }
-        }
-
-        var panel = {
-            theme: 'light',
-            modeLabel: t('QA.keepRight.title'),
-            title: errorTitle(error),
-            collapseCategory: 'inspect'
-        };
-
-        panel.renderHeaderIcon = function(selection) {
-            var icon = selection
-                .append('div')
-                .attr('class', 'error-header-icon')
-                .classed('new', error.id < 0);
-
-            icon
-                .append('div')
-                .attr('class', 'qa_error ' + error.service + ' error_id-' + error.id + ' error_type-' + error.parent_error_type)
-                .call(svgIcon('#iD-icon-bolt', 'qa_error-fill'));
-        };
-
-        panel.renderBody = function(selection) {
-            var editor = uiKeepRightEditor(context)
-                .error(error);
-            selection.call(editor);
         };
 
         return panel;
