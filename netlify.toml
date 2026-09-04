@@ -1,0 +1,8 @@
+# Branch-only override: the Netlify UI command is for current iD (`npm ci` + imagery).
+# This 2020 snapshot has no package-lock.json.
+[build]
+  command = "npm install && npm run all"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"
