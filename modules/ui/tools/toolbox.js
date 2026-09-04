@@ -5,7 +5,7 @@ import {
 
 import { t } from '../../util/locale';
 import { svgIcon } from '../../svg/icon';
-import { tooltip } from '../../util/tooltip';
+import { uiTooltip } from '../tooltip';
 import { popover } from '../../util/popover';
 import { utilFunctor } from '../../util/util';
 
@@ -40,9 +40,8 @@ export function uiToolToolbox(context) {
             .attr('class', 'bar-button')
             .attr('tabindex', -1)
             .call(poplist)
-            .call(tooltip()
+            .call(uiTooltip()
                 .placement('bottom')
-                .html(true)
                 .title(t('toolbar.toolbox.tooltip'))
                 .scrollContainer(context.container().select('.top-toolbar'))
             )

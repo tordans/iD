@@ -7,7 +7,7 @@ import {
 import { t, localizer } from '../core/localizer';
 import { services } from '../services';
 import { svgIcon } from '../svg/index';
-import { tooltip } from '../util/tooltip';
+import { uiTooltip } from './tooltip';
 import { popover } from '../util/popover';
 import { uiTagReference } from './tag_reference';
 import { uiPresetFavoriteButton } from './preset_favorite_button';
@@ -595,8 +595,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
             var isAutoHidden = context.features().autoHidden(hiddenPresetFeatures.key);
             var tooltipIdSuffix = isAutoHidden ? 'zoom' : 'manual';
             var tooltipObj = { features: hiddenPresetFeatures.title };
-            button.call(tooltip('dark')
-                .html(true)
+            button.call(uiTooltip('dark')
                 .title(t('inspector.hidden_preset.' + tooltipIdSuffix, tooltipObj))
                 .placement(index < 2 ? 'bottom' : 'top')
             );

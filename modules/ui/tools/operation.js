@@ -4,8 +4,7 @@ import {
 } from 'd3-selection';
 
 import { svgIcon } from '../../svg/icon';
-import { uiTooltipHtml } from '../tooltipHtml';
-import { tooltip } from '../../util/tooltip';
+import { uiTooltip } from '../tooltip';
 
 export function uiToolOperation(context, operationClass, tool) {
 
@@ -17,14 +16,15 @@ export function uiToolOperation(context, operationClass, tool) {
     tool.iconClass = 'operation-icon';
 
     var button,
-        tooltipBehavior = tooltip()
+        tooltipBehavior = uiTooltip()
         .placement('bottom')
-        .html(true)
         .scrollContainer(context.container().select('.top-toolbar'));
 
     tool.render = function(selection) {
 
-        tooltipBehavior.title(uiTooltipHtml(operation.tooltip(), operation.keys[0]));
+        tooltipBehavior
+            .title(operation.tooltip())
+            .keys(operation.keys);
 
         button = selection
             .selectAll('.bar-button')

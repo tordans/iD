@@ -443,6 +443,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
                 _annotation
             );
         });
+    };
 
 
     // Connect the way to an existing node

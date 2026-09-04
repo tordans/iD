@@ -1,12 +1,11 @@
 import _debounce from 'lodash-es/debounce';
-import { dataEn } from '../../data';
 import { drag as d3_drag } from 'd3-drag';
 import {
     select as d3_select,
     event as d3_event
 } from 'd3-selection';
 import { svgIcon } from '../svg/icon';
-import { currentLocale, t, textDirection } from '../util/locale';
+import { t, localizer } from '../util/locale';
 import { services } from '../services';
 import { utilDisplayLabel } from '../util';
 import { uiIntro } from './intro';
@@ -14,7 +13,7 @@ import { uiSuccess } from './success';
 import { uiPresetIcon } from './preset_icon';
 import { uiEntityEditor } from './entity_editor';
 import { uiFeatureList } from './feature_list';
-import { uiSelectionList } from './selection_list';
+import { uiSectionSelectionList } from './sections/selection_list';
 import { uiNoteEditor } from './note_editor';
 import { uiKeepRightEditor } from './keepRight_editor';
 import { uiImproveOsmEditor } from './improveOSM_editor';
@@ -95,7 +94,7 @@ export function uiAssistant(context) {
 
                 var x = d3_event.x - dragOffset;
 
-                var targetWidth = (textDirection === 'rtl') ? utilGetDimensions(d3_select('.main-content')).width - x: x;
+                var targetWidth = (localizer.textDirection() === 'rtl') ? utilGetDimensions(d3_select('.main-content')).width - x: x;
                 container
                     .style('width', targetWidth + 'px');
             })
@@ -477,8 +476,8 @@ export function uiAssistant(context) {
                                       displayName: '<b>' + details.display_name + '</b>'
                                   }) + '<br/>' +
                                   t('assistant.launch.changesets_date', {
-                                      changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(currentLocale) + '</b>',
-                                      joinDate: '<b>' + joinDate.toLocaleDateString(currentLocale, { day: 'numeric', month: 'long', year: 'numeric' }) + '</b>'
+                                      changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(localizer.localeCode()) + '</b>',
+                                      joinDate: '<b>' + joinDate.toLocaleDateString(localizer.localeCode(), { day: 'numeric', month: 'long', year: 'numeric' }) + '</b>'
                                   });
             bodyTextArea.html(anniversaryInfo);
 
@@ -529,7 +528,7 @@ export function uiAssistant(context) {
                                            displayName: '<b>' + details.display_name + '</b>'
                                        }) + '<br/>' +
                                        t('assistant.launch.changesets', {
-                                           changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(currentLocale) + '</b>'
+                                           changesets: '<b>' + parseFloat(details.changesets_count).toLocaleString(localizer.localeCode()) + '</b>'
                                        });
                     bodyTextArea.html(loggedInInfo);
                 }
@@ -665,12 +664,9 @@ export function uiAssistant(context) {
             var errorType = d.error_type;
             var parentErrorType = d.parent_error_type;
 
-            var et = dataEn.QA.keepRight.errorTypes[errorType];
-            var pt = dataEn.QA.keepRight.errorTypes[parentErrorType];
-
-            if (et && et.title) {
+            if (errorType) {
                 return t('QA.keepRight.errorTypes.' + errorType + '.title');
-            } else if (pt && pt.title) {
+            } else if (parentErrorType) {
                 return t('QA.keepRight.errorTypes.' + parentErrorType + '.title');
             } else {
                 return unknown;
@@ -714,9 +710,7 @@ export function uiAssistant(context) {
 
             if (!d) return unknown;
             var errorType = d.error_key;
-            var et = dataEn.QA.improveOSM.error_types[errorType];
-
-            if (et && et.title) {
+            if (errorType) {
                 return t('QA.improveOSM.error_types.' + errorType + '.title');
             } else {
                 return unknown;
@@ -918,10 +912,12 @@ export function uiAssistant(context) {
             title: t('assistant.feature_count.multiple', { count: selectedIDs.length.toString() })
         };
 
-        panel.renderBody = function() {
-            var selectionList = uiSelectionList(context, selectedIDs);
-            body
-                .call(selectionList);
+        panel.renderBody = function(selection) {
+            selection.call(
+                uiSectionSelectionList(context)
+                    .entityIDs(selectedIDs)
+                    .render
+            );
         };
 
         return panel;

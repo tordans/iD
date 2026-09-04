@@ -1206,6 +1206,8 @@ li.hide + li.version .badge .tooltip .popover-arrow {
     left: 20px;
 }
 .ideditor[dir='rtl'] .assistant .preset-browser.popover {
+    right: 20px;
+}
 .ideditor[dir='ltr'] .assistant .preset-browser.poplist {
     left: 20px;
 }
@@ -6600,7 +6602,6 @@ svg.mouseclick use.right {
 ------------------------------------------------------- */
 a.user-info {
     display: inline-block;}
-
 .commit-form {
     margin-bottom: 0;
 }
