@@ -4580,12 +4580,6 @@ div.full-screen > button:focus {
     border-radius: 0 0 4px 0;
 }
 
-/* Zoom to selection button */
-.zoom-to-selection-control .icon {
-    width: 22px;
-    height: 22px;
-}
-
 
 /* Background / Map Data / Help Pane buttons
 ------------------------------------------------------- */

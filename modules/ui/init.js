@@ -38,7 +38,6 @@ import { uiTooltip } from './tooltip';
 import { uiTopToolbar } from './top_toolbar';
 import { uiVersion } from './version';
 import { uiZoom } from './zoom';
-import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
 
 import { uiPaneBackground } from './panes/background';
@@ -190,11 +189,6 @@ export function uiInit(context) {
             .append('div')
             .attr('class', 'map-control zoombuttons')
             .call(uiZoom(context));
-
-        controls
-            .append('div')
-            .attr('class', 'map-control zoom-to-selection-control')
-            .call(uiZoomToSelection(context));
 
         controls
             .append('div')
