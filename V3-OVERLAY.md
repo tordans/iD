@@ -1,18 +1,17 @@
 # V3 overlay inventory (2020 prototype)
 
-This file is a **product-theme inventory of the original 2020 iD v3-prototype work**. It is not a hop changelog and it does not describe rewritten SHAs from later overlay hops.
+This file is a **product-theme inventory of the original 2020 iD v3-prototype work**. Use it to find which freeze files and commits owned a behavior when comparing against this worktree ([PR #8](https://github.com/tordans/iD/pull/8)). Learn from [PR #9](https://github.com/tordans/iD/pull/9); do not edit that PR, `develop`, or any other worktree.
 
 Pointers:
 
-- Freeze PR: [tordans/iD#9](https://github.com/tordans/iD/pull/9) (`v3-prototype` → frozen 2020 snapshot)
-- Freeze tip of the 2020 tree: `0328e101aaccc3d84b866b22d6493c09c7fadc3d` (`v2.17.2 changelog`, 2020-02-14)
-- Join with 2.x that **is** on `develop`: `ba40154a06842a82a7ac557e1f0f15ba1f897add` (`v2.17.1`)
+- Frozen original: [tordans/iD#9](https://github.com/tordans/iD/pull/9) (`v3-prototype`, tip `0328e101aaccc3d84b866b22d6493c09c7fadc3d`)
+- This overlay: [tordans/iD#8](https://github.com/tordans/iD/pull/8) (`iD--v3-reloaded`)
+- Join with 2.x that **is** on `develop` (read-only): `ba40154a06842a82a7ac557e1f0f15ba1f897add` (`v2.17.1`)
 - Unique original series: first-parent, no-merge `ba40154a0..0328e101a` (**256** commits)
 - Local linearized freeze backup: `backup/iD--v3-reloaded-linear-2020` = `0146e63710c175ebcf7b8a95364be7883bff928b`
 - Netlify/Node 24 shims on PR #9 only (not product): `5a94d76b1`, `92e1302de`
-- Current hop-8 HEAD (this worktree, unchanged by this inventory): `1407539c783f17999a114fe311a67db9f6d0e1d0` (`Build hop 8 on Node 24 against upstream/develop.`)
 
-**Original** means those 256 commits (or matching subjects on `0328e101a` ancestry). Hop 1–8 rewritten SHAs are not original.
+**Original** means those 256 commits (or matching subjects on `0328e101a` ancestry).
 
 Each product commit is listed in **one** theme (oldest first). CSS and `data/core.yaml` strings also land inside feature commits; those files are called out in the theme that owns the behavior. There is **no Osmose** work in this freeze; QA inspectors that moved into the assistant are KeepRight and ImproveOSM.
 
@@ -412,21 +411,3 @@ Empty or noise relative to v3 UI. No greenkeeper commits appear in this 256. Ima
 | Unclassified | 0 |
 
 Every SHA in the 256 appears in exactly one of: a product theme, or the skip table.
-
----
-
-## Hop-8 status on this worktree (2.43.0-dev)
-
-Target chrome is current `upstream/develop`: docked 2.x sidebar, `.top-toolbar`, `t.append`, `context.ts`, `en.min.json` only.
-
-| Group | In tree? | Paints / behaves like 2020? |
-| --- | --- | --- |
-| 1 Assistant | `assistant.js` mounted in `.sidebar-wrap` | Partial: wrap often empty; 2.x sidebar kept on purpose; splash deleted |
-| 2 Ribbon | `top_toolbar.js` + `modules/ui/tools/*` | **No** until `presetManager.getAddable` / favorites APIs restored; `t.html` on notes/save/undo must be `t.append` |
-| 3 Groups / browser | `groups.json`, managers, `preset_browser.js` | Files present; addable ribbon depends on group 2 APIs |
-| 4 Draw / structure / repeat | mode/behavior ports from hops 4–7 | Needs re-check after ribbon boots |
-| 5 Hash / scale / panes | hop-7 ports | Duplicate `.over-map` CSS (v3 `top:71px` vs 2.43 relative) |
-| 6 Strings | `data/core.yaml` `assistant.*` / `toolbar.*` | In `en.min.json`; other locales (e.g. `de.min.json`) lack v3 keys |
-| 7 CSS | assistant/ribbon rules in `css/80_app.css` | Duplicate `.over-map` blocks fight layout |
-| 8 FA / build_data | v3 glyphs on `faIcons` Set | Extra fetched SVGs untracked; warn+skip missing glyphs |
-| 9 Other | toolbar `available('toolbar')`, multi-id hash | Mixed; keep 2.43 `checkActionAllowed` + toolbar situation |
