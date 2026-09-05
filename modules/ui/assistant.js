@@ -6,7 +6,7 @@ import {
 import { svgIcon } from '../svg/icon';
 import { t, localizer } from '../util/locale';
 import { services } from '../services';
-import { utilDisplayLabel } from '../util';
+import { utilDisplayName } from '../util';
 import { uiIntro } from './intro';
 import { uiSuccess } from './success';
 import { uiPresetIcon } from './preset_icon';
@@ -38,6 +38,12 @@ function utilGreetingIcon() {
     var hours = now.getHours();
     if (hours >= 6 && hours < 18) return 'fas-sun';
     return 'fas-moon';
+}
+
+// Inspect header title: name/ref if the feature has one, otherwise the OSM id.
+// Freeze screenshots show a numeric id on this line, never the preset name.
+function inspectSubjectTitle(entity) {
+    return utilDisplayName(entity) || entity.osmId();
 }
 
 export function uiAssistant(context) {
@@ -807,7 +813,7 @@ export function uiAssistant(context) {
             hash: 'select ' + selectedIDs.toString(),
             theme: 'light',
             modeLabel: t('assistant.mode.inspecting'),
-            title: selectedIDs.length === 1 ? utilDisplayLabel(context.entity(selectedIDs[0]), context.graph()) :
+            title: selectedIDs.length === 1 ? inspectSubjectTitle(context.entity(selectedIDs[0])) :
                 t('assistant.feature_count.multiple', { count: selectedIDs.length.toString() }),
             collapseCategory: 'inspect'
         };
