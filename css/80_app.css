@@ -40,12 +40,12 @@
     touch-action: none;
 }
 
-.main-content.active {
+.main-content.active .main-map {
     filter: none !important;
     transition-duration: 200ms;
 }
 
-.main-content.inactive {
+.main-content.inactive .main-map {
     filter: grayscale(80%) brightness(80%);
     transition-duration: 200ms;
 }
@@ -1767,7 +1767,8 @@ summary.hide-toggle::-webkit-details-marker {
     padding-top: 5px;
 }
 .assistant.light.prominent:not(.has-body) {
-    background: var(--bg-color);
+    background: rgba(255, 255, 255, 0.97);
+    color: #333;
 }
 .assistant.light.prominent:not(.has-body) .assistant-header {
     background: transparent;
