@@ -76,9 +76,21 @@ export function operationCircularize(context, selectedIDs) {
     };
 
 
-    operation.available = function(/* situation */) {
+    operation.available = function(situation) {
         const graph = context.graph();
-        return selectedIDs.length > 0 && selectedIDs.every(id => checkActionAllowed(id, graph));
+        if (!(selectedIDs.length > 0 && selectedIDs.every(id => checkActionAllowed(id, graph)))) {
+            return false;
+        }
+        // Freeze 3701b9422: don't show Circularize in the toolbar when the
+        // action is disabled (e.g. an unclosed line). Keep it available for
+        // the map/key so 2.43 multi-way joining still works there.
+        if (situation === 'toolbar') {
+            if (!_actions.length) return false;
+            return _actions.some(function(action) {
+                return typeof action.disabled === 'function' && !action.disabled(graph);
+            });
+        }
+        return true;
     };
 
 

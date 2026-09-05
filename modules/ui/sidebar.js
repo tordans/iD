@@ -435,6 +435,7 @@ export function uiSidebar(context) {
     sidebar.showPresetList = function() {};
     sidebar.hover = function() {};
     sidebar.hover.cancel = function() {};
+    sidebar.hoverModeSelect = function() {};
     sidebar.intersects = function() {};
     sidebar.select = function() {};
     sidebar.show = function() {};

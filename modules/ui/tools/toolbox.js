@@ -133,8 +133,8 @@ export function uiToolToolbox(context) {
 
         row.append('div')
             .attr('class', 'label')
-            .text(function(d) {
-                return utilFunctor(d.toolboxLabel)() || utilFunctor(d.label)();
+            .each(function(d) {
+                fillToolLabel(d3_select(this), d.toolboxLabel || d.label);
             });
 
         row.append('div')
@@ -151,6 +151,23 @@ export function uiToolToolbox(context) {
             .classed('hide', function(d) {
                 return d.isToggledOn === false;
             });
+    }
+
+    function fillToolLabel(selection, label) {
+        if (typeof label === 'function' && label.stringId) {
+            selection.call(label);
+            return;
+        }
+        if (typeof label === 'function') {
+            var value = label();
+            if (typeof value === 'function') {
+                selection.call(value);
+            } else {
+                selection.text(value);
+            }
+            return;
+        }
+        selection.text(label || '');
     }
 
     tool.setAllowedTools = function(newItems) {

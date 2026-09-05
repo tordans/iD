@@ -24,7 +24,7 @@ export function uiToolCenterZoom(context) {
             }
         },
         toolboxIconName: 'iD-icon-frame-pin',
-        iconClass: 'operation-icon',
+        iconClass: 'operation',
         onClick: function() {
             if (!originTransform) {
                 context.mode().zoomToSelected();

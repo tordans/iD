@@ -66,7 +66,7 @@ export function operationDelete(context, selectedIDs) {
 
 
     operation.available = function() {
-        return !operationDowngrade(selectedIDs, context).available();
+        return !operationDowngrade(context, selectedIDs).available();
     };
 
 

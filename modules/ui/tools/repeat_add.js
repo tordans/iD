@@ -1,4 +1,3 @@
-import { select as d3_select } from 'd3-selection';
 import { t } from '../../util/locale';
 import { svgIcon } from '../../svg/icon';
 import { uiTooltip } from '../tooltip';
@@ -25,7 +24,11 @@ export function uiToolRepeatAdd(context) {
         var geom = mode.id.indexOf('point') !== -1 ? 'point' : 'way';
 
         tooltipBehavior
-            .title(t('toolbar.repeat.tooltip.' + geom, { feature: '<strong>' + mode.title + '</strong>' }))
+            .title(function() {
+                return t.append('toolbar.repeat.tooltip.' + geom, {
+                    feature: appendStrong(mode.title)
+                });
+            })
             .keys([key]);
 
         button = selection
@@ -69,6 +72,17 @@ export function uiToolRepeatAdd(context) {
 
         button = null;
     };
+
+    function appendStrong(label) {
+        return function(selection) {
+            var strong = selection.append('strong');
+            if (typeof label === 'function') {
+                strong.call(label);
+            } else {
+                strong.text(label || '');
+            }
+        };
+    }
 
     return tool;
 }

@@ -7,7 +7,7 @@ import { debounce } from 'es-toolkit';
 import { operationCircularize, operationContinue, operationDelete, operationDisconnect,
     operationDowngrade, operationExtract, operationMerge, operationOrthogonalize,
     operationReverse, operationSplit, operationStraighten } from '../operations';
-import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToolSave, uiToolAddFeature, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
+import { uiToolAddFavorite, uiToolAddRecent, uiToolNotes, uiToolOperation, uiToolSave, uiToolAddFeature, uiToolUndoRedo } from './tools';
 import { uiToolAddAddablePresets } from './tools/quick_presets_addable';
 import { uiToolAddGeneric } from './tools/quick_presets_generic';
 import { uiToolSimpleButton } from './tools/simple_button';
@@ -22,8 +22,7 @@ import { uiToolPowerSupport } from './tools/power_support';
 
 export function uiTopToolbar(context) {
 
-    var sidebarToggle = uiToolSidebarToggle(context),
-        circularize = uiToolOperation(context, operationCircularize),
+    var circularize = uiToolOperation(context, operationCircularize),
         continueTool = uiToolOperation(context, operationContinue),
         deleteTool = uiToolOperation(context, operationDelete),
         disconnect = uiToolOperation(context, operationDisconnect),
@@ -129,7 +128,6 @@ export function uiTopToolbar(context) {
             mode.id === 'draw-line' || mode.id === 'draw-area') {
 
             tools = [
-                sidebarToggle,
                 toolbox,
                 addingGeometry,
                 'spacer',
@@ -146,7 +144,6 @@ export function uiTopToolbar(context) {
         } else {
 
             tools = [
-                sidebarToggle,
                 toolbox,
                 'spacer',
                 centerZoom,
@@ -273,15 +270,29 @@ export function uiTopToolbar(context) {
                     sel.text('');
                     sel.selectAll('*').remove();
                     if (!d || typeof d === 'string') return;
-                    var label = d.label;
-                    if (typeof label === 'function') {
-                        label(sel);
-                    } else if (label != null) {
-                        sel.text(label);
-                    }
+                    fillToolLabel(sel, d.label);
                 });
         }
 
+    }
+
+    // t.append labels (.stringId) fill the selection; other functions return
+    // a string (freeze utilFunctor(d.label)()) or another t.append callback.
+    function fillToolLabel(selection, label) {
+        if (typeof label === 'function' && label.stringId) {
+            selection.call(label);
+            return;
+        }
+        if (typeof label === 'function') {
+            var value = label();
+            if (typeof value === 'function') {
+                selection.call(value);
+            } else {
+                selection.text(value);
+            }
+            return;
+        }
+        selection.text(label || '');
     }
 
     return topToolbar;

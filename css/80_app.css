@@ -578,6 +578,9 @@ button.loading .icon {
 .top-toolbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
 }
+.top-toolbar:has(.poplist.in) {
+    overflow: visible;
+}
 .top-toolbar .toolbar-item {    display: flex;
     flex: 0 1 auto;
     flex-flow: column wrap;
@@ -1599,7 +1602,10 @@ summary.hide-toggle::-webkit-details-marker {
     display: none;
 }
 .assistant .assistant-body .feature-list-pane {
-    padding: 0px 15px 10px 15px;
+    padding: 0 15px 10px 15px;
+    height: auto;
+    min-height: 0;
+    flex: 0 1 auto;
 }
 .assistant .body-text {
     font-size: 12px;
@@ -1616,29 +1622,45 @@ summary.hide-toggle::-webkit-details-marker {
 }
 .assistant .search-header {
     position: relative;
+    flex: 0 0 auto;
+    overflow: visible;
 }
 .assistant .search-header .icon {
     position: absolute;
-    left: 7px;
-    top: 5px;
+    left: 8px;
+    top: 7px;
+    width: 16px;
+    height: 16px;
+    margin: 0;
     pointer-events: none;
     opacity: 0.75;
+    color: #fff;
 }
 [dir='rtl'] .assistant .search-header .icon {
     left: auto;
-    right: 7px;
+    right: 8px;
 }
-.assistant input[type='search'].feature-search {
+.assistant input[type='search'],
+.assistant input[type='search'].feature-search,
+.assistant input[type='search'].feature-search:focus {
     height: 30px;
     width: 100%;
     padding: 5px 10px;
     border-radius: 15px;
-    border-width: 0;
+    border: 0;
     text-indent: 25px;
     font-size: 12px;
-    background: var(--bg-color-3);
-    color: var(--text-color);
+    font-weight: normal;
+    line-height: 20px;
+    background: rgba(18, 18, 18, 0.97);
+    color: #fff;
     min-width: 225px;
+    overflow: hidden;
+}
+.assistant input[type='search']::placeholder,
+.assistant input[type='search'].feature-search::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+    font-weight: normal;
 }
 .assistant .main-footer {
     margin-top: 15px;
@@ -1662,64 +1684,81 @@ summary.hide-toggle::-webkit-details-marker {
 .assistant .assistant-body:empty {
     display: none;
 }
-.assistant .assistant-body .feature-list-pane {
-    padding: 0px 15px 10px 15px;
+.assistant .feature-list-pane .inspector-body {
+    overflow: visible;
+    height: auto;
+    flex: none;
+    max-height: none;
 }
-.assistant .search-header {
-    position: relative;
+.assistant .inspector-body {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
-.assistant .search-header .icon {
-    position: absolute;
-    left: 7px;
-    top: 5px;
-    pointer-events: none;
-    opacity: 0.75;
+.assistant .feature-list {
+    text-align: center;
 }
-[dir='rtl'] .assistant .search-header .icon {
-    left: auto;
-    right: 7px;
-}
-
-.assistant input[type='search'] {
-    height: 30px;
-    width: 100%;
-    padding: 5px 10px;
-    border-radius: 15px;
-    border-width: 0;
-    text-indent: 25px;
-    font-size: 12px;
-    background: var(--bg-color-3);
-    color: var(--text-color);
-    min-width: 225px;
+.assistant .feature-list.filtered {
+    overflow-y: auto;
+    max-height: 40vh;
+    text-align: initial;
 }
 .assistant .no-results-item,
 .assistant .feature-list-item {
     width: 100%;
     background: transparent;
-    border-bottom: 1px solid var(--border-color);
-    color: var(--text-color);
+    border: 0;
+    color: inherit;
+    font-weight: bold;
+    height: 40px;
+    line-height: 20px;
+    display: flex;
+    text-align: initial;
+}
+.assistant .feature-list-item.sep-top {
+    border-top: 1px solid rgba(127, 127, 127, 0.5);
 }
 .assistant .feature-list-item:hover {
-    background: var(--active-bg-color);
+    background: rgba(255, 255, 255, 0.05);
 }
-.assistant .feature-list > *:nth-last-child(2) {
-    border-bottom: none;
+.assistant .feature-list-pane .feature-list > *:first-child {
+    border-top: none;
 }
 [dir='ltr'] .assistant .feature-list-item .label {
-    padding-left: 8px;
+    padding: 10px 10px 10px 8px;
 }
 [dir='rtl'] .assistant .feature-list-item .label {
-    padding-right: 8px;
+    padding: 10px 8px 10px 10px;
 }
-.assistant .feature-list-item .icon {
+.assistant .feature-list-item .label .icon,
+.assistant .feature-list-item .entity-geom-icon .icon {
+    opacity: 0.75;
+    margin: 0;
+}
+[dir='ltr'] .assistant .feature-list-item .entity-geom-icon .icon {
     margin-right: 8px;
 }
-
+[dir='rtl'] .assistant .feature-list-item .entity-geom-icon .icon {
+    margin-left: 8px;
+}
+.assistant .feature-list-item .entity-name {
+    color: inherit;
+    font-weight: normal;
+    padding-left: 10px;
+}
+[dir='rtl'] .assistant .feature-list-item .entity-name {
+    padding-left: 0;
+    padding-right: 10px;
+}
+/* 2.x inspector page chrome — assistant already has its own header */
+.assistant .header.fillL {
+    display: none;
+}
 .assistant .geocode-item {
-    margin-top: 5px;
-    margin-right: auto;
-    margin-left: auto;
-    margin-bottom: 10px;
+    width: auto;
+    max-width: none;
+    min-height: 0;
+    margin: 5px auto 10px auto;
 }
 
 /* prominent assistant */
@@ -4395,6 +4434,15 @@ img.tag-reference-wiki-image {
 .over-map > * {
     pointer-events: auto;
     z-index: 5;
+}
+/* `.over-map > *` and `.assistant-wrap` have equal specificity; this later
+   block would otherwise make the full-height assistant column eat map clicks. */
+.over-map > .assistant-wrap,
+.over-map > .sidebar-wrap,
+.over-map > .map-controls-wrap,
+.over-map > .map-panes,
+.over-map > .attribution-wrap {
+    pointer-events: none;
 }
 /* offscreen this without hiding it */
 .over-map .select-trap {
@@ -7078,11 +7126,20 @@ li.hide + li.version .badge .tooltip .popover-arrow {
     fill: #79f;
 }
 .toolbar-item.operation button use,
-.edit-menu-item use {    pointer-events: none;
+.edit-menu-item use {
+    pointer-events: none;
 }
-.disabled .operation-icon {
-    fill: rgba(32,32,32,.2);
-    color: rgba(40,40,40,.2);
+/* Freeze `.operation-icon` with 2.43 theme tokens (same as `.icon.operation use`). */
+.operation-icon,
+.operation-icon use {
+    fill: var(--widget-color);
+    color: #79f;
+    pointer-events: none;
+}
+.disabled .operation-icon,
+.disabled .operation-icon use {
+    fill: var(--transparent-text-color);
+    color: var(--transparent-text-color);
 }
 
 /* Lasso

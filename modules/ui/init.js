@@ -137,11 +137,6 @@ export function uiInit(context) {
             .attr('id', 'ideditor-defs')
             .call(ui.svgDefs);
 
-        container
-            .append('div')
-            .attr('class', 'sidebar')
-            .call(ui.sidebar);
-
         var content = container
             .append('div')
             .attr('class', 'main-content ' + (context.history().hasRestorableChanges() ? 'inactive' : 'active'));
@@ -251,7 +246,7 @@ export function uiInit(context) {
         ui.assistant = uiAssistant(context);
         overMap
             .append('div')
-            .attr('class', 'sidebar-wrap')
+            .attr('class', 'assistant-wrap')
             .call(ui.assistant);
 
         overMap
@@ -381,10 +376,6 @@ export function uiInit(context) {
         var panPixels = 80;
         context.keybinding()
             .on('⌫', function(d3_event) { d3_event.preventDefault(); })
-            .on([t('sidebar.key'), '²', '@'], (d3_event) => {
-                d3_event.preventDefault();
-                ui.sidebar.toggle();
-            })   // sidebar: apostrophe + AZERTY extras; backtick is add-feature
             .on('←', pan([panPixels, 0]))
             .on('↑', pan([0, panPixels]))
             .on('→', pan([-panPixels, 0]))
@@ -536,11 +527,11 @@ export function uiInit(context) {
     ui.onResize = function(withPan) {
         var map = context.map();
 
-        // Recalc dimensions of map and sidebar.. (`true` = force recalc)
+        // Recalc dimensions of map and assistant.. (`true` = force recalc)
         // This will call `getBoundingClientRect` and trigger reflow,
         //  but the values will be cached for later use.
         var mapDimensions = utilGetDimensions(context.container().select('.main-content'), true);
-        utilGetDimensions(context.container().select('.sidebar'), true);
+        utilGetDimensions(context.container().select('.assistant'), true);
 
         if (withPan !== undefined) {
             map.redrawEnable(false);

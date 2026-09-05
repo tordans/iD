@@ -20,23 +20,25 @@ export function uiOsmoseEditor(context) {
 
   function osmoseEditor(selection) {
 
-    const header = selection.selectAll('.header')
-      .data([0]);
+    if (!(selection.node() && selection.node().closest('.assistant'))) {
+      const header = selection.selectAll('.header')
+        .data([0]);
 
-    const headerEnter = header.enter()
-      .append('div')
-        .attr('class', 'header fillL');
+      const headerEnter = header.enter()
+        .append('div')
+          .attr('class', 'header fillL');
 
-    headerEnter
-      .append('button')
-        .attr('class', 'close')
-        .attr('title', t('icons.close'))
-        .on('click', () => context.enter(modeBrowse(context)))
-        .call(svgIcon('#iD-icon-close'));
+      headerEnter
+        .append('button')
+          .attr('class', 'close')
+          .attr('title', t('icons.close'))
+          .on('click', () => context.enter(modeBrowse(context)))
+          .call(svgIcon('#iD-icon-close'));
 
-    headerEnter
-      .append('h2')
-        .call(t.append('QA.osmose.title'));
+      headerEnter
+        .append('h2')
+          .call(t.append('QA.osmose.title'));
+    }
 
     let body = selection.selectAll('.body')
       .data([0]);

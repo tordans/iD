@@ -1,7 +1,3 @@
-import {
-    select as d3_select
-} from 'd3-selection';
-
 import { svgIcon } from '../../svg/icon';
 import { uiTooltip } from '../tooltip';
 
@@ -12,7 +8,7 @@ export function uiToolOperation(context, operationClass, tool) {
     var operation;
 
     tool.itemClass = 'operation';
-    tool.iconClass = 'operation-icon';
+    tool.iconClass = 'operation';
 
     var button,
         tooltipBehavior = uiTooltip()

@@ -47,7 +47,7 @@ export function uiToolSegemented(context) {
                 return 'bar-button ' + d.id + ' ' + (d === active ? 'active' : '');
             })
             .attr('tabindex', -1)
-            .on('click', function(d) {
+            .on('click', function(d3_event, d) {
                 if (d3_select(this).classed('active')) return;
 
                 setActiveItem(d);

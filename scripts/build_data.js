@@ -268,7 +268,7 @@ function writeFaIcons(faIcons) {
         attributes: { xmlns: 'http://www.w3.org/2000/svg' },
       }).html.toString();
       fs.writeFileSync(`svg/fontawesome/${key}.svg`, svg);
-    } catch (error) {
+    } catch {
       console.error(`Warning: No FontAwesome icon for ${key}`);
     }
   });

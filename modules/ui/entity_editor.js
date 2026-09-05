@@ -83,44 +83,47 @@ export function uiEntityEditor(context) {
     function entityEditor(selection) {
 
         var combinedTags = utilCombinedTags(_entityIDs, context.graph());
+        var skipPageHeader = selection.node() && selection.node().closest('.assistant');
 
-        // Header
-        var header = selection.selectAll('.header')
-            .data([0]);
+        if (!skipPageHeader) {
+            // Header
+            var header = selection.selectAll('.header')
+                .data([0]);
 
-        // Enter
-        var headerEnter = header.enter()
-            .append('div')
-            .attr('class', 'header fillL');
+            // Enter
+            var headerEnter = header.enter()
+                .append('div')
+                .attr('class', 'header fillL');
 
-        var direction = (localizer.textDirection() === 'rtl') ? 'forward' : 'backward';
+            var direction = (localizer.textDirection() === 'rtl') ? 'forward' : 'backward';
 
-        headerEnter
-            .append('button')
-            .attr('class', 'preset-reset preset-choose')
-            .attr('title', t('inspector.back_tooltip'))
-            .call(svgIcon(`#iD-icon-${direction}`));
+            headerEnter
+                .append('button')
+                .attr('class', 'preset-reset preset-choose')
+                .attr('title', t('inspector.back_tooltip'))
+                .call(svgIcon(`#iD-icon-${direction}`));
 
-        headerEnter
-            .append('button')
-            .attr('class', 'close')
-            .attr('title', t('icons.close'))
-            .on('click', function() { context.enter(modeBrowse(context)); })
-            .call(svgIcon(_modified ? '#iD-icon-apply' : '#iD-icon-close'));
+            headerEnter
+                .append('button')
+                .attr('class', 'close')
+                .attr('title', t('icons.close'))
+                .on('click', function() { context.enter(modeBrowse(context)); })
+                .call(svgIcon(_modified ? '#iD-icon-apply' : '#iD-icon-close'));
 
-        headerEnter
-            .append('h2');
+            headerEnter
+                .append('h2');
 
-        // Update
-        header = header
-            .merge(headerEnter);
+            // Update
+            header = header
+                .merge(headerEnter);
 
-        header.selectAll('h2')
-            .text('')
-            .call(_entityIDs.length === 1 ? t.append('inspector.edit') : t.append('inspector.edit_features'));
+            header.selectAll('h2')
+                .text('')
+                .call(_entityIDs.length === 1 ? t.append('inspector.edit') : t.append('inspector.edit_features'));
 
-        header.selectAll('.preset-reset')
-            .on('click', togglePresetBrowser);
+            header.selectAll('.preset-reset')
+                .on('click', togglePresetBrowser);
+        }
 
         // Body
         var body = selection.selectAll('.inspector-body')
@@ -131,9 +134,7 @@ export function uiEntityEditor(context) {
             .append('div')
             .attr('class', 'entity-editor inspector-body sep-top');
 
-        if (!bodyEnter.empty()) {
-            presetBrowser.render(bodyEnter);
-        }
+        var isNewBody = !bodyEnter.empty();
 
         // Update
         body = body
@@ -168,6 +169,22 @@ export function uiEntityEditor(context) {
             }
             body.call(section.render);
         });
+
+        // Freeze: popover is anchored to the feature-type button, not 2.43's inline `.render()`.
+        if (isNewBody) {
+            var presetButtonWrap = body.select('.preset-list-button-wrap');
+            if (!presetButtonWrap.empty()) {
+                presetButtonWrap.call(presetBrowser.scrollContainer(body));
+            }
+
+            if (_newFeature && _entityIDs.length === 1) {
+                var newEntity = context.hasEntity(_entityIDs[0]);
+                if (newEntity && !newEntity.hasNonGeometryTags()) {
+                    presetBrowser.setAllowedGeometry(entityGeometries());
+                    presetBrowser.show();
+                }
+            }
+        }
 
         context.history()
             .on('change.entity-editor', historyChanged)

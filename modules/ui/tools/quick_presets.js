@@ -77,12 +77,16 @@ export function uiToolQuickPresets(context) {
             protoMode.title = presetName;
 
             if (geometry) {
-                protoMode.description = t('modes.add_preset.title', { feature: '<strong>' + presetName + '</strong>' });
+                protoMode.description = t.append('modes.add_preset.title', {
+                    feature: appendStrong(presetName)
+                });
             } else {
                 var hiddenPresetFeatures = context.features().isHiddenPreset(d.preset, d.preset.geometry[0]);
                 var isAutoHidden = context.features().autoHidden(hiddenPresetFeatures.key);
                 var tooltipIdSuffix = isAutoHidden ? 'zoom' : 'manual';
-                protoMode.description = t('inspector.hidden_preset.' + tooltipIdSuffix, { features: hiddenPresetFeatures.title });
+                protoMode.description = t.append('inspector.hidden_preset.' + tooltipIdSuffix, {
+                    features: hiddenPresetFeatures.title
+                });
                 protoMode.key = null;
             }
 
@@ -350,6 +354,17 @@ export function uiToolQuickPresets(context) {
             .on('move.' + tool.id, null)
             .on('drawn.' + tool.id, null);
     };
+
+    function appendStrong(label) {
+        return function(selection) {
+            var strong = selection.append('strong');
+            if (typeof label === 'function') {
+                strong.call(label);
+            } else {
+                strong.text(label || '');
+            }
+        };
+    }
 
     return tool;
 }

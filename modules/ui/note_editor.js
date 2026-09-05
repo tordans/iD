@@ -35,25 +35,27 @@ export function uiNoteEditor(context) {
 
     function noteEditor(selection) {
 
-        var header = selection.selectAll('.header')
-            .data([0]);
+        if (!(selection.node() && selection.node().closest('.assistant'))) {
+            var header = selection.selectAll('.header')
+                .data([0]);
 
-        var headerEnter = header.enter()
-            .append('div')
-            .attr('class', 'header fillL');
+            var headerEnter = header.enter()
+                .append('div')
+                .attr('class', 'header fillL');
 
-        headerEnter
-            .append('button')
-            .attr('class', 'close')
-            .attr('title', t('icons.close'))
-            .on('click', function() {
-                context.enter(modeBrowse(context));
-            })
-            .call(svgIcon('#iD-icon-close'));
+            headerEnter
+                .append('button')
+                .attr('class', 'close')
+                .attr('title', t('icons.close'))
+                .on('click', function() {
+                    context.enter(modeBrowse(context));
+                })
+                .call(svgIcon('#iD-icon-close'));
 
-        headerEnter
-            .append('h2')
-            .call(t.append('note.title'));
+            headerEnter
+                .append('h2')
+                .call(t.append('note.title'));
+        }
 
 
         var body = selection.selectAll('.body')

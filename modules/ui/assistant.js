@@ -12,7 +12,6 @@ import { uiSuccess } from './success';
 import { uiPresetIcon } from './preset_icon';
 import { uiEntityEditor } from './entity_editor';
 import { uiFeatureList } from './feature_list';
-import { uiSectionSelectionList } from './sections/selection_list';
 import { uiNoteEditor } from './note_editor';
 import { uiOsmoseEditor } from './osmose_editor';
 import { uiDataEditor } from './data_editor';
@@ -298,11 +297,7 @@ export function uiAssistant(context) {
 
         } else if (mode.id === 'select') {
 
-            var selectedIDs = mode.selectedIDs();
-            if (selectedIDs.length === 1) {
-                return panelSelectSingle(context, selectedIDs[0]);
-            }
-            return panelSelectMultiple(context, selectedIDs);
+            return panelSelect(context, mode.selectedIDs());
 
         } else if (mode.id === 'drag-node' && mode.restoreSelectedIDs().length) {
 
@@ -802,54 +797,45 @@ export function uiAssistant(context) {
         return panel;
     }
 
-    function panelSelectSingle(context, id) {
+    function panelSelect(context, selectedIDs) {
 
-        var entity = context.entity(id);
-        var geometry = entity.geometry(context.graph());
-        var preset = context.presets().match(entity, context.graph());
+        // Keep inspect open so fields/tags are visible (same idea as freeze
+        // always showing the save body after pressing Save).
+        setIsBodyCollapsed('inspect', false);
 
         var panel = {
-            hash: 'select ' + id,
+            hash: 'select ' + selectedIDs.toString(),
             theme: 'light',
             modeLabel: t('assistant.mode.inspecting'),
-            title: utilDisplayLabel(entity, context),
+            title: selectedIDs.length === 1 ? utilDisplayLabel(context.entity(selectedIDs[0]), context.graph()) :
+                t('assistant.feature_count.multiple', { count: selectedIDs.length.toString() }),
             collapseCategory: 'inspect'
         };
 
         panel.renderHeaderIcon = function(selection) {
-            selection.call(uiPresetIcon(context)
-                .geometry(geometry)
-                .preset(preset)
-                .sizeClass('small')
-                .pointMarker(false));
+
+            if (selectedIDs.length === 1) {
+                var entity = context.entity(selectedIDs[0]);
+                var geometry = entity.geometry(context.graph());
+                var preset = context.presets().match(entity, context.graph());
+
+                selection.call(uiPresetIcon(context)
+                    .geometry(geometry)
+                    .preset(preset)
+                    .sizeClass('small')
+                    .pointMarker(false));
+            } else {
+                selection.call(svgIcon('#fas-edit'));
+            }
         };
 
         panel.renderBody = function(selection) {
             var mode = context.mode();
             var entityEditor = uiEntityEditor(context)
                 .state('select')
-                .entityIDs([id])
+                .entityIDs(selectedIDs)
                 .newFeature(mode.newFeature && mode.newFeature());
             selection.call(entityEditor);
-        };
-
-        return panel;
-    }
-
-    function panelSelectMultiple(context, selectedIDs) {
-
-        var panel = {
-            headerIcon: 'fas-edit',
-            modeLabel: t('assistant.mode.editing'),
-            title: t('assistant.feature_count.multiple', { count: selectedIDs.length.toString() })
-        };
-
-        panel.renderBody = function(selection) {
-            selection.call(
-                uiSectionSelectionList(context)
-                    .entityIDs(selectedIDs)
-                    .render
-            );
         };
 
         return panel;

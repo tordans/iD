@@ -91,6 +91,7 @@ export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
     loadTiles(projection: Projection, callback?: Callback<LoadedData>): void;
     loadTileAtLoc(loc: Vec2, callback?: Callback<LoadedData>): void;
     loadEntity(entityID: EntityId, callback: Callback<LoadedData>): void;
+    loadEntities(entityIDs: EntityId[], callback: Callback<LoadedData>): void;
     loadNote(entityID: NoteId, callback: Callback<LoadedData>): void;
     zoomToEntity(entityID: EntityId, zoomTo?: boolean): void;
     zoomToEntities(entityIDs: EntityId[], zoomTo?: boolean): void;
@@ -347,17 +348,17 @@ export function coreContext(this: object): coreContext {
       const cid = _connection.getConnectionId();
       _connection.loadMultiple(entityIDs, loadedMultiple);
 
-      function loadedMultiple(err, result) {
+      function loadedMultiple(err: Error | null, result?: LoadedData) {
         if (err || !result) {
-          afterLoad(cid, callback)(err, result);
+          afterLoad(cid, callback)(err as Error, result as undefined);
           return;
         }
 
         // `loadMultiple` doesn't fetch child nodes, so we have to fetch them
         // manually before merging ways
-        const unloadedNodeIDs = new Set();
-        const okayResults = [];
-        const waitingEntities = [];
+        const unloadedNodeIDs = new Set<EntityId>();
+        const okayResults: OsmEntity[] = [];
+        const waitingEntities: OsmEntity[] = [];
         result.data.forEach((entity) => {
           let hasUnloaded = false;
           if (entity.type === 'way') {
@@ -378,9 +379,9 @@ export function coreContext(this: object): coreContext {
           afterLoad(cid, callback)(err, { data: okayResults });
         }
         if (waitingEntities.length) {
-          _connection.loadMultiple(Array.from(unloadedNodeIDs), (err2, result2) => {
+          _connection.loadMultiple(Array.from(unloadedNodeIDs), (err2: Error | null, result2?: LoadedData) => {
             if (err2 || !result2) {
-              afterLoad(cid, callback)(err2, result2);
+              afterLoad(cid, callback)(err2 as Error, result2 as undefined);
               return;
             }
             result2.data.forEach((entity) => {
@@ -750,6 +751,7 @@ export function coreContext(this: object): coreContext {
   context.undo = undefined!;
   context.redo = undefined!;
   context.on = undefined!;
+  context.isFirstSession = undefined!;
 
   context.init = () => {
 

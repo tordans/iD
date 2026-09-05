@@ -148,7 +148,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
             .each(function(d) {
                 d3_select(this).call(svgIcon('#iD-icon-' + d));
             })
-            .on('click', function(d) {
+            .on('click', function(d3_event, d) {
                 toggleShownGeometry(d);
                 if (shownGeometry.length === 0) {
                     updateShownGeometry(allowedGeometry);
@@ -501,7 +501,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
 
         row.append('button')
             .attr('class', 'choose')
-            .on('click', function(d) {
+            .on('click', function(d3_event, d) {
                 d.choose.call(this);
             });
 
@@ -567,7 +567,7 @@ export function uiPresetBrowser(context, allowedGeometry, onChoose, onCancel) {
         var listItem = d3_selectAll('.add-feature .poplist .list-item');
 
         // remove existing tooltips
-        listItem.selectAll('button.choose').call(tooltip().destroyAny);
+        listItem.selectAll('button.choose').call(uiTooltip().destroyAny);
 
         listItem.each(function(item, index) {
 
