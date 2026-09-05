@@ -20,11 +20,13 @@ export function uiSectionFeatureType(context) {
 
     var _tagReference;
 
+    // Freeze rendered the type picker as a plain inspector row, not a 2.x
+    // "Feature Type" / Objekttyp disclosure.
     var section = uiSection('feature-type', context)
-        .label(() => t.append('inspector.feature_type'))
-        .disclosureContent(renderDisclosureContent);
+        .classes('preset-list-item inspector-inner')
+        .content(renderContent);
 
-    function renderDisclosureContent(selection) {
+    function renderContent(selection) {
 
         selection.classed('preset-list-item', true);
         selection.classed('mixed-types', _presets.length > 1);
@@ -87,7 +89,7 @@ export function uiSectionFeatureType(context) {
             });
 
         var geometries = entityGeometries();
-        selection.select('.preset-list-item button')
+        selection.select('.preset-list-button')
             .call(uiPresetIcon()
                 .geometry(_presets.length === 1 ? (geometries.length === 1 && geometries[0]) : null)
                 .preset(_presets.length === 1 ? _presets[0] : presetManager.item('point'))

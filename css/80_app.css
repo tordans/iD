@@ -1461,8 +1461,8 @@ summary.hide-toggle::-webkit-details-marker {
     */
 }
 .assistant.light:not(.body-collapsed) {
-    background: var(--bg-color-2);
-    color: var(--text-color);
+    background: rgba(246, 246, 246, 0.98);
+    color: #333;
 }
 .assistant .sep-top {
     border-top: 1px solid var(--transparent-border-color);
@@ -1501,7 +1501,7 @@ summary.hide-toggle::-webkit-details-marker {
     border-top-right-radius: inherit;
 }
 .assistant.light:not(.body-collapsed) .assistant-header {
-    background: var(--bg-color);
+    background: #fff;
 }
 .assistant.collapsible .assistant-header {
     cursor: pointer;
@@ -2016,6 +2016,23 @@ summary.hide-toggle::-webkit-details-marker {
 .section:not(:last-child),
 .map-pane .section {
     margin-bottom: 30px;}
+
+/* Freeze: type picker is a compact row, not a disclosure section */
+.entity-editor .section-feature-type {
+    margin-bottom: 10px;
+}
+.assistant.light .section-feature-type .preset-list-button-wrap {
+    background: #fff;
+    border-color: #ccc;
+}
+.assistant.light .section-feature-type .preset-list-button,
+.assistant.light .section-feature-type .preset-list-button .label {
+    color: #333;
+    background: transparent;
+}
+.assistant.light .section-feature-type .preset-list-button-wrap button.tag-reference-button:not(:hover):not(:active):not(:focus) {
+    background: #f6f6f6;
+}
 
 
 /* Feature List / Search Results

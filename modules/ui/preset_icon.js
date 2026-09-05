@@ -394,7 +394,10 @@ export function uiPresetIcon() {
     const imageURL = (showThirdPartyIcons === 'true') && p.imageURL;
     const picon = getIcon(p, geom);
     const isCategory = !p.setTags;
-    const drawPoint = geom === 'point' && (isSmall() || !picon) && !isFallback;
+    // Freeze: pin only when asked (`pointMarker`) or when there is no preset icon.
+    // 2.43 used `isSmall() || !picon`, which ignored `.pointMarker(false)` and
+    // drew a marker around every small point icon (assistant header, etc.).
+    const drawPoint = geom === 'point' && (_pointMarker || !picon) && !isFallback;
     const drawVertex = picon !== null && geom === 'vertex' && (!isSmall() || !isFallback);
     const drawLine = picon && geom === 'line' && !isFallback && !isCategory;
     const drawArea = picon && geom === 'area' && !isFallback && !isCategory;
