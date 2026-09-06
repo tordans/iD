@@ -1664,6 +1664,9 @@ summary.hide-toggle::-webkit-details-marker {
 }
 .assistant .main-footer {
     margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 .assistant button.geocode-item,
 .assistant .main-footer button {
@@ -1672,12 +1675,6 @@ summary.hide-toggle::-webkit-details-marker {
     padding: 7px 12px;
     line-height: 1em;
     font-size: 13px;
-}
-[dir='ltr'] .assistant .main-footer button:first-of-type {
-    margin-right: 8px;
-}
-[dir='rtl'] .assistant .main-footer button:first-of-type {
-    margin-left: 8px;
 }
 .assistant .body-text:empty,
 .assistant .main-footer:empty,

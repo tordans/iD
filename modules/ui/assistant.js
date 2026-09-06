@@ -548,52 +548,21 @@ export function uiAssistant(context) {
 
             var bodyTextArea = selection
                 .append('div')
-                .attr('class', 'body-text');
+                .attr('class', 'body-text')
+                .html(t('restore.description'));
 
             var mainFooter = selection
                 .append('div')
                 .attr('class', 'main-footer');
 
-            var savedHistoryJSON = JSON.parse(context.history().savedHistoryJSON());
-
-            var lastGraph = savedHistoryJSON.stack &&
-                savedHistoryJSON.stack.length > 0 &&
-                savedHistoryJSON.stack[savedHistoryJSON.stack.length - 1];
-            if (!lastGraph) return;
-
-            var changeCount = (lastGraph.modified ? lastGraph.modified.length : 0) +
-                (lastGraph.deleted ? lastGraph.deleted.length : 0);
-            if (changeCount === 0) return;
-
-            var loc = lastGraph.transform &&
-                geoRawMercator()
-                .transform(lastGraph.transform)
-                .invert([0, 0]);
-            if (!loc) return;
-
-            var restoreInfoDict = {
-                count: '<b>' + changeCount.toString() + '</b>',
-                location: '<b class="restore-location">' + decimalCoordinatePair(loc, 3) + '</b>'
-            };
-            var infoID = 'count_loc';
-
-            if (savedHistoryJSON.timestamp) {
-                infoID = 'count_loc_time';
-                var milliseconds = (new Date()).getTime() - savedHistoryJSON.timestamp;
-                restoreInfoDict.duration = '<b>' + formattedRoundedDuration(milliseconds) + '</b>';
+            function activateMap() {
+                context.container().selectAll('.main-content')
+                    .attr('class', 'main-content active');
             }
 
-            bodyTextArea.html(t('assistant.restore.info.' + infoID, restoreInfoDict) +
-                '<br/>' +
-                t('assistant.restore.ask'));
-
-            getLocation(loc, null, function(placeName) {
-                if (placeName) {
-                    selection.selectAll('.restore-location')
-                        .text(placeName);
-                }
-            });
-
+            // Always offer Restore/Discard. 2.43 history is async IndexedDB, and
+            // freeze returned early with no buttons when details were missing —
+            // that left the map inactive with no way out.
             mainFooter.append('button')
                 .attr('class', 'primary')
                 .on('click', function(d3_event) {
@@ -601,10 +570,10 @@ export function uiAssistant(context) {
                     d3_event.stopPropagation();
 
                     updateDidEditStatus();
-                    context.container().selectAll('.main-content')
-                        .attr('class', 'main-content active');
-                    context.history().restore();
-                    redraw();
+                    activateMap();
+                    Promise.resolve(context.history().restore()).then(function() {
+                        redraw();
+                    });
                 })
                 .append('span')
                 .text(t('assistant.restore.title'));
@@ -617,14 +586,69 @@ export function uiAssistant(context) {
 
                     // don't show another welcome screen after discarding changes
                     updateDidEditStatus();
-                    context.container().selectAll('.main-content')
-                        .attr('class', 'main-content active');
+                    activateMap();
                     context.history().clearSaved();
                     context.map().pan([0,0]);  // trigger a map redraw
                     redraw();
                 })
                 .append('span')
                 .text(t('assistant.restore.discard'));
+
+            function parseSavedHistory(data) {
+                if (!data) return null;
+                if (typeof data === 'string') {
+                    try { return JSON.parse(data); } catch (err) { return null; }
+                }
+                return data;
+            }
+
+            function renderRestoreDetails(savedHistoryJSON) {
+                if (selection.empty()) return;
+                if (!savedHistoryJSON) return;
+
+                var lastGraph = savedHistoryJSON.stack &&
+                    savedHistoryJSON.stack.length > 0 &&
+                    savedHistoryJSON.stack[savedHistoryJSON.stack.length - 1];
+                if (!lastGraph) return;
+
+                var changeCount = (lastGraph.modified ? lastGraph.modified.length : 0) +
+                    (lastGraph.deleted ? lastGraph.deleted.length : 0);
+                if (changeCount === 0) return;
+
+                var loc = lastGraph.transform &&
+                    geoRawMercator()
+                    .transform(lastGraph.transform)
+                    .invert([0, 0]);
+                if (!loc) return;
+
+                var restoreInfoDict = {
+                    count: '<b>' + changeCount.toString() + '</b>',
+                    location: '<b class="restore-location">' + decimalCoordinatePair(loc, 3) + '</b>'
+                };
+                var infoID = 'count_loc';
+
+                if (savedHistoryJSON.timestamp) {
+                    infoID = 'count_loc_time';
+                    var milliseconds = (new Date()).getTime() - savedHistoryJSON.timestamp;
+                    restoreInfoDict.duration = '<b>' + formattedRoundedDuration(milliseconds) + '</b>';
+                }
+
+                bodyTextArea.html(t('assistant.restore.info.' + infoID, restoreInfoDict) +
+                    '<br/>' +
+                    t('assistant.restore.ask'));
+
+                getLocation(loc, null, function(placeName) {
+                    if (placeName) {
+                        selection.selectAll('.restore-location')
+                            .text(placeName);
+                    }
+                });
+            }
+
+            Promise.resolve(context.history().savedHistoryJSON())
+                .then(parseSavedHistory)
+                .then(renderRestoreDetails)
+                .catch(function() { /* keep generic copy + buttons */ });
         };
 
         return panel;
