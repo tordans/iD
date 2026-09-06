@@ -668,23 +668,14 @@ button.bar-button .label {
     flex: 0 1 auto;
     padding: 0 5px;
 }
+.toolbar-item.disclosing button.bar-button {
+    /* Chevron is a skinny glyph; less trailing pad than the leading icon */
+    padding-inline-end: 4px;
+}
 .toolbar-item button.bar-button .disclosure-icon {
     width: 18px;
     color: var(--passive-text-color);
-}
-[dir='ltr'] .toolbar-item .disclosure-icon {
-    margin-left: 6px;
-    margin-right: -2px;
-}
-[dir='rtl'] .toolbar-item .disclosure-icon {
-    margin-left: -2px;
-    margin-right: 6px;
-}
-[dir='ltr'] .toolbar-item.add-feature .disclosure-icon {
-    margin-left: 4px;
-}
-[dir='rtl'] .toolbar-item.add-feature .disclosure-icon {
-    margin-right: 4px;
+    margin-inline-start: 4px;
 }
 
 button.bar-button.dragging {
@@ -1442,12 +1433,11 @@ summary.hide-toggle::-webkit-details-marker {
 .over-map > * {
     pointer-events: auto;
 }
-/* `.over-map > *` and wrap classes have equal specificity; keep full-height
-   columns from eating map and toolbar clicks. */
+/* `.over-map > *` beats a wrap's own `none`. Full-bleed wraps stay `none`;
+   children opt in. `.map-panes` is pane-width only (develop) so keep auto. */
 .over-map > .assistant-wrap,
 .over-map > .sidebar-wrap,
 .over-map > .map-controls-wrap,
-.over-map > .map-panes,
 .over-map > .attribution-wrap,
 .over-map > .info-panels {
     pointer-events: none;
