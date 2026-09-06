@@ -11,14 +11,15 @@ export function uiToolSave(context) {
 
     var tool = {
         id: 'save',
-        label: t.append('save.title')
+        label: t.append('save.title'),
+        userToggleable: false
     };
 
     var button = null;
     var tooltipBehavior = null;
     var history = context.history();
     var key = uiCmd('⌘S');
-    var _numChanges = 0;
+    var _numChanges;
 
     function isSaving() {
         var mode = context.mode();
@@ -26,7 +27,7 @@ export function uiToolSave(context) {
     }
 
     function isDisabled() {
-        return _numChanges === 0 || isSaving();
+        return !_numChanges || isSaving();
     }
 
     function save(d3_event) {
@@ -36,15 +37,15 @@ export function uiToolSave(context) {
         }
     }
 
-    function bgColor(numChanges) {
+    function bgColor(count) {
         var step;
-        if (numChanges === 0) {
+        if (count === 0) {
             return null;
-        } else if (numChanges <= 50) {
-            step = numChanges / 50;
+        } else if (count <= 50) {
+            step = count / 50;
             return d3_interpolateRgb('#fff0', '#ff08')(step);  // transparent -> yellow
         } else {
-            step = Math.min((numChanges - 50) / 50, 1.0);
+            step = Math.min((count - 50) / 50, 1.0);
             return d3_interpolateRgb('#ff08', '#f008')(step);  // yellow -> red
         }
     }
@@ -57,7 +58,7 @@ export function uiToolSave(context) {
 
         if (tooltipBehavior) {
             tooltipBehavior
-                .title(() => t.append(_numChanges > 0 ? 'save.help' : 'save.no_changes'))
+                .title(() => t.append(val > 0 ? 'save.help' : 'save.no_changes'))
                 .keys([key]);
         }
 
@@ -67,21 +68,28 @@ export function uiToolSave(context) {
                 .style('--accent-color', bgColor(_numChanges));
 
             button.select('span.count')
-                .text(_numChanges);
+                .html(val);
         }
     }
 
 
     tool.render = function(selection) {
-        tooltipBehavior = uiTooltip()
-            .placement('bottom')
-            .title(() => t.append('save.no_changes'))
-            .keys([key])
-            .scrollContainer(context.container().select('.top-toolbar'));
+        if (!tooltipBehavior) {
+            tooltipBehavior = uiTooltip()
+                .placement('bottom')
+                .title(() => t.append('save.no_changes'))
+                .keys([key])
+                .scrollContainer(context.container().select('.top-toolbar'));
+        }
 
         var lastPointerUpType;
 
         button = selection
+            .selectAll('.bar-button')
+            .data([0]);
+
+        var buttonEnter = button
+            .enter()
             .append('button')
             .attr('class', 'save disabled bar-button')
             .on('pointerup', function(d3_event) {
@@ -105,21 +113,36 @@ export function uiToolSave(context) {
             })
             .call(tooltipBehavior);
 
-        button
+        buttonEnter
             .call(svgIcon('#iD-icon-save'));
 
-        button
+        buttonEnter
             .append('span')
             .attr('class', 'count')
             .attr('aria-hidden', 'true')
             .text('0');
 
+        button = buttonEnter.merge(button);
+
         updateCount();
+    };
 
+    var disallowedModes = new Set([
+        'save',
+        'add-point',
+        'add-line',
+        'add-area',
+        'draw-line',
+        'draw-area'
+    ]);
 
+    tool.allowed = function() {
+        return !disallowedModes.has(context.mode().id);
+    };
+
+    tool.install = function() {
         context.keybinding()
             .on(key, save, true);
-
 
         context.history()
             .on('change.save', updateCount);
@@ -139,6 +162,9 @@ export function uiToolSave(context) {
 
 
     tool.uninstall = function() {
+
+        _numChanges = null;
+
         context.keybinding()
             .off(key, true);
 

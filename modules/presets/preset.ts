@@ -54,6 +54,8 @@ export interface presetPreset extends Omit<Preset,
   isFallback(): boolean;
   getParentPreset(): presetPreset | undefined;
   addable: GetSet<presetPreset, boolean>;
+  defaultAddGeometry(context: iD.Context, allowedGeometries?: Geometry[]): Geometry | null;
+  setMostRecentAddGeometry(context: iD.Context, geometry: Geometry): void;
 }
 
 //
@@ -352,6 +354,36 @@ export function presetPreset(
 
     return resolved;
   }
+
+  // The geometry type to use when adding a new feature of this preset
+  _this.defaultAddGeometry = function(context, allowedGeometries) {
+    const geometry: Geometry[] = (_this.geometry || []).slice().filter((geom) => {
+      if (allowedGeometries && allowedGeometries.indexOf(geom) === -1) return false;
+      if (context.features().isHiddenPreset(_this, geom)) return false;
+      return true;
+    });
+    // prefs JSDoc claims boolean; the getter actually returns the stored string.
+    let mostRecentAddGeom = context.storage('preset.' + _this.id + '.addGeom') as unknown as string | null;
+    if (mostRecentAddGeom === 'vertex') mostRecentAddGeom = 'point';
+    if (mostRecentAddGeom && geometry.indexOf(mostRecentAddGeom as Geometry) !== -1) {
+      return mostRecentAddGeom as Geometry;
+    }
+    const vertexIndex = geometry.indexOf('vertex');
+    if (vertexIndex !== -1 && geometry.indexOf('point') !== -1) {
+      geometry.splice(vertexIndex, 1);
+    }
+    if (geometry.length) {
+      return geometry[0];
+    }
+    return null;
+  };
+
+  _this.setMostRecentAddGeometry = function(context, geometry) {
+    if ((_this.geometry || []).length > 1 &&
+        _this.geometry.indexOf(geometry) !== -1) {
+      context.storage('preset.' + _this.id + '.addGeom', geometry);
+    }
+  };
 
   return _this;
 }

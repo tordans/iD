@@ -218,16 +218,18 @@ export function behaviorHash(context) {
         var q = utilStringQs(window.location.hash);
 
         if (q.id) {
-            // targeting specific features: download, select, and zoom to them
-            const selectIds = q.id.split(',');
-            if (selectIds.length === 1 && selectIds[0].startsWith('note/')) {
-                const noteId = +selectIds[0].split('/')[1];
-                context.moveToNote(noteId, !q.map);
-            } else {
-                context.zoomToEntities(
-                    // convert ids to short form id: node/123 -> n123
-                    selectIds.map(id => id.replace(/([nwr])[^/]*\//, '$1')),
-                    !q.map);
+            if (!context.history().hasRestorableChanges()) {
+                // targeting specific features: download, select, and zoom to them
+                const selectIds = q.id.split(',');
+                if (selectIds.length === 1 && selectIds[0].startsWith('note/')) {
+                    const noteId = +selectIds[0].split('/')[1];
+                    context.moveToNote(noteId, !q.map);
+                } else {
+                    context.zoomToEntities(
+                        // convert ids to short form id: node/123 -> n123
+                        selectIds.map(id => id.replace(/([nwr])[^/]*\//, '$1')),
+                        !q.map);
+                }
             }
         }
 

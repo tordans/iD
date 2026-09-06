@@ -449,8 +449,7 @@ path.line.casing.tag-road {
 }
 
 /* service roads */
-path.line.stroke.tag-highway-service {
-    stroke: #fff;
+path.line.stroke.tag-highway-service {    stroke: #fff;
 }
 path.line.casing.tag-highway-service {
     stroke: #666;
@@ -512,7 +511,6 @@ path.line.stroke.tag-highway-bridleway.tag-oneway {
 
 /* style for features that should have highway=footway but don't yet */
 path.line.stroke.tag-crossing,
-path.line.stroke.tag-footway-access_aisle,
 path.line.stroke.tag-public_transport-platform,
 path.line.stroke.tag-highway-platform,
 path.line.stroke.tag-railway-platform,
@@ -524,8 +522,7 @@ path.line.stroke.tag-man_made-pier {
 path.line.casing.tag-highway-path,
 path.line.casing.tag-highway-footway.tag-public_transport-platform,
 path.line.casing.tag-highway-footway.tag-man_made-pier,
-path.line.casing.tag-highway.tag-crossing,
-path.line.casing.tag-highway.tag-footway-access_aisle {
+path.line.casing.tag-highway.tag-crossing {
     stroke: #dca;
     stroke-linecap: round;
     stroke-dasharray: none;
@@ -570,7 +567,7 @@ path.stroke.tag-highway-footway.tag-footway-sidewalk,
 .preset-icon-container path.casing.tag-highway-footway.tag-footway-sidewalk {
     stroke: #d4b4b4;
 }
-.preset-icon-container path.stroke.tag-highway-footway:not(.tag-crossing-marked):not(.tag-crossing-unmarked):not(.tag-footway-access_aisle):not(.tag-man_made-pier):not(.tag-public_transport-platform) {
+.preset-icon-container path.stroke.tag-highway-footway:not(.tag-crossing-marked):not(.tag-crossing-unmarked):not(.tag-man_made-pier):not(.tag-public_transport-platform) {
     stroke: #fff;
 }
 
@@ -730,7 +727,6 @@ path.line.stroke.tag-highway.tag-footway-access_aisle {
 .preset-icon .icon.tag-highway.tag-footway-access_aisle {
     color: #4c4444;
 }
-
 
 /* highway midpoints */
 g.midpoint.tag-highway-corridor .fill,

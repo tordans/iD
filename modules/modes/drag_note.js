@@ -55,7 +55,6 @@ export function modeDragNote(context) {
 
         context.perform(actionNoop());
         context.enter(mode);
-        context.selectedNoteID(_note.id);
     }
 
 
@@ -95,7 +94,6 @@ export function modeDragNote(context) {
         context.replace(actionNoop());   // trigger redraw
 
         context
-            .selectedNoteID(_note.id)
             .enter(modeSelectNote(context, _note.id));
     }
 

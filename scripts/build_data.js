@@ -72,7 +72,17 @@ function buildData() {
     'fas-user-cog',
     'fas-calendar-days',
     'fas-rotate',
-    'fas-eye-dropper'
+    'fas-eye-dropper',
+    'fas-toolbox',
+    'fas-clock',
+    'fas-edit',
+    'fas-sun',
+    'fas-moon',
+    'fas-birthday-cake',
+    'fas-map-marked-alt',
+    'fas-smile-beam',
+    'fas-grin-beam',
+    'fas-laugh-beam'
   ]);
   // add icons for QA integrations
   readQAIssueIcons(faIcons);
@@ -253,13 +263,13 @@ function writeFaIcons(faIcons) {
     const name = key.substring(4);
     const def = fontawesome.findIconDefinition({ prefix: prefix, iconName: name });
     try {
+      if (!def) throw new Error('missing');
       const svg = fontawesome.icon(def, {
         attributes: { xmlns: 'http://www.w3.org/2000/svg' },
       }).html.toString();
       fs.writeFileSync(`svg/fontawesome/${key}.svg`, svg);
-    } catch (error) {
-      console.error(`Error: No FontAwesome icon for ${key}`);
-      throw (error);
+    } catch {
+      console.error(`Warning: No FontAwesome icon for ${key}`);
     }
   });
 }

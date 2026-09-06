@@ -16,33 +16,35 @@ export function uiDataEditor(context) {
 
     function dataEditor(selection) {
 
-        var header = selection.selectAll('.header')
-            .data([0]);
+        if (!(selection.node() && selection.node().closest('.assistant'))) {
+            var header = selection.selectAll('.header')
+                .data([0]);
 
-        var headerEnter = header.enter()
-            .append('div')
-            .attr('class', 'header fillL');
+            var headerEnter = header.enter()
+                .append('div')
+                .attr('class', 'header fillL');
 
-        headerEnter
-            .append('button')
-            .attr('class', 'close')
-            .attr('title', t('icons.close'))
-            .on('click', function() {
-                context.enter(modeBrowse(context));
-            })
-            .call(svgIcon('#iD-icon-close'));
+            headerEnter
+                .append('button')
+                .attr('class', 'close')
+                .attr('title', t('icons.close'))
+                .on('click', function() {
+                    context.enter(modeBrowse(context));
+                })
+                .call(svgIcon('#iD-icon-close'));
 
-        headerEnter
-            .append('h2')
-            .call(t.append('map_data.title'));
+            headerEnter
+                .append('h2')
+                .call(t.append('map_data.title'));
+        }
 
 
-        var body = selection.selectAll('.body')
+        var body = selection.selectAll('.inspector-body')
             .data([0]);
 
         body = body.enter()
             .append('div')
-            .attr('class', 'body')
+            .attr('class', 'inspector-body')
             .merge(body);
 
         var editor = body.selectAll('.data-editor')

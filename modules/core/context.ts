@@ -8,6 +8,7 @@ import type { EntityId, NoteId, osmChangeset, OsmEntity } from '../osm';
 import { t, localizer } from './localizer';
 import { fileFetcher, type AssetMap } from './file_fetcher';
 import { coreHistory } from './history';
+import { prefs } from './preferences';
 import { coreValidator } from './validator';
 import { coreUploader } from './uploader';
 import { geoRawMercator, type Projection } from '../geo/raw_mercator';
@@ -90,6 +91,7 @@ export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
     loadTiles(projection: Projection, callback?: Callback<LoadedData>): void;
     loadTileAtLoc(loc: Vec2, callback?: Callback<LoadedData>): void;
     loadEntity(entityID: EntityId, callback: Callback<LoadedData>): void;
+    loadEntities(entityIDs: EntityId[], callback: Callback<LoadedData>): void;
     loadNote(entityID: NoteId, callback: Callback<LoadedData>): void;
     zoomToEntity(entityID: EntityId, zoomTo?: boolean): void;
     zoomToEntities(entityIDs: EntityId[], zoomTo?: boolean): void;
@@ -124,6 +126,10 @@ export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
     copyGraph(): coreGraph;
     copyIDs: GetSet<coreContext, EntityId[]>;
     copyLonLat: GetSet<coreContext, Vec2>;
+
+    presets(): typeof presetManager;
+    storage: typeof prefs;
+    isFirstSession: boolean;
 
     background(): ReturnType<typeof rendererBackground>;
 
@@ -335,6 +341,63 @@ export function coreContext(this: object): coreContext {
     }
   };
 
+  context.loadEntities = (entityIDs, callback) => {
+    const handle = window.requestIdleCallback(() => {
+      _deferred.delete(handle);
+      if (!_connection) return;
+      const cid = _connection.getConnectionId();
+      _connection.loadMultiple(entityIDs, loadedMultiple);
+
+      function loadedMultiple(err: Error | null, result?: LoadedData) {
+        if (err || !result) {
+          afterLoad(cid, callback)(err as Error, result as undefined);
+          return;
+        }
+
+        // `loadMultiple` doesn't fetch child nodes, so we have to fetch them
+        // manually before merging ways
+        const unloadedNodeIDs = new Set<EntityId>();
+        const okayResults: OsmEntity[] = [];
+        const waitingEntities: OsmEntity[] = [];
+        result.data.forEach((entity) => {
+          let hasUnloaded = false;
+          if (entity.type === 'way') {
+            entity.nodes.forEach((nodeID) => {
+              if (!context.hasEntity(nodeID)) {
+                hasUnloaded = true;
+                unloadedNodeIDs.add(nodeID);
+              }
+            });
+          }
+          if (hasUnloaded) {
+            waitingEntities.push(entity);
+          } else {
+            okayResults.push(entity);
+          }
+        });
+        if (okayResults.length) {
+          afterLoad(cid, callback)(err, { data: okayResults });
+        }
+        if (waitingEntities.length) {
+          _connection.loadMultiple(Array.from(unloadedNodeIDs), (err2: Error | null, result2?: LoadedData) => {
+            if (err2 || !result2) {
+              afterLoad(cid, callback)(err2 as Error, result2 as undefined);
+              return;
+            }
+            result2.data.forEach((entity) => {
+              unloadedNodeIDs.delete(entity.id);
+              waitingEntities.push(entity);
+            });
+            if (unloadedNodeIDs.size === 0) {
+              afterLoad(cid, callback)(err2, { data: waitingEntities });
+            }
+          });
+        }
+      }
+    });
+    _deferred.add(handle);
+  };
+
   context.zoomToEntity = (entityID, zoomTo) => {
     context.zoomToEntities([entityID], zoomTo);
   };
@@ -353,17 +416,19 @@ export function coreContext(this: object): coreContext {
       }
     }));
 
-    _map.on('drawn.zoomToEntity', () => {
-      if (!entityIDs.every(entityID => context.hasEntity(entityID))) return;
-      _map.on('drawn.zoomToEntity', null);
-      context.on('enter.zoomToEntity', null);
-      context.enter(modeSelect(context, entityIDs));
+    _map.on('drawn.zoomToEntities', () => {
+      if (entityIDs.some(entityID => !context.hasEntity(entityID))) return;
+      _map.on('drawn.zoomToEntities', null);
+      context.on('enter.zoomToEntities', null);
+      const mode = modeSelect(context, entityIDs);
+      context.enter(mode);
+      if (zoomTo !== false && mode.zoomToSelected) mode.zoomToSelected();
     });
 
-    context.on('enter.zoomToEntity', () => {
-      if (_mode.id !== 'browse') {
-        _map.on('drawn.zoomToEntity', null);
-        context.on('enter.zoomToEntity', null);
+    context.on('enter.zoomToEntities', () => {
+      if (_mode && _mode.id !== 'browse') {
+        _map.on('drawn.zoomToEntities', null);
+        context.on('enter.zoomToEntities', null);
       }
     });
   };
@@ -384,7 +449,6 @@ export function coreContext(this: object): coreContext {
       context.enter(modeSelectNote(context, noteId));
     });
   };
-
   let _minEditableZoom = 16;
   context.minEditableZoom = function(val) {
     if (!arguments.length) return _minEditableZoom;
@@ -468,11 +532,13 @@ export function coreContext(this: object): coreContext {
   context.enter = (newMode) => {
     if (_mode) {
       _mode.exit();
+      _container.classed('mode-' + _mode.id, false);
       dispatch.call('exit', this, _mode);
     }
 
     _mode = newMode;
     _mode.enter();
+    _container.classed('mode-' + newMode.id, true);
     dispatch.call('enter', this, _mode);
   };
 
@@ -518,6 +584,13 @@ export function coreContext(this: object): coreContext {
     _copyLonLat = val;
     return context;
   } as coreContext['copyLonLat'];
+
+
+  /* Presets */
+  context.presets = () => presetManager;
+
+  /* Persistence (v3 call sites; 2.18 uses prefs) */
+  context.storage = prefs;
 
 
   /* Background */
@@ -678,12 +751,15 @@ export function coreContext(this: object): coreContext {
   context.undo = undefined!;
   context.redo = undefined!;
   context.on = undefined!;
+  context.isFirstSession = undefined!;
 
   context.init = () => {
 
     instantiateInternal();
 
     initializeDependents();
+
+    context.isFirstSession = !prefs('sawSplash') && !prefs('sawPrivacyVersion');
 
     return context;
 

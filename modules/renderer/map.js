@@ -1064,6 +1064,7 @@ export function rendererMap(context) {
 
 
     map.editableDataEnabled = function(skipZoomCheck) {
+        if (context.history().hasRestorableChanges()) return false;
 
         var layer = context.layers().layer('osm');
         if (!layer || !layer.enabled()) return false;

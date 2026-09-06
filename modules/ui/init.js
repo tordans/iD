@@ -13,6 +13,7 @@ import { utilDetect } from '../util/detect';
 import { utilGetDimensions } from '../util/dimensions';
 
 import { uiAccount } from './account';
+import { uiAssistant } from './assistant';
 import { uiAttribution } from './attribution';
 import { uiContributors } from './contributors';
 import { uiEditMenu } from './edit_menu';
@@ -27,19 +28,16 @@ import { uiLoading } from './loading';
 import { uiMapInMap } from './map_in_map';
 import { uiNotice } from './notice';
 import { uiPhotoviewer } from './photoviewer';
-import { uiRestore } from './restore';
 import { uiScale } from './scale';
 import { uiShortcuts } from './shortcuts';
 import { uiSidebar } from './sidebar';
 import { uiSourceSwitch } from './source_switch';
 import { uiSpinner } from './spinner';
-import { uiSplash } from './splash';
 import { uiStatus } from './status';
 import { uiTooltip } from './tooltip';
 import { uiTopToolbar } from './top_toolbar';
 import { uiVersion } from './version';
 import { uiZoom } from './zoom';
-import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
 
 import { uiPaneBackground } from './panes/background';
@@ -47,6 +45,7 @@ import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
 import { uiPaneMapData } from './panes/map_data';
 import { uiPanePreferences } from './panes/preferences';
+import { applyInterfacePrefs } from './sections/interface';
 
 export function uiInit(context) {
     var _initCounter = 0;
@@ -57,6 +56,8 @@ export function uiInit(context) {
     var overMap;
 
     function render(container) {
+
+        applyInterfacePrefs(context);
 
         container
             .on('click.ui', function(d3_event) {
@@ -138,14 +139,9 @@ export function uiInit(context) {
             .attr('id', 'ideditor-defs')
             .call(ui.svgDefs);
 
-        container
-            .append('div')
-            .attr('class', 'sidebar')
-            .call(ui.sidebar);
-
         var content = container
             .append('div')
-            .attr('class', 'main-content active');
+            .attr('class', 'main-content ' + (context.history().hasRestorableChanges() ? 'inactive' : 'active'));
 
         // Top toolbar
         content
@@ -199,11 +195,6 @@ export function uiInit(context) {
 
         controls
             .append('div')
-            .attr('class', 'map-control zoom-to-selection-control')
-            .call(uiZoomToSelection(context));
-
-        controls
-            .append('div')
             .attr('class', 'map-control geolocate-control')
             .call(uiGeolocate(context));
 
@@ -249,6 +240,12 @@ export function uiInit(context) {
             .classed('hide', true)
             .call(ui.photoviewer);
 
+        ui.assistant = uiAssistant(context);
+        overMap
+            .append('div')
+            .attr('class', 'assistant-wrap')
+            .call(ui.assistant);
+
         overMap
             .append('div')
             .attr('class', 'attribution-wrap')
@@ -278,11 +275,6 @@ export function uiInit(context) {
         var footerWrap = footer
             .append('div')
             .attr('class', 'main-footer-wrap footer-show');
-
-        footerWrap
-            .append('div')
-            .attr('class', 'scale-block')
-            .call(uiScale(context));
 
         var aboutList = footerWrap
             .append('div')
@@ -348,6 +340,11 @@ export function uiInit(context) {
                 .call(uiAccount(context));
         }
 
+        footerWrap
+            .append('div')
+            .attr('class', 'scale-block')
+            .call(uiScale(context));
+
 
         // Setup map dimensions and move map to initial center/zoom.
         // This should happen after .main-content and toolbars exist.
@@ -375,10 +372,7 @@ export function uiInit(context) {
 
         var panPixels = 80;
         context.keybinding()
-            .on([t('sidebar.key'), '`', '²', '@'], (d3_event) => {
-                d3_event.preventDefault();
-                ui.sidebar.toggle();
-            })   // #5663, #6864 - common QWERTY, AZERTY
+            .on('⌫', function(d3_event) { d3_event.preventDefault(); })
             .on('←', pan([panPixels, 0]))
             .on('↑', pan([0, panPixels]))
             .on('→', pan([-panPixels, 0]))
@@ -439,12 +433,6 @@ export function uiInit(context) {
         context.enter(modeBrowse(context));
 
         if (!_initCounter++) {
-            if (!ui.hash.startWalkthrough) {
-                context.container()
-                    .call(uiSplash(context))
-                    .call(uiRestore(context));
-            }
-
             context.container()
                 .call(ui.shortcuts);
         }
@@ -502,6 +490,7 @@ export function uiInit(context) {
             .catch(err => console.error(err));  // eslint-disable-line
     };
 
+    ui.assistant = null;
 
     // `ui.restart()` will destroy and rebuild the entire iD interface,
     // for example to switch the locale while iD is running.
@@ -523,6 +512,7 @@ export function uiInit(context) {
 
     ui.flash = uiFlash(context);
 
+    ui.assistant = null;
     ui.sidebar = uiSidebar(context);
 
     ui.photoviewer = uiPhotoviewer(context);
@@ -534,11 +524,11 @@ export function uiInit(context) {
     ui.onResize = function(withPan) {
         var map = context.map();
 
-        // Recalc dimensions of map and sidebar.. (`true` = force recalc)
+        // Recalc dimensions of map and assistant.. (`true` = force recalc)
         // This will call `getBoundingClientRect` and trigger reflow,
         //  but the values will be cached for later use.
         var mapDimensions = utilGetDimensions(context.container().select('.main-content'), true);
-        utilGetDimensions(context.container().select('.sidebar'), true);
+        utilGetDimensions(context.container().select('.assistant'), true);
 
         if (withPan !== undefined) {
             map.redrawEnable(false);

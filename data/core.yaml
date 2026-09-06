@@ -20,11 +20,112 @@ en:
     collapse: collapse
     plus: add
   toolbar:
+    center_zoom:
+      title: Center
+      return_tooltip: Undo centering on this.
+    return: Return
+    deselect:
+      title: Deselect
     inspect: Inspect
     undo_redo: Undo / Redo
     recent: Recent
     favorites: Favorites
     add_feature: Add Feature
+    finish: Finish
+    generic:
+      title: Geometries
+    geometry:
+      key: T
+    repeat:
+      title: Repeat
+      tooltip:
+        point: "Add another {feature} after this one."
+        way: "Start another {feature} after finishing this one."
+      key: R
+    segments:
+      title: Segments
+      straight:
+        title: Straight
+      orthogonal:
+        title: Rectangular
+      key: A
+    structure:
+      none:
+        title: None
+      key: S
+    support:
+      title: Support
+      pole:
+        title: Pole
+      tower:
+        title: Tower
+      key: S
+    toolbox:
+      title: Tools
+      tooltip: Customize the toolbar.
+  assistant:
+    mode:
+      authenticating: Authenticating
+      drawing: Drawing
+      inspecting: Inspecting
+      mapping: Mapping
+      placing: Placing
+      saving: Saving
+    instructions:
+      add_point: Click the center of the feature.
+      add_vertex: Click the point along a line or area where the feature occurs.
+      add_line: Click the starting point of the feature.
+      draw_line: Place points along the feature's centerline.
+      add_area: Click any corner of the feature.
+      draw_area: Place points along the feature's outline.
+      finishing: When you're done, click the last point again or click <b>Finish</b>.
+    global_location: Planet Earth
+    greetings:
+      morning: Good Morning
+      afternoon: Good Afternoon
+      evening: Good Evening
+      # "Good Night" isn't a greeting in English but it can be in some languages
+      night: Good Evening
+    notice: Notice
+    launch:
+      osm_info: "You’re editing <b>OpenStreetMap</b>: the free, collaborative world map."
+      first_time_tutorial: "If this is your first time here, consider taking the <a>quick-start tutorial</a>."
+      thanks_have_fun: Thanks for contributing. Have fun!
+      generic_welcome:
+        0: Ready to make the map even better?
+        1: What a great day for mapping.
+      welcome_back_user: "Welcome back, {displayName}."
+      changesets: "You've contributed {changesets} changesets to OpenStreetMap so far."
+      changesets_date: "You've contributed {changesets} changesets to OpenStreetMap since {joinDate}."
+      anniversary:
+        happy_anniversary: Happy Anniversary
+        years:
+          first: "Congratulations on your first year of mapping, {displayName}!"
+          subsequent: "Congratulations on {years} years of mapping, {displayName}!"
+      blocks:
+        active: Your OpenStreetMap account, {displayName}, has an active block and cannot upload changes.
+      start_mapping: Start Mapping
+    welcome:
+      first_time: "You’re editing <b>OpenStreetMap</b>: the free, collborative world map.<br/>If this is your first time here, consider taking the <a>quick-start tutorial</a>.<br/>Thanks for contributing. Have fun!"
+      return: "Welcome back. Ready to make the map even better?"
+      start_mapping: Start Mapping
+    restore:
+      title: Restore
+      discard: Discard
+      info:
+        count_loc: "You have {count} unsaved changes around {location}."
+        count_loc_time: "You have {count} unsaved changes from {duration} ago around {location}."
+      ask: Would you like to restore them?
+    commit:
+      auth:
+        osm_account: OpenStreetMap Account
+        message: You must sign in to upload your changes.
+      success:
+        thank_you: Thank You!
+        just_improved: "You've just improved OpenStreetMap around {location}."
+        propagation_help: Your changes will be live momentarily. Some maps take longer to update than others.
+    feature_count:
+      multiple: "{count} Features"
   title:
     format:
       context: "{base} – {context}"
@@ -34,6 +135,13 @@ en:
       one: "{labeled} and {count} more"
       other: "{labeled} and {count} more"
   modes:
+    add_feature:
+      search_placeholder: Search feature types
+      description: "Browse features to add to the map."
+      # The hotkey to open the Add Feature preset browser. Expect the key adjacent to the number row.
+      key: "`"
+      result: "{count} result"
+      results: "{count} results"
     add_area:
       title: Area
       description: "Add parks, buildings, lakes or other areas to the map."
@@ -587,7 +695,7 @@ en:
   report_a_bug: Report a bug
   help_translate: Help translate
   sidebar:
-    key: '`'
+    key: "'"
     tooltip: Toggle the sidebar.
   feature_info:
     hidden_warning:
@@ -610,6 +718,7 @@ en:
     request_review_info: "Unsure about something? Invite an experienced mapper to check your work once it's live."
     save: Upload
     cancel: Cancel
+    change: "1 Change"
     changes: Changes
     download_changes: Download osmChange file
     errors: Errors
@@ -618,8 +727,9 @@ en:
     modified: Modified
     deleted: Deleted
     created: Created
-    outstanding_errors_message: "Please resolve all errors first. {count} remaining."
-    comment_needed_message: Please add a changeset comment first.
+    blocker_message:
+      outstanding_errors: "Please resolve all errors before uploading."
+      comment_needed: Please add a changeset comment before uploading. This helps others understand your edits.
     about_changeset_comments: About changeset comments
     about_changeset_comments_link: //wiki.openstreetmap.org/wiki/Good_changeset_comments
     changeset_comment_length_warning: "Changeset comments can have a maximum of {maxChars} characters."
@@ -707,6 +817,10 @@ en:
       key: Z
       title: Zoom To Selection
       no_selection: Nothing to zoom to.
+      tooltip_feature: "Center and zoom the map to focus on this feature."
+      tooltip_note: "Center and zoom the map to focus on this note."
+      tooltip_data: "Center and zoom the map to focus on this data."
+      tooltip_issue: "Center and zoom the map to focus on this issue."
     show_more: Show More
     last_touched: Last touched {timeago} by {user}
     view_on_osm: View on openstreetmap.org
@@ -1019,6 +1133,11 @@ en:
     title: Preferences
     description: Preferences
     key: P
+    interface:
+      title: Interface
+      labels:
+        description: Show button labels
+        tooltip: Uncheck this box to hide the captions under the ribbon buttons.
     privacy:
       title: Privacy
       privacy_link: View the iD privacy policy

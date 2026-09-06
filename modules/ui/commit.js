@@ -204,33 +204,35 @@ export function uiCommit(context) {
         var osm = context.connection();
         if (!osm) return;
 
-        var header = selection.selectAll('.header')
-            .data([0]);
+        if (!(selection.node() && selection.node().closest('.assistant'))) {
+            var header = selection.selectAll('.header')
+                .data([0]);
 
-        var headerTitle = header.enter()
-            .append('div')
-            .attr('class', 'header fillL');
+            var headerTitle = header.enter()
+                .append('div')
+                .attr('class', 'header fillL');
 
-        headerTitle
-            .append('div')
-            .append('h2')
-            .call(t.append('commit.title'));
+            headerTitle
+                .append('div')
+                .append('h2')
+                .call(t.append('commit.title'));
 
-        headerTitle
-            .append('button')
-            .attr('class', 'close')
-            .attr('title', t('icons.close'))
-            .on('click', function() {
-                dispatch.call('cancel', this);
-            })
-            .call(svgIcon('#iD-icon-close'));
+            headerTitle
+                .append('button')
+                .attr('class', 'close')
+                .attr('title', t('icons.close'))
+                .on('click', function() {
+                    dispatch.call('cancel', this);
+                })
+                .call(svgIcon('#iD-icon-close'));
+        }
 
-        var body = selection.selectAll('.body')
+        var body = selection.selectAll('.inspector-body')
             .data([0]);
 
         body = body.enter()
             .append('div')
-            .attr('class', 'body')
+            .attr('class', 'inspector-body')
             .merge(body);
 
 

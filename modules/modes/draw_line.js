@@ -1,12 +1,17 @@
 import { t } from '../core/localizer';
 import { behaviorDrawWay } from '../behavior/draw_way';
+import { modeSelect } from './select';
+import { utilDisplayLabel } from '../util';
 
-
-export function modeDrawLine(context, wayID, startGraph, button, affix, continuing) {
+export function modeDrawLine(context, wayID, startGraph, button, affix, addMode) {
     var mode = {
         button: button,
-        id: 'draw-line'
+        id: 'draw-line',
+        title: (addMode && addMode.title) || utilDisplayLabel(context.entity(wayID), context),
+        geometry: 'line'
     };
+
+    mode.addMode = addMode;
 
     var behavior = behaviorDrawWay(context, wayID, mode, startGraph)
         .on('rejectedSelfIntersection.modeDrawLine', function() {
@@ -17,9 +22,16 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, continui
 
     mode.wayID = wayID;
 
-    mode.isContinuing = continuing;
+    mode.isContinuing = !!affix;
+
+    mode.preset = context.presets().match(context.entity(mode.wayID), context.graph());
 
     mode.enter = function() {
+        if (addMode && addMode.addAddedEntityID) {
+            // add in case this draw mode was entered from somewhere besides the add mode itself
+            addMode.addAddedEntityID(wayID);
+        }
+
         behavior
             .nodeIndex(affix === 'prefix' ? 0 : undefined);
 
@@ -30,6 +42,23 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, continui
         context.uninstall(behavior);
     };
 
+    mode.repeatAddedFeature = function(val) {
+        if (addMode) return addMode.repeatAddedFeature(val);
+    };
+
+    mode.addedEntityIDs = function() {
+        if (addMode) return addMode.addedEntityIDs();
+    };
+
+    mode.didFinishAdding = function() {
+        if (mode.repeatAddedFeature()) {
+            context.enter(mode.addMode);
+        } else {
+            context.enter(modeSelect(context, mode.addedEntityIDs() || [wayID]).newFeature(!mode.isContinuing));
+        }
+    };
+
+
     mode.selectedIDs = function() {
         return [wayID];
     };
@@ -37,6 +66,15 @@ export function modeDrawLine(context, wayID, startGraph, button, affix, continui
     mode.activeID = function() {
         return (behavior && behavior.activeID()) || [];
     };
+
+
+    mode.finish = function(skipCompletion) {
+        if (skipCompletion) {
+            mode.didFinishAdding = function() {};
+        }
+        return behavior.finish();
+    };
+
 
     return mode;
 }

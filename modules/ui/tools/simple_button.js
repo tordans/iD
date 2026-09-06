@@ -1,0 +1,40 @@
+import { select as d3_select } from 'd3-selection';
+import { svgIcon } from '../../svg/icon';
+import { uiTooltip } from '../tooltip';
+import { utilFunctor } from '../../util/util';
+
+export function uiToolSimpleButton(protoTool) {
+
+    var tool = protoTool || {};
+
+    var tooltipBehavior = uiTooltip()
+        .placement('bottom')
+        .scrollContainer(d3_select('.top-toolbar'));
+
+    tool.render = function(selection) {
+        var tooltipKey = utilFunctor(tool.tooltipKey)();
+        tooltipBehavior
+            .title(utilFunctor(tool.tooltipText)())
+            .keys(tooltipKey ? [tooltipKey] : null);
+
+        var button = selection
+            .selectAll('.bar-button')
+            .data([0]);
+
+        var buttonEnter = button
+            .enter()
+            .append('button')
+            .attr('class', 'bar-button ' + (utilFunctor(tool.barButtonClass)() || ''))
+            .attr('tabindex', -1)
+            .call(tooltipBehavior)
+            .on('click', tool.onClick)
+            .call(svgIcon('#', utilFunctor(tool.iconClass)()));
+
+        button = buttonEnter.merge(button);
+
+        button.selectAll('.icon use')
+            .attr('href', '#' + utilFunctor(tool.iconName)());
+    };
+
+    return tool;
+}

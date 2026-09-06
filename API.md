@@ -29,8 +29,9 @@ of iD (e.g. `https://ideditor-release.netlify.app`), the following parameters ar
   optional and will be added automatically. (Note that hashtag-like strings are
   automatically detected in the `comment`).<br/>
   _Example:_ `hashtags=%23hotosm-task-592,%23MissingMaps`
-* __`id`__ - Selects the specified OSM node, way, relation or note, and, unless a `map` parameter is also provided, centers the map on it. Supported formats are: a) `[nwr]<osm-id>` where the character 'n', 'w', or 'r' correspond to an OSM node, way or relation, respectively; or b) `<osm-type>/<osm-id>` which also allows specifying OSM notes (example: `note/1`).<br/>
+* __`id`__ - Selects the specified OSM node, way, relation or note, and, unless a `map` parameter is also provided, centers the map on it. Supported formats are: a) `[nwr]<osm-id>` where the character 'n', 'w', or 'r' correspond to an OSM node, way or relation, respectively; or b) `<osm-type>/<osm-id>` which also allows specifying OSM notes (example: `note/1`). Multiple comma-separated values are supported.<br/>
   _Example:_ `id=n1207480649`
+  _Example 2:_ `id=n1207480649,n3334654948`
 * __`locale`__ - A code specifying the localization to use, affecting the language, layout, and keyboard shortcuts. Multiple codes may be specified in order of preference. The first valid code will be the locale, while the rest will be used as fallbacks if certain text hasn't been translated. The default locale preferences are set by the browser.<br/>
   _Example:_ `locale=ja`, `locale=pt-BR`, `locale=nl,fr,de`<br/>
   _Available values:_ Any of the [supported locales](https://github.com/openstreetmap/iD/tree/develop/dist/locales).

@@ -4,6 +4,7 @@ import { deepEqual } from 'fast-equals';
 
 import { presetManager } from '../presets';
 import { t, localizer } from '../core/localizer';
+import { actionChangePreset } from '../actions/change_preset';
 import { actionChangeTags } from '../actions/change_tags';
 import { modeBrowse } from '../modes/browse';
 import { svgIcon } from '../svg/icon';
@@ -17,6 +18,7 @@ import { uiSectionRawMemberEditor } from './sections/raw_member_editor';
 import { uiSectionRawMembershipEditor } from './sections/raw_membership_editor';
 import { uiSectionRawTagEditor } from './sections/raw_tag_editor';
 import { uiSectionSelectionList } from './sections/selection_list';
+import { uiPresetBrowser } from './preset_browser';
 
 export function uiEntityEditor(context) {
     var dispatch = d3_dispatch('choose');
@@ -29,50 +31,99 @@ export function uiEntityEditor(context) {
     var _newFeature;
 
     var _sections;
+    var presetBrowser = uiPresetBrowser(context, [], choosePreset);
+
+
+    function entityGeometries() {
+        var counts = {};
+        for (var i in _entityIDs) {
+            var geometry = context.graph().geometry(_entityIDs[i]);
+            if (!counts[geometry]) counts[geometry] = 0;
+            counts[geometry] += 1;
+        }
+        return Object.keys(counts).sort(function(geom1, geom2) {
+            return counts[geom2] - counts[geom1];
+        });
+    }
+
+
+    function togglePresetBrowser() {
+        if (!_entityIDs || !_entityIDs.length) return;
+        if (presetBrowser.isShown()) {
+            presetBrowser.hide();
+        } else {
+            presetBrowser.setAllowedGeometry(entityGeometries());
+            presetBrowser.show();
+        }
+    }
+
+
+    function choosePreset(preset) {
+        presetManager.setMostRecent(preset);
+        var graph = context.graph();
+        var actions = [];
+        for (var i in _entityIDs) {
+            var entityID = _entityIDs[i];
+            var entity = graph.hasEntity(entityID);
+            if (!entity) continue;
+            var oldPreset = presetManager.match(entity, graph);
+            actions.push(actionChangePreset(entityID, oldPreset, preset));
+        }
+        if (!actions.length) return;
+        var combinedAction = function(g) {
+            actions.forEach(function(action) {
+                g = action(g);
+            });
+            return g;
+        };
+        context.perform(combinedAction, t('operations.change_tags.annotation'));
+        context.validator().validate();
+    }
 
     function entityEditor(selection) {
 
         var combinedTags = utilCombinedTags(_entityIDs, context.graph());
+        var skipPageHeader = selection.node() && selection.node().closest('.assistant');
 
-        // Header
-        var header = selection.selectAll('.header')
-            .data([0]);
+        if (!skipPageHeader) {
+            // Header
+            var header = selection.selectAll('.header')
+                .data([0]);
 
-        // Enter
-        var headerEnter = header.enter()
-            .append('div')
-            .attr('class', 'header fillL');
+            // Enter
+            var headerEnter = header.enter()
+                .append('div')
+                .attr('class', 'header fillL');
 
-        var direction = (localizer.textDirection() === 'rtl') ? 'forward' : 'backward';
+            var direction = (localizer.textDirection() === 'rtl') ? 'forward' : 'backward';
 
-        headerEnter
-            .append('button')
-            .attr('class', 'preset-reset preset-choose')
-            .attr('title', t('inspector.back_tooltip'))
-            .call(svgIcon(`#iD-icon-${direction}`));
+            headerEnter
+                .append('button')
+                .attr('class', 'preset-reset preset-choose')
+                .attr('title', t('inspector.back_tooltip'))
+                .call(svgIcon(`#iD-icon-${direction}`));
 
-        headerEnter
-            .append('button')
-            .attr('class', 'close')
-            .attr('title', t('icons.close'))
-            .on('click', function() { context.enter(modeBrowse(context)); })
-            .call(svgIcon(_modified ? '#iD-icon-apply' : '#iD-icon-close'));
+            headerEnter
+                .append('button')
+                .attr('class', 'close')
+                .attr('title', t('icons.close'))
+                .on('click', function() { context.enter(modeBrowse(context)); })
+                .call(svgIcon(_modified ? '#iD-icon-apply' : '#iD-icon-close'));
 
-        headerEnter
-            .append('h2');
+            headerEnter
+                .append('h2');
 
-        // Update
-        header = header
-            .merge(headerEnter);
+            // Update
+            header = header
+                .merge(headerEnter);
 
-        header.selectAll('h2')
-            .text('')
-            .call(_entityIDs.length === 1 ? t.append('inspector.edit') : t.append('inspector.edit_features'));
+            header.selectAll('h2')
+                .text('')
+                .call(_entityIDs.length === 1 ? t.append('inspector.edit') : t.append('inspector.edit_features'));
 
-        header.selectAll('.preset-reset')
-            .on('click', function() {
-                dispatch.call('choose', this, _activePresets);
-            });
+            header.selectAll('.preset-reset')
+                .on('click', togglePresetBrowser);
+        }
 
         // Body
         var body = selection.selectAll('.inspector-body')
@@ -83,6 +134,8 @@ export function uiEntityEditor(context) {
             .append('div')
             .attr('class', 'entity-editor inspector-body sep-top');
 
+        var isNewBody = !bodyEnter.empty();
+
         // Update
         body = body
             .merge(bodyEnter);
@@ -90,8 +143,8 @@ export function uiEntityEditor(context) {
         if (!_sections) {
             _sections = [
                 uiSectionSelectionList(context),
-                uiSectionFeatureType(context).on('choose', function(presets) {
-                    dispatch.call('choose', this, presets);
+                uiSectionFeatureType(context).on('choose', function() {
+                    togglePresetBrowser();
                 }),
                 uiSectionEntityIssues(context),
                 uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
@@ -116,6 +169,22 @@ export function uiEntityEditor(context) {
             }
             body.call(section.render);
         });
+
+        // Freeze: popover is anchored to the feature-type button, not 2.43's inline `.render()`.
+        if (isNewBody) {
+            var presetButtonWrap = body.select('.preset-list-button-wrap');
+            if (!presetButtonWrap.empty()) {
+                presetButtonWrap.call(presetBrowser.scrollContainer(body));
+            }
+
+            if (_newFeature && _entityIDs.length === 1) {
+                var newEntity = context.hasEntity(_entityIDs[0]);
+                if (newEntity && !newEntity.hasNonGeometryTags()) {
+                    presetBrowser.setAllowedGeometry(entityGeometries());
+                    presetBrowser.show();
+                }
+            }
+        }
 
         context.history()
             .on('change.entity-editor', historyChanged)

@@ -199,6 +199,14 @@ export class coreLocalizer {
                         let directory = Object.values(localeDirs)[i];
                         if (index[code]) loadStringsPromises.push(this.loadLocale(code, scopeId, directory));
                     });
+                    // v3 overlay keys live in local core.yaml → en.min.json. A
+                    // Transifex locale can be "100% complete" for 2.x and still
+                    // omit those strings; always load English general as fallback.
+                    const scopeId = Object.keys(localeDirs)[i];
+                    const directory = Object.values(localeDirs)[i];
+                    if (scopeId === 'general' && index.en) {
+                        loadStringsPromises.push(this.loadLocale('en', scopeId, directory));
+                    }
                 });
 
                 return Promise.all(loadStringsPromises);

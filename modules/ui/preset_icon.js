@@ -9,6 +9,13 @@ import { utilFunctor } from '../util';
 export function uiPresetIcon() {
   let _preset;
   let _geometry;
+  let _sizeClass = 'medium';
+  let _pointMarker = true;
+
+
+  function isSmall() {
+    return _sizeClass === 'small';
+  }
 
 
   function presetIcon(selection) {
@@ -81,7 +88,7 @@ export function uiPresetIcon() {
 
 
   function renderCircleFill(container, drawVertex) {
-    const vertexFill = container.selectAll('.preset-icon-fill-vertex')
+    let vertexFill = container.selectAll('.preset-icon-fill-vertex')
       .data(drawVertex ? [0] : []);
 
     vertexFill.exit()
@@ -89,9 +96,10 @@ export function uiPresetIcon() {
 
     const vertexFillEnter = vertexFill.enter();
 
-    const w = 60;
-    const h = 60;
-    const d = 40;
+    const d = isSmall() ? 40 : 60;
+    const w = d;
+    const h = d;
+    const r = d / 3;
 
     vertexFillEnter
       .append('svg')
@@ -102,7 +110,9 @@ export function uiPresetIcon() {
       .append('circle')
       .attr('cx', w / 2)
       .attr('cy', h / 2)
-      .attr('r', d / 2);
+      .attr('r', r);
+
+    vertexFill = vertexFillEnter.merge(vertexFill);
   }
 
 
@@ -384,8 +394,11 @@ export function uiPresetIcon() {
     const imageURL = (showThirdPartyIcons === 'true') && p.imageURL;
     const picon = getIcon(p, geom);
     const isCategory = !p.setTags;
-    const drawPoint = false;
-    const drawVertex = picon !== null && geom === 'vertex';
+    // Freeze: pin only when asked (`pointMarker`) or when there is no preset icon.
+    // 2.43 used `isSmall() || !picon`, which ignored `.pointMarker(false)` and
+    // drew a marker around every small point icon (assistant header, etc.).
+    const drawPoint = geom === 'point' && (_pointMarker || !picon) && !isFallback;
+    const drawVertex = picon !== null && geom === 'vertex' && (!isSmall() || !isFallback);
     const drawLine = picon && geom === 'line' && !isFallback && !isCategory;
     const drawArea = picon && geom === 'area' && !isFallback && !isCategory;
     const drawRoute = picon && geom === 'route';
@@ -410,7 +423,7 @@ export function uiPresetIcon() {
       .merge(container);
 
     container
-      .classed('showing-img', !!imageURL)
+      .classed('showing-img', false)
       .classed('fallback', isFallback);
 
     renderCategoryBorder(container, isCategory && p);
@@ -434,6 +447,19 @@ export function uiPresetIcon() {
   presetIcon.geometry = function(val) {
     if (!arguments.length) return _geometry;
     _geometry = utilFunctor(val);
+    return presetIcon;
+  };
+
+
+  presetIcon.sizeClass = function(val) {
+    if (!arguments.length) return _sizeClass;
+    _sizeClass = val;
+    return presetIcon;
+  };
+
+  presetIcon.pointMarker = function(val) {
+    if (!arguments.length) return _pointMarker;
+    _pointMarker = val;
     return presetIcon;
   };
 

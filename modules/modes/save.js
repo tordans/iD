@@ -163,6 +163,12 @@ export function modeSave(context) {
             .on('cancel', function() { context.ui().sidebar.hide(); });
 
         context.enter(modeBrowse(context).sidebar(ui));
+
+        var assistant = context.ui() && context.ui().assistant;
+        if (assistant && assistant.didSaveChangset) {
+            var changeCount = context.history().difference().summary().length;
+            assistant.didSaveChangset(changeset, changeCount);
+        }
     }
 
 
@@ -212,6 +218,9 @@ export function modeSave(context) {
         function done() {
             context.ui().sidebar.show(commit);
         }
+
+        // make sure the save UI is initially visible
+        context.storage('assistant.collapsed.save', null);
 
         keybindingOn();
 

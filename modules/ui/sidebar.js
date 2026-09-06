@@ -279,8 +279,9 @@ export function uiSidebar(context) {
             if (ids && ids.length) {
 
                 var entity = ids.length === 1 && context.entity(ids[0]);
-                if (entity && newFeature && selection.classed('collapsed')) {
-                    // uncollapse the sidebar
+                // uncollapse the sidebar if adding a new, untagged feature
+                if (entity && newFeature && selection.classed('collapsed') &&
+                    context.presets().match(entity, context.graph()).isFallback()) {
                     var extent = entity.extent(context.graph());
                     sidebar.expand(sidebar.intersects(extent));
                 }
@@ -434,6 +435,7 @@ export function uiSidebar(context) {
     sidebar.showPresetList = function() {};
     sidebar.hover = function() {};
     sidebar.hover.cancel = function() {};
+    sidebar.hoverModeSelect = function() {};
     sidebar.intersects = function() {};
     sidebar.select = function() {};
     sidebar.show = function() {};

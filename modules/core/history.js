@@ -741,11 +741,22 @@ export function coreHistory(context) {
         },
 
 
+        // Freeze returned a localStorage JSON string. 2.43 stores the object in
+        // IndexedDB, so this returns a Promise of that object (or undefined).
+        savedHistoryJSON: function() {
+            return asyncPrefs.get('saved_history');
+        },
+
+
         restore: async function() {
             if (lock.locked()) {
                 _hasUnresolvedRestorableChanges = false;
                 var json = await asyncPrefs.get('saved_history');
-                if (json) history.fromJSON(json, true);
+                if (json) {
+                    history.fromJSON(json, true);
+                } else {
+                    history.clearSaved();
+                }
             }
         },
 
