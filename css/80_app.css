@@ -1405,6 +1405,21 @@ summary.hide-toggle::-webkit-details-marker {
 .over-map > * {
     pointer-events: auto;
 }
+/* `.over-map > *` and wrap classes have equal specificity; keep full-height
+   columns from eating map and toolbar clicks. */
+.over-map > .assistant-wrap,
+.over-map > .sidebar-wrap,
+.over-map > .map-controls-wrap,
+.over-map > .map-panes,
+.over-map > .attribution-wrap,
+.over-map > .info-panels {
+    pointer-events: none;
+}
+.over-map .select-trap {
+    position: absolute;
+    right: -1000%;
+    opacity: 0;
+}
 
 .sidebar-wrap {
     position: relative;
@@ -4433,39 +4448,6 @@ img.tag-reference-wiki-image {
 }
 
 
-.over-map {
-    position: relative;
-    top: auto;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    height: 100%;
-    pointer-events: none;
-    display: flex;
-    flex-direction: row-reverse;
-    align-items: flex-start;
-    overflow: hidden;
-}
-.over-map > * {
-    pointer-events: auto;
-    z-index: 5;
-}
-/* `.over-map > *` and `.assistant-wrap` have equal specificity; this later
-   block would otherwise make the full-height assistant column eat map clicks. */
-.over-map > .assistant-wrap,
-.over-map > .sidebar-wrap,
-.over-map > .map-controls-wrap,
-.over-map > .map-panes,
-.over-map > .attribution-wrap {
-    pointer-events: none;
-}
-/* offscreen this without hiding it */
-.over-map .select-trap {
-    position: absolute;
-    right: -1000%;
-    opacity: 0;
-}
-
 /* Map Controls
 ------------------------------------------------------- */
 .map-controls-wrap {
@@ -5939,7 +5921,10 @@ img.tile-debug {
 ------------------------------------------------------- */
 .map-footer {
     width: 100%;
-    position: relative;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
     border-radius: 0;
     pointer-events: none;
     display: flex;
