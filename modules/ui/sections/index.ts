@@ -11,6 +11,7 @@ export { uiSectionOverlayList } from './overlay_list';
 export { uiSectionPhotoOverlays } from './photo_overlays';
 export { uiSectionPresetFields } from './preset_fields';
 export { uiSectionPrivacy } from './privacy';
+export { uiSectionToolbar } from './toolbar';
 export { uiSectionRawMemberEditor } from './raw_member_editor';
 export { uiSectionRawMembershipEditor } from './raw_membership_editor';
 export { uiSectionRawTagEditor } from './raw_tag_editor';

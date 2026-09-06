@@ -25,6 +25,11 @@
     touch-action: none;
     -ms-user-select: none;
     -ms-content-zooming: none;
+
+    --id-toolbar-height: 71px;
+}
+.ideditor.hide-toolbar-labels {
+    --id-toolbar-height: 50px;
 }
 .ideditor div {
     /* disable pinch-to-zoom of the UI on touch devices */
@@ -618,6 +623,9 @@ button.loading .icon {
     font-size: 11px;
     white-space: nowrap;
     margin: 1px 2px 2px 2px;
+}
+.ideditor.hide-toolbar-labels .top-toolbar .toolbar-item .item-label {
+    display: none;
 }
 .top-toolbar .toolbar-item.spacer-half {
     width: 50%;
@@ -1397,7 +1405,7 @@ summary.hide-toggle::-webkit-details-marker {
     position: absolute;
     left: 0;
     right: 0;
-    top: 71px;
+    top: var(--id-toolbar-height);
     bottom: 30px;
     pointer-events: none;
     display: flex;
