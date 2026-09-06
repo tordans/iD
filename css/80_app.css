@@ -585,7 +585,8 @@ button.loading .icon {
 .top-toolbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
 }
-.top-toolbar:has(.poplist.in) {
+.top-toolbar:has(.poplist.in),
+.top-toolbar:has(.tooltip.in) {
     overflow: visible;
 }
 .top-toolbar .toolbar-item {    display: flex;
@@ -800,6 +801,8 @@ button.add-note svg.icon {
 
 .popover-inner {
     border-radius: inherit;
+}
+.poplist .popover-inner {
     display: flex;
     flex-direction: column;
     min-height: 0;

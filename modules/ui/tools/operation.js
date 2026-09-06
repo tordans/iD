@@ -18,7 +18,7 @@ export function uiToolOperation(context, operationClass, tool) {
     tool.render = function(selection) {
 
         tooltipBehavior
-            .title(operation.tooltip())
+            .title(operation.tooltip)
             .keys(operation.keys);
 
         button = selection
