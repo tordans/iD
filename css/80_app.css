@@ -3631,24 +3631,29 @@ div.full-screen > button:focus {
     line-height: 0.95rem;
 }
 
-/* Esri Wayback: inline date select (same pattern as yearly variants), hidden until ready */
+/* Esri Wayback: keep the name; swap date select and spinner in the same inline slot */
+.layer-list .wayback-date,
 .layer-list .wayback-spinner {
-    flex-shrink: 0;
+    display: none;
+    margin-inline-start: 0.5rem;
+    vertical-align: middle;
+}
+.layer-list li.wayback-ready:not(.wayback-loading) .wayback-date {
+    display: inline;
+}
+.layer-list li.wayback-loading .wayback-spinner {
+    display: inline-block;
+    width: 1.35em;
+    height: 1.35em;
+    overflow: hidden;
 }
 .layer-list .wayback-spinner.hide {
     display: none;
 }
-.layer-list .wayback-date,
-.layer-list .wayback-release-suffix {
-    display: none;
-}
-.layer-list li.wayback-ready .wayback-date {
-    display: inline;
-    margin-inline-start: 0.25em;
-    vertical-align: baseline;
-}
-.layer-list li.wayback-ready .wayback-release-suffix {
-    display: inline;
+.layer-list .wayback-spinner img {
+    display: block;
+    width: 100%;
+    height: 100%;
 }
 
 .layer-list input.list-item-input {

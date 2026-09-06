@@ -10,13 +10,13 @@ const WAYBACK_READY_CLASS = 'wayback-ready';
 const WAYBACK_SPINNER_CLASS = 'wayback-spinner';
 
 /**
- * Format a wayback release date for the inline variant select (date only).
- * The "Release" suffix is rendered next to the select, like yearly imagery variants.
+ * Format a wayback release date for the inline select, e.g. "8/5/2026 Release".
  */
 export function formatWaybackReleaseLabel(dateString: string, localeCode?: string): string {
     const date = new Date(dateString + 'T00:00:00Z');
     const code = localeCode ?? localizer.localeCode();
-    return isNaN(date.getTime()) ? dateString : date.toLocaleDateString(code);
+    const localeDate = isNaN(date.getTime()) ? dateString : date.toLocaleDateString(code);
+    return `${localeDate} ${t('background.EsriWayback.release')}`;
 }
 
 /**
@@ -45,14 +45,14 @@ export function updateWaybackDropdownOptions(
 }
 
 /**
- * Set loading state on the wayback list item (spinner visible, dropdown hidden).
+ * Set loading state on the wayback list item (spinner in place of the dropdown).
+ * The "Esri Wayback" label stays visible.
  */
 export function setWaybackLoading(
     li: Selection<HTMLLIElement, unknown, null, undefined>,
     isLoading: boolean,
     context: iD.Context
 ): void {
-    li.classed(WAYBACK_READY_CLASS, !isLoading);
     uiSetInlineLoading(li as unknown as Selection<HTMLElement, unknown, null, undefined>, isLoading, {
         className: WAYBACK_LOADING_CLASS,
         spinner: true,
@@ -173,7 +173,7 @@ export function updateWaybackRow(
 
 /**
  * Render Wayback controls in the same shape as yearly background variants:
- * name + inline select + suffix inside the label text, plus a loading spinner.
+ * name + inline date select (or a same-size spinner while loading).
  */
 export function renderWaybackRowContent(
     waybackLiEnter: Selection<HTMLLIElement, unknown, null, undefined>,
@@ -198,11 +198,6 @@ export function renderWaybackRowContent(
         .on('change', callbacks.onDateChange);
 
     labelText
-        .append('span')
-        .attr('class', 'wayback-release-suffix')
-        .text(` ${t('background.EsriWayback.release')}`);
-
-    waybackLiEnter.select('label')
         .append('span')
         .attr('class', WAYBACK_SPINNER_CLASS + ' hide')
         .attr('aria-hidden', 'true');
