@@ -546,7 +546,7 @@ button.disabled .icon.operation use,
 }
 
 .icon-annotation {
-    color: #333;
+    color: var(--text-color);
     vertical-align: baseline;
 }
 
@@ -554,6 +554,8 @@ button.loading .icon {
     background-image: url(img/mini-loader.gif);
     background-position: 0 0;
     background-size: auto;
+    filter: var(--bg-filter);
+    mix-blend-mode: var(--mix-blend-mode);
 }
 
 
@@ -1476,8 +1478,8 @@ summary.hide-toggle::-webkit-details-marker {
     */
 }
 .assistant.light:not(.body-collapsed) {
-    background: rgba(246, 246, 246, 0.98);
-    color: #333;
+    background: var(--bg-color-2);
+    color: var(--text-color);
 }
 .assistant .sep-top {
     border-top: 1px solid var(--transparent-border-color);
@@ -1516,7 +1518,7 @@ summary.hide-toggle::-webkit-details-marker {
     border-top-right-radius: inherit;
 }
 .assistant.light:not(.body-collapsed) .assistant-header {
-    background: #fff;
+    background: var(--bg-color);
 }
 .assistant.collapsible .assistant-header {
     cursor: pointer;
@@ -1539,6 +1541,10 @@ summary.hide-toggle::-webkit-details-marker {
 .assistant .icon-col > .icon {
     width: 30px;
     height: 30px;
+}
+.assistant .icon-col .icon use,
+.assistant .control-col .icon use {
+    fill: currentColor;
 }
 .assistant .icon-col > .preset-icon-container {
     margin: -5px;
@@ -1707,6 +1713,12 @@ summary.hide-toggle::-webkit-details-marker {
     flex: 1 1 auto;
     min-height: 0;
 }
+.assistant .entity-editor {
+    padding-bottom: 15px;
+}
+.assistant .entity-editor > div:last-child {
+    margin-bottom: 0;
+}
 .assistant .feature-list {
     text-align: center;
 }
@@ -1779,8 +1791,8 @@ summary.hide-toggle::-webkit-details-marker {
     padding-top: 5px;
 }
 .assistant.light.prominent:not(.has-body) {
-    background: rgba(255, 255, 255, 0.97);
-    color: #333;
+    background: var(--bg-color);
+    color: var(--text-color);
 }
 .assistant.light.prominent:not(.has-body) .assistant-header {
     background: transparent;
@@ -1977,7 +1989,7 @@ summary.hide-toggle::-webkit-details-marker {
     width: 100%;
     display: flex;
     flex-direction: column;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
     border-radius: inherit;
 }
 
@@ -1992,8 +2004,9 @@ summary.hide-toggle::-webkit-details-marker {
     height: 100%;
     flex: 1 1 100%;}.entity-editor {    padding: 20px;
 }
-/* preserve extra space at bottom of inspector to allow for dropdown options - #5280 */
-.entity-editor > div:last-child {
+/* 2.x sidebar: extra space so comboboxes can open (#5280). The assistant
+   panel should hug its last section instead. */
+.sidebar .entity-editor > div:last-child {
     margin-bottom: 150px;
 }
 
@@ -2035,16 +2048,16 @@ summary.hide-toggle::-webkit-details-marker {
     margin-bottom: 10px;
 }
 .assistant.light .section-feature-type .preset-list-button-wrap {
-    background: #fff;
-    border-color: #ccc;
+    background: var(--bg-color);
+    border-color: var(--border-color);
 }
 .assistant.light .section-feature-type .preset-list-button,
 .assistant.light .section-feature-type .preset-list-button .label {
-    color: #333;
+    color: var(--text-color);
     background: transparent;
 }
 .assistant.light .section-feature-type .preset-list-button-wrap button.tag-reference-button:not(:hover):not(:active):not(:focus) {
-    background: #f6f6f6;
+    background: var(--bg-color-2);
 }
 
 
@@ -2239,12 +2252,12 @@ summary.hide-toggle::-webkit-details-marker {
     cursor: inherit;
 }
 .preset-icon-container circle.vertex {
-    fill: #fff;
-    stroke: rgba(0, 0, 0, 0.25);
+    fill: var(--bg-color);
+    stroke: var(--transparent-text-color);
 }
 .preset-icon-fill circle.midpoint {
     fill: transparent;
-    stroke: rgba(0, 0, 0, 0.25);
+    stroke: var(--transparent-text-color);
 }
 /* use a consistent stroke width */
 .preset-icon-container path.line.stroke {
@@ -3992,6 +4005,8 @@ button.raw-tag-option svg.icon {
 .tag-reference-loading .icon {
     background-image: url(img/mini-loader.gif);
     background-position: 0 0;
+    filter: var(--bg-filter);
+    mix-blend-mode: var(--mix-blend-mode);
 }
 
 .tag-reference-body {
