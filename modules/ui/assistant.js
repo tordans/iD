@@ -117,13 +117,36 @@ export function uiAssistant(context) {
         redraw();
     };
 
+    // Browse (search) and inspect share one closed/open state, like develop's
+    // sidebar. Draw and save stay separate. Develop only auto-opens for a
+    // newly drawn feature.
+    function collapseStorageCategory(collapseCategory) {
+        if (collapseCategory === 'browse' || collapseCategory === 'inspect') {
+            return 'sidebar';
+        }
+        return collapseCategory;
+    }
+
     function isBodyCollapsed(collapseCategory) {
-        return collapseCategory && context.storage('assistant.collapsed.' + collapseCategory) === 'true';
+        var key = collapseStorageCategory(collapseCategory);
+        if (!key) return false;
+        if (context.storage('assistant.collapsed.' + key) === 'true') return true;
+        if (key === 'sidebar') {
+            return context.storage('assistant.collapsed.inspect') === 'true' ||
+                context.storage('assistant.collapsed.browse') === 'true';
+        }
+        return false;
     }
 
     function setIsBodyCollapsed(collapseCategory, flag) {
         if (!flag) flag = null;
-        if (collapseCategory) context.storage('assistant.collapsed.' + collapseCategory, flag);
+        var key = collapseStorageCategory(collapseCategory);
+        if (!key) return;
+        context.storage('assistant.collapsed.' + key, flag);
+        if (key === 'sidebar') {
+            context.storage('assistant.collapsed.inspect', null);
+            context.storage('assistant.collapsed.browse', null);
+        }
     }
 
     function updateDidEditStatus() {
@@ -829,9 +852,10 @@ export function uiAssistant(context) {
 
     function panelSelect(context, selectedIDs) {
 
-        // Keep inspect open so fields/tags are visible (same idea as freeze
-        // always showing the save body after pressing Save).
-        setIsBodyCollapsed('inspect', false);
+        var mode = context.mode();
+        if (mode.newFeature && mode.newFeature()) {
+            setIsBodyCollapsed('inspect', false);
+        }
 
         var panel = {
             hash: 'select ' + selectedIDs.toString(),
