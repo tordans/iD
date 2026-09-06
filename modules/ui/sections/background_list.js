@@ -275,7 +275,7 @@ export function uiSectionBackgroundList(context) {
                 }
             });
 
-        // Esri Wayback row: spinner next to label, dropdown (via helper)
+        // Esri Wayback row: inline date select inside the label, like yearly variants
         const waybackEnter = enter.filter(function(d) { return d.id === ESRI_WAYBACK_ID; });
         renderWaybackRowContent(waybackEnter, context, {
             onDateFocus: waybackDateFocus,

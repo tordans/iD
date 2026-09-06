@@ -1,6 +1,6 @@
 import type { Selection } from 'd3-selection';
 import { select as d3_select } from 'd3-selection';
-import { localizer } from '../../core/localizer';
+import { t, localizer } from '../../core/localizer';
 import { uiSetInlineLoading } from '../inline_loading';
 import { ESRI_WAYBACK_ID } from '../../renderer/background_source_wayback';
 import type { WaybackSource } from '../../renderer/background_source_wayback';
@@ -10,13 +10,13 @@ const WAYBACK_READY_CLASS = 'wayback-ready';
 const WAYBACK_SPINNER_CLASS = 'wayback-spinner';
 
 /**
- * Format a wayback release date string for display in the dropdown.
+ * Format a wayback release date for the inline variant select (date only).
+ * The "Release" suffix is rendered next to the select, like yearly imagery variants.
  */
 export function formatWaybackReleaseLabel(dateString: string, localeCode?: string): string {
     const date = new Date(dateString + 'T00:00:00Z');
     const code = localeCode ?? localizer.localeCode();
-    const localeDate = isNaN(date.getTime()) ? dateString : date.toLocaleDateString(code);
-    return `${localeDate} Release`;
+    return isNaN(date.getTime()) ? dateString : date.toLocaleDateString(code);
 }
 
 /**
@@ -172,8 +172,8 @@ export function updateWaybackRow(
 }
 
 /**
- * Render the wayback-specific row content: spinner container (inside label, after text)
- * and date dropdown (sibling of label). Call with the enter selection of wayback li elements.
+ * Render Wayback controls in the same shape as yearly background variants:
+ * name + inline select + suffix inside the label text, plus a loading spinner.
  */
 export function renderWaybackRowContent(
     waybackLiEnter: Selection<HTMLLIElement, unknown, null, undefined>,
@@ -186,21 +186,26 @@ export function renderWaybackRowContent(
     waybackLiEnter
         .classed('wayback-row', true);
 
-    // Spinner container inside label (after the text span), aligned with label
-    waybackLiEnter.select('label')
-        .append('span')
-        .attr('class', WAYBACK_SPINNER_CLASS + ' hide')
-        .attr('aria-hidden', 'true');
+    const labelText = waybackLiEnter.select('label > span');
 
-    // Dropdown as sibling of label; visibility controlled by .wayback-ready on li
-    waybackLiEnter
+    labelText
         .append('select')
         .attr('class', 'wayback-date')
-        .attr('aria-label', 'Wayback release date')
+        .attr('aria-label', t('background.EsriWayback.date'))
         .on('focus', function (this: HTMLSelectElement) {
             callbacks.onDateFocus(d3_select(this));
         })
         .on('change', callbacks.onDateChange);
+
+    labelText
+        .append('span')
+        .attr('class', 'wayback-release-suffix')
+        .text(` ${t('background.EsriWayback.release')}`);
+
+    waybackLiEnter.select('label')
+        .append('span')
+        .attr('class', WAYBACK_SPINNER_CLASS + ' hide')
+        .attr('aria-hidden', 'true');
 }
 
 export { ESRI_WAYBACK_ID };
