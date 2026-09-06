@@ -53,7 +53,7 @@ export function uiScale(context: iD.Context, originLeading?: boolean) {
 
         var scaleGroupX = originLeading ? 10 : (250 - 10 - scale.px);
 
-        selection.select('#scale-group')
+        selection.select('.scale-group')
             .attr('transform', 'translate(' + scaleGroupX + ',11)');
 
         selection.select('.scale-path')
@@ -65,7 +65,6 @@ export function uiScale(context: iD.Context, originLeading?: boolean) {
             .attr('transform', 'translate(' + textGroupX + ',' + tickHeight + ')');
 
         selection.select('.scale-text')
-            .style(localizer.textDirection() === 'ltr' ? 'left' : 'right', (scale.px + 16) + 'px')
             .text(scale.text);
     }
 
@@ -80,14 +79,16 @@ export function uiScale(context: iD.Context, originLeading?: boolean) {
             .attr('class', 'scale' + (originLeading ? ' origin-leading' : ' origin-trailing'))
             .on('click', switchUnits)
             .append('g')
-            .attr('id', 'scale-group');
+            .attr('class', 'scale-group');
 
         scalegroup
             .append('path')
             .attr('class', 'scale-path');
 
-        selection
-            .append('div')
+        scalegroup
+            .append('g')
+            .attr('class', 'scale-textgroup')
+            .append('text')
             .attr('class', 'scale-text');
 
         selection.call(update);
