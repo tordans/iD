@@ -1133,8 +1133,8 @@ en:
     title: Preferences
     description: Preferences
     key: P
-    toolbar:
-      title: Toolbar
+    interface:
+      title: Interface
       labels:
         description: Show button labels
         tooltip: Uncheck this box to hide the captions under the ribbon buttons.

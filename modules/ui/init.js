@@ -45,7 +45,7 @@ import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
 import { uiPaneMapData } from './panes/map_data';
 import { uiPanePreferences } from './panes/preferences';
-import { applyToolbarLabelsPref } from './sections/toolbar';
+import { applyInterfacePrefs } from './sections/interface';
 
 export function uiInit(context) {
     var _initCounter = 0;
@@ -57,7 +57,7 @@ export function uiInit(context) {
 
     function render(container) {
 
-        applyToolbarLabelsPref(context);
+        applyInterfacePrefs(context);
 
         container
             .on('click.ui', function(d3_event) {

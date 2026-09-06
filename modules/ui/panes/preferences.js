@@ -1,7 +1,7 @@
 import { t } from '../../core/localizer';
 import { uiPane } from '../pane';
 import { uiSectionPrivacy } from '../sections/privacy';
-import { uiSectionToolbar } from '../sections/toolbar';
+import { uiSectionInterface } from '../sections/interface';
 
 export function uiPanePreferences(context) {
 
@@ -11,7 +11,7 @@ export function uiPanePreferences(context) {
     .description(t.append('preferences.description'))
     .iconName('fas-user-cog')
     .sections([
-        uiSectionToolbar(context),
+        uiSectionInterface(context),
         uiSectionPrivacy(context)
     ]);
 
