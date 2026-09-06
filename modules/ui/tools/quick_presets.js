@@ -81,11 +81,12 @@ export function uiToolQuickPresets(context) {
                     feature: appendStrong(presetName)
                 });
             } else {
-                var hiddenPresetFeatures = context.features().isHiddenPreset(d.preset, d.preset.geometry[0]);
-                var isAutoHidden = context.features().autoHidden(hiddenPresetFeatures.key);
+                // 2.43 returns a feature-key string (or false); freeze returned the rule object.
+                var hiddenPresetFeaturesId = context.features().isHiddenPreset(d.preset, d.preset.geometry[0]);
+                var isAutoHidden = hiddenPresetFeaturesId && context.features().autoHidden(hiddenPresetFeaturesId);
                 var tooltipIdSuffix = isAutoHidden ? 'zoom' : 'manual';
                 protoMode.description = t.append('inspector.hidden_preset.' + tooltipIdSuffix, {
-                    features: hiddenPresetFeatures.title
+                    features: hiddenPresetFeaturesId ? t('feature.' + hiddenPresetFeaturesId + '.description') : ''
                 });
                 protoMode.key = null;
             }
@@ -131,8 +132,10 @@ export function uiToolQuickPresets(context) {
             .attr('id', function(d) {
                 return utilSafeClassName(d.button);
             })
-            .on('click.mode-buttons', function(d) {
+            .on('click.mode-buttons', function(d3_event, d) {
+                d3_event.preventDefault();
                 if (d3_select(this).classed('disabled')) return;
+                if (suppressClick) return;
                 toggleMode(d);
             })
             .call(uiTooltip()
@@ -156,7 +159,7 @@ export function uiToolQuickPresets(context) {
                 }
 
                 d3_select(this)
-                    .call(uiPresetIcon(context)
+                    .call(uiPresetIcon()
                         .geometry(geometry)
                         .preset(d.preset)
                         .sizeClass('small')
@@ -166,6 +169,7 @@ export function uiToolQuickPresets(context) {
 
         var scrollNode = d3_select('.top-toolbar').node();
         var dragOrigin, dragMoved, targetData;
+        var suppressClick = false;
         var ltr = localizer.textDirection() === 'ltr',
             rtl = !ltr;
 
@@ -256,9 +260,13 @@ export function uiToolQuickPresets(context) {
             })
             .on('end', function(d3_event, d) {
 
-                if (dragMoved && !d3_select(this).classed('dragging')) {
-                    // didn't move, interpret as a click
+                if (!d3_select(this).classed('dragging')) {
+                    // click, or movement below the drag threshold.
+                    // d3-drag v3 preventDefault()s mouseup, so the click event
+                    // often never fires (freeze relied on d3-drag v1 still firing it).
                     toggleMode(d);
+                    suppressClick = true;
+                    setTimeout(function() { suppressClick = false; }, 0);
                     return;
                 }
 
