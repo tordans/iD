@@ -29,7 +29,7 @@
     --id-toolbar-height: 71px;
 }
 .ideditor.hide-toolbar-labels {
-    --id-toolbar-height: 50px;
+    --id-toolbar-height: 60px;
 }
 .ideditor div {
     /* disable pinch-to-zoom of the UI on touch devices */
@@ -626,6 +626,9 @@ button.loading .icon {
 }
 .ideditor.hide-toolbar-labels .top-toolbar .toolbar-item .item-label {
     display: none;
+}
+.ideditor.hide-toolbar-labels .top-toolbar .toolbar-item {
+    padding-bottom: 10px;
 }
 .top-toolbar .toolbar-item.spacer-half {
     width: 50%;
