@@ -1277,7 +1277,34 @@ button.bar-button.add-preset {
 }
 button.add-preset.disabled .preset-icon-container {
     opacity: 0.5;
-}/* Header for modals / panes
+}
+
+/* Point / line / area generic add: one group with a hairline gap */
+.toolbar-item.add-generic .item-content {
+    gap: 2px;
+}
+.toolbar-item.add-generic button.bar-button.add-preset {
+    border-radius: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+.ideditor[dir='ltr'] .toolbar-item.add-generic button.bar-button.add-preset:first-child {
+    border-radius: 4px 0 0 4px;
+}
+.ideditor[dir='rtl'] .toolbar-item.add-generic button.bar-button.add-preset:first-child {
+    border-radius: 0 4px 4px 0;
+}
+.ideditor[dir='ltr'] .toolbar-item.add-generic button.bar-button.add-preset:last-child {
+    border-radius: 0 4px 4px 0;
+}
+.ideditor[dir='rtl'] .toolbar-item.add-generic button.bar-button.add-preset:last-child {
+    border-radius: 4px 0 0 4px;
+}
+.toolbar-item.add-generic button.bar-button.add-preset:first-child:last-child {
+    border-radius: 4px;
+}
+
+/* Header for modals / panes
 ------------------------------------------------------- */
 .header {
     border-bottom: 1px solid var(--border-color);
