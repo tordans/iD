@@ -168,7 +168,7 @@ export function uiToolQuickPresets(context) {
             });
 
         var scrollNode = d3_select('.top-toolbar').node();
-        var dragOrigin, dragMoved, targetData;
+        var dragOrigin, targetData;
         var suppressClick = false;
         var ltr = localizer.textDirection() === 'ltr',
             rtl = !ltr;
@@ -185,11 +185,8 @@ export function uiToolQuickPresets(context) {
                     nodeTop: node.offsetTop,
                 };
                 targetData = null;
-                dragMoved = false;
             })
             .on('drag', function(d3_event, d) {
-                dragMoved = true;
-
                 var deltaX = d3_event.x - dragOrigin.x,
                     deltaY = d3_event.y - dragOrigin.y;
 

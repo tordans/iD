@@ -597,7 +597,7 @@ export function uiAssistant(context) {
             function parseSavedHistory(data) {
                 if (!data) return null;
                 if (typeof data === 'string') {
-                    try { return JSON.parse(data); } catch (err) { return null; }
+                    try { return JSON.parse(data); } catch { return null; }
                 }
                 return data;
             }
