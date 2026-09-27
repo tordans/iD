@@ -905,6 +905,24 @@ en:
         tooltip: "Drag and drop a data file onto the page, or click the button to setup"
         title: Custom Map Data
         zoom: Zoom to data
+    custom_data_layers:
+      title: Custom Data Layers
+      add: Add custom data layer
+      empty: No custom data layers yet. Add one with the + button.
+      edit_tooltip: Edit this data layer
+      delete:
+        tooltip: Delete this data layer
+        header: Delete data layer
+        message: "Delete “{name}”? This cannot be undone."
+        confirm: Delete
+      settings:
+        header_add: Add custom data layer
+        header_edit: Edit custom data layer
+        name: Name (optional)
+        url: URL
+        url_placeholder: https://example.com/data.pmtiles
+        color: Color
+        formats: "Supported: GeoJSON files (.geojson, .json), PMTiles archives (.pmtiles) and vector tile URL templates (z, x, y). The server must allow cross-origin requests (CORS)."
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.

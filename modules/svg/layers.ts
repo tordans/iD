@@ -2,6 +2,7 @@ import { dispatch as d3_dispatch, type Dispatch } from 'd3-dispatch';
 import { select as d3_select } from 'd3-selection';
 
 import { svgData } from './data';
+import { svgCustomData } from './custom_data';
 import { svgLocalPhotos} from './local_photos';
 import { svgDebug } from './debug';
 import { svgGeolocate } from './geolocate';
@@ -46,6 +47,7 @@ export function svgLayers(projection: Projection, context: iD.Context) {
         { id: 'osm', layer: svgOsm(projection, context, dispatch) },
         { id: 'notes', layer: svgNotes(projection, context, dispatch) },
         { id: 'data', layer: svgData(projection, context, dispatch) },
+        { id: 'custom-data', layer: svgCustomData(projection, context, dispatch) },
         { id: 'osmose', layer: svgOsmose(projection, context, dispatch) },
         { id: 'streetside', layer: svgStreetside(projection, context, dispatch)},
         { id: 'mapillary', layer: svgMapillaryImages(projection, context, dispatch) },
