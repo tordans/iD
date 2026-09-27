@@ -291,6 +291,7 @@ Notes:
   - Strings under `live_touched` in `data/core.yaml` (English only; German texts are in `docs/concept.md`).
 - Checked so far: unit/integration test with an in-memory backend and two users (`test/spec/live_touched/live_touched.ts`): alice's iD edit is shared, bob sees it, a parallel edit gets the `parallel` hint and the "others nearby" flag, undo deletes the entry, "delete my data" works. In the browser (logged out): section renders, login hint shows, switch is disabled.
 - **T10 (Tobias):** open iD at `http://127.0.0.1:8080` (not `localhost`; only `127.0.0.1:*` is allowed by the backend) in two browser profiles with two OSM accounts, same area at zoom ≥ 15. Turn on "Show and share live edits" in both (consent dialog). Edit in one; the other should list it within ~10 s and show the orange halo. Also check: parallel hint when both edit the same way, "saved" (violet) after an upload, the map halos on lines, areas and points, and "Delete my data on the server".
+- Open question for osm-live-touched (from Cursor Bugbot on PR #10): the full OSM token goes to the backend, which only needs the user id and name. The consent text now says so; a narrower mechanism would be better.
 - Not verified yet: the halo CSS on real map elements (needs real entries), the upload → `saved` path in a real upload.
 
 ### 12. Read-only feature categories — ⬜ (plan)
