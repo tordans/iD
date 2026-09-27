@@ -3,6 +3,7 @@ import { uiPane } from '../pane';
 
 import { uiSectionDataLayers } from '../sections/data_layers';
 import { uiSectionCustomDataLayers } from '../sections/custom_data_layers';
+import { uiSectionLenses } from '../sections/lenses';
 import { uiSectionMapFeatures } from '../sections/map_features';
 import { uiSectionMapStyleOptions } from '../sections/map_style_options';
 import { uiSectionPhotoOverlays } from '../sections/photo_overlays';
@@ -19,6 +20,7 @@ export function uiPaneMapData(context) {
             uiSectionCustomDataLayers(context),
             uiSectionPhotoOverlays(context),
             uiSectionMapStyleOptions(context),
+            uiSectionLenses(context),
             uiSectionMapFeatures(context)
         ]);
 

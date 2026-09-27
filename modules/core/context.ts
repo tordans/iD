@@ -7,6 +7,8 @@ import packageJSON from '../../package.json';
 import type { EntityId, NoteId, osmChangeset, OsmEntity } from '../osm';
 import { t, localizer } from './localizer';
 import { fileFetcher, type AssetMap } from './file_fetcher';
+import { prefs } from './preferences';
+import { applyLens, LENS_PREF, UPLOADED_LENSES_PREF } from './lenses';
 import { coreHistory } from './history';
 import { coreValidator } from './validator';
 import { coreUploader } from './uploader';
@@ -743,6 +745,16 @@ export function coreContext(this: object): coreContext {
       _map.init();
       _validator.init();
       _features.init();
+
+      // apply the active CSS lens (injected CSS + tag classes), and re-apply +
+      // redraw whenever the selected lens or the stored lenses change
+      applyLens();
+      const onLensChange = () => {
+        applyLens();
+        if (_map) _map.pan([0, 0]);   // force a redraw so classes are recomputed
+      };
+      prefs.onChange(LENS_PREF, onLensChange);
+      prefs.onChange(UPLOADED_LENSES_PREF, onLensChange);
 
       // Migrate history data from localStorage to IndexedDB
       _history.migrateHistoryData();
