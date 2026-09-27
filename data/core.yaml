@@ -836,6 +836,13 @@ en:
     add_tooltip: "Add shortcut"
     save_tooltip: "Save shortcut"
     cancel_tooltip: "Cancel"
+  traffic_sign_field:
+    order_hint: Signs are read top to bottom. The top sign is the main sign.
+    open_tool: Open in Traffic Sign Tool
+    drag: Drag or use arrow keys to reorder
+    empty: No signs yet. Search below by name or sign ID to add one.
+    add_sign: Add sign…
+    unknown_sign: Unknown sign
   background:
     title: Background
     description: Background Settings

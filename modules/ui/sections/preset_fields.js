@@ -8,6 +8,8 @@ import { geoExtent } from '../../geo/extent';
 import { uiField } from '../field';
 import { uiFormFields } from '../form_fields';
 import { uiSection } from '../section';
+import { trafficSignTagKeysFromTags } from '../../presets/traffic_sign_fields';
+import { appendTrafficSignInspectorFields } from './traffic_sign_inspector_fields';
 
 export function uiSectionPresetFields(context) {
 
@@ -22,16 +24,22 @@ export function uiSectionPresetFields(context) {
     var _presets = [];
     var _tags;
     var _entityIDs;
+    var _trafficSignFieldsArr = [];
+    var _trafficSignFieldsSignature = '';
+
+    function trafficSignFieldsSignature(tags) {
+        return trafficSignTagKeysFromTags(tags).join('\0');
+    }
 
     function renderDisclosureContent(selection) {
+        var graph = context.graph();
+
+        var geometries = Object.keys(_entityIDs.reduce(function(geoms, entityID) {
+            geoms[graph.entity(entityID).geometry(graph)] = true;
+            return geoms;
+        }, {}));
+
         if (!_fieldsArr) {
-
-            var graph = context.graph();
-
-            var geometries = Object.keys(_entityIDs.reduce(function(geoms, entityID) {
-                geoms[graph.entity(entityID).geometry(graph)] = true;
-                return geoms;
-            }, {}));
 
             const loc = _entityIDs.reduce(function(extent, entityID) {
                 var entity = context.graph().entity(entityID);
@@ -109,7 +117,24 @@ export function uiSectionPresetFields(context) {
             });
         }
 
-        _fieldsArr.forEach(function(field) {
+        var signature = trafficSignFieldsSignature(_tags);
+        if (signature !== _trafficSignFieldsSignature) {
+            _trafficSignFieldsSignature = signature;
+            _trafficSignFieldsArr = [];
+            appendTrafficSignInspectorFields(
+                _trafficSignFieldsArr,
+                _tags,
+                context,
+                _entityIDs,
+                presetManager,
+                geometries,
+                dispatch
+            );
+        }
+
+        var fieldsToShow = _fieldsArr.slice().concat(_trafficSignFieldsArr);
+
+        fieldsToShow.forEach(function(field) {
             field
                 .state(_state)
                 .tags(_tags);
@@ -118,7 +143,7 @@ export function uiSectionPresetFields(context) {
 
         selection
             .call(formFields
-                .fieldsArr(_fieldsArr)
+                .fieldsArr(fieldsToShow)
                 .state(_state)
                 .klass('grouped-items-area')
             );
@@ -151,6 +176,8 @@ export function uiSectionPresetFields(context) {
         if (!val || !_entityIDs || !utilArrayIdentical(_entityIDs, val)) {
             _entityIDs = val;
             _fieldsArr = null;
+            _trafficSignFieldsArr = [];
+            _trafficSignFieldsSignature = '';
         }
         return section;
     };

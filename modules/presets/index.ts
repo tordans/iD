@@ -1,4 +1,4 @@
-import type { Fields, Geometry, Preset, PresetCategories, PresetDefaults, Presets } from '@openstreetmap/id-tagging-schema';
+import type { Field, Fields, Geometry, Preset, PresetCategories, PresetDefaults, Presets } from '@openstreetmap/id-tagging-schema';
 import { prefs } from '../core/preferences';
 import { fileFetcher } from '../core/file_fetcher';
 import { locationManager } from '../core/location_manager';
@@ -12,6 +12,7 @@ import { presetCategory } from './category';
 import { presetCollection } from './collection';
 import { presetField } from './field';
 import { presetPreset } from './preset';
+import { applyTrafficSignFieldTypes, EXTRA_TRAFFIC_SIGN_FIELDS } from './traffic_sign_fields';
 import { utilArrayUniq } from '../util';
 
 export { presetCategory };
@@ -140,6 +141,8 @@ export function presetIndex() {
 
     // Merge Fields
     if (d.fields) {
+      applyTrafficSignFieldTypes(d.fields);
+
       Object.entries(d.fields).forEach(([fieldID, rawField]) => {
 
         if (rawField) {   // add or replace
@@ -151,6 +154,11 @@ export function presetIndex() {
           delete _fields[fieldID];
         }
       });
+
+      for (const [fieldID, rawField] of Object.entries(EXTRA_TRAFFIC_SIGN_FIELDS)) {
+        _fields[fieldID] ??= presetField(fieldID, rawField as unknown as Field);
+      }
+      applyTrafficSignFieldTypes(_fields);
     }
 
     // Merge Presets
