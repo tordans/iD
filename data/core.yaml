@@ -1004,8 +1004,21 @@ en:
       title: Lens
       select: Lens
       default: Default
-      upload: Import a CSS file
-      upload_description: Add a custom lens from a .css file kept in your browser.
+      default_tooltip: iD's normal map style
+      select_tooltip: Show the map with this lens
+      add: Import a lens
+      edit_tooltip: Edit name and shortcut
+      header_add: Import a lens
+      header_edit: Edit lens
+      name: Name
+      choose_file: Choose CSS file
+      no_file: No file chosen
+      delete:
+        header: Delete lens
+        message: "Delete “{name}”? This cannot be undone."
+        confirm: Delete
+      upload: CSS file
+      upload_description: The lens is kept in your browser.
       upload_warning: Only import lenses from sources you trust. A lens's CSS can change the editor's appearance.
       remove: Remove lens
       shortcut:

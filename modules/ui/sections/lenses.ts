@@ -1,180 +1,184 @@
+import { select as d3_select } from 'd3-selection';
+
+import { localizer, t } from '../../core/localizer';
 import { prefs } from '../../core/preferences';
-import { t } from '../../core/localizer';
-import { svgIcon } from '../../svg/icon';
-import { uiSection } from '../section';
-import type { LensEntry } from '../../core/lenses';
 import {
     DEFAULT_LENS_SHORTCUT,
     LENS_PREF,
     LENS_SHORTCUTS_PREF,
-    RESERVED_LENS_SHORTCUTS,
     UPLOADED_LENSES_PREF,
-    addUploadedLens,
     getSelectedLensId,
     getShortcutForLens,
     getUploadedLenses,
     listLenses,
-    removeLensShortcut,
     removeUploadedLens,
-    setLensShortcut,
-    setSelectedLensId
+    setSelectedLensId,
+    type LensEntry
 } from '../../core/lenses';
+import { svgIcon } from '../../svg/icon';
+import { uiCmd } from '../cmd';
+import { uiConfirm } from '../confirm';
+import { uiSection } from '../section';
+import { uiSettingsLens } from '../settings/lens';
+import { uiTooltip } from '../tooltip';
+
 
 /**
- * Map data section to pick a UI lens: the built-in default, or a CSS file
- * imported by the user (kept in localStorage). Selecting a lens injects its CSS
- * and applies its tag-based styling to the map.
- *
- * @param context - the iD application context
- * @returns the section
+ * Map Data pane section to pick a lens: the built-in default, or a CSS file
+ * imported by the user (kept in localStorage). Styled like the Background list:
+ * one radio row per lens, "+" in the header to import, edit and delete buttons
+ * on imported lenses, and the ⌥ shortcut in the row tooltip.
  */
-export function uiSectionLenses(context: any) {
-
-    // uiSection is authored in JS; its fluent setters are added dynamically and
-    // are not visible to TS, hence the `any`.
-    const section: any = (uiSection('map-data-lenses', context) as any)
+export function uiSectionLenses(context: iD.Context) {
+    const section = (uiSection('map-data-lenses', context) as any)
         .label(() => t.append('map_data.lens.title'))
+        .disclosureHeaderOptions(renderHeaderOptions)
         .disclosureContent(renderDisclosureContent);
 
-    /** Display label for a lens entry (the built-in one is localized + shows ⌥D). */
-    function lensLabel(entry: LensEntry): string {
-        if (entry.source === 'default') {
-            return `${t('map_data.lens.default')} (⌥${DEFAULT_LENS_SHORTCUT.toUpperCase()})`;
-        }
-        return entry.name || entry.id;
+    const tooltipPlacement = () => localizer.textDirection() === 'rtl' ? 'right' : 'left';
+
+
+    function lensName(entry: LensEntry) {
+        return entry.source === 'default' ? t('map_data.lens.default') : (entry.name || entry.id);
     }
 
-    /** Read the selected CSS file, store it as a lens and select it. */
-    function onUploadFile(this: HTMLInputElement) {
-        const file = this.files && this.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            const lens = addUploadedLens({
-                name: file.name.replace(/\.css$/i, ''),
-                css: String(reader.result || '')
-            });
-            setSelectedLensId(lens.id);
-        };
-        reader.readAsText(file);
-        this.value = '';  // allow re-importing the same filename
+    function lensShortcut(entry: LensEntry) {
+        return entry.source === 'default' ? DEFAULT_LENS_SHORTCUT : getShortcutForLens(entry.id);
     }
 
-    function renderDisclosureContent(selection: any) {
-        let container = selection.selectAll('.lens-options-container').data([0]);
-
-        const containerEnter = container.enter()
-            .append('div')
-            .attr('class', 'display-options-container lens-options-container');
-
-        // lens picker
-        const pickerEnter = containerEnter.append('div').attr('class', 'lens-pref');
-        pickerEnter.append('label')
-            .attr('class', 'lens-select-label')
-            .call(t.append('map_data.lens.select'));
-        pickerEnter.append('select')
-            .attr('class', 'lens-select')
-            .on('change', function(this: HTMLSelectElement) { setSelectedLensId(this.value); });
-
-        // inline CSS import
-        const uploadEnter = containerEnter.append('div').attr('class', 'lens-pref lens-upload');
-        uploadEnter.append('label')
-            .attr('class', 'lens-upload-label')
-            .call(t.append('map_data.lens.upload'));
-        uploadEnter.append('input')
-            .attr('type', 'file')
-            .attr('class', 'lens-upload-input')
-            .attr('accept', '.css,text/css')
-            .on('change', onUploadFile);
-        uploadEnter.append('div')
-            .attr('class', 'editing-option-description')
-            .call(t.append('map_data.lens.upload_description'));
-        uploadEnter.append('div')
-            .attr('class', 'editing-option-description lens-upload-warning')
-            .call(t.append('map_data.lens.upload_warning'));
-
-        container = containerEnter.merge(container);
-
-        // update: lens options
-        const options = container.select('.lens-select')
-            .selectAll('option')
-            .data(listLenses(), (d: LensEntry) => d.id);
-        options.exit().remove();
-        options.enter().append('option')
-            .merge(options)
-            .attr('value', (d: LensEntry) => d.id)
-            .text(lensLabel);
-        container.select('.lens-select').property('value', getSelectedLensId());
-
-        // update: uploaded lenses list with remove buttons
-        renderUploadedList(container);
+    function uploadedLens(id: string) {
+        return getUploadedLenses().find(lens => lens.id === id);
     }
 
-    function renderUploadedList(container: any) {
-        const list = container.selectAll('.lens-uploaded-list').data([0]);
-        const listMerged = list.enter()
+
+    function renderHeaderOptions(selection: d3.Selection) {
+        selection.selectAll('button.add-lens')
+            .data([0])
+            .enter()
+            .append('button')
+            .attr('class', 'disclosure-header-option add-lens')
+            .attr('aria-label', t('map_data.lens.add'))
+            .call((uiTooltip() as any)
+                .title(() => t.append('map_data.lens.add'))
+                .placement(tooltipPlacement())
+            )
+            .on('click', (d3_event: MouseEvent) => {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                uiSettingsLens(context);
+            })
+            .call(svgIcon('#iD-icon-plus', ''));
+    }
+
+
+    function renderDisclosureContent(selection: d3.Selection) {
+        let list = selection.selectAll<HTMLUListElement, number>('ul.layer-list-lenses')
+            .data([0]);
+        list = list.enter()
             .append('ul')
-            .attr('class', 'layer-list lens-uploaded-list')
+            .attr('class', 'layer-list layer-list-lenses')
             .merge(list);
 
-        const items = listMerged.selectAll('.lens-uploaded-item')
-            .data(getUploadedLenses(), (d: any) => d.id);
+        let items = list.selectAll<HTMLLIElement, LensEntry>('li')
+            .data(listLenses(), d => d.id);
         items.exit().remove();
 
         const itemsEnter = items.enter()
             .append('li')
-            .attr('class', 'lens-uploaded-item');
-        itemsEnter.append('span').attr('class', 'lens-uploaded-name');
+            .attr('class', d => `lens-item lens-item-${d.source}`);
 
-        // shortcut assignment: a single letter, activated with ⌥+letter
-        const shortcutEnter = itemsEnter.append('label').attr('class', 'lens-shortcut');
-        shortcutEnter.append('span').attr('class', 'lens-shortcut-modifier').text('⌥');
-        shortcutEnter.append('input')
-            .attr('type', 'text')
-            .attr('class', 'lens-shortcut-input')
-            .attr('maxlength', '1')
-            .attr('size', '1')
-            .attr('placeholder', () => t('map_data.lens.shortcut.placeholder'))
-            .attr('title', () => t('map_data.lens.shortcut.label'))
-            .on('change', onShortcutChange)
-            .on('keydown', function(this: HTMLInputElement, d3_event: KeyboardEvent) {
-                if (d3_event.key === 'Enter') this.blur();
-            });
+        const labelEnter = itemsEnter.append('label');
+        labelEnter
+            .append('input')
+            .attr('type', 'radio')
+            .attr('name', 'lens')
+            .on('change', (_d3_event: Event, d: LensEntry) => setSelectedLensId(d.id));
+        labelEnter
+            .append('span');
 
-        itemsEnter.append('button')
-            .attr('class', 'lens-uploaded-remove')
-            .attr('title', () => t('map_data.lens.remove'))
-            .on('click', (_d3_event: any, d: any) => removeUploadedLens(d.id))
+        const uploadedEnter = itemsEnter.filter(d => d.source === 'uploaded');
+
+        uploadedEnter
+            .append('button')
+            .attr('class', 'lens-edit')
+            .call((uiTooltip() as any)
+                .title(() => t.append('map_data.lens.edit_tooltip'))
+                .placement(tooltipPlacement())
+            )
+            .on('click', (d3_event: MouseEvent, d: LensEntry) => {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                const lens = uploadedLens(d.id);
+                if (lens) uiSettingsLens(context, lens);
+            })
+            .call(svgIcon('#iD-icon-edit', ''));
+
+        uploadedEnter
+            .append('button')
+            .attr('class', 'lens-delete')
+            .call((uiTooltip() as any)
+                .title(() => t.append('map_data.lens.remove'))
+                .placement(tooltipPlacement())
+            )
+            .on('click', (d3_event: MouseEvent, d: LensEntry) => {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                confirmDelete(d);
+            })
             .call(svgIcon('#iD-operation-delete', ''));
 
-        const itemsMerged = itemsEnter.merge(items);
-        itemsMerged.select('.lens-uploaded-name').text((d: any) => d.name);
-        itemsMerged.select('.lens-shortcut-input')
-            .property('value', (d: any) => getShortcutForLens(d.id) || '')
-            .classed('lens-shortcut-invalid', false)
-            .attr('title', () => t('map_data.lens.shortcut.label'));
+        items = items.merge(itemsEnter)
+            .order();
+
+        const selectedID = getSelectedLensId();
+        items
+            .classed('active', d => d.id === selectedID)
+            .select('input')
+            .property('checked', d => d.id === selectedID);
+
+        items.select('label > span')
+            .text(lensName);
+
+        // the ⌥ shortcut shows in the tooltip, like ⌘B in the Background list
+        items.select<HTMLLabelElement>('label')
+            .each(function(d) {
+                const shortcut = lensShortcut(d);
+                const tooltip = (uiTooltip() as any)
+                    .title(() => t.append(d.source === 'default' ? 'map_data.lens.default_tooltip' : 'map_data.lens.select_tooltip'))
+                    .keys(shortcut ? [uiCmd('⌥' + shortcut.toUpperCase())] : null)
+                    .placement('top');
+                d3_select(this).call((uiTooltip() as any).destroyAny).call(tooltip);
+            });
     }
 
-    /** Validate and persist (or clear) a lens's shortcut letter. */
-    function onShortcutChange(this: HTMLInputElement, _d3_event: Event, d: any) {
-        const letter = this.value.trim().toLowerCase();
 
-        if (!letter) {
-            removeLensShortcut(d.id);
-            return;  // prefs.onChange triggers a re-render
-        }
-        const invalid = !/^[a-z]$/.test(letter)
-            ? t('map_data.lens.shortcut.invalid')
-            : RESERVED_LENS_SHORTCUTS.has(letter) ? t('map_data.lens.shortcut.reserved') : null;
-        if (invalid) {
-            this.classList.add('lens-shortcut-invalid');
-            this.title = invalid;
-            this.value = getShortcutForLens(d.id) || '';
-            return;
-        }
-        setLensShortcut(d.id, letter);
+    function confirmDelete(entry: LensEntry) {
+        const modal = uiConfirm(context.container());
+
+        modal.select('.modal-section.header')
+            .append('h3')
+            .call(t.append('map_data.lens.delete.header'));
+
+        modal.select('.modal-section.message-text')
+            .append('p')
+            .call(t.append('map_data.lens.delete.message', { name: lensName(entry) }));
+
+        const buttons = modal.select('.modal-section.buttons');
+        buttons
+            .append('button')
+            .attr('class', 'button cancel-button secondary-action')
+            .call(t.append('confirm.cancel'))
+            .on('click.cancel', () => modal.close());
+        buttons
+            .append('button')
+            .attr('class', 'button action')
+            .call(t.append('map_data.lens.delete.confirm'))
+            .on('click.delete', () => {
+                modal.close();
+                removeUploadedLens(entry.id);
+            });
     }
+
 
     prefs.onChange(LENS_PREF, section.reRender);
     prefs.onChange(UPLOADED_LENSES_PREF, section.reRender);

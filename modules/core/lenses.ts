@@ -92,6 +92,15 @@ export function sanitizeLensCss(css: string): string {
 }
 
 /**
+ * Rename an uploaded lens.
+ * @param id - id of the lens
+ * @param name - the new display name
+ */
+export function renameUploadedLens(id: string, name: string): void {
+    saveUploadedLenses(getUploadedLenses().map((lens) => lens.id === id ? { ...lens, name } : lens));
+}
+
+/**
  * Remove an uploaded lens; resets the selection to default if it was active.
  * @param id - id of the lens to remove
  */
