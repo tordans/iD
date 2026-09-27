@@ -11,6 +11,7 @@ import { geoExtent } from '../../geo';
 import { modeBrowse } from '../../modes/browse';
 import { uiCmd } from '../cmd';
 import { uiSection } from '../section';
+import { drawWayTablePanelItem } from './way_table_panel_item';
 import { uiSettingsCustomData } from '../settings/custom_data';
 
 export function uiSectionDataLayers(context) {
@@ -440,6 +441,9 @@ export function uiSectionDataLayers(context) {
         measurementPanelLabelEnter
             .append('span')
             .call(t.append('map_data.measurement_panel.title'));
+
+        panelsListEnter
+            .call(drawWayTablePanelItem, context);
     }
 
     context.layers().on('change.uiSectionDataLayers', section.reRender);

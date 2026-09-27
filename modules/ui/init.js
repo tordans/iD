@@ -23,6 +23,7 @@ import { uiFlash } from './flash';
 import { uiFullScreen } from './full_screen';
 import { uiGeolocate } from './geolocate';
 import { uiInfo } from './info';
+import { uiWayTablePanel } from './way_table_panel';
 import { uiIntro } from './intro';
 import { uiIssuesInfo } from './issues_info';
 import { uiLoading } from './loading';
@@ -243,6 +244,10 @@ export function uiInit(context) {
 
         overMap
             .call(ui.info);
+
+        ui.wayTable = uiWayTablePanel(context);
+        overMap
+            .call(ui.wayTable);
 
         overMap
             .append('div')

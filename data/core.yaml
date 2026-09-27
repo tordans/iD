@@ -923,6 +923,9 @@ en:
         url_placeholder: https://example.com/data.pmtiles
         color: Color
         formats: "Supported: GeoJSON files (.geojson, .json), PMTiles archives (.pmtiles) and vector tile URL templates (z, x, y). The server must allow cross-origin requests (CORS)."
+    way_table_panel:
+      title: Show Way Table Panel
+      tooltip: Compare the tags of the selected way with the previous and next ways.
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.
@@ -949,6 +952,17 @@ en:
     map_features: Map Features
     autohidden: "These features have been automatically hidden because too many would be shown on the screen.  You can zoom in to edit them."
     osmhidden: "These features have been automatically hidden because the OpenStreetMap layer is hidden."
+  way_table:
+    title: Way Table
+    key: K
+    previous: Select the previous way
+    next: Select the next way
+    close: Close the way table
+    key_column: Tag
+    reversed: This way points in the opposite direction. Its left/right tags are shown swapped.
+    junction:
+      backward: "Several ways continue before the first way. Choose one:"
+      forward: "Several ways continue after the last way. Choose one:"
   visual_diff:
     highlight_edits:
       description: Highlight Changes
