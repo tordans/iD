@@ -154,15 +154,7 @@ export function uiTagReference(what) {
 
 
     tagReference.button = function(selection, klass, iconName) {
-        var container = selection.selectAll('.accessory-buttons')
-            .data([0]);
-
-        container = container.enter()
-            .append('div')
-            .attr('class', 'accessory-buttons')
-            .merge(container);
-
-        _button = container.selectAll('.tag-reference-button')
+        _button = selection.selectAll('.tag-reference-button')
             .data([0]);
 
         _button = _button.enter()
