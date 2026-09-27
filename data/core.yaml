@@ -1049,12 +1049,19 @@ en:
     favorite_presets:
       title: Favorite Presets & Shortcuts
       empty_message: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut.
-      explanation: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut. You can reassign the shortcuts by reordering this list.
+      explanation: Click the star on a preset to add it to the favorites. Each new favorite gets a free number shortcut, which stays the same until you change it here. Drag the list to change the order in the preset list.
       add_tooltip: Add to favorites
       remove_tooltip: Remove from favorites
+      shortcut_label: Shortcut number
       config_tooltip: Open preferences to manage favorites
       heart_tooltip_active: Remove favorite; Right-click to open preferences
       heart_tooltip_inactive: Add favorite; Right-click to open preferences
+      flash:
+        draw: "Shortcut {shortcut}: add "
+        apply:
+          one: "Shortcut {shortcut}: changed {n} feature to "
+          other: "Shortcut {shortcut}: changed {n} features to "
+        switch: "Switching to shortcut {shortcut}"
     privacy:
       title: Privacy
       privacy_link: View the iD privacy policy

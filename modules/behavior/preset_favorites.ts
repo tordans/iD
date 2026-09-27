@@ -25,7 +25,7 @@ import { t } from '../core/localizer';
  *
  * Behavior:
  * - Numbers 1-3: Execute immediately (normal drawing modes) but can be cancelled by multi-digit shortcuts
- * - Numbers 8-999: User-defined preset favorites shortcuts
+ * - Other numbers (up to 3 digits): User-defined preset favorites shortcuts
  * - Single-digit shortcuts: Execute after 150ms (can be cancelled by additional digits)
  * - Multi-digit shortcuts: Execute after 500ms, can override single-digit actions
  * - Cancellation: Multi-digit shortcuts cancel previous single-digit actions seamlessly
@@ -94,7 +94,7 @@ export function behaviorPresetFavorites(context: iD.Context) {
 
         if ((mode.id === 'browse' || /^add-/.test(mode.id)) && !selectedIDs.length) {
             const geometries = preset.geometry;
-            let drawingMode;
+            let drawingMode: any;
 
             if (geometries.includes('point')) {
                 drawingMode = modeAddPoint(context, {
@@ -129,15 +129,14 @@ export function behaviorPresetFavorites(context: iD.Context) {
             setTimeout(() => {
                 try {
                     const presetName = preset.nameLabel();
-                    context.ui().flash
+                    (context.ui().flash as any)
                         .duration(3000)
                         .iconName('#iD-icon-apply')
                         .iconClass('success')
                         .label(function(selection: d3.Selection) {
                             selection.text('');
-                            selection.append('span').text('Drawing mode: ');
+                            selection.append('span').call(t.append('preferences.favorite_presets.flash.draw', { shortcut }));
                             presetName(selection.append('span').attr('class', 'preset-name'));
-                            selection.append('span').text(' (shortcut: ' + shortcut + ')');
                         })();
                 } catch {
                     // Flash notification failed
@@ -150,13 +149,11 @@ export function behaviorPresetFavorites(context: iD.Context) {
 
         const entityIDs = context.selectedIDs();
         if (entityIDs.length > 0) {
-            // @ts-expect-error - perform exists on Context but not in type definition
             context.perform(
                 function(graph: iD.Graph) {
                     for (let i = 0; i < entityIDs.length; i++) {
                         const entityID = entityIDs[i];
                         const entity = graph.entity(entityID);
-                        // @ts-expect-error - match exists on presetManager but not in type definition
                         const oldPreset = presetManager.match(entity, graph);
 
                         const entityGeometry = entity.geometry(graph);
@@ -175,16 +172,14 @@ export function behaviorPresetFavorites(context: iD.Context) {
                 try {
                     const presetName = preset.nameLabel();
                     const entityCount = entityIDs.length;
-                    context.ui().flash
+                    (context.ui().flash as any)
                         .duration(3000)
                         .iconName('#iD-icon-apply')
                         .iconClass('success')
                         .label(function(selection: d3.Selection) {
                             selection.text('');
-                            selection.append('span').text('Applied ');
+                            selection.append('span').call(t.append('preferences.favorite_presets.flash.apply', { n: entityCount, shortcut }));
                             presetName(selection.append('span').attr('class', 'preset-name'));
-                            selection.append('span').text(' to ' + entityCount + ' feature' + (entityCount === 1 ? '' : 's'));
-                            selection.append('span').text(' (shortcut: ' + shortcut + ')');
                         })();
                 } catch {
                     // Flash notification failed
@@ -211,21 +206,7 @@ export function behaviorPresetFavorites(context: iD.Context) {
         const shortcut = _numberBuffer;
         clearNumberBuffer();
 
-        const num = parseInt(shortcut, 10);
-        if (num >= 8 && num <= 999) {
-            if (executeShortcut(shortcut)) {
-                return true;
-            }
-        }
-
-        if (shortcut.length === 1) {
-            const digit = parseInt(shortcut, 10);
-            if (digit >= 1 && digit <= 3) {
-                return false;
-            }
-        }
-
-        return false;
+        return executeShortcut(shortcut);
     }
 
     function keydown(d3_event: KeyboardEvent) {
@@ -305,22 +286,22 @@ export function behaviorPresetFavorites(context: iD.Context) {
         }
 
         if (_numberBuffer.length > 1 && _singleDigitExecuted) {
-            context.enter(modeBrowse(context));
+            context.enter(modeBrowse(context) as any);
             _singleDigitExecuted = false;
 
             try {
-                context.ui().flash
+                (context.ui().flash as any)
                     .duration(1500)
                     .iconName('#iD-icon-backward')
                     .iconClass('blue')
-                    .label('Switching to shortcut: ' + _numberBuffer)();
+                    .label(t.append('preferences.favorite_presets.flash.switch', { shortcut: _numberBuffer }))();
             } catch {
                 // Flash notification failed
             }
         }
 
-        const bufferNum = parseInt(_numberBuffer, 10);
-        if (bufferNum >= 8 || (_numberBuffer.length > 1)) {
+        const isDrawModeKey = _numberBuffer.length === 1 && digit >= '1' && digit <= '3';
+        if (!isDrawModeKey && (hasExactMatch || hasLongerShortcuts || _numberBuffer.length > 1)) {
             d3_event.preventDefault();
             d3_event.stopImmediatePropagation();
         }

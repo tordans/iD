@@ -143,18 +143,12 @@ export function uiPresetList(context) {
 
         listWrap.node().scrollTo({ top: 0 });
         context.features().on('change.preset-list', updateForFeatureHiddenState);
-        
+
         // Store reference for favorites change events
         _currentSelection = selection;
-        
+
         // Re-render when favorites change
-        presetFavorites.on('favoriteAdded.presetList', function() {
-            if (_currentSelection) presetList(_currentSelection);
-        });
-        presetFavorites.on('favoriteRemoved.presetList', function() {
-            if (_currentSelection) presetList(_currentSelection);
-        });
-        presetFavorites.on('favoriteChanged.presetList', function() {
+        presetFavorites.on('change.presetList', function() {
             if (_currentSelection) presetList(_currentSelection);
         });
     }
@@ -163,7 +157,7 @@ export function uiPresetList(context) {
     function drawList(list, presets, isSearching, skipFavorites) {
         presets = presets.matchAllGeometry(entityGeometries());
         var collection = [];
-        
+
         // Add favorites category at the top when not searching and not in a sublist
         if (!isSearching && !skipFavorites) {
             var favoriteIds = presetFavorites.getFavoritesInOrder();
@@ -172,7 +166,7 @@ export function uiPresetList(context) {
                 collection.push(favoritesCategoryItem(drawList, entityGeometries, itemKeydown));
             }
         }
-        
+
         collection = presets.collection.reduce(function(collection, preset) {
             if (!preset) return collection;
 

@@ -88,7 +88,7 @@ export function favoritesCategoryItem(drawList: any, entityGeometries: any, item
       .attr('class', 'namepart')
       .call(svgIcon((localizer.textDirection() === 'rtl' ? '#iD-icon-backward' : '#iD-icon-forward'), 'inline'))
       .append('span')
-      .html(t.html('presets.favorites'))
+      .call(t.append('presets.favorites'))
       .append('span').text('…');
 
     box = selection.append('div')

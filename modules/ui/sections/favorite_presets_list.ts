@@ -2,253 +2,216 @@ import { select as d3_select } from 'd3-selection';
 import { drag as d3_drag } from 'd3-drag';
 
 import { presetManager } from '../../presets';
-import { presetFavorites } from '../../core/preset_favorites';
+import { isValidShortcut, presetFavorites } from '../../core/preset_favorites';
 import { t } from '../../core/localizer';
 import { uiTooltip } from '../tooltip';
 import { svgIcon } from '../../svg/icon';
 import { uiPresetIcon } from '../preset_icon';
+import { utilNoAuto } from '../../util';
 
+const GEOMETRY_ICONS: Record<string, string> = {
+    point: '#iD-icon-point',
+    line: '#iD-icon-line',
+    area: '#iD-icon-area',
+    vertex: '#iD-icon-vertex',
+    relation: '#iD-icon-relation'
+};
 
-function renderGeometryIcons(container: d3.Selection, geometries: string[]) {
-    const geometryIcons: Record<string, string> = {
-        'point': '#iD-icon-point',
-        'line': '#iD-icon-line',
-        'area': '#iD-icon-area',
-        'vertex': '#iD-icon-vertex',
-        'relation': '#iD-icon-relation'
-    };
+/** Minimal drag distance in px before a row counts as dragged */
+const DRAG_THRESHOLD = 5;
 
-    geometries.forEach((geom: string) => {
-        const iconId = geometryIcons[geom];
-        if (iconId) {
-            container
-                .append('li')
-                .call(svgIcon(iconId));
-        }
-    });
-}
-
+/**
+ * Renders the favorites in the preferences pane.
+ * Each row shows the preset and an input for its shortcut.
+ * Rows can be dragged to change the display order, which does not change shortcuts.
+ */
 export function renderFavoritesList(
     container: d3.Selection<HTMLOListElement>,
     favorites: string[],
-    onReorder: (newOrder: string[]) => void,
     onRemove: (presetId: string) => void
 ) {
-    const list = container
-        .selectAll('.favorite-presets-item')
-        // @ts-expect-error - data key function types are compatible at runtime
-        .data(favorites, (d: string) => d);
+    let items = container.selectAll<HTMLLIElement, string>('.favorite-presets-item')
+        .data(favorites, d => d);
 
-    list.exit().remove();
+    items.exit()
+        .remove();
 
-    const listEnter = list.enter()
+    const itemsEnter = items.enter()
         .append('li')
         .attr('class', 'favorite-presets-item');
 
-    // Drag indicator
-    listEnter
+    itemsEnter
         .append('nav')
         .attr('class', 'drag-indicator')
         .call(svgIcon('#iD-operation-move', 'inline operation'));
 
-    // Preset icon
-    listEnter
+    itemsEnter
         .append('figure')
-        .attr('class', 'preset-icon-wrapper')
-        .each(function(presetId: string) {
-            const preset = presetManager.item(presetId);
-            if (preset) {
-                const geometries = preset.geometry || [];
-                const primaryGeometry = geometries.length > 0 ? geometries[0] : null;
-                d3_select(this)
-                    .call(uiPresetIcon()
-                        .geometry(primaryGeometry)
-                        .preset(preset));
-            }
-        });
+        .attr('class', 'preset-icon-wrapper');
 
-    // Preset name
-    listEnter
+    itemsEnter
         .append('h4')
-        .attr('class', 'preset-name')
-        .each(function(presetId: string) {
-            const preset = presetManager.item(presetId);
-            if (preset) {
-                preset.nameLabel()(d3_select(this));
-            }
-        });
+        .attr('class', 'preset-name');
 
-    // Right-side group: geometry icons, shortcut, delete button
-    const rightGroup = listEnter
+    const rightGroupEnter = itemsEnter
         .append('div')
         .attr('class', 'preset-right-group');
 
-    // Geometry icons
-    rightGroup
+    rightGroupEnter
         .append('ul')
-        .attr('class', 'preset-geometries')
-        .each(function(presetId: string) {
-            const preset = presetManager.item(presetId);
-            if (preset && preset.geometry) {
-                renderGeometryIcons(d3_select(this), preset.geometry);
-            }
-        });
+        .attr('class', 'preset-geometries');
 
-    rightGroup
-        .append('div')
-        .attr('class', 'shortcut-display')
-        .each(function(presetId: string) {
-            const shortcut = presetFavorites.getShortcut(presetId);
-            if (shortcut) {
-                d3_select(this)
-                    .append('kbd')
-                    .attr('class', 'shortcut')
-                    .text(shortcut);
-            }
-        });
+    rightGroupEnter
+        .append('input')
+        .attr('type', 'text')
+        .attr('class', 'favorite-shortcut')
+        .attr('inputmode', 'numeric')
+        .attr('maxlength', 3)
+        .attr('aria-label', t('preferences.favorite_presets.shortcut_label'))
+        .call(utilNoAuto)
+        .on('input', shortcutInput)
+        .on('change', shortcutChange);
 
-    // Remove favorite button
-    rightGroup
+    rightGroupEnter
         .append('button')
         .attr('class', 'favorite-remove')
-        .call(svgIcon('#iD-operation-delete'))
-        .call(function(selection) {
-            const tooltip = uiTooltip();
-            // @ts-expect-error - title and placement exist on uiTooltip but not in type definition
-            tooltip.title(() => t('preferences.favorite_presets.remove_tooltip'));
-            // @ts-expect-error - placement exists on uiTooltip but not in type definition
-            tooltip.placement('bottom');
-            selection.call(tooltip as any);
-        });
-
-    // Update existing items
-    // @ts-expect-error - merge types are compatible at runtime
-    const items = listEnter.merge(list);
-
-    items.select('.favorite-remove')
-        .on('click', function(d3_event) {
+        .on('click', (d3_event: MouseEvent, presetId: string) => {
             d3_event.stopPropagation();
-            const parent = (this as HTMLElement).parentElement;
-            if (!parent) return;
-            const presetId = d3_select(parent).datum() as string;
             onRemove(presetId);
+        })
+        .call(svgIcon('#iD-operation-delete', ''))
+        .call((uiTooltip() as any)
+            .title(() => t.append('preferences.favorite_presets.remove_tooltip'))
+            .placement('bottom')
+        );
+
+    items = items.merge(itemsEnter)
+        .order();
+
+    items.select<HTMLElement>('.preset-icon-wrapper')
+        .each(function(presetId) {
+            const preset = presetManager.item(presetId);
+            if (!preset) return;
+            d3_select(this)
+                .call(uiPresetIcon()
+                    .geometry(preset.geometry[0])
+                    .preset(preset)
+                );
         });
 
-    items.select('.preset-icon-wrapper')
-        .each(function(presetId: string) {
+    items.select<HTMLElement>('.preset-name')
+        .each(function(presetId) {
+            const selection = d3_select(this).text('');
             const preset = presetManager.item(presetId);
             if (preset) {
-                const geometries = preset.geometry || [];
-                const primaryGeometry = geometries.length > 0 ? geometries[0] : null;
-                d3_select(this).selectAll('*').remove();
-                d3_select(this)
-                    .call(uiPresetIcon()
-                        .geometry(primaryGeometry)
-                        .preset(preset));
+                preset.nameLabel()(selection);
+            } else {
+                selection.text(presetId);
             }
         });
 
-    items.select('.preset-name')
-        .each(function(presetId: string) {
-            const preset = presetManager.item(presetId);
-            if (preset) {
-                d3_select(this).selectAll('*').remove();
-                preset.nameLabel()(d3_select(this));
-            }
+    items.select<HTMLUListElement>('.preset-geometries')
+        .each(function(presetId) {
+            const geometries: string[] = presetManager.item(presetId)?.geometry ?? [];
+            const icons = d3_select(this)
+                .selectAll<HTMLLIElement, string>('li')
+                .data(geometries.filter(geometry => GEOMETRY_ICONS[geometry]));
+
+            icons.exit()
+                .remove();
+
+            icons.enter()
+                .append('li')
+                .merge(icons)
+                .each(function(geometry) {
+                    d3_select(this)
+                        .text('')
+                        .call(svgIcon(GEOMETRY_ICONS[geometry], ''));
+                });
         });
 
-    items.select('.preset-right-group .preset-geometries')
-        .each(function(presetId: string) {
-            const preset = presetManager.item(presetId);
-            const container = d3_select(this);
-            container.selectAll('*').remove();
+    items.select<HTMLInputElement>('.favorite-shortcut')
+        .classed('invalid', false)
+        .property('value', presetId => presetFavorites.getShortcut(presetId) ?? '');
 
-            if (preset && preset.geometry) {
-                renderGeometryIcons(container, preset.geometry);
+    items.call(d3_drag<HTMLLIElement, string>()
+        .filter(d3_event => !(d3_event.target as Element).closest('input, button'))
+        .on('start', dragStart)
+        .on('drag', dragMove)
+        .on('end', dragEnd)
+    );
+
+
+    function shortcutInput(this: HTMLInputElement) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+        d3_select(this)
+            .classed('invalid', this.value !== '' && !isValidShortcut(this.value));
+    }
+
+    function shortcutChange(this: HTMLInputElement, d3_event: Event, presetId: string) {
+        const shortcut = this.value;
+        if (!isValidShortcut(shortcut)) {
+            // restore the stored shortcut
+            this.value = presetFavorites.getShortcut(presetId) ?? '';
+            d3_select(this).classed('invalid', false);
+            return;
+        }
+
+        // A shortcut used by another favorite is swapped, see `presetFavorites.setShortcut`
+        presetFavorites.setShortcut(presetId, shortcut);
+    }
+
+
+    let _dragOrigin: { x: number, y: number } | undefined;
+    let _targetIndex: number | undefined;
+
+    function dragStart(d3_event: { x: number, y: number }) {
+        _dragOrigin = { x: d3_event.x, y: d3_event.y };
+        _targetIndex = undefined;
+    }
+
+    function dragMove(this: HTMLLIElement, d3_event: { x: number, y: number }) {
+        if (!_dragOrigin) return;
+
+        const x = d3_event.x - _dragOrigin.x;
+        const y = d3_event.y - _dragOrigin.y;
+        const row = d3_select(this);
+
+        if (!row.classed('dragging') && Math.hypot(x, y) <= DRAG_THRESHOLD) return;
+
+        const index = items.nodes().indexOf(this);
+        row.classed('dragging', true);
+        _targetIndex = undefined;
+
+        items.style('transform', function(_d, index2) {
+            if (index2 === index) {
+                return `translate(${x}px, ${y}px)`;
             }
+            if (index2 > index && d3_event.y > this.offsetTop) {
+                if (_targetIndex === undefined || index2 > _targetIndex) _targetIndex = index2;
+                return 'translateY(-100%)';
+            }
+            if (index2 < index && d3_event.y < this.offsetTop + this.offsetHeight) {
+                if (_targetIndex === undefined || index2 < _targetIndex) _targetIndex = index2;
+                return 'translateY(100%)';
+            }
+            return null;
         });
+    }
 
-    items.select('.preset-right-group .shortcut-display')
-        .each(function(presetId: string) {
-            const shortcut = presetFavorites.getShortcut(presetId);
-            const container = d3_select(this);
-            container.selectAll('*').remove();
+    function dragEnd(this: HTMLLIElement) {
+        const row = d3_select(this);
+        if (!row.classed('dragging')) return;
 
-            if (shortcut) {
-                container
-                    .append('kbd')
-                    .attr('class', 'shortcut')
-                    .text(shortcut);
-            }
-        });
+        const index = items.nodes().indexOf(this);
+        row.classed('dragging', false);
+        items.style('transform', null);
 
-    // Drag and drop
-    let dragOrigin: { x: number; y: number } | null = null;
-    let targetIndex: number | null = null;
+        if (_targetIndex === undefined || _targetIndex === index) return;
 
-    // @ts-expect-error - d3_drag types are compatible at runtime
-    items.call(d3_drag()
-        .on('start', function(d3_event) {
-            dragOrigin = {
-                x: d3_event.x,
-                y: d3_event.y
-            };
-            targetIndex = null;
-        })
-        .on('drag', function(d3_event) {
-            if (!dragOrigin) return;
-
-            const x = d3_event.x - dragOrigin.x;
-            const y = d3_event.y - dragOrigin.y;
-
-            if (!d3_select(this).classed('dragging') &&
-                Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2)) <= 5) return;
-
-            const index = (items.nodes() as Element[]).indexOf(this as Element);
-
-            d3_select(this)
-                .classed('dragging', true);
-
-            targetIndex = null;
-
-            items.style('transform', function(d2: string, index2: number) {
-                const node = d3_select(this).node() as HTMLElement;
-                if (index === index2) {
-                    return 'translate(' + x + 'px, ' + y + 'px)';
-                } else if (index2 > index && d3_event.y > node.offsetTop) {
-                    if (targetIndex === null || index2 > targetIndex) {
-                        targetIndex = index2;
-                    }
-                    return 'translateY(-100%)';
-                } else if (index2 < index && d3_event.y < node.offsetTop + node.offsetHeight) {
-                    if (targetIndex === null || index2 < targetIndex) {
-                        targetIndex = index2;
-                    }
-                    return 'translateY(100%)';
-                }
-                return null;
-            });
-        })
-        .on('end', function() {
-            if (!d3_select(this).classed('dragging')) return;
-
-            const index = (items.nodes() as Element[]).indexOf(this as Element);
-
-            d3_select(this)
-                .classed('dragging', false);
-
-            items.style('transform', null);
-
-            if (targetIndex !== null && targetIndex !== index) {
-                // Reorder favorites
-                const newOrder = [...favorites];
-                const [removed] = newOrder.splice(index, 1);
-                newOrder.splice(targetIndex, 0, removed);
-
-                // Reassign shortcuts sequentially
-                presetFavorites.reorderShortcuts(newOrder);
-                onReorder(newOrder);
-            }
-        })
-    ) as any;
+        const newOrder = [...favorites];
+        const [moved] = newOrder.splice(index, 1);
+        newOrder.splice(_targetIndex, 0, moved);
+        presetFavorites.reorder(newOrder);
+    }
 }

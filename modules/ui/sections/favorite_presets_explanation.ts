@@ -13,5 +13,5 @@ export function renderExplanation(selection: d3.Selection, hasFavorites: boolean
         .append('div')
         .attr('class', 'favorite-presets-explanation')
         .append('p')
-        .html(t('preferences.favorite_presets.explanation'));
+        .call(t.append('preferences.favorite_presets.explanation'));
 }

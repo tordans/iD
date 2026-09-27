@@ -15,5 +15,5 @@ export function renderEmptyState(selection: d3.Selection) {
 
     emptyStateEnter
         .append('p')
-        .text(t('preferences.favorite_presets.empty_message'));
+        .call(t.append('preferences.favorite_presets.empty_message'));
 }

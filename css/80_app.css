@@ -5573,16 +5573,18 @@ img.tile-debug {
     height: 14px;
 }
 
-.favorite-presets-item .preset-right-group .shortcut-display {
+.favorite-presets-item .preset-right-group input.favorite-shortcut {
     flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 2px;
+    width: 3.5em;
+    height: 24px;
+    padding: 0 4px;
+    text-align: center;
+    font-family: monospace;
 }
 
-.favorite-presets-item .preset-right-group .shortcut-display kbd {
-    margin: 0;
-    font-size: 11px;
+.favorite-presets-item .preset-right-group input.favorite-shortcut.invalid {
+    border-color: #e06d5f;
+    background-color: #fce9e7;
 }
 
 .favorite-presets-item .preset-right-group .favorite-remove {
