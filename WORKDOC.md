@@ -293,6 +293,34 @@ Notes:
 - **T10 (Tobias):** open iD at `http://127.0.0.1:8080` (not `localhost`; only `127.0.0.1:*` is allowed by the backend) in two browser profiles with two OSM accounts, same area at zoom ≥ 15. Turn on "Show and share live edits" in both (consent dialog). Edit in one; the other should list it within ~10 s and show the orange halo. Also check: parallel hint when both edit the same way, "saved" (violet) after an upload, the map halos on lines, areas and points, and "Delete my data on the server".
 - Not verified yet: the halo CSS on real map elements (needs real entries), the upload → `saved` path in a real upload.
 
+### 12. Read-only feature categories — ⬜ (plan)
+
+**Goal:** mark whole feature categories (e.g. buildings and water) as **read-only**. They stay on the map for orientation, in a muted style, but cannot be edited. This works like the Map Features filters, which *hide* categories: same category list, same kind of URL state and list UI, but "read-only" instead of "hidden". For our project this keeps the map calm and prevents accidental edits to things we do not map (buildings, water, landuse …) while we focus on streets and bike infrastructure.
+
+**How iD's filters work today** (`modules/renderer/features.js`)
+- Rules per category via `defineRule(key, filter)`: `points`, `traffic_roads`, `service_roads`, `paths`, `buildings`, `building_parts`, `indoor`, `landuse`, `boundaries`, `water`, `rail`, `pistes`, `aerialways`, `power`, `past_future`, `others`.
+- State: URL hash `disable_features=buildings,water` and pref `disabled-features`; `features.enable/disable/enabled/disabled`.
+- List: Map Data pane ▸ "Map Features" (`modules/ui/sections/map_features.js`), one checkbox per category.
+- Hidden entities are skipped by the renderer and by selection/lasso via `features.isHidden*`.
+
+**Wanted behavior**
+- A second state per category: `readonly`. URL hash `readonly_features=buildings,water`, pref `readonly-features`, same keys as the filters. If a category is hidden, hidden wins.
+- List: in the "Map Features" section, a "read-only" toggle per category next to the visibility checkbox (or a separate section with the same list; decide when building).
+- Rendering: muted, e.g. lower luminance / grayscale (all colors pulled toward gray), maybe lower opacity. Done with a class (`readonly-feature`) on the SVG elements plus CSS. To check: CSS `filter: grayscale() brightness()` on SVG shapes vs. overriding `stroke`/`fill` colors; performance with many elements.
+- Not editable:
+  - not selectable by click or lasso, no hover highlight,
+  - drawing does not snap to or connect with them (new ways must not join buildings or water),
+  - no move/rotate/delete via other selections (e.g. a shared node with an editable way: decide what happens),
+  - open question: should clicking still show the tags read-only in the sidebar?
+
+**Plan and difficulty**
+- Easy: rules and category list reuse the existing `defineRule` definitions; URL/pref state like `disable_features`; list UI; CSS for the muted style.
+- Medium: adding the class to all drawn elements (areas, lines, points, vertices, labels) and keeping it cached per entity like the hidden cache.
+- Hard: making them non-interactive everywhere: hover, select, lasso, snapping in draw modes (`behaviorDraw`, `behaviorHover`, `modes/drag_node`), shared nodes, validations that suggest fixes on read-only objects. Likely one central check `features.isReadOnly(entity, graph, geometry)`, called where `isHidden` is called today.
+- Code: new TS module (e.g. `modules/renderer/readonly_features.ts`) that reuses the rules from `features.js`, plus small hooks in the upstream files.
+
+**Open:** the German input ended mid-sentence ("Und ich meine, dass …"). Ask Tobias for the rest before building.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -306,6 +334,7 @@ Notes:
 9. QA rules (with 8)
 10. Width indicator and editing
 11. Live touched (T10 test with two accounts)
+12. Read-only feature categories
 
 ## Coding conventions (this branch)
 
@@ -341,6 +370,7 @@ Notes:
 - Known issue: deleting the active custom background switches to "None" instead of the previous background (from the backgrounds branch).
 - Features 8–10 (plans above).
 - T10: two-account test of live touched (feature 11).
+- Feature 12 (read-only categories): get the rest of the idea, then build.
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
