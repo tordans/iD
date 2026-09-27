@@ -49,6 +49,23 @@ describe('way_table/chain', () => {
         expect(chain.segments.map(s => s.wayID)).toEqual(['w1', 'w2']);
     });
 
+    it('asks at a fork of two ways of the same kind', () => {
+        const entities = [
+            new iD.osmNode({ id: 'n1' }), new iD.osmNode({ id: 'n2' }),
+            new iD.osmNode({ id: 'n3' }), new iD.osmNode({ id: 'n4' }),
+            new iD.osmWay({ id: 'w1', nodes: ['n1', 'n2'], tags: { highway: 'residential' } }),
+            new iD.osmWay({ id: 'w2', nodes: ['n2', 'n3'], tags: { highway: 'residential' } }),
+            new iD.osmWay({ id: 'w3', nodes: ['n2', 'n4'], tags: { highway: 'residential' } })
+        ];
+        const chain = buildWayChain(new iD.coreGraph(entities as unknown as iD.Graph), 'w1')!;
+        expect(chain.segments.map(s => s.wayID)).toEqual(['w1']);
+        expect(chain.junctions).toHaveLength(1);
+        expect(chain.junctions[0].candidates.map(c => c.wayID).sort()).toEqual(['w2', 'w3']);
+
+        const chosen = buildWayChain(new iD.coreGraph(entities as unknown as iD.Graph), 'w1', 3, new Map([['n2', 'w3']]))!;
+        expect(chosen.segments.map(s => s.wayID)).toEqual(['w1', 'w3']);
+    });
+
     it('returns undefined for missing ways', () => {
         expect(buildWayChain(graph(), 'w99')).toBeUndefined();
     });

@@ -147,19 +147,19 @@ export function behaviorPresetFavorites(context: iD.Context) {
             return true;
         }
 
-        const entityIDs = context.selectedIDs();
-        if (entityIDs.length > 0) {
+        if (selectedIDs.length > 0) {
+            // only features whose geometry the preset supports
+            const graph = context.graph();
+            const entityIDs = selectedIDs.filter(entityID =>
+                preset.geometry.includes(graph.entity(entityID).geometry(graph))
+            );
+            if (!entityIDs.length) return false;
+
             context.perform(
                 function(graph: iD.Graph) {
-                    for (let i = 0; i < entityIDs.length; i++) {
-                        const entityID = entityIDs[i];
-                        const entity = graph.entity(entityID);
-                        const oldPreset = presetManager.match(entity, graph);
-
-                        const entityGeometry = entity.geometry(graph);
-                        if (preset.geometry.includes(entityGeometry)) {
-                            graph = actionChangePreset(entityID, oldPreset, preset)(graph);
-                        }
+                    for (const entityID of entityIDs) {
+                        const oldPreset = presetManager.match(graph.entity(entityID), graph);
+                        graph = actionChangePreset(entityID, oldPreset, preset)(graph);
                     }
                     return graph;
                 },
@@ -264,7 +264,9 @@ export function behaviorPresetFavorites(context: iD.Context) {
             }
         }
 
-        if (hasExactMatch) {
+        // Only fire right away if no longer shortcut starts with these digits (e.g. `4` vs `41`).
+        // Otherwise wait for `_waitDuration`, so `41` does not also run `4`.
+        if (hasExactMatch && !hasLongerShortcuts) {
             _immediateTimeout = setTimeout(() => {
                 if (!_executed) {
                     const handled = executeShortcut(_numberBuffer);

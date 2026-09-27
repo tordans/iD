@@ -128,7 +128,8 @@ function pickBestNeighbor(from: ChainSegment, candidates: ChainSegment[]) {
         .map(segment => ({ segment, score: score(from, segment) }))
         .sort((a, b) => b.score - a.score);
 
-    if (top.score === second.score && top.score < 100) return undefined;
+    // a tie is ambiguous, also between ways of the same kind (e.g. a fork of two residential roads)
+    if (top.score === second.score) return undefined;
     return top.segment;
 }
 
