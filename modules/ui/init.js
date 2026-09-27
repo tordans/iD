@@ -26,6 +26,7 @@ import { uiInfo } from './info';
 import { uiWayTablePanel } from './way_table_panel';
 import { installWidthIndicatorListeners } from '../width/width_indicator';
 import { setupLiveTouched } from '../live_touched/live_touched';
+import { applyInterfacePrefs } from './sections/interface';
 import { uiIntro } from './intro';
 import { uiIssuesInfo } from './issues_info';
 import { uiLoading } from './loading';
@@ -62,6 +63,8 @@ export function uiInit(context) {
     var overMap;
 
     function render(container) {
+
+        applyInterfacePrefs(context);
 
         container
             .on('click.ui', function(d3_event) {

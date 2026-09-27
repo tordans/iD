@@ -1204,6 +1204,11 @@ en:
     title: Preferences
     description: Preferences
     key: P
+    interface:
+      title: Interface
+      labels:
+        description: Show button labels
+        tooltip: Uncheck this box to hide the captions under the toolbar buttons.
     favorite_presets:
       title: Favorite Presets & Shortcuts
       empty_message: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut.

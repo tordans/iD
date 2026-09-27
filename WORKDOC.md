@@ -321,6 +321,12 @@ Notes:
 - Hard: making them non-interactive everywhere: hover, select, lasso, snapping in draw modes (`behaviorDraw`, `behaviorHover`, `modes/drag_node`), shared nodes, validations that suggest fixes on read-only objects. Likely one central check `features.isReadOnly(entity, graph, geometry)`, called where `isHidden` is called today.
 - Code: new TS module (e.g. `modules/renderer/readonly_features.ts`) that reuses the rules from `features.js`, plus small hooks in the upstream files.
 
+### 13. Hide toolbar button labels — ✅
+
+- Source: `iD--v3-reloaded` worktree (commits `1f76e0820`, `439e18668`, `7d74005f8`), ported to the current toolbar.
+- Preferences ▸ Interface ▸ "Show button labels". Unchecked, the captions under the top toolbar buttons ("Add Feature", "Undo / Redo", …) are hidden and the toolbar is 60 px instead of 71 px high. Stored in the pref `preferences.interface.labels` (same key as in v3).
+- Code: `modules/ui/sections/interface.ts`, `css/91_interface_prefs.css`, applied at startup in `ui/init.js`.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -335,6 +341,7 @@ Notes:
 10. Width indicator and editing
 11. Live touched (T10 test with two accounts)
 12. Read-only feature categories
+13. Hide toolbar button labels
 
 ## Coding conventions (this branch)
 
@@ -358,6 +365,7 @@ Notes:
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Custom data layers can be made non-selectable. Lens section and TILDA section redesigned in iD's style; TILDA section moved to the top of the inspector. Ported the toolbar label preference from v3 (feature 13).
 - 2026-09-27: Switched live touched to npm 0.1.0. Built the TILDA bike infrastructure section (feature 8 v1).
 - 2026-09-27: Width indicator and side width fields. Integrated live touched (feature 11), tested with a fake backend.
 - 2026-09-27: Full UI test run of all features (no OSM uploads, test edits discarded). Fixed the way table checkbox state. Merged the side indicator branch. Planned features 8–10.
