@@ -69,6 +69,11 @@ interface LoadedData {
     data: OsmEntity[];
 }
 
+export type DirectionalComboIndicatorState = {
+    side: 'left' | 'right';
+    entityIDs: string[];
+};
+
 export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
     version: string;
     privacyVersion: string;
@@ -114,6 +119,9 @@ export interface coreContext extends Pick<Dispatch<object, EventMap>, 'on'> {
 
     selectedIDs(): EntityId[];
     activeID(): EntityId | undefined;
+    /** Side of the selected ways that the focused directional combo row describes */
+    directionalComboIndicator(): DirectionalComboIndicatorState | null;
+    setDirectionalComboIndicator(val: DirectionalComboIndicatorState | null): coreContext;
     selectedNoteID: GetSet<coreContext, NoteId | null>;
     selectedErrorID: GetSet<coreContext, string | null>;
 
@@ -480,6 +488,14 @@ export function coreContext(this: object): coreContext {
 
   context.selectedIDs = () => (_mode && _mode.selectedIDs && _mode.selectedIDs()) || [];
   context.activeID = () => _mode && _mode.activeID && _mode.activeID();
+
+  let _directionalComboIndicator: DirectionalComboIndicatorState | null = null;
+  context.directionalComboIndicator = () => _directionalComboIndicator;
+  context.setDirectionalComboIndicator = (val: DirectionalComboIndicatorState | null) => {
+    _directionalComboIndicator = val;
+    dispatch.call('change');
+    return context;
+  };
 
   let _selectedNoteID: NoteId | null;
   context.selectedNoteID = function(noteID) {
