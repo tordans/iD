@@ -3,7 +3,7 @@ import { select as d3_select } from 'd3-selection';
 import { t } from '../../core/localizer';
 import { uiTooltip } from '../tooltip';
 import { uiSection } from '../section';
-import { drawReadOnlyToggles } from './readonly_feature_toggles';
+import { drawFeatureModeToggles } from './readonly_feature_toggles';
 import { readOnlyFeatures } from '../../renderer/readonly_features';
 
 export function uiSectionMapFeatures(context) {
@@ -113,8 +113,8 @@ export function uiSectionMapFeatures(context) {
             .property('checked', active)
             .property('indeterminate', autoHiddenFeature);
 
-        // Radnetz Berlin: lock button per category (read-only, see renderer/readonly_features.ts)
-        if (name === 'feature') items.call(drawReadOnlyToggles);
+        // Radnetz Berlin: Edit / Read / Hide toggle per category (see readonly_feature_toggles.ts)
+        if (name === 'feature') items.call(drawFeatureModeToggles, context);
     }
 
     function autoHiddenFeature(d) {

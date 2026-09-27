@@ -12,10 +12,47 @@
     pointer-events: none !important;
 }
 
-/* lock button in the Map Features list */
-.map-data-pane .layer-list li.readonly > label {
-    opacity: 0.7;
+/* Map Features list: name, then the Edit | Read | Hide toggle (readonly_feature_toggles.ts) */
+.map-data-pane .layer-feature-list li {
+    display: flex;
+    align-items: stretch;
 }
-.map-data-pane .layer-list button.readonly-toggle:not(.active) .icon {
+.map-data-pane .layer-feature-list li > label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+/* the toggle replaces the checkbox; keep the input for iD's own code */
+.map-data-pane .layer-feature-list li > label input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.map-data-pane .layer-feature-list li[data-mode="read"] > label,
+.map-data-pane .layer-feature-list li[data-mode="hide"] > label {
+    opacity: 0.6;
+}
+.map-data-pane .feature-mode {
+    display: flex;
+    flex: 0 0 auto;
+}
+.map-data-pane .feature-mode button {
+    width: 30px;
+    height: auto;
+    border-radius: 0;
+    border-left: 1px solid var(--border-color, rgba(128, 128, 128, 0.3));
+    background: transparent;
+}
+.map-data-pane .feature-mode button .icon {
+    width: 14px;
+    height: 14px;
     opacity: 0.25;
 }
+.map-data-pane .feature-mode button:hover .icon {
+    opacity: 0.6;
+}
+.map-data-pane .feature-mode button.active .icon {
+    opacity: 1;
+}
+.map-data-pane .feature-mode button.feature-mode-edit.active { color: #7092ff; }
+.map-data-pane li:last-child .feature-mode button:last-child { border-bottom-right-radius: 4px; }
+.map-data-pane li:first-child .feature-mode button:last-child { border-top-right-radius: 4px; }

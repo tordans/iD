@@ -73,7 +73,10 @@ function buildData() {
     'fas-calendar-days',
     'fas-rotate',
     'fas-eye-dropper',
-    'fas-arrow-pointer'   // custom data layers: selectable toggle
+    'fas-arrow-pointer',   // custom data layers: selectable toggle
+    'fas-pen',             // map features: edit / read / hide toggle
+    'fas-eye',
+    'fas-eye-slash'
   ]);
   // add icons for QA integrations
   readQAIssueIcons(faIcons);
