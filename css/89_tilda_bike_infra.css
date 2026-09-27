@@ -1,84 +1,109 @@
-/* TILDA bike infrastructure section in the inspector */
+/* TILDA bike infrastructure section in the inspector.
+   Cards look like iD fields: a header bar like `.field-label`, a bordered body below. */
+
+.section-tilda-bike-infra {
+    line-height: 1.4;
+}
+
+.tilda-callout {
+    margin-bottom: 10px;
+    padding: 8px 10px;
+    border-left: 4px solid var(--link-color);
+    border-radius: 4px;
+    background: var(--bg-color-2);
+    color: var(--text-color);
+    font-size: 12px;
+    line-height: 1.5;
+}
+.tilda-callout-warning {
+    margin: 4px 0;
+    border-left-color: #e06d5f;
+}
 
 .tilda-card {
     margin-bottom: 10px;
-    padding: 8px;
-    border-radius: 4px;
-    background: var(--fill-color-secondary, rgba(255, 255, 255, 0.05));
-    border: 1px solid rgba(128, 128, 128, 0.3);
 }
 .tilda-card-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 6px;
-    margin-bottom: 6px;
-}
-.tilda-side {
+    padding: 5px 10px 4px 10px;
     font-weight: bold;
+    color: var(--text-color);
+    background: var(--bg-color-2);
+    border: 1px solid var(--border-color);
+    border-radius: 4px 4px 0 0;
 }
+.tilda-card-body {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-top: 0;
+    border-radius: 0 0 4px 4px;
+    background: var(--bg-color);
+}
+
 .tilda-category {
-    padding: 1px 6px;
+    display: inline-block;
+    margin-bottom: 8px;
+    padding: 2px 8px;
     border-radius: 3px;
     background: #2e7d32;
     color: #fff;
+    cursor: help;
 }
 .tilda-category.incomplete { background: #b27c00; }
 .tilda-category.needs-clarification { background: #c62828; }
 .tilda-category.absent { background: #666; }
-.tilda-category-id {
-    font-size: 11px;
-    opacity: 0.6;
-}
 
-.tilda-gap,
-.tilda-plan,
-.tilda-attribute {
+.tilda-subheading {
+    margin: 4px 0;
+    font-weight: bold;
     font-size: 12px;
 }
+
 .tilda-gap {
-    margin-bottom: 6px;
-    padding: 4px 6px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
     border-left: 3px solid #b27c00;
+    font-size: 12px;
+}
+.tilda-gap code {
+    margin-inline-end: 4px;
 }
 .tilda-buttons {
     display: inline-flex;
     flex-wrap: wrap;
     gap: 4px;
-    margin: 2px 0;
+    margin: 4px 0 0 0;
 }
 .tilda-card button.tilda-value {
     height: auto;
     padding: 2px 8px;
     font-size: 12px;
+    line-height: 1.4;
 }
 
-.tilda-target label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+.tilda-target-label {
+    display: block;
     margin: 4px 0;
-    font-size: 12px;
 }
 .tilda-target select {
-    flex: 1 1 auto;
-    min-width: 0;
-    height: 28px;
+    width: 100%;
+    height: 30px;
+}
+.tilda-plan {
+    font-size: 12px;
 }
 .tilda-plan ul {
-    margin: 4px 0;
+    margin: 6px 0;
 }
 .tilda-plan li {
-    margin: 2px 0;
+    margin: 4px 0;
 }
 .tilda-plan li.tilda-plan-add code::before { content: '+ '; }
 .tilda-plan li.tilda-plan-change code::before { content: '~ '; }
 .tilda-plan li.tilda-plan-remove code::before { content: '− '; }
 .tilda-plan li.tilda-plan-remove code { text-decoration: line-through; }
-.tilda-plan li.tilda-plan-conflict { color: #e0282e; }
 .tilda-plan .tilda-reason {
     display: block;
-    opacity: 0.7;
+    color: var(--passive-text-color);
 }
 .tilda-card button.tilda-apply-all {
     height: auto;
@@ -89,32 +114,35 @@
 }
 
 .tilda-attributes-header {
-    margin-top: 8px;
+    margin: 10px 0 4px 0;
     font-size: 12px;
     font-weight: bold;
 }
 .tilda-attribute {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    padding: 2px 0;
+    display: grid;
+    grid-template-columns: 1.2em 9em 1fr;
+    align-items: baseline;
+    column-gap: 6px;
+    padding: 3px 0;
+    font-size: 12px;
+    border-top: 1px solid var(--border-color);
+}
+.tilda-attribute:first-of-type {
+    border-top: 0;
 }
 .tilda-attribute-state {
-    width: 1.2em;
     text-align: center;
     font-weight: bold;
 }
 .tilda-attribute.present .tilda-attribute-state { color: #2e9d3a; }
-.tilda-attribute.missing .tilda-attribute-state { color: #e0282e; }
-.tilda-attribute-label {
-    min-width: 8em;
-}
+.tilda-attribute.missing .tilda-attribute-state { color: #e06d5f; }
 .tilda-attribute-value {
     font-family: monospace;
+    overflow-wrap: anywhere;
 }
 .tilda-attribute-inputs {
-    display: inline-flex;
+    grid-column: 2 / 4;
+    display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;

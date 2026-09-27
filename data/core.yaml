@@ -707,10 +707,12 @@ en:
   inspector:
     tilda:
       title: TILDA Bike Infrastructure
+      intro: "How TILDA, the bike infrastructure dataset, reads this way. Check the category of each side. If it does not match what is on the ground, choose the right one under “Change to” and apply the tags. Then fill in what is missing below."
+      category_id: "TILDA category: {id}"
       not_processed: TILDA does not process this way as bike infrastructure.
       no_category: No category
       current: current
-      target: Target category
+      target: Change to
       apply_all: Apply these tags
       remove_reason: Replaced by tags for each side
       required: Needed for the Radnetz dataset

@@ -93,6 +93,13 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     function renderDisclosureContent(selection: d3.Selection) {
         const data = cards();
 
+        selection.selectAll('.tilda-intro')
+            .data([0])
+            .enter()
+            .append('div')
+            .attr('class', 'tilda-callout tilda-intro')
+            .call(t.append('inspector.tilda.intro'));
+
         const empty = selection.selectAll<HTMLParagraphElement, number>('.tilda-empty')
             .data(data.length ? [] : [0]);
         empty.exit().remove();
@@ -111,13 +118,16 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .on('mouseenter', (_d3_event: MouseEvent, d: SideCard) => showSide(d.side))
             .on('mouseleave', () => showSide(undefined));
 
-        const headerEnter = cardEnter.append('div').attr('class', 'tilda-card-header');
-        headerEnter.append('span').attr('class', 'tilda-side');
-        headerEnter.append('span').attr('class', 'tilda-category');
-        headerEnter.append('code').attr('class', 'tilda-category-id');
-        cardEnter.append('div').attr('class', 'tilda-gaps');
-        cardEnter.append('div').attr('class', 'tilda-target');
-        cardEnter.append('div').attr('class', 'tilda-attributes');
+        // header bar like a field label, body like a field input
+        cardEnter.append('div')
+            .attr('class', 'tilda-card-header')
+            .append('span')
+            .attr('class', 'tilda-side');
+        const bodyEnter = cardEnter.append('div').attr('class', 'tilda-card-body');
+        bodyEnter.append('div').attr('class', 'tilda-category');
+        bodyEnter.append('div').attr('class', 'tilda-gaps');
+        bodyEnter.append('div').attr('class', 'tilda-target');
+        bodyEnter.append('div').attr('class', 'tilda-attributes');
 
         cardSelection = cardSelection.merge(cardEnter);
 
@@ -130,9 +140,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 isIncompleteCategoryId(d.result.category) ? 'incomplete' : '',
                 d.result._infrastructureExists ? 'exists' : 'absent'
             ].filter(Boolean).join(' '))
-            .text(d => categoryLabel(d.result.category));
-        cardSelection.select('.tilda-category-id')
-            .text(d => d.result.category);
+            .text(d => categoryLabel(d.result.category))
+            // the TILDA category id is the value in the TILDA dataset
+            .attr('title', d => t('inspector.tilda.category_id', { id: d.result.category }));
 
         cardSelection.select<HTMLDivElement>('.tilda-gaps').each(function(d) { drawGaps(d3_select(this), d); });
         cardSelection.select<HTMLDivElement>('.tilda-target').each(function(d) { drawTarget(d3_select(this), d); });
@@ -154,7 +164,12 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
         rows = rows.merge(rowsEnter);
         rows.select('.tilda-gap-reason')
-            .text(d => `${writeKeyForSide(d.key, card.side, card.result._prefix)}: ${d.reason}`);
+            .each(function(d) {
+                const reason = d3_select(this).text('');
+                reason.append('code').text(writeKeyForSide(d.key, card.side, card.result._prefix));
+                // the library adds a note about its internal key names; not useful here
+                reason.append('span').text(` ${d.reason.replace(/\s*\(transformed from [^)]*\)/, '')}`);
+            });
 
         const buttons = rows.select('.tilda-buttons')
             .selectAll<HTMLButtonElement, string>('button')
@@ -180,8 +195,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
         let label = selection.selectAll<HTMLLabelElement, number>('label')
             .data([0]);
-        const labelEnter = label.enter().append('label');
-        labelEnter.append('span').call(t.append('inspector.tilda.target'));
+        const labelEnter = label.enter().append('label').attr('class', 'tilda-target-label');
+        labelEnter.append('div').attr('class', 'tilda-subheading').call(t.append('inspector.tilda.target'));
         labelEnter.append('select')
             .on('change', function(this: HTMLSelectElement) {
                 const value = this.value;
@@ -236,11 +251,14 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .attr('class', d => `tilda-plan-${d.kind}`)
             .each(function(d) {
                 const li = d3_select(this).text('');
-                const tag = d.kind === 'change' ? `${d.key}: ${d.from} → ${d.value}` : `${d.key}=${d.value}`;  // remove shows the old tag
-                li.append('code').text(d.kind === 'conflict' ? d.reason : tag);
-                if (d.kind !== 'conflict') {
-                    li.append('span').attr('class', 'tilda-reason').text(d.reason);
+                if (d.kind === 'conflict') {
+                    // a readable callout, not code
+                    li.append('div').attr('class', 'tilda-callout tilda-callout-warning').text(d.reason);
+                    return;
                 }
+                const tag = d.kind === 'change' ? `${d.key}: ${d.from} → ${d.value}` : `${d.key}=${d.value}`;  // remove shows the old tag
+                li.append('code').text(tag);
+                li.append('span').attr('class', 'tilda-reason').text(d.reason);
             });
 
         const editable = plan.aligned && plan.add.length + plan.change.length + plan.remove.length > 0;

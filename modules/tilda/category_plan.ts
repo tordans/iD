@@ -207,7 +207,9 @@ export function planCategory(tags: Tags, target: string, side: Side): TildaTagPl
     }
 
     const base = planTagsForCategory(working, target, side === 'self' ? undefined : { side });
-    const suggestions = MACRO_CATEGORY_SUGGESTIONS[target];
+    // suggestions that retag `highway` are for separate ways; on a road side they would retag the whole road
+    const suggestions = MACRO_CATEGORY_SUGGESTIONS[target]
+        ?.filter(entry => side === 'self' || entry.key !== 'highway');
     const library = suggestions ? withSuggestions(base, suggestions, working) : base;
 
     for (const entry of library.add) {
