@@ -370,6 +370,8 @@ Notes:
 - `npm run build:data` merges `data/traffic_sign_field_locales.yaml` into the committed `dist/locales/de*.min.json`.
 - New UI strings exist only in English (`data/core.yaml`). With a German browser they show as "Missing translation". Use `&locale=en` or add German strings to a fork locale file like `data/traffic_sign_field_locales.yaml`.
 
+- Since the lens merge, all iD CSS is in `@layer ideditor`. CSS loaded later without a layer (e.g. `vendor/traffic-sign-field/id-field.css`) always wins over it; overriding such CSS from `css/` needs `!important` (see `css/93_traffic_sign_field.css`).
+
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
