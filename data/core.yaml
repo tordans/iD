@@ -1042,7 +1042,8 @@ en:
   live_touched:
     title: Live edits nearby
     toggle: Show and share live edits
-    login: Log in to OpenStreetMap to use live edits.
+    login: Live edits need your OpenStreetMap login, so others can see who is editing.
+    login_button: Log in to OpenStreetMap
     consent:
       body: "While this is on, other mappers who also use it can see which objects you are editing, with your OSM username, before you upload. Only object ids, versions, and a rough location are shared. To confirm your OSM username, your OpenStreetMap login token is sent to the live-edits server, which uses it only to read your user id and name. Everything is deleted after 3 hours at the latest."
       accept: Turn on

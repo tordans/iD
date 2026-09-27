@@ -16,6 +16,24 @@
 .ideditor g.vertex.live-touched-saved .shadow { fill: #9b59ff; }
 
 /* Map Data pane section */
+.live-touched-login {
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border-left: 4px solid #ff8c00;
+    background: rgba(255, 140, 0, 0.15);
+}
+.live-touched-login p {
+    margin: 0 0 6px;
+}
+.live-touched-login button {
+    height: auto;
+    padding: 4px 10px;
+}
+ul.live-touched-toggle li.disabled label {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 .live-touched-message {
     margin: 4px 0;
     font-size: 12px;

@@ -8,8 +8,6 @@ import { utilDisplayLabel } from '../../util/utilDisplayLabel';
 import { uiConfirm } from '../confirm';
 import { uiSection } from '../section';
 
-type OsmService = { authenticated?: () => boolean };
-
 const TYPE_LETTER = { node: 'n', way: 'w', relation: 'r' } as const;
 
 
@@ -37,7 +35,7 @@ export function uiSectionLiveTouched(context: iD.Context) {
 
 
     function isLoggedIn() {
-        return !!(context.connection() as OsmService | undefined)?.authenticated?.();
+        return !!context.connection()?.authenticated();
     }
 
 
@@ -70,7 +68,10 @@ export function uiSectionLiveTouched(context: iD.Context) {
 
     function toggle(this: HTMLInputElement) {
         const live = liveTouched();
-        if (!live) return;
+        if (!live || (this.checked && !isLoggedIn())) {
+            this.checked = false;
+            return;
+        }
 
         if (!this.checked) {
             live.disable().finally(section.reRender);
@@ -175,14 +176,34 @@ export function uiSectionLiveTouched(context: iD.Context) {
             .append('span')
             .call(t.append('live_touched.toggle'));
 
+        const canToggle = !!live && (enabled || isLoggedIn());
         toggleList = toggleList.merge(toggleEnter);
+        toggleList.select('li')
+            .classed('disabled', !canToggle);
         toggleList.select('input')
             .property('checked', enabled)
-            .property('disabled', !live || (!enabled && !isLoggedIn()));
+            .property('disabled', !canToggle);
 
-        // status messages: login, error, zoom, empty, nuke result
+        // login needed: a warning box above everything else, with a login button
+        const loginBox = selection.selectAll<HTMLDivElement, number>('.live-touched-login')
+            .data(isLoggedIn() ? [] : [0]);
+        loginBox.exit().remove();
+        const loginEnter = loginBox.enter()
+            .insert('div', 'ul.live-touched-toggle')
+            .attr('class', 'live-touched-login');
+        loginEnter
+            .append('p')
+            .call(t.append('live_touched.login'));
+        loginEnter
+            .append('button')
+            .attr('class', 'button action')
+            .call(t.append('live_touched.login_button'))
+            .on('click', () => {
+                context.connection()?.authenticate(() => section.reRender(), {});
+            });
+
+        // status messages: error, zoom, empty, nuke result
         const messages: string[] = [];
-        if (!isLoggedIn()) messages.push(t('live_touched.login'));
         if (enabled && state?.error) messages.push(`${state.error.code}: ${state.error.message}`);
         if (enabled && state?.zoomedOutTooFar) messages.push(t('live_touched.zoomIn'));
         if (enabled && !state?.zoomedOutTooFar && !state?.items.length) messages.push(t('live_touched.empty'));
@@ -267,6 +288,9 @@ export function uiSectionLiveTouched(context: iD.Context) {
             .classed('live-touched-others-nearby', othersNearby);
     }
 
+
+    // login and logout change what is possible
+    (context.connection() as unknown as { on(type: string, listener: () => void): void } | undefined)?.on('change.uiSectionLiveTouched', () => section.reRender());
 
     // `ui/init.js` sets up live touched before it builds the panes
     liveTouched()?.session.subscribe(() => {
