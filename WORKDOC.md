@@ -153,6 +153,115 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - `packages/id-plugin`: only a stub (`mount()`, `createIdAdapter(context)`). The adapter needs `getWay` / `getWaysForNode`, which map to `context.graph()` / `graph.parentWays(node)`.
 - `~/Development/OSM/parking-lanes`: the app where this table is used today. Use it as the UX reference.
 
+### 7. Side indicator for directional combo fields — ✅
+
+- Source: branch `side-indicator` (4 commits, 2026-05, on origin), merged 2026-09-27.
+- Hovering or focusing the left/right row of a directional combo field (e.g. `cycleway:left`/`:right`, `sidewalk:*`) draws blue arrows on that side of the selected way. The label gets a matching arrow. Hidden when the visible part of the way is too curved (`modules/geo/way_viewport_straightness.ts`).
+- Merge work: state ported to the TS `context.ts` (`directionalComboIndicator()` / `setDirectionalComboIndicator()`), `directional_combo_arrow` converted to TS, tests updated to current test APIs (`new iD.osmNode`, no `d3` global, vitest matchers).
+- The same hover/focus → map indicator pattern is the base for the width indicator (feature 10).
+
+### 8. TILDA bike infrastructure helper — ⬜ (plan)
+
+**Goal:** mappers pick the TILDA bike infrastructure category a way should have. The sidebar then shows which tags are missing or conflicting for that category, and which are required for the Radnetz dataset (width, surface, …).
+
+**Sources**
+
+- `@tilda-geo/bicycle-infrastructure` (npm 0.1.2, source `~/Development/FMC/tilda-geo-schema-spec-and-library-workspace/tilda-schemas/packages/bicycle-infrastructure`). Port of TILDA's LUA bikelane processing, 100% category match against the Berlin export.
+  - `processBikelanes(tags)`: 1..N results (`self`, `left`, `right` side) with `category`, `surface`, `oneway`, `separation_*`, `buffer_*`, `marking_*`, `traffic_mode_*`, `width`, …
+  - `analyzeCategoryGaps(tags, results)`: for incomplete categories (`*_adjoiningOrIsolated`, `*_advisoryOrExclusive`, `needsClarification`) the missing keys, allowed values and which category each unlocks.
+  - `listTargetCategories()` and `planTagsForCategory(tags, target, side)`: `add` / `change` / `conflicts` to reach a target category.
+  - Category vocabulary: `schemas/bicycle-infrastructure-category/schema/category.schema.json` (29 values incl. `needsClarification`, `data_no`, `separate_geometry`, `not_expected`).
+  - Local WIP: uncommitted changes to `plan-tags-for-category.ts` in that repo. Check before relying on newer behavior.
+- Street-space-editor (`~/Development/OSM/street-space-editor` → `parking-lanes`), bicycle mode, already uses this in a UI:
+  - `app/src/modes/bicycle/domain/bicycle-edit-helpers.ts`: `findGapResult`, `defaultTargetCategory`, `planForSide`, `applyCategoryPlan`.
+  - `app/src/modes/bicycle/domain/bicycle-category-plan.ts`: `MACRO_CATEGORY_SUGGESTIONS` (bicycle road, bus lanes, crossing), which the library planner skips.
+  - `app/src/modes/bicycle/domain/bicycle-tag-keys.ts`: the key lists that matter per side.
+- Design for a guided "tagging helper": `osm-cycleway-tagging-helper/plans/cycleway-tagging-helper/{plan,canvas}.mdx` in the same workspace. Questions are derived from missing predicates, plus "why not category X" explanations. Reuse its question design.
+- TILDA LUA: `~/Development/FMC/tilda-geo/processing/topics/roads_bikelanes/` (bikelanes, roads, paths, todos; see the QA list below).
+
+**Decision: a custom inspector section, not presets.**
+Presets match on a fixed tag set and cannot express "category X on the left side of this road". The category comes from many tags, per side, in a fixed rule order. So:
+
+- A new inspector section "TILDA Radinfrastruktur" (TS module, added next to the preset fields like the traffic sign fields) for ways with `highway=*`:
+  1. **Current result** per side (`self`/`left`/`right`): category label, short explanation, color chip.
+  2. **Target category** select per side (default from `defaultTargetCategory`), grouped: separate paths / on-road lanes / shared / other.
+  3. **Tag plan** for the target: rows "add `key=value`", "change `key` a → b", "conflict". Each row has a one-click "apply" button that goes through `actionChangeTags`, plus "apply all". The reason text comes from the library.
+  4. **Gaps**: for incomplete categories, the questions from `analyzeCategoryGaps` as buttons (e.g. `is_sidepath` yes/no, `cycleway:right:lane` advisory/exclusive).
+  5. **Required attributes checklist** for the Radnetz dataset (from infravelo `inspector/QA.md`, see below): oneway, width (+ source), surface (+ `sett:length` for sett), `surface:colour`, traffic_sign (or `none`); for protected lanes separation / traffic_mode / buffer / marking left+right. Green check / missing, with the field to fill.
+- Also a **preset category** "TILDA Radinfrastruktur" with a few presets for the separate-geometry cases (`highway=cycleway` + `is_sidepath`, segregated foot+bike path, shared path, bicycle road) whose fields are the checklist keys. That gives mappers a quick start. Build it as a local preset override (like the traffic sign fields in `modules/presets/traffic_sign_fields.ts`), not in id-tagging-schema.
+- Map support: a lens (feature 5) colored by TILDA category, computed live with `processBikelanes` → CSS classes (`tilda-category-*`) via the tag-class hook from the lens work.
+
+**Easy / hard**
+
+- Easy: adding the npm package, the "current category" readout, the checklist, apply buttons (plain tag changes).
+- Medium: side handling (`left`/`right` keys vs `self`), macro categories, keeping the section in sync with the raw tag editor.
+- Hard: good explanations ("why not X") and question flow; live category coloring on the map for all ways (performance: cache per entity version).
+
+### 9. QA rules — ⬜ (plan)
+
+Rules from TILDA todos (`tilda-geo/processing/topics/roads_bikelanes/bikelanes/bikelane_todo_categories.lua`, `roads/road_todo_categories.lua`), the infravelo QA inspector (`~/Development/FMC/infravelo-radnetz/inspector/src/components/shared/*Style.ts`, `inspector/QA.md`, live: https://infravelo-qa.netlify.app/) and the infravelo validation scripts (`validation/*.py`).
+
+How we implement them: **(V)** iD validation (issues pane, with fixes), **(H)** hint in the TILDA helper section (feature 8), **(L)** lens / map coloring, **(—)** not in the editor.
+
+| Rule | Source | How here |
+|---|---|---|
+| `needsClarification`: tagging not enough to categorize | TILDA todo `needs_clarification`, infravelo category layer "Führung gar nicht erkannt" | V + H (gap questions) + L |
+| `*_adjoiningOrIsolated`: missing `is_sidepath=yes/no` | TILDA `adjoining_or_isolated`, infravelo "Führung ungenau" | V + H |
+| `*_advisoryOrExclusive`: missing `cycleway:*:lane=advisory/exclusive` | TILDA `advisory_or_exclusive` | V + H |
+| `cycleway=track` too vague | TILDA `needs_clarification_track` | V + H |
+| Mixed `cycleway`/`cycleway:both` with `cycleway:SIDE` | TILDA `mixed_cycleway_both` | V (fix: merge into sides) |
+| Deprecated `cycleway=shared` | TILDA road todo `deprecated_cycleway_shared` | V (upstream iD may already cover it; check) |
+| Missing `segregated=yes/no` on foot+bike ways | TILDA `missing_segregated` | V + H |
+| Missing `bicycle=designated` + `foot=designated` for DE:240 | TILDA `missing_access_tag_240` | V (fix adds tags) |
+| Missing `bicycle=designated` on bicycle roads | TILDA `missing_access_tag_bicycle_road` | V |
+| Footway with bicycle access that should be `highway=path` | TILDA `unexpected_bicycle_access_on_footway` | V (warning, needs survey) |
+| `highway=path` that should be `highway=cycleway` (DE:237) | TILDA `unexpected_highway_path` | V |
+| Missing traffic sign (`DE:*` or `none`) | TILDA `missing_traffic_sign`, infravelo traffic sign layer | H + L; the traffic sign field (feature 2) helps fill it |
+| Malformed traffic sign value | TILDA `malformed_traffic_sign` | V using the traffic sign converter package |
+| Bicycle road without `DE:244.1` / vehicle destination sign | TILDA `missing_traffic_sign_244`, `..._vehicle_destination` | V + H |
+| Missing `oneway` on bike infrastructure | TILDA `missing_oneway`, infravelo oneway layer | H + L |
+| One-way road without `oneway:bicycle` | infravelo `QA.md`, oneway layer | H |
+| Missing `width` / missing width source | TILDA `missing_width`, infravelo width layer ("Quellenangabe der Breite fehlt") | H + width tool (feature 10) |
+| `surface=sett` without `sett:length` (mosaic / small / large) | infravelo sett layer, `QA.md` | H |
+| Missing `surface` | TILDA `missing_surface` | H |
+| Missing `surface:colour` where colored paint is expected | infravelo surface colour layer | H + L |
+| Protected lanes: `separation`, `traffic_mode`, `buffer`, `marking` left+right | infravelo buffer/marking layer, `QA.md` | H + L |
+| Bicycle roads: `marking_left/right`, `buffer_left/right` | infravelo buffer/marking layer | H |
+| Road likely missing `cycleway:SIDE=no` | infravelo "cycleway no" layer | H + L |
+| One-way pair without `dual_carriageway=yes` | infravelo dual carriageway layer, `validation/analyse_dual_carriageway.py` | V (needs a neighbor lookup: same name, opposite direction) |
+| Crossing longer than 100 m | TILDA `crossing_too_long` | V |
+| Not edited for ~10 years | TILDA `currentness_too_old`, infravelo age layer | L (color by last edit date) |
+| Edited by the project account vs. others since project start | infravelo update source layer | L (needs changeset user; maybe later) |
+| Mapillary coverage for way / sign | TILDA `*__mapillary` todos, infravelo Mapillary layer | L (via Mapillary layers already in iD; later) |
+| Damage notes via `traffic_sign=*schäden*` + `source:traffic_sign:mapillary` | infravelo `QA.md` "ERGÄNZEN" | H (hint in traffic sign field) |
+| `cycleway:note` for explanations | infravelo `QA.md` | H |
+| Duplicate include/exclude ids, snapping/aggregation checks, Knotenpunkte ids | infravelo `validation/*.py` | — (processing-side, not editing) |
+
+Notes:
+- iD validations live in `modules/validations/*`. New ones go into their own TS files and are registered in `modules/validations/index`.
+- Most rules only need the tags of one way plus `processBikelanes`, so they are cheap. Dual carriageway and crossing length need geometry and neighbors.
+
+### 10. Width: map indicator and editing — ⬜ (plan)
+
+**Wanted**
+
+1. When the width field (`width`, `cycleway:*:width`, `est_width`, …) is hovered or focused, the map shows the width as a band around the selected way, like street-space-editor's width mode.
+2. A right-click action "Edit width" on ways: drag handles on both sides of the way change the width on the map, and the width field updates.
+
+**Reference:** street-space-editor width mode, `~/Development/OSM/parking-lanes/app/src/modes/width/`:
+- `domain/handle-geometry.ts`: handle count by way length (1 / 2 / 3), handle positions, rectangles and hit areas (turf).
+- `domain/road-width-from-tags.ts`, `domain/highway-width-fallbacks.ts`: parse `width`/`est_width`, fallback widths by highway type and oneway.
+- `map/width-layer-paint.ts`, `map/WidthHandlesLayer.tsx`: band and handle styling (MapLibre; we draw SVG).
+- `measure-guide/*`: what to measure per infrastructure type; useful as help text.
+
+**Plan and difficulty**
+
+- Easy: port the width parsing and fallbacks as TS (`modules/width/*`).
+- Easy–medium: the indicator. Same pattern as the side indicator (feature 7): the field sets a state on focus/hover, an SVG layer draws a band. Band = the way's line with `stroke-width` = width in meters × pixels per meter at the current zoom (`projection.scale()` and latitude). Needs a hook in the width field (upstream `input`/`roadwidth` field is JS; add a small TS helper and call it from there).
+- Medium: `cycleway:left:width` etc. need the band offset to that side (combine with the side indicator's side logic).
+- Medium–hard: "Edit width" operation. A new operation in the edit menu (TS, like the operations in `modules/operations/*`) that enters a new mode with SVG drag handles. Dragging changes a preview width; on release, `context.perform(actionChangeTags(…))` with the rounded width (0.1 m) and `source:width` if we want it. The field updates by itself through the normal redraw. Hard parts: pointer handling inside iD's modes (similar to `modeMove`/`modeRotate`), handles on curved ways, undo annotation, touch.
+- Open: which keys the tool edits (`width` of the way vs `cycleway:*:width` for lanes on the road), and whether to write `width:source` / `source:width` (infravelo wants a width source).
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -161,6 +270,10 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 4. Custom data layers (builds on 1's UI pattern)
 5. Lenses
 6. Way-as-table
+7. Side indicator
+8. TILDA bike infrastructure helper (after merging all others)
+9. QA rules (with 8)
+10. Width indicator and editing
 
 ## Coding conventions (this branch)
 
@@ -184,11 +297,14 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Full UI test run of all features (no OSM uploads, test edits discarded). Fixed the way table checkbox state. Merged the side indicator branch. Planned features 8–10.
 - 2026-09-27: Merged the lens PR and the v6 lens shortcut commits. Added the way table panel. All six features are in `radnetz-berlin`, checked in the browser.
 - 2026-09-27: Merged multiple custom backgrounds. Merged favorites and reworked the shortcuts (fixed numbers, left-hand first, swap on conflict, number input in preferences). Merged the traffic sign field (converted to TS). Added PMTiles support and multiple custom data layers. All checked in the browser with the test URLs.
 
 ## Next steps
 
+- Known issue: deleting the active custom background switches to "None" instead of the previous background (from the backgrounds branch).
+- Features 8–10 (plans above).
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
