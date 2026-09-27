@@ -40,17 +40,46 @@ ul.live-touched-toggle li.disabled label {
 }
 ul.live-touched-items li.live-touched-item {
     display: block;
-    padding: 6px 10px;
+    padding: 5px 10px;
+    line-height: 1.35;
     cursor: pointer;
     border-left: 4px solid #ff8c00;
 }
 ul.live-touched-items li.live-touched-item-stale { border-left-color: rgba(255, 140, 0, 0.4); }
 ul.live-touched-items li.live-touched-item-saved { border-left-color: #9b59ff; }
-ul.live-touched-items li.live-touched-hint-parallel,
-ul.live-touched-items li.live-touched-hint-outdated { box-shadow: inset 0 0 0 1px #e0282e; }
-.live-touched-item-title { font-weight: bold; }
-.live-touched-item-text,
-.live-touched-item-meta { font-size: 12px; }
+.live-touched-item-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+.live-touched-item-title {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.live-touched-item-id {
+    flex: 0 0 auto;
+    font-size: 11px;
+    opacity: 0.7;
+}
+.live-touched-item-status,
+.live-touched-item-hint {
+    font-size: 12px;
+}
+/* conflict: only the hint line stands out, in iD's warning colors */
+.live-touched-item-hint {
+    margin-top: 2px;
+    color: var(--warning-text-color);
+}
+.live-touched-item-hint .icon {
+    color: var(--warning-icon-color);
+    fill: currentColor;
+}
+.live-touched-item-hint.hide {
+    display: none;
+}
 .live-touched-footer {
     display: flex;
     align-items: center;

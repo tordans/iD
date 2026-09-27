@@ -4,6 +4,7 @@ import { PRIVACY_URL, type LiveItem } from '@osm-editor-kit/live-touched';
 import { t } from '../../core/localizer';
 import type { LiveTouched } from '../../live_touched/live_touched';
 import { modeSelect } from '../../modes/select';
+import { svgIcon } from '../../svg/icon';
 import { utilDisplayLabel } from '../../util/utilDisplayLabel';
 import { uiConfirm } from '../confirm';
 import { uiSection } from '../section';
@@ -39,14 +40,31 @@ export function uiSectionLiveTouched(context: iD.Context) {
     }
 
 
-    function itemText(item: LiveItem) {
-        const user = item.user.display_name;
-        if (item.hint === 'parallel') return t('live_touched.hint.parallel', { user });
+    /** "{user} edited this 12 min ago", with the user name as a link to the OSM profile */
+    function renderStatus(selection: d3.Selection, item: LiveItem) {
+        const marker = '\u0000';
+        const minutes = Math.round(item.ageMs / 60000);
+        const text = t(`live_touched.status.${item.status}`, { user: marker, minutes, version: item.newVersion ?? '?' });
+        const [before, after = ''] = text.split(marker);
+        selection.text('');
+        selection.append('span').text(before);
+        selection.append('a')
+            .attr('href', `https://www.openstreetmap.org/user/${encodeURIComponent(item.user.display_name)}`)
+            .attr('target', '_blank')
+            .attr('rel', 'noopener')
+            .on('click', (d3_event: MouseEvent) => d3_event.stopPropagation())
+            .text(item.user.display_name);
+        selection.append('span').text(after);
+    }
+
+
+    /** Only for conflicts: what the other edit means for my own edit */
+    function hintText(item: LiveItem) {
+        if (item.hint === 'parallel') return t('live_touched.hint.parallel');
         if (item.hint === 'outdated') {
-            return t('live_touched.hint.outdated', { user, local: item.localVersion ?? '?', remote: item.newVersion ?? '?' });
+            return t('live_touched.hint.outdated', { user: item.user.display_name, local: item.localVersion ?? '?', remote: item.newVersion ?? '?' });
         }
-        if (item.status === 'saved') return t('live_touched.status.saved', { user, version: item.newVersion ?? '?' });
-        return t(`live_touched.status.${item.status}`, { user });
+        return '';
     }
 
 
@@ -233,9 +251,13 @@ export function uiSectionLiveTouched(context: iD.Context) {
             .append('li')
             .attr('class', 'live-touched-item')
             .on('click', (_d3_event: MouseEvent, d: LiveItem) => selectItem(d));
-        rowsEnter.append('div').attr('class', 'live-touched-item-title');
-        rowsEnter.append('div').attr('class', 'live-touched-item-text');
-        rowsEnter.append('div').attr('class', 'live-touched-item-meta');
+        const headEnter = rowsEnter.append('div').attr('class', 'live-touched-item-head');
+        headEnter.append('span').attr('class', 'live-touched-item-title');
+        headEnter.append('span').attr('class', 'live-touched-item-id');
+        rowsEnter.append('div').attr('class', 'live-touched-item-status');
+        const hintEnter = rowsEnter.append('div').attr('class', 'live-touched-item-hint');
+        hintEnter.call(svgIcon('#iD-icon-alert', 'inline'));
+        hintEnter.append('span');
 
         rows = rows.merge(rowsEnter)
             .order()
@@ -243,20 +265,16 @@ export function uiSectionLiveTouched(context: iD.Context) {
 
         rows.select('.live-touched-item-title')
             .text(itemLabel);
-        rows.select('.live-touched-item-text')
-            .text(itemText);
-        rows.select('.live-touched-item-meta')
+        rows.select('.live-touched-item-id')
+            .text(d => `${TYPE_LETTER[d.type]}/${d.id}`);
+        rows.select<HTMLDivElement>('.live-touched-item-status')
             .each(function(d) {
-                const meta = d3_select(this).text('');
-                meta.append('a')
-                    .attr('href', `https://www.openstreetmap.org/user/${encodeURIComponent(d.user.display_name)}`)
-                    .attr('target', '_blank')
-                    .attr('rel', 'noopener')
-                    .on('click', (d3_event: MouseEvent) => d3_event.stopPropagation())
-                    .text(d.user.display_name);
-                meta.append('span')
-                    .text(` · ${t('live_touched.age', { minutes: Math.round(d.ageMs / 60000) })}`);
+                renderStatus(d3_select<HTMLElement, unknown>(this), d);
             });
+        rows.select('.live-touched-item-hint')
+            .classed('hide', d => !hintText(d))
+            .select('span')
+            .text(hintText);
 
         // footer
         let footer = selection.selectAll<HTMLDivElement, number>('.live-touched-footer')

@@ -1051,12 +1051,12 @@ en:
       accept: Turn on
       privacy: Privacy details
     status:
-      touched: "{user} is editing this right now"
-      stale: "{user} edited this recently; unclear if saved or discarded"
-      saved: "{user} edited and saved this (v{version})"
+      touched: "{user} is editing this, since {minutes} min"
+      stale: "{user} edited this {minutes} min ago"
+      saved: "{user} saved this as v{version} {minutes} min ago"
     hint:
-      parallel: "{user} is editing this object at the same time as you"
-      outdated: "Careful: you are on v{local}, {user} saved v{remote}. Save soon to avoid conflicts"
+      parallel: "You also edited this, this might result in merge conflicts"
+      outdated: "You are on v{local}, {user} saved v{remote}. Save soon to avoid conflicts"
       ok: Your version is current
     zoomIn: Zoom in to see live edits
     empty: Nobody else is editing here right now
@@ -1064,7 +1064,6 @@ en:
       button: Delete my data on the server
       confirm: Delete all your live-edit entries on the server and turn this off?
       done: "Deleted {count} entries"
-    age: "{minutes} min ago"
   way_table:
     title: Way Table
     key: K
