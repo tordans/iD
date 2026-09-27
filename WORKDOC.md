@@ -335,6 +335,12 @@ Notes:
 - Preferences ▸ Interface ▸ "Show button labels". Unchecked, the captions under the top toolbar buttons ("Add Feature", "Undo / Redo", …) are hidden and the toolbar is 60 px instead of 71 px high. Stored in the pref `preferences.interface.labels` (same key as in v3).
 - Code: `modules/ui/sections/interface.ts`, `css/91_interface_prefs.css`, applied at startup in `ui/init.js`.
 
+### 14. Show Mapillary image from the field — ⬜ (idea)
+
+- The `mapillary` field (Mapillary Image ID) only has the external-link button, which opens mapillary.com.
+- Add a second button (eye icon) next to it: it turns on the Mapillary photo layer, opens the photo viewer panel and shows this image (`services.mapillary.selectImage` / `showViewer`), like clicking the photo on the map.
+- Disabled when the field is empty; tooltip "Show image in the viewer".
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -392,6 +398,7 @@ Notes:
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
+- Feature 14: eye button on the Mapillary Image ID field.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
