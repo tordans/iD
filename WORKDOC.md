@@ -322,7 +322,7 @@ Notes:
 
 - Dev server: `npm start` (port 8080, or `PORT=… npm start`). The CSS watcher only knows files that existed at startup; run `npm run build:css` after adding a CSS file.
 - A fresh worktree needs the SVG sprites: `npx run-p "dist:svg:*"`, and the traffic sign assets: `npx run-p dist:traffic-sign-field dist:traffic-sign-converter`.
-- The traffic sign packages are local `file:` dependencies on `~/Development/OSM/osm-traffic-sign-tools-id-field` (WIP, unpublished). A deployed build needs them published or vendored.
+- The traffic sign packages are vendored in `vendor/` (built files from `~/Development/OSM/osm-traffic-sign-tools-id-field`, which is WIP and not fully on npm). Refresh with `npm run vendor:traffic-signs`, see `vendor/README.md`.
 - `npm run build:data` merges `data/traffic_sign_field_locales.yaml` into the committed `dist/locales/de*.min.json`.
 - New UI strings exist only in English (`data/core.yaml`). With a German browser they show as "Missing translation". Use `&locale=en` or add German strings to a fork locale file like `data/traffic_sign_field_locales.yaml`.
 
@@ -345,7 +345,6 @@ Notes:
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
-- Publish or vendor the traffic sign packages before deploying.
 
 ## Open questions
 
