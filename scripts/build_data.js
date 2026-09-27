@@ -72,7 +72,8 @@ function buildData() {
     'fas-user-cog',
     'fas-calendar-days',
     'fas-rotate',
-    'fas-eye-dropper'
+    'fas-eye-dropper',
+    'fas-arrow-pointer'   // custom data layers: selectable toggle
   ]);
   // add icons for QA integrations
   readQAIssueIcons(faIcons);

@@ -46,3 +46,15 @@
     height: 30px;
     padding: 2px;
 }
+
+/* selectable toggle: dimmed when the layer is a visual overlay only */
+.layer-list-custom-data button.layer-selectable-custom-data:not(.active) .icon {
+    opacity: 0.35;
+}
+
+/* a layer that is not selectable ignores the pointer, so clicks reach the OSM data below */
+.layer-custom-data.not-selectable,
+.layer-custom-data.not-selectable path,
+.layer-custom-data.not-selectable text {
+    pointer-events: none;
+}

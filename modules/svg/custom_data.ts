@@ -6,7 +6,7 @@ import { select as d3_select } from 'd3-selection';
 import stringify from 'fast-json-stable-stringify';
 import type { Feature, FeatureCollection } from 'geojson';
 
-import { customDataFormat, customDataLayers, type CustomDataLayer } from '../renderer/custom_data_layers';
+import { customDataFormat, customDataLayers, isSelectable, type CustomDataLayer } from '../renderer/custom_data_layers';
 import { services } from '../services';
 import { utilHashcode } from '../util';
 import { svgPath } from './helpers';
@@ -139,6 +139,7 @@ export function svgCustomData(projection: Projection, context: iD.Context, dispa
             .append('g')
             .attr('class', d => `layer-mapdata layer-custom-data layer-custom-data-${d.id}`)
             .merge(groups)
+            .classed('not-selectable', d => !isSelectable(d))
             .style('--custom-data-color', d => d.color);
 
         const getPath = svgPath(projection).geojson;

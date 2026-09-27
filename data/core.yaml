@@ -975,6 +975,8 @@ en:
       add: Add custom data layer
       empty: No custom data layers yet. Add one with the + button.
       edit_tooltip: Edit this data layer
+      selectable_on: "Features can be selected. Click to make this layer a visual overlay only."
+      selectable_off: "Visual overlay only, features cannot be selected. Click to make them selectable."
       delete:
         tooltip: Delete this data layer
         header: Delete data layer

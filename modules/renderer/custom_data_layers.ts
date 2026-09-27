@@ -14,6 +14,8 @@ export interface CustomDataLayer {
     url: string;
     color: string;
     enabled: boolean;
+    /** features can be hovered and clicked; `false` makes the layer a visual overlay only (default `true`) */
+    selectable?: boolean;
 }
 
 export type CustomDataFormat = 'geojson' | 'vectortile';
@@ -44,6 +46,11 @@ export function customDataLabel(url: string) {
         return path.replace(/\/?\{[\s\S]*$/, '');
     }
     return path.split('/').pop() || path;
+}
+
+
+export function isSelectable(layer: CustomDataLayer) {
+    return layer.selectable !== false;
 }
 
 
@@ -133,6 +140,12 @@ function createCustomDataLayers() {
 
         remove(id: string) {
             save(load().filter(layer => layer.id !== id));
+            return customDataLayers;
+        },
+
+        toggleSelectable(id: string) {
+            const layer = customDataLayers.get(id);
+            if (layer) customDataLayers.update(id, { selectable: !isSelectable(layer) });
             return customDataLayers;
         },
 
