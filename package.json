@@ -57,7 +57,7 @@
     "@mapbox/geojson-area": "^0.2.2",
     "@mapbox/sexagesimal": "1.2.0",
     "@mapbox/vector-tile": "^3.0.0",
-    "@osm-editor-kit/live-touched": "file:../osm-live-touched/packages/live-touched",
+    "@osm-editor-kit/live-touched": "^0.1.0",
     "@rapideditor/country-coder": "~5.6.0",
     "@rapideditor/location-conflation": "~3.0.0",
     "@tmcw/togeojson": "^7.1.2",

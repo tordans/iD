@@ -271,7 +271,7 @@ Notes:
 
 ### 11. Live touched: see what others edit right now — 🟨 (integrated, T10 test open)
 
-- Source: `~/Development/OSM/osm-live-touched` (package `@osm-editor-kit/live-touched` 0.1.0, not on npm yet, so a local `file:` dependency). Start from its `packages/live-touched/README.md` ("iD integration guide") and `docs/concept.md`. Its `WORKPLAN.md` tracks the steps (T10 = the iD test).
+- Source: `~/Development/OSM/osm-live-touched` (package `@osm-editor-kit/live-touched`, from npm `^0.1.0`). Start from its `packages/live-touched/README.md` ("iD integration guide") and `docs/concept.md`. Its `WORKPLAN.md` tracks the steps (T10 = the iD test).
 - Integrated 2026-09-27:
   - `modules/services/osm.js`: `getAccessToken()` (the backend uses the token only to read user id and name).
   - `modules/live_touched/live_touched.ts`: session wiring. Reports locally modified objects on history `change` (also fires on undo, redo, reset, restore), marks them saved on uploader `resultSuccess` (the changeset has its id there), reports the view on map `move`, sets `.live-touched-*` classes on map `drawn`. Turns back on after reload if enabled and consent is current.
