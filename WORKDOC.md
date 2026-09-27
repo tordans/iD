@@ -303,6 +303,7 @@ Notes:
 
 ## Next steps
 
+- Known upstream behavior: leaving (blur) a directional combo row without typing rewrites `cycleway:both=no` to `cycleway=no` (upstream `directional_combo.js` calls `change` on blur and uses the common key when both sides match). Equivalent for TILDA, but an unexpected edit. Consider not writing on blur when nothing changed.
 - Known issue: deleting the active custom background switches to "None" instead of the previous background (from the backgrounds branch).
 - Features 8–10 (plans above).
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
