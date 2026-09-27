@@ -5,8 +5,9 @@
 }
 
 .width-indicator path.width-indicator-band {
-    fill: rgba(255, 196, 0, 0.35);
-    stroke: #ffc400;
+    /* same blue as the directional combo side indicator (css/20_map.css) */
+    fill: rgba(112, 146, 255, 0.3);
+    stroke: #7092ff;
     stroke-width: 1.5;
     stroke-linejoin: round;
 }
