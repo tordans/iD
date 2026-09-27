@@ -25,6 +25,8 @@ en:
     recent: Recent
     favorites: Favorites
     add_feature: Add Feature
+  presets:
+    favorites: Favorites
   title:
     format:
       context: "{base} – {context}"
@@ -818,6 +820,22 @@ en:
       disable:
         already_set: "This photo is already tagged on the selected map feature"
         too_far: "This photo is too far away from the selected map feature"
+  preset_shortcut:
+    title: Set Keyboard Shortcut
+    button_tooltip: Set keyboard shortcut
+    button_tooltip_with_shortcut: "Keyboard shortcut: {shortcut}"
+    preset_label: "Set shortcut for: {preset}"
+    instructions: "Enter a number between 8 and 999 (numbers 1-7 are reserved shortcuts)."
+    placeholder: "e.g. 8, 22, 555"
+    error_range: "Shortcut must be between 8 and 999 (numbers 1-7 are reserved shortcuts)"
+    error_conflict: "Shortcut {shortcut} is already in use"
+    remove: Remove Shortcut
+    inline_label: "Shortcut:"
+    none_display: "none"
+    edit_tooltip: "Edit shortcut"
+    add_tooltip: "Add shortcut"
+    save_tooltip: "Save shortcut"
+    cancel_tooltip: "Cancel"
   background:
     title: Background
     description: Background Settings
@@ -1028,6 +1046,15 @@ en:
     title: Preferences
     description: Preferences
     key: P
+    favorite_presets:
+      title: Favorite Presets & Shortcuts
+      empty_message: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut.
+      explanation: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut. You can reassign the shortcuts by reordering this list.
+      add_tooltip: Add to favorites
+      remove_tooltip: Remove from favorites
+      config_tooltip: Open preferences to manage favorites
+      heart_tooltip_active: Remove favorite; Right-click to open preferences
+      heart_tooltip_inactive: Add favorite; Right-click to open preferences
     privacy:
       title: Privacy
       privacy_link: View the iD privacy policy

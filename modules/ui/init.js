@@ -7,6 +7,7 @@ import { prefs } from '../core/preferences';
 import { t, localizer } from '../core/localizer';
 import { presetManager } from '../presets';
 import { behaviorHash } from '../behavior';
+import { behaviorPresetFavorites } from '../behavior/preset_favorites';
 import { modeBrowse } from '../modes/browse';
 import { svgDefs, svgIcon } from '../svg';
 import { utilDetect } from '../util/detect';
@@ -358,6 +359,10 @@ export function uiInit(context) {
         if (!ui.hash.hadLocation) {
             map.centerZoom([0, 0], 2);
         }
+
+        // Setup preset favorites behavior
+        ui.presetFavorites = behaviorPresetFavorites(context);
+        d3_select(document).call(ui.presetFavorites);
 
         // Bind events
         window.onbeforeunload = function() {
