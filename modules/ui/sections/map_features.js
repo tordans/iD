@@ -72,7 +72,11 @@ export function uiSectionMapFeatures(context) {
 
         // Enter
         var enter = items.enter()
-            .append('li')
+            .append('li');
+
+        // Radnetz Berlin: tooltip on the label (not the li), so it does not show over the mode toggle
+        var label = enter
+            .append('label')
             .call(uiTooltip()
                 .title(function(d) {
                     var tip = t.append(name + '.' + d + '.tooltip');
@@ -87,9 +91,6 @@ export function uiSectionMapFeatures(context) {
                 })
                 .placement('top')
             );
-
-        var label = enter
-            .append('label');
 
         label
             .append('input')

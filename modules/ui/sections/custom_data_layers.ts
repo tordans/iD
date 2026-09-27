@@ -1,11 +1,11 @@
-import { localizer, t } from '../../core/localizer';
+import { t } from '../../core/localizer';
 import { customDataLabel, customDataLayers, isSelectable, type CustomDataLayer } from '../../renderer/custom_data_layers';
 import { svgIcon } from '../../svg/icon';
 import { uiConfirm } from '../confirm';
 import { uiLayerModeToggle, type LayerMode } from '../layer_mode_toggle';
 import { uiSection } from '../section';
 import { uiSettingsCustomDataLayer } from '../settings/custom_data_layer';
-import { uiTooltip } from '../tooltip';
+import { uiPaneTooltip } from '../pane_tooltip';
 
 
 function layerName(layer: CustomDataLayer) {
@@ -22,9 +22,6 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
         .disclosureHeaderOptions(renderHeaderOptions)
         .disclosureContent(renderDisclosureContent);
 
-    const tooltipPlacement = () => localizer.textDirection() === 'rtl' ? 'right' : 'left';
-
-
     function renderHeaderOptions(selection: d3.Selection) {
         selection.selectAll('button.add-custom-data-layer')
             .data([0])
@@ -32,9 +29,8 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             .append('button')
             .attr('class', 'disclosure-header-option add-custom-data-layer')
             .attr('aria-label', t('map_data.custom_data_layers.add'))
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title(() => t.append('map_data.custom_data_layers.add'))
-                .placement(tooltipPlacement())
             )
             .on('click', (d3_event: MouseEvent) => {
                 d3_event.preventDefault();
@@ -78,7 +74,12 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             .attr('class', 'layer-custom-data');
 
         const labelEnter = itemsEnter
-            .append('label');
+            .append('label')
+            .call(uiPaneTooltip()
+                .title((d: CustomDataLayer) => (selection: d3.Selection) => {
+                    selection.append('code').text(d.url);
+                })
+            );
 
         labelEnter
             .append('span')
@@ -91,9 +92,8 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
         itemsEnter
             .append('button')
             .attr('class', 'layer-edit-custom-data')
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title(() => t.append('map_data.custom_data_layers.edit_tooltip'))
-                .placement(tooltipPlacement())
             )
             .on('click', (d3_event: MouseEvent, d: CustomDataLayer) => {
                 d3_event.preventDefault();
@@ -105,9 +105,8 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
         itemsEnter
             .append('button')
             .attr('class', 'layer-delete-custom-data')
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title(() => t.append('map_data.custom_data_layers.delete.tooltip'))
-                .placement(tooltipPlacement())
             )
             .on('click', (d3_event: MouseEvent, d: CustomDataLayer) => {
                 d3_event.preventDefault();
@@ -118,8 +117,7 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
 
         items = items.merge(itemsEnter)
             .order()
-            .classed('active', d => d.enabled)
-            .attr('title', d => d.url);
+            .classed('active', d => d.enabled);
 
         // the mode toggle goes before the edit and delete buttons
         items.call(modeToggle);

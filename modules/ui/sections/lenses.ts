@@ -20,6 +20,7 @@ import { uiCmd } from '../cmd';
 import { uiConfirm } from '../confirm';
 import { uiSection } from '../section';
 import { uiSettingsLens } from '../settings/lens';
+import { uiPaneTooltip } from '../pane_tooltip';
 import { uiTooltip } from '../tooltip';
 
 
@@ -101,9 +102,8 @@ export function uiSectionLenses(context: iD.Context) {
         uploadedEnter
             .append('button')
             .attr('class', 'lens-edit')
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title(() => t.append('map_data.lens.edit_tooltip'))
-                .placement(tooltipPlacement())
             )
             .on('click', (d3_event: MouseEvent, d: LensEntry) => {
                 d3_event.preventDefault();
@@ -116,9 +116,8 @@ export function uiSectionLenses(context: iD.Context) {
         uploadedEnter
             .append('button')
             .attr('class', 'lens-delete')
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title(() => t.append('map_data.lens.remove'))
-                .placement(tooltipPlacement())
             )
             .on('click', (d3_event: MouseEvent, d: LensEntry) => {
                 d3_event.preventDefault();
@@ -143,10 +142,9 @@ export function uiSectionLenses(context: iD.Context) {
         items.select<HTMLLabelElement>('label')
             .each(function(d) {
                 const shortcut = lensShortcut(d);
-                const tooltip = (uiTooltip() as any)
+                const tooltip = uiPaneTooltip()
                     .title(() => t.append(d.source === 'default' ? 'map_data.lens.default_tooltip' : 'map_data.lens.select_tooltip'))
-                    .keys(shortcut ? [uiCmd('⌥' + shortcut.toUpperCase())] : null)
-                    .placement('top');
+                    .keys(shortcut ? [uiCmd('⌥' + shortcut.toUpperCase())] : null);
                 d3_select(this).call((uiTooltip() as any).destroyAny).call(tooltip);
             });
     }

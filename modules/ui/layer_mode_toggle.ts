@@ -1,8 +1,8 @@
 import { select as d3_select, type Selection } from 'd3-selection';
 
-import { localizer, t } from '../core/localizer';
+import { t } from '../core/localizer';
 import { svgIcon } from '../svg/icon';
-import { uiTooltip } from './tooltip';
+import { uiPaneTooltip } from './pane_tooltip';
 
 /**
  * How a list entry of the Map Data pane takes part in the map:
@@ -37,8 +37,6 @@ export function uiLayerModeToggle<T>(options: {
     const { getMode, setMode, name, tooltipPrefix } = options;
 
     return function(items: Selection<HTMLLIElement, T, any, any>) {
-        const placement = localizer.textDirection() === 'rtl' ? 'right' : 'left';
-
         const group = items.selectAll<HTMLDivElement, T>('.layer-mode')
             .data((d: T) => [d]);
         const groupEnter = group.enter()
@@ -55,9 +53,8 @@ export function uiLayerModeToggle<T>(options: {
             .append('button')
             .attr('class', d => `layer-mode-${d.mode}`)
             .attr('role', 'radio')
-            .call((uiTooltip() as any)
+            .call(uiPaneTooltip()
                 .title((d: ModeButton<T>) => t.append(`${tooltipPrefix}.${d.mode}`))
-                .placement(placement)
             )
             .on('click', (d3_event: MouseEvent, d) => {
                 d3_event.preventDefault();

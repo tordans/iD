@@ -5,6 +5,7 @@ import { select as d3_select } from 'd3-selection';
 import { prefs } from '../../core/preferences';
 import { t, localizer } from '../../core/localizer';
 import { customIdNumber } from '../../renderer/custom_backgrounds';
+import { uiPaneTooltip } from '../pane_tooltip';
 import { uiTooltip } from '../tooltip';
 import { svgIcon } from '../../svg/icon';
 import { uiCmd } from '../cmd';
@@ -314,9 +315,8 @@ export function uiSectionBackgroundList(context) {
         customControls
             .append('button')
             .attr('class', 'layer-edit-custom')
-            .call(uiTooltip()
+            .call(uiPaneTooltip()
                 .title(() => t.append('settings.custom_background.tooltip'))
-                .placement((localizer.textDirection() === 'rtl') ? 'right' : 'left')
             )
             .on('click', function(d3_event, d) {
                 d3_event.preventDefault();
@@ -328,9 +328,8 @@ export function uiSectionBackgroundList(context) {
         customControls
             .append('button')
             .attr('class', 'layer-delete-custom')
-            .call(uiTooltip()
+            .call(uiPaneTooltip()
                 .title(() => t.append('background.custom_delete.tooltip'))
-                .placement((localizer.textDirection() === 'rtl') ? 'right' : 'left')
             )
             .on('click', function(d3_event, d) {
                 d3_event.preventDefault();
@@ -342,9 +341,8 @@ export function uiSectionBackgroundList(context) {
         enter.filter(function(d) { return d.best(); })
             .append('div')
             .attr('class', 'best')
-            .call(uiTooltip()
+            .call(uiPaneTooltip()
                 .title(() => t.append('background.best_imagery'))
-                .placement((localizer.textDirection() === 'rtl') ? 'right' : 'left')
             )
             .append('span')
             .text('★');

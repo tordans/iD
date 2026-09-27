@@ -377,6 +377,7 @@ Notes:
   - Used by Map Features (hidden = iD's filter, read-only = feature 12) and Custom Data Layers (hidden = disabled, read-only = `selectable: false`).
 - Pencil (`iD-icon-edit`) = "edit the settings of this entry" (custom backgrounds, custom data layers, lenses), like upstream's background list.
 - Trash (`iD-operation-delete`) = delete the entry, always with a confirm modal.
+- Tooltips in panes: one per element. Row tooltip on the `label` (never the `li`), buttons their own; both via `uiPaneTooltip()` (`modules/ui/pane_tooltip.ts`: on top, kept inside the pane). No native `title` attributes.
 
 ## Dev notes
 
