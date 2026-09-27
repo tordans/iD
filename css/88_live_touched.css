@@ -1,0 +1,68 @@
+/* Live touched: objects other mappers are editing, list in the Map Data pane, indicator dot */
+
+/* map halos, drawn like the selection halo but in the status colors */
+.ideditor .live-touched-touched.shadow,
+.ideditor .live-touched-stale.shadow,
+.ideditor .live-touched-saved.shadow {
+    stroke-opacity: 0.7;
+}
+.ideditor path.live-touched-touched.shadow { stroke: #ff8c00; }
+.ideditor path.live-touched-stale.shadow { stroke: #ff8c00; stroke-opacity: 0.35; stroke-dasharray: 6, 6; }
+.ideditor path.live-touched-saved.shadow { stroke: #9b59ff; }
+.ideditor path.live-touched-conflict.casing { stroke: #e0282e; stroke-opacity: 1; }
+.ideditor g.point.live-touched .shadow,
+.ideditor g.vertex.live-touched .shadow { fill: #ff8c00; fill-opacity: 0.6; }
+.ideditor g.point.live-touched-saved .shadow,
+.ideditor g.vertex.live-touched-saved .shadow { fill: #9b59ff; }
+
+/* Map Data pane section */
+.live-touched-message {
+    margin: 4px 0;
+    font-size: 12px;
+}
+ul.live-touched-items li.live-touched-item {
+    display: block;
+    padding: 6px 10px;
+    cursor: pointer;
+    border-left: 4px solid #ff8c00;
+}
+ul.live-touched-items li.live-touched-item-stale { border-left-color: rgba(255, 140, 0, 0.4); }
+ul.live-touched-items li.live-touched-item-saved { border-left-color: #9b59ff; }
+ul.live-touched-items li.live-touched-hint-parallel,
+ul.live-touched-items li.live-touched-hint-outdated { box-shadow: inset 0 0 0 1px #e0282e; }
+.live-touched-item-title { font-weight: bold; }
+.live-touched-item-text,
+.live-touched-item-meta { font-size: 12px; }
+.live-touched-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+}
+.live-touched-footer button.live-touched-nuke {
+    height: auto;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* pulsing dot on the Map Data button while others edit in view */
+.map-data-control button.live-touched-others-nearby {
+    position: relative;
+}
+.map-data-control button.live-touched-others-nearby::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff8c00;
+    animation: live-touched-pulse 1.5s ease-in-out infinite;
+}
+@keyframes live-touched-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+}

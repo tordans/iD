@@ -3,6 +3,7 @@ import { uiPane } from '../pane';
 
 import { uiSectionDataLayers } from '../sections/data_layers';
 import { uiSectionCustomDataLayers } from '../sections/custom_data_layers';
+import { uiSectionLiveTouched } from '../sections/live_touched';
 import { uiSectionLenses } from '../sections/lenses';
 import { uiSectionMapFeatures } from '../sections/map_features';
 import { uiSectionMapStyleOptions } from '../sections/map_style_options';
@@ -18,6 +19,7 @@ export function uiPaneMapData(context) {
         .sections([
             uiSectionDataLayers(context),
             uiSectionCustomDataLayers(context),
+            uiSectionLiveTouched(context),
             uiSectionPhotoOverlays(context),
             uiSectionMapStyleOptions(context),
             uiSectionLenses(context),

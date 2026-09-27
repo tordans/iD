@@ -269,6 +269,19 @@ Notes:
 - Medium–hard: "Edit width" operation. A new operation in the edit menu (TS, like the operations in `modules/operations/*`) that enters a new mode with SVG drag handles. Dragging changes a preview width; on release, `context.perform(actionChangeTags(…))` with the rounded width (0.1 m) and `source:width` if we want it. The field updates by itself through the normal redraw. Hard parts: pointer handling inside iD's modes (similar to `modeMove`/`modeRotate`), handles on curved ways, undo annotation, touch.
 - Open: which keys the tool edits (`width` of the way vs `cycleway:*:width` for lanes on the road), and whether to write `width:source` / `source:width` (infravelo wants a width source).
 
+### 11. Live touched: see what others edit right now — 🟨 (integrated, T10 test open)
+
+- Source: `~/Development/OSM/osm-live-touched` (package `@osm-editor-kit/live-touched` 0.1.0, not on npm yet, so a local `file:` dependency). Start from its `packages/live-touched/README.md` ("iD integration guide") and `docs/concept.md`. Its `WORKPLAN.md` tracks the steps (T10 = the iD test).
+- Integrated 2026-09-27:
+  - `modules/services/osm.js`: `getAccessToken()` (the backend uses the token only to read user id and name).
+  - `modules/live_touched/live_touched.ts`: session wiring. Reports locally modified objects on history `change` (also fires on undo, redo, reset, restore), marks them saved on uploader `resultSuccess` (the changeset has its id there), reports the view on map `move`, sets `.live-touched-*` classes on map `drawn`. Turns back on after reload if enabled and consent is current.
+  - `modules/ui/sections/live_touched.ts`: "Live edits nearby" in the Map Data pane: switch with consent dialog on first use, login hint, zoom-in / empty messages, list (select + zoom on click, user link, status, age, hint), privacy link, "Delete my data on the server". Pulsing dot on the Map Data button while others edit in view.
+  - `css/88_live_touched.css`: orange `touched`, faded dashed `stale`, violet `saved`, red casing for `parallel`/`outdated`.
+  - Strings under `live_touched` in `data/core.yaml` (English only; German texts are in `docs/concept.md`).
+- Checked so far: unit/integration test with an in-memory backend and two users (`test/spec/live_touched/live_touched.ts`): alice's iD edit is shared, bob sees it, a parallel edit gets the `parallel` hint and the "others nearby" flag, undo deletes the entry, "delete my data" works. In the browser (logged out): section renders, login hint shows, switch is disabled.
+- **T10 (Tobias):** open iD at `http://127.0.0.1:8080` (not `localhost`; only `127.0.0.1:*` is allowed by the backend) in two browser profiles with two OSM accounts, same area at zoom ≥ 15. Turn on "Show and share live edits" in both (consent dialog). Edit in one; the other should list it within ~10 s and show the orange halo. Also check: parallel hint when both edit the same way, "saved" (violet) after an upload, the map halos on lines, areas and points, and "Delete my data on the server".
+- Not verified yet: the halo CSS on real map elements (needs real entries), the upload → `saved` path in a real upload.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -281,6 +294,7 @@ Notes:
 8. TILDA bike infrastructure helper (after merging all others)
 9. QA rules (with 8)
 10. Width indicator and editing
+11. Live touched (T10 test with two accounts)
 
 ## Coding conventions (this branch)
 
@@ -304,6 +318,7 @@ Notes:
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Width indicator and side width fields. Integrated live touched (feature 11), tested with a fake backend.
 - 2026-09-27: Full UI test run of all features (no OSM uploads, test edits discarded). Fixed the way table checkbox state. Merged the side indicator branch. Planned features 8–10.
 - 2026-09-27: Merged the lens PR and the v6 lens shortcut commits. Added the way table panel. All six features are in `radnetz-berlin`, checked in the browser.
 - 2026-09-27: Merged multiple custom backgrounds. Merged favorites and reworked the shortcuts (fixed numbers, left-hand first, swap on conflict, number input in preferences). Merged the traffic sign field (converted to TS). Added PMTiles support and multiple custom data layers. All checked in the browser with the test URLs.
@@ -313,6 +328,7 @@ Notes:
 - Known upstream behavior: leaving (blur) a directional combo row without typing rewrites `cycleway:both=no` to `cycleway=no` (upstream `directional_combo.js` calls `change` on blur and uses the common key when both sides match). Equivalent for TILDA, but an unexpected edit. Consider not writing on blur when nothing changed.
 - Known issue: deleting the active custom background switches to "None" instead of the previous background (from the backgrounds branch).
 - Features 8–10 (plans above).
+- T10: two-account test of live touched (feature 11).
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
