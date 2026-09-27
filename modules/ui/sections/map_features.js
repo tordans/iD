@@ -3,7 +3,7 @@ import { select as d3_select } from 'd3-selection';
 import { t } from '../../core/localizer';
 import { uiTooltip } from '../tooltip';
 import { uiSection } from '../section';
-import { drawFeatureModeToggles } from './readonly_feature_toggles';
+import { uiLayerModeToggle } from '../layer_mode_toggle';
 import { readOnlyFeatures } from '../../renderer/readonly_features';
 
 export function uiSectionMapFeatures(context) {
@@ -113,9 +113,26 @@ export function uiSectionMapFeatures(context) {
             .property('checked', active)
             .property('indeterminate', autoHiddenFeature);
 
-        // Radnetz Berlin: Edit / Read / Hide toggle per category (see readonly_feature_toggles.ts)
-        if (name === 'feature') items.call(drawFeatureModeToggles, context);
+        // Radnetz Berlin: interactive / read-only / hidden toggle per category (see ui/layer_mode_toggle.ts)
+        if (name === 'feature') items.call(featureModeToggle);
     }
+
+    var featureModeToggle = uiLayerModeToggle({
+        getMode: function(d) {
+            if (!context.features().enabled(d)) return 'hidden';
+            return readOnlyFeatures.isReadOnlyKey(d) ? 'readonly' : 'interactive';
+        },
+        setMode: function(d, mode) {
+            if (readOnlyFeatures.isReadOnlyKey(d) !== (mode === 'readonly')) readOnlyFeatures.toggle(d);
+            if (mode === 'hidden') {
+                context.features().disable(d);
+            } else {
+                context.features().enable(d);
+            }
+        },
+        name: function(d) { return t('feature.' + d + '.description'); },
+        tooltipPrefix: 'map_data.layer_mode.feature'
+    });
 
     function autoHiddenFeature(d) {
         return context.features().autoHidden(d);

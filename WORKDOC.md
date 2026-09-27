@@ -299,7 +299,7 @@ Notes:
 **Done (2026-09-27):**
 - Lock button per row in Map Data ▸ Map Features. Locked categories stay visible (grayscale, 50 % opacity) and get no pointer events, so no hover, click or snapping while drawing; the lasso skips them too. State in the URL (`readonly_features=buildings,water`) and the pref `readonly-features`.
 - Vertices are read-only only if all their parent ways are, so a road node shared with a building stays editable.
-- Code: `modules/renderer/readonly_features.ts` (store, matching via `features().getMatches`, classes on every map redraw), `modules/ui/sections/readonly_feature_toggles.ts`, hooks in `map_features.js`, `behavior/lasso.js`, `ui/init.js`; `css/92_readonly_features.css`; test `test/spec/renderer/readonly_features.ts`.
+- Code: `modules/renderer/readonly_features.ts` (store, matching via `features().getMatches`, classes on every map redraw), `modules/ui/layer_mode_toggle.ts` (shared toggle, see Icon conventions), hooks in `map_features.js`, `behavior/lasso.js`, `ui/init.js`; `css/92_readonly_features.css`; test `test/spec/renderer/readonly_features.ts`.
 - Not covered in v1: selecting a read-only object via search, the feature list or `id=` in the URL still works.
 
 **Original plan:**
@@ -367,6 +367,16 @@ Notes:
   - Small stores are singletons with a d3 `dispatch('change')` and `utilRebind(obj, dispatch, 'on')`, persisted with `prefs()` (see `modules/core/preset_favorites.ts`, `modules/renderer/custom_data_layers.ts`).
 - New CSS goes into its own file (e.g. `css/85_custom_data_layers.css`).
 - Checks: `npx tsc`, `npx eslint modules test/spec`, `npx vitest run`, `npm run build:data`.
+
+## Icon conventions (Map Data pane)
+
+- One toggle for every list entry that can take part in the map (`modules/ui/layer_mode_toggle.ts`, `css/94_layer_mode_toggle.css`):
+  - pointer (`fas-arrow-pointer`) = interactive: shown, can be selected (and edited, for OSM data). The default.
+  - lock (`fas-lock`) = read-only: shown for orientation, cannot be hovered or selected. Same lock as iD's locked fields.
+  - crossed eye (`fas-eye-slash`) = hidden.
+  - Used by Map Features (hidden = iD's filter, read-only = feature 12) and Custom Data Layers (hidden = disabled, read-only = `selectable: false`).
+- Pencil (`iD-icon-edit`) = "edit the settings of this entry" (custom backgrounds, custom data layers, lenses), like upstream's background list.
+- Trash (`iD-operation-delete`) = delete the entry, always with a confirm modal.
 
 ## Dev notes
 

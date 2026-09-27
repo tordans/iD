@@ -1,0 +1,45 @@
+/* Interactive | read-only | hidden toggle in the Map Data lists (ui/layer_mode_toggle.ts) */
+
+.map-data-pane .layer-list li:has(> .layer-mode) {
+    display: flex;
+    align-items: stretch;
+}
+.map-data-pane .layer-list li:has(> .layer-mode) > label {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+/* Map Features: the toggle replaces the checkbox; keep the input for iD's own code */
+.map-data-pane .layer-feature-list li > label input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.map-data-pane .layer-list li[data-mode="readonly"] > label,
+.map-data-pane .layer-list li[data-mode="hidden"] > label {
+    opacity: 0.6;
+}
+.map-data-pane .layer-mode {
+    display: flex;
+    flex: 0 0 auto;
+}
+.map-data-pane .layer-mode button {
+    width: 30px;
+    height: auto;
+    border-radius: 0;
+    border-left: 1px solid rgba(128, 128, 128, 0.3);
+    background: transparent;
+}
+.map-data-pane .layer-mode button .icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.25;
+}
+.map-data-pane .layer-mode button:hover .icon {
+    opacity: 0.6;
+}
+.map-data-pane .layer-mode button.active .icon {
+    opacity: 1;
+}
+.map-data-pane .layer-mode button.layer-mode-interactive.active {
+    color: #7092ff;
+}

@@ -2,6 +2,7 @@ import { localizer, t } from '../../core/localizer';
 import { customDataLabel, customDataLayers, isSelectable, type CustomDataLayer } from '../../renderer/custom_data_layers';
 import { svgIcon } from '../../svg/icon';
 import { uiConfirm } from '../confirm';
+import { uiLayerModeToggle, type LayerMode } from '../layer_mode_toggle';
 import { uiSection } from '../section';
 import { uiSettingsCustomDataLayer } from '../settings/custom_data_layer';
 import { uiTooltip } from '../tooltip';
@@ -80,33 +81,12 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             .append('label');
 
         labelEnter
-            .append('input')
-            .attr('type', 'checkbox')
-            .on('change', (_d3_event: Event, d: CustomDataLayer) => customDataLayers.toggle(d.id));
-
-        labelEnter
             .append('span')
             .attr('class', 'custom-data-swatch');
 
         labelEnter
             .append('span')
             .attr('class', 'custom-data-name');
-
-        itemsEnter
-            .append('button')
-            .attr('class', 'layer-selectable-custom-data')
-            .call((uiTooltip() as any)
-                .title((d: CustomDataLayer) => t.append(isSelectable(d)
-                    ? 'map_data.custom_data_layers.selectable_on'
-                    : 'map_data.custom_data_layers.selectable_off'))
-                .placement(tooltipPlacement())
-            )
-            .on('click', (d3_event: MouseEvent, d: CustomDataLayer) => {
-                d3_event.preventDefault();
-                d3_event.stopPropagation();
-                customDataLayers.toggleSelectable(d.id);
-            })
-            .call(svgIcon('#fas-arrow-pointer', ''));
 
         itemsEnter
             .append('button')
@@ -141,12 +121,13 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             .classed('active', d => d.enabled)
             .attr('title', d => d.url);
 
-        items.select('.layer-selectable-custom-data')
-            .classed('active', isSelectable)
-            .attr('aria-pressed', d => String(isSelectable(d)));
-
-        items.select<HTMLInputElement>('input')
-            .property('checked', d => d.enabled);
+        // the mode toggle goes before the edit and delete buttons
+        items.call(modeToggle);
+        items.each(function() {
+            const toggle = this.querySelector('.layer-mode');
+            const label = this.querySelector('label');
+            if (toggle && label && label.nextSibling !== toggle) label.after(toggle);
+        });
 
         items.select('.custom-data-swatch')
             .style('background-color', d => d.color);
@@ -154,6 +135,17 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
         items.select('.custom-data-name')
             .text(layerName);
     }
+
+
+    const modeToggle = uiLayerModeToggle<CustomDataLayer>({
+        getMode: layer => !layer.enabled ? 'hidden' : isSelectable(layer) ? 'interactive' : 'readonly',
+        setMode: (layer: CustomDataLayer, mode: LayerMode) => customDataLayers.update(layer.id, {
+            enabled: mode !== 'hidden',
+            ...(mode === 'hidden' ? {} : { selectable: mode === 'interactive' })
+        }),
+        name: layerName,
+        tooltipPrefix: 'map_data.layer_mode.custom_data'
+    });
 
 
     function confirmDelete(layer: CustomDataLayer) {

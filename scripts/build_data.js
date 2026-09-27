@@ -74,9 +74,7 @@ function buildData() {
     'fas-rotate',
     'fas-eye-dropper',
     'fas-arrow-pointer',   // custom data layers: selectable toggle
-    'fas-pen',             // map features: edit / read / hide toggle
-    'fas-eye',
-    'fas-eye-slash'
+    'fas-eye-slash'        // map data: layer mode toggle (with fas-arrow-pointer, fas-lock)
   ]);
   // add icons for QA integrations
   readQAIssueIcons(faIcons);

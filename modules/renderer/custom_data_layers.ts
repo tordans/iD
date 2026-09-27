@@ -143,12 +143,6 @@ function createCustomDataLayers() {
             return customDataLayers;
         },
 
-        toggleSelectable(id: string) {
-            const layer = customDataLayers.get(id);
-            if (layer) customDataLayers.update(id, { selectable: !isSelectable(layer) });
-            return customDataLayers;
-        },
-
         toggle(id: string) {
             const layer = customDataLayers.get(id);
             if (layer) customDataLayers.update(id, { enabled: !layer.enabled });
