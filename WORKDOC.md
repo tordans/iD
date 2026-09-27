@@ -311,15 +311,14 @@ Notes:
   - not selectable by click or lasso, no hover highlight,
   - drawing does not snap to or connect with them (new ways must not join buildings or water),
   - no move/rotate/delete via other selections (e.g. a shared node with an editable way: decide what happens),
-  - open question: should clicking still show the tags read-only in the sidebar?
+  - no interaction at all in v1: clicking does nothing (decided 2026-09-27).
+- Follow-up phase: a quick override for one object, e.g. Shift+click opens it in the inspector in normal edit mode.
 
 **Plan and difficulty**
 - Easy: rules and category list reuse the existing `defineRule` definitions; URL/pref state like `disable_features`; list UI; CSS for the muted style.
 - Medium: adding the class to all drawn elements (areas, lines, points, vertices, labels) and keeping it cached per entity like the hidden cache.
 - Hard: making them non-interactive everywhere: hover, select, lasso, snapping in draw modes (`behaviorDraw`, `behaviorHover`, `modes/drag_node`), shared nodes, validations that suggest fixes on read-only objects. Likely one central check `features.isReadOnly(entity, graph, geometry)`, called where `isHidden` is called today.
 - Code: new TS module (e.g. `modules/renderer/readonly_features.ts`) that reuses the rules from `features.js`, plus small hooks in the upstream files.
-
-**Open:** the German input ended mid-sentence ("Und ich meine, dass …"). Ask Tobias for the rest before building.
 
 ## Integration order (proposal)
 
@@ -370,7 +369,7 @@ Notes:
 - Known issue: deleting the active custom background switches to "None" instead of the previous background (from the backgrounds branch).
 - Features 8–10 (plans above).
 - T10: two-account test of live touched (feature 11).
-- Feature 12 (read-only categories): get the rest of the idea, then build.
+- Feature 12 (read-only categories): ready to build (v1 without interaction).
 - Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
