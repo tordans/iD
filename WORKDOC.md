@@ -109,7 +109,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - TODO: write the Radnetz Berlin lens CSS.
 - Fetch without adding a remote: `git fetch https://github.com/kaligrafy/iD.git feat/theme-css-upstream:kg-lens v6:kg-v6`.
 
-### 6. Way-as-table comparison — ⬜
+### 6. Way-as-table comparison — ✅ (v1, read-only)
 
 - Renders a chain of connected ways as a table so you can compare the tags of the current way with the previous and following ones.
 
@@ -135,6 +135,13 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - If the match is ambiguous, show a small chooser.
 - **Direction:** order columns along the selected way's direction. Mark neighbours that point the opposite way.
 - **Chain length:** how many neighbours per side (the core package defaults to 5, with "load more")?
+
+**Done (2026-09-27)**
+
+- `modules/way_table/chain.ts`: chain logic ported from `osm-way-as-table-ui` (`buildChain`, `neighborMatch`, `direction`), synchronous on the iD graph. Up to 3 ways per side; `choices` pins ways at ambiguous junctions.
+- `modules/way_table/tag_rows.ts`: one row per key, cell status `same`/`changed`/`added`/`removed`/`empty`, preset keys first.
+- `modules/ui/way_table_panel.ts`: the panel. Toggle with `K` (`T`/`Y` are the flip operations) or the checkbox in Map Data ▸ Data Layers. Layout stored in `way-table-panel-layout` as fractions of the map area.
+- Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values.
 
 **Existing code to reuse**
 
@@ -177,7 +184,16 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Merged the lens PR and the v6 lens shortcut commits. Added the way table panel. All six features are in `radnetz-berlin`, checked in the browser.
 - 2026-09-27: Merged multiple custom backgrounds. Merged favorites and reworked the shortcuts (fixed numbers, left-hand first, swap on conflict, number input in preferences). Merged the traffic sign field (converted to TS). Added PMTiles support and multiple custom data layers. All checked in the browser with the test URLs.
+
+## Next steps
+
+- Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
+- German strings for the new UI (favorites, custom data layers, lenses, way table).
+- Way table v2: raw tag editing.
+- Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
+- Publish or vendor the traffic sign packages before deploying.
 
 ## Open questions
 
