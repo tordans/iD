@@ -88,7 +88,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   2. Map it onto iD's `modules/svg/data.js` (d3/SVG, not Pixi) and `modules/ui/sections/data_layers.js`.
   3. Reuse the storage/id model from multiple custom backgrounds.
 
-### 5. Map style "lenses" — ⬜
+### 5. Map style "lenses" — 🟨
 
 - Idea: a lens is a CSS file that restyles the OSM data on the map for one mapping theme or for QA (issue openstreetmap/iD#11189).
 - Source A: kaligrafy's PR openstreetmap/iD#12473 "Add Lens support" (branch `kaligrafy/iD:feat/theme-css-upstream`, 5 commits, Jun 2026):
@@ -103,6 +103,10 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - `v6` has 195 commits of mostly Québec-specific work, so don't merge the branch. Cherry-pick the lens commits:
     `b50a25d67`, `484e80ecf`, `4d4c0047d` (shortcuts), `dfadc0451` (maxspeed tag classes), `46bb85bdc` (bundling), and parts of `1c5a20e12` / `1d1f563f9`.
 - Plan: take Source A as the base, add the Source B commits, then write our own Radnetz Berlin lens CSS.
+- Done (2026-09-27): merged Source A. Cherry-picked the v6 shortcut commits `b50a25d67`, `484e80ecf`, `4d4c0047d` (Alt+letter, shortcut UI). `lens_shortcuts` converted to TS, strings moved to `data/core.yaml` (v6 uses its own `data/locales/custom/*.json`).
+- Not taken yet: maxspeed tag classes (`dfadc0451`) and build-time bundling (`46bb85bdc`, `1c5a20e12`, `1d1f563f9`). They are mixed with Québec lens files. Build our own bundling once we have a Radnetz Berlin lens.
+- Note: the lens only overrides core styles when `dist/iD.css` is wrapped in `@layer ideditor` (done by `scripts/build_css.js`). Restart the dev server after pulling changes to `build_css.js`.
+- TODO: write the Radnetz Berlin lens CSS.
 - Fetch without adding a remote: `git fetch https://github.com/kaligrafy/iD.git feat/theme-css-upstream:kg-lens v6:kg-v6`.
 
 ### 6. Way-as-table comparison — ⬜
