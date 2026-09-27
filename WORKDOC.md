@@ -32,13 +32,13 @@ Updating the base: `git -C ~/Development/OSM/iD pull --ff-only upstream develop`
 
 Status: ⬜ not started · 🟨 in progress · ✅ integrated
 
-### 1. Multiple custom backgrounds — ⬜
+### 1. Multiple custom backgrounds — ✅
 
 - Source: branch `multiple-custom-backgrounds` (worktree `~/Development/OSM/iD--backgrounds`, 23 commits, on origin).
 - Redo of openstreetmap/iD#11850 for #8874. Stable synthetic id plus a single `addOrGetCustomSource` path.
 - Manual browser tests still TODO.
 
-### 2. Traffic signs — ⬜
+### 2. Traffic signs — ✅
 
 - Source: branch **`traffic-sign-field-integration`** (worktree `~/Development/OSM/iD-traffic-sign-field`, 1 commit, 2026-06-06).
   - Adds a lazy-loaded `traffic_sign` field in the inspector (`modules/ui/fields/traffic_sign.js`, `modules/presets/traffic_sign_fields.js`, `modules/ui/sections/traffic_sign_inspector_fields.js`, build step in `scripts/build_data.js`).
@@ -47,7 +47,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - Decision (2026-09-27): use this branch. The old `traffic-signs` branch (2025-02) was an early prototype (combo field with 3rd-party icons, openstreetmap/iD#10254) and is superseded.
 - Expect a UI rework after integration.
 
-### 3. Favorites and shortcuts — ⬜
+### 3. Favorites and shortcuts — ✅
 
 - Source: branch **`pr/11269-favorites-shortcuts`** on tordans/iD (2 commits).
   - `632e57d85`: kaligrafy's original commit, rebased onto 2026 develop.
@@ -62,7 +62,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - Shortcuts stay **number-only** (no alphanumeric like `8a`).
 - Related, low priority: kaligrafy/iD branches `feat/preset-shortcut-from-selection`, `feat/preset-shortcuts-batch`, `feat/clone-shortcuts` (based on kaligrafy's `v5`/`v6`, not on develop).
 
-### 4. Custom data layers: multiple, from URLs, PMTiles — ⬜
+### 4. Custom data layers: multiple, from URLs, PMTiles — ✅
 
 - Built directly on `radnetz-berlin`; extract into its own branch later if needed.
 - Goal: iD has a single custom data layer (GeoJSON/GPX/KML via upload or URL). We want:
@@ -151,9 +151,29 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 5. Lenses
 6. Way-as-table
 
+## Coding conventions (this branch)
+
+- New code is TypeScript with `const`/`let`. Old upstream files stay JS; change them as little as possible and put new logic in new TS modules (e.g. `modules/ui/favorite_button.ts` is called from upstream's `feature_type.js`).
+- Follow the modern TS files upstream uses: `modules/ui/sections/map_style_options.ts`, `modules/ui/fields/check.ts`, `modules/svg/mapillary_signs.ts`.
+  - Global types `iD.Context`, `d3.Selection<T>`, `Tags`, `TagsMulti` from `modules/globals.d.ts`.
+  - Sections: `(uiSection(id, context) as any).label(…).disclosureContent(…)`; tooltips: `(uiTooltip() as any).title(…)`.
+  - d3 events: `.on('click', (d3_event, d) => …)`; namespaced listeners `store.on('change.someName', …)`; typed joins `selectAll<HTMLLIElement, Datum>(…)`.
+  - Small stores are singletons with a d3 `dispatch('change')` and `utilRebind(obj, dispatch, 'on')`, persisted with `prefs()` (see `modules/core/preset_favorites.ts`, `modules/renderer/custom_data_layers.ts`).
+- New CSS goes into its own file (e.g. `css/85_custom_data_layers.css`).
+- Checks: `npx tsc`, `npx eslint modules test/spec`, `npx vitest run`, `npm run build:data`.
+
+## Dev notes
+
+- Dev server: `npm start` (port 8080, or `PORT=… npm start`). The CSS watcher only knows files that existed at startup; run `npm run build:css` after adding a CSS file.
+- A fresh worktree needs the SVG sprites: `npx run-p "dist:svg:*"`, and the traffic sign assets: `npx run-p dist:traffic-sign-field dist:traffic-sign-converter`.
+- The traffic sign packages are local `file:` dependencies on `~/Development/OSM/osm-traffic-sign-tools-id-field` (WIP, unpublished). A deployed build needs them published or vendored.
+- `npm run build:data` merges `data/traffic_sign_field_locales.yaml` into the committed `dist/locales/de*.min.json`.
+- New UI strings exist only in English (`data/core.yaml`). With a German browser they show as "Missing translation". Use `&locale=en` or add German strings to a fork locale file like `data/traffic_sign_field_locales.yaml`.
+
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Merged multiple custom backgrounds. Merged favorites and reworked the shortcuts (fixed numbers, left-hand first, swap on conflict, number input in preferences). Merged the traffic sign field (converted to TS). Added PMTiles support and multiple custom data layers. All checked in the browser with the test URLs.
 
 ## Open questions
 
