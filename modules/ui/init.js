@@ -27,6 +27,7 @@ import { uiWayTablePanel } from './way_table_panel';
 import { installWidthIndicatorListeners } from '../width/width_indicator';
 import { setupLiveTouched } from '../live_touched/live_touched';
 import { applyInterfacePrefs } from './sections/interface';
+import { setupReadOnlyFeatures } from '../renderer/readonly_features';
 import { uiIntro } from './intro';
 import { uiIssuesInfo } from './issues_info';
 import { uiLoading } from './loading';
@@ -258,6 +259,7 @@ export function uiInit(context) {
             .call(ui.wayTable);
 
         installWidthIndicatorListeners(context);
+        setupReadOnlyFeatures(context);
 
         overMap
             .append('div')

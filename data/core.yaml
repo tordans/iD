@@ -1032,6 +1032,9 @@ en:
     highlight_edits:
       key: G
     map_features: Map Features
+    readonly:
+      "on": "Read-only: shown muted and cannot be edited. Click to make editable."
+      "off": "Click to make this category read-only: still shown, but muted and not editable."
     autohidden: "These features have been automatically hidden because too many would be shown on the screen.  You can zoom in to edit them."
     osmhidden: "These features have been automatically hidden because the OpenStreetMap layer is hidden."
   live_touched:

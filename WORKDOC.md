@@ -294,7 +294,15 @@ Notes:
 - Open question for osm-live-touched (from Cursor Bugbot on PR #10): the full OSM token goes to the backend, which only needs the user id and name. The consent text now says so; a narrower mechanism would be better.
 - Not verified yet: the halo CSS on real map elements (needs real entries), the upload → `saved` path in a real upload.
 
-### 12. Read-only feature categories — ⬜ (plan)
+### 12. Read-only feature categories — ✅ (v1)
+
+**Done (2026-09-27):**
+- Lock button per row in Map Data ▸ Map Features. Locked categories stay visible (grayscale, 50 % opacity) and get no pointer events, so no hover, click or snapping while drawing; the lasso skips them too. State in the URL (`readonly_features=buildings,water`) and the pref `readonly-features`.
+- Vertices are read-only only if all their parent ways are, so a road node shared with a building stays editable.
+- Code: `modules/renderer/readonly_features.ts` (store, matching via `features().getMatches`, classes on every map redraw), `modules/ui/sections/readonly_feature_toggles.ts`, hooks in `map_features.js`, `behavior/lasso.js`, `ui/init.js`; `css/92_readonly_features.css`; test `test/spec/renderer/readonly_features.ts`.
+- Not covered in v1: selecting a read-only object via search, the feature list or `id=` in the URL still works.
+
+**Original plan:**
 
 **Goal:** mark whole feature categories (e.g. buildings and water) as **read-only**. They stay on the map for orientation, in a muted style, but cannot be edited. This works like the Map Features filters, which *hide* categories: same category list, same kind of URL state and list UI, but "read-only" instead of "hidden". For our project this keeps the map calm and prevents accidental edits to things we do not map (buildings, water, landuse …) while we focus on streets and bike infrastructure.
 
