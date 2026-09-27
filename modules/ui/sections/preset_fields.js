@@ -10,6 +10,7 @@ import { uiFormFields } from '../form_fields';
 import { uiSection } from '../section';
 import { trafficSignTagKeysFromTags } from '../../presets/traffic_sign_fields';
 import { appendTrafficSignInspectorFields } from './traffic_sign_inspector_fields';
+import { uiSideWidthFields } from './side_width_fields';
 
 export function uiSectionPresetFields(context) {
 
@@ -26,6 +27,7 @@ export function uiSectionPresetFields(context) {
     var _entityIDs;
     var _trafficSignFieldsArr = [];
     var _trafficSignFieldsSignature = '';
+    var _sideWidthFields = uiSideWidthFields(context, dispatch);
 
     function trafficSignFieldsSignature(tags) {
         return trafficSignTagKeysFromTags(tags).join('\0');
@@ -133,6 +135,11 @@ export function uiSectionPresetFields(context) {
         }
 
         var fieldsToShow = _fieldsArr.slice().concat(_trafficSignFieldsArr);
+        var shownKeys = new Set(fieldsToShow.map(function(field) { return field.key; }));
+        var widthField = presetManager.field('width');
+        fieldsToShow = fieldsToShow.concat(
+            _sideWidthFields.fields(_tags, _entityIDs, widthField, shownKeys)
+        );
 
         fieldsToShow.forEach(function(field) {
             field
@@ -178,6 +185,7 @@ export function uiSectionPresetFields(context) {
             _fieldsArr = null;
             _trafficSignFieldsArr = [];
             _trafficSignFieldsSignature = '';
+            _sideWidthFields.reset();
         }
         return section;
     };

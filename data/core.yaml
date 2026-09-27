@@ -705,6 +705,15 @@ en:
     locating: "Locating, please wait..."
     location_unavailable: Your location is unavailable.
   inspector:
+    side_width:
+      cycleway:
+        left: Bike Lane Width, Left (Meters)
+        right: Bike Lane Width, Right (Meters)
+        both: Bike Lane Width, Both Sides (Meters)
+      sidewalk:
+        left: Sidewalk Width, Left (Meters)
+        right: Sidewalk Width, Right (Meters)
+        both: Sidewalk Width, Both Sides (Meters)
     zoom_to:
       key: Z
       title: Zoom To Selection

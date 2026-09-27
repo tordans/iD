@@ -24,6 +24,7 @@ import { uiFullScreen } from './full_screen';
 import { uiGeolocate } from './geolocate';
 import { uiInfo } from './info';
 import { uiWayTablePanel } from './way_table_panel';
+import { installWidthIndicatorListeners } from '../width/width_indicator';
 import { uiIntro } from './intro';
 import { uiIssuesInfo } from './issues_info';
 import { uiLoading } from './loading';
@@ -248,6 +249,8 @@ export function uiInit(context) {
         ui.wayTable = uiWayTablePanel(context);
         overMap
             .call(ui.wayTable);
+
+        installWidthIndicatorListeners(context);
 
         overMap
             .append('div')

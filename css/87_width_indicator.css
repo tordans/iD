@@ -1,0 +1,23 @@
+/* Width preview on the map while a width field is hovered or focused */
+
+.data-layer.width-indicator {
+    pointer-events: none;
+}
+
+.width-indicator path.width-indicator-band {
+    fill: rgba(255, 196, 0, 0.35);
+    stroke: #ffc400;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.width-indicator text.width-indicator-label {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 3px;
+    paint-order: stroke;
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+    dominant-baseline: middle;
+}

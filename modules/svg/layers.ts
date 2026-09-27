@@ -3,6 +3,7 @@ import { select as d3_select } from 'd3-selection';
 
 import { svgData } from './data';
 import { svgCustomData } from './custom_data';
+import { svgWidthIndicator } from './width_indicator';
 import { svgLocalPhotos} from './local_photos';
 import { svgDebug } from './debug';
 import { svgGeolocate } from './geolocate';
@@ -59,6 +60,7 @@ export function svgLayers(projection: Projection, context: iD.Context) {
         { id: 'vegbilder', layer: svgVegbilder(projection, context, dispatch) },
         { id: 'panoramax', layer: svgPanoramaxImages(projection, context, dispatch) },
         { id: 'local-photos', layer: svgLocalPhotos(projection, context, dispatch) },
+        { id: 'width-indicator', layer: svgWidthIndicator(projection, context, dispatch) },
         { id: 'debug', layer: svgDebug(projection, context) },
         { id: 'geolocate', layer: svgGeolocate(projection) },
         { id: 'touch', layer: svgTouch() },

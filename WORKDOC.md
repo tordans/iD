@@ -241,7 +241,14 @@ Notes:
 - iD validations live in `modules/validations/*`. New ones go into their own TS files and are registered in `modules/validations/index`.
 - Most rules only need the tags of one way plus `processBikelanes`, so they are cheap. Dual carriageway and crossing length need geometry and neighbors.
 
-### 10. Width: map indicator and editing — ⬜ (plan)
+### 10. Width: map indicator and editing — 🟨 (indicator done, editing open)
+
+**Done (2026-09-27):**
+- Hovering or focusing a width input (preset field or raw tag editor row) draws the width as a band on the map with a label. `width`/`est_width`: band around the way. `cycleway:*:width`/`sidewalk:*:width`: band on that side, starting at the road edge (half of `width`, else a default by highway type). The band updates while typing.
+- New fields "Bike Lane Width, Left/Right/Both" and "Sidewalk Width, …" appear when that side has a lane/track/sidewalk, or the key is already tagged (id-tagging-schema has no fields for these keys).
+- Code: `modules/width/width_tags.ts` (parsing, fallbacks), `modules/width/width_indicator.ts` (state + event delegation, no change to the field code), `modules/svg/width_indicator.ts`, `modules/ui/sections/side_width_fields.ts`, `css/87_width_indicator.css`.
+- Open: the right-click "Edit width" tool; the band for a `cycleway` side ignores a sidewalk or parking between road and lane.
+
 
 **Wanted**
 
