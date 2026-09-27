@@ -160,7 +160,18 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - Merge work: state ported to the TS `context.ts` (`directionalComboIndicator()` / `setDirectionalComboIndicator()`), `directional_combo_arrow` converted to TS, tests updated to current test APIs (`new iD.osmNode`, no `d3` global, vitest matchers).
 - The same hover/focus → map indicator pattern is the base for the width indicator (feature 10).
 
-### 8. TILDA bike infrastructure helper — ⬜ (plan)
+### 8. TILDA bike infrastructure helper — 🟨 (v1 built)
+
+**Done (2026-09-27):** inspector section "TILDA Bike Infrastructure" below the preset fields, for single ways with `highway=*`. Uses `@tilda-geo/bicycle-infrastructure` ^0.1.2 from npm.
+- One card per TILDA result (this way / left side / right side): category label (with the German term) and id, colored by state (exact / incomplete / needs clarification / none). Hovering a left/right card shows the side on the map (side indicator, feature 7).
+- Gap questions from `analyzeCategoryGaps` as buttons (e.g. `cycleway:right:lane` advisory / exclusive).
+- Target category select. The tag plan lists removals, additions and changes with reasons; "Apply these tags" only appears when the plan reaches the target (checked with `processBikelanes`). All edits go through the entity editor, so each apply is one undo step.
+- Checklist "Needed for the Radnetz dataset" per side (width, surface, traffic sign, oneway for separate ways; separation / traffic mode / buffer / marking for protected lanes; buffer / marking for on-road lanes and bicycle roads) with quick-value buttons and a value input.
+- Code: `modules/tilda/category_plan.ts` (planner, ported from street-space-editor + fixes), `modules/tilda/required_attributes.ts`, `modules/ui/sections/tilda_bike_infra.ts`, `css/89_tilda_bike_infra.css`, labels under `inspector.tilda` in `data/core.yaml`; tests in `test/spec/tilda/`.
+- Library issues found (worked around in `category_plan.ts`, to fix in tilda-schemas): for left/right plans `planTagsForCategory` writes the presence key as `cycleway:<side>:cycleway` instead of `cycleway:<side>`, and without an existing `cycleway:<side>` it plans bare keys (`lane=…`). It also does not split `cycleway:both`. Our wrapper splits `:both`, adds `cycleway:<side>=lane|track|…` for the target, fixes the keys and checks the result with `processBikelanes`.
+- Next: preset group "TILDA Radinfrastruktur", map lens colored by category, QA validations (feature 9), German texts, "why not category X" explanations.
+
+**Original plan:**
 
 **Goal:** mappers pick the TILDA bike infrastructure category a way should have. The sidebar then shows which tags are missing or conflicting for that category, and which are required for the Radnetz dataset (width, surface, …).
 
@@ -318,6 +329,7 @@ Notes:
 ## Progress log
 
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
+- 2026-09-27: Switched live touched to npm 0.1.0. Built the TILDA bike infrastructure section (feature 8 v1).
 - 2026-09-27: Width indicator and side width fields. Integrated live touched (feature 11), tested with a fake backend.
 - 2026-09-27: Full UI test run of all features (no OSM uploads, test edits discarded). Fixed the way table checkbox state. Merged the side indicator branch. Planned features 8–10.
 - 2026-09-27: Merged the lens PR and the v6 lens shortcut commits. Added the way table panel. All six features are in `radnetz-berlin`, checked in the browser.

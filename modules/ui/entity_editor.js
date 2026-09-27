@@ -13,6 +13,7 @@ import { utilCleanTags, utilCombinedTags, utilRebind } from '../util';
 import { uiSectionEntityIssues } from './sections/entity_issues';
 import { uiSectionFeatureType } from './sections/feature_type';
 import { uiSectionPresetFields } from './sections/preset_fields';
+import { uiSectionTildaBikeInfra } from './sections/tilda_bike_infra';
 import { uiSectionRawMemberEditor } from './sections/raw_member_editor';
 import { uiSectionRawMembershipEditor } from './sections/raw_membership_editor';
 import { uiSectionRawTagEditor } from './sections/raw_tag_editor';
@@ -95,6 +96,7 @@ export function uiEntityEditor(context) {
                 }),
                 uiSectionEntityIssues(context),
                 uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
+                uiSectionTildaBikeInfra(context).on('change', changeTags),
                 uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags),
                 uiSectionRawMemberEditor(context),
                 uiSectionRawMembershipEditor(context)

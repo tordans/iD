@@ -1,0 +1,127 @@
+/* TILDA bike infrastructure section in the inspector */
+
+.tilda-card {
+    margin-bottom: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    background: var(--fill-color-secondary, rgba(255, 255, 255, 0.05));
+    border: 1px solid rgba(128, 128, 128, 0.3);
+}
+.tilda-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+.tilda-side {
+    font-weight: bold;
+}
+.tilda-category {
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: #2e7d32;
+    color: #fff;
+}
+.tilda-category.incomplete { background: #b27c00; }
+.tilda-category.needs-clarification { background: #c62828; }
+.tilda-category.absent { background: #666; }
+.tilda-category-id {
+    font-size: 11px;
+    opacity: 0.6;
+}
+
+.tilda-gap,
+.tilda-plan,
+.tilda-attribute {
+    font-size: 12px;
+}
+.tilda-gap {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border-left: 3px solid #b27c00;
+}
+.tilda-buttons {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 2px 0;
+}
+.tilda-card button.tilda-value {
+    height: auto;
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.tilda-target label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+    font-size: 12px;
+}
+.tilda-target select {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 28px;
+}
+.tilda-plan ul {
+    margin: 4px 0;
+}
+.tilda-plan li {
+    margin: 2px 0;
+}
+.tilda-plan li.tilda-plan-add code::before { content: '+ '; }
+.tilda-plan li.tilda-plan-change code::before { content: '~ '; }
+.tilda-plan li.tilda-plan-remove code::before { content: '− '; }
+.tilda-plan li.tilda-plan-remove code { text-decoration: line-through; }
+.tilda-plan li.tilda-plan-conflict { color: #e0282e; }
+.tilda-plan .tilda-reason {
+    display: block;
+    opacity: 0.7;
+}
+.tilda-card button.tilda-apply-all {
+    height: auto;
+    padding: 4px 10px;
+}
+.tilda-card button.tilda-apply-all.hide {
+    display: none;
+}
+
+.tilda-attributes-header {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+.tilda-attribute {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+}
+.tilda-attribute-state {
+    width: 1.2em;
+    text-align: center;
+    font-weight: bold;
+}
+.tilda-attribute.present .tilda-attribute-state { color: #2e9d3a; }
+.tilda-attribute.missing .tilda-attribute-state { color: #e0282e; }
+.tilda-attribute-label {
+    min-width: 8em;
+}
+.tilda-attribute-value {
+    font-family: monospace;
+}
+.tilda-attribute-inputs {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+.tilda-attribute input.tilda-attribute-input {
+    width: 8em;
+    height: 24px;
+    padding: 0 4px;
+    font-size: 12px;
+}
