@@ -10,6 +10,8 @@ import { actionAddMidpoint } from '../actions/add_midpoint';
 import { actionMoveNode } from '../actions/move_node';
 import { actionNoop } from '../actions/noop';
 import { behaviorDraw } from './draw';
+import { drawAngleSnapStep, snapNodeAngleLoc } from './draw_angle_snap';
+import { drawSnapGuides, clearSnapGuides } from './draw_angle_guide';
 import { geoChooseEdge, geoHasSelfIntersections } from '../geo';
 import { modeBrowse } from '../modes/browse';
 import { modeSelect } from '../modes/select';
@@ -33,6 +35,10 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
     var _annotation;
 
     var _pointerHasMoved = false;
+
+    // Active angle-snap step in degrees while a modifier key is held (or null).
+    // Updated on every `move`, then reused when the node is actually placed.
+    var _angleSnapStep = null;
 
     // The osmNode to be placed.
     // This is temporary and just follows the mouse cursor until an "add" event occurs.
@@ -84,6 +90,13 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
                 .classed('nope', false)
                 .classed('nope-disabled', true);
         }
+
+        // pressing Shift (or adding Alt) turns angle snapping on; show the guides
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            _angleSnapStep = drawAngleSnapStep(d3_event);
+            refreshSnapGuides();
+        }
     }
 
 
@@ -96,6 +109,25 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             context.surface()
                 .classed('nope-suppressed', false)
                 .classed('nope-disabled', false);
+        }
+
+        // pressing/releasing Shift or Alt changes the snap step, so the guide
+        // lines must appear/update/disappear even if the mouse hasn't moved
+        if (d3_event.keyCode === utilKeybinding.modifierCodes.shift ||
+            d3_event.keyCode === utilKeybinding.modifierCodes.alt) {
+            _angleSnapStep = drawAngleSnapStep(d3_event);
+            refreshSnapGuides();
+        }
+    }
+
+
+    // Show/update the blue snap guide lines while a modifier is held (using the
+    // current cursor unless `loc` is given); clear them otherwise.
+    function refreshSnapGuides(loc) {
+        if (_angleSnapStep && _drawNode) {
+            drawSnapGuides(context, _drawNode.id, loc || context.map().mouseCoordinates(), _angleSnapStep);
+        } else {
+            clearSnapGuides(context);
         }
     }
 
@@ -117,6 +149,8 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.surface().classed('nope-disabled', d3_event.altKey);
 
+        _angleSnapStep = drawAngleSnapStep(d3_event);
+
         var targetLoc = datum && datum.properties && datum.properties.entity &&
             allowsVertex(datum.properties.entity) && datum.properties.entity.loc;
         var targetNodes = datum && datum.properties && datum.properties.nodes;
@@ -129,7 +163,14 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
             if (choice) {
                 loc = choice.loc;
             }
+        } else if (_angleSnapStep) {   // snap the segment angle - only in open space
+            // snap the draw node relative to its way neighbours; for an area the
+            // draw node already sits between the last node and the closing first
+            // node, so it can lock onto a perfect corner while drawing
+            loc = snapNodeAngleLoc(context, _drawNode.id, loc, _angleSnapStep);
         }
+
+        refreshSnapGuides();
 
         context.replace(actionMoveNode(_drawNode.id, loc), _annotation);
         _drawNode = context.entity(_drawNode.id);
@@ -313,6 +354,7 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         _drawNode = undefined;
         _nodeIndex = undefined;
+        _angleSnapStep = null;
 
         context.map()
             .on('drawn.draw', null);
@@ -332,6 +374,9 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
         context.history()
             .on('undone.draw', null);
+
+        // last: purely visual cleanup, so it can never preempt the teardown above
+        clearSnapGuides(context);
     };
 
 
@@ -368,6 +413,11 @@ export function behaviorDrawWay(context, wayID, mode, startGraph) {
 
     // Accept the current position of the drawing node
     drawWay.add = function(loc, d) {
+        // `loc` is the raw cursor location; snap it the same way `move` snapped
+        // the preview so the committed node matches what the user sees.
+        if (_angleSnapStep && _drawNode) {
+            loc = snapNodeAngleLoc(context, _drawNode.id, loc, _angleSnapStep);
+        }
         attemptAdd(d, loc, function() {
             // don't need to do anything extra
         });

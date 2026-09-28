@@ -33,6 +33,7 @@ export function uiToolDrawModes(context) {
             title: t.append('modes.add_line.title'),
             button: 'line',
             description: t.append('modes.add_line.description'),
+            snapTip: t.append('modes.add_line.snap_tip'),
             preset: presetManager.item('line'),
             key: '2'
         }),
@@ -40,6 +41,7 @@ export function uiToolDrawModes(context) {
             title: t.append('modes.add_area.title'),
             button: 'area',
             description: t.append('modes.add_area.description'),
+            snapTip: t.append('modes.add_area.snap_tip'),
             preset: presetManager.item('area'),
             key: '3'
         })
@@ -118,7 +120,18 @@ export function uiToolDrawModes(context) {
                 })
                 .call(uiTooltip()
                     .placement('bottom')
-                    .title(function(d) { return d.description; })
+                    .title(function(d) {
+                        // render the description, plus a second line with the
+                        // angle-snapping hint for the line/area tools
+                        return function(selection) {
+                            selection.call(d.description);
+                            if (d.snapTip) {
+                                selection.append('div')
+                                    .attr('class', 'tooltip-tip')
+                                    .call(d.snapTip);
+                            }
+                        };
+                    })
                     .keys(function(d) { return [d.key]; })
                     .scrollContainer(context.container().select('.top-toolbar'))
                 );
