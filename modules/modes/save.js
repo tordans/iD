@@ -157,9 +157,32 @@ export function modeSave(context) {
     function showSuccess(changeset) {
         commit.reset();
 
+        // Snapshot before flush: MapRoulette resolve needs task IDs + API key
+        // work while the service cache is still intact.
+        var earmarks = [];
+        if (services.maproulette && typeof services.maproulette.takeEarmarkedSnapshot === 'function') {
+            earmarks = services.maproulette.takeEarmarkedSnapshot();
+        }
+        // closed:maproulette* tags for this changeset are already on the
+        // uploaded changeset — clear the session ledger so the next upload
+        // does not repeat those task IDs.
+        if (services.maproulette && typeof services.maproulette.clearClosed === 'function') {
+            services.maproulette.clearClosed();
+        }
+
+        var resolveComplete = function() {};
+        if (earmarks.length) {
+            var flushWait = new Promise(function(resolve) {
+                resolveComplete = resolve;
+            });
+            uploader.deferFlush(flushWait);
+        }
+
         var ui = _success
             .changeset(changeset)
             .location(_location)
+            .maprouletteEarmarks(earmarks)
+            .onMapRouletteResolveComplete(resolveComplete)
             .on('cancel', function() { context.ui().sidebar.hide(); });
 
         context.enter(modeBrowse(context).sidebar(ui));

@@ -126,6 +126,8 @@ g.note .shadow {
     stroke: #f6634f;
     stroke-width: 16;
     stroke-opacity: 0;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 g.qaItem.hover:not(.selected) .shadow,
@@ -139,6 +141,31 @@ g.qaItem.selected .shadow,
 g.note.selected .shadow,
 g.point.selected .shadow {
     stroke-opacity: 0.7;
+}
+
+/* Blue highlight when an entity-inspector MapRoulette disclosure is open
+   (mirrors path.shadow.highlighted). Red `.selected` stays the active pin. */
+g.qaItem.highlighted:not(.selected) .shadow {
+    stroke-opacity: 0.95;
+    stroke: #7092ff;
+}
+
+g.qaItem.maproulette .shadow {
+    stroke: #8b5cf6;
+}
+
+/* Pin body fill comes from inline style in maproulette_marker.ts (V4 status palette). */
+
+/* Recently resolved — gray pin fill; soft neutral shadow (no green earmark glow). */
+g.qaItem.maproulette.resolved:not(.selected) .shadow {
+    stroke: #888;
+    stroke-opacity: 0.25;
+}
+
+/* Earmarked for resolve-with-upload — green ring is drawn on the pin border. */
+g.qaItem.maproulette.earmarked:not(.selected):not(.resolved) .shadow {
+    stroke-opacity: 0.45;
+    stroke: #22c55e;
 }
 
 /* g.note ellipse.stroke, */
