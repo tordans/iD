@@ -49,8 +49,9 @@ export function presetField(fieldID: string, field: Field) {
 
   _this.hasTextForStringId = (scope) => localizer.hasTextForStringId(`_tagging.presets.fields.${fieldID}.${scope}`);
 
-  _this.title = () => _this.t('label', { 'default': fieldID });
-  _this.label = () => _this.t.append('label', { 'default': fieldID });
+  // Radnetz Berlin: fields from a preset customization have an untranslated `label`
+  _this.title = () => _this.t('label', { 'default': field.label ?? fieldID });
+  _this.label = () => _this.t.append('label', { 'default': field.label ?? fieldID });
 
   _this.placeholder = () => _this.t('placeholder', { 'default': '' });
 

@@ -50,6 +50,10 @@
             .assetPath('dist/')
             .containerNode(container);
           window.context = window.id = context;  // for debugging
+
+          // Radnetz Berlin: project fields and preset changes (modules/presets/customization.ts)
+          iD.presetManager.customize(iD.RADNETZ_PRESET_CUSTOMIZATION);
+
           context.init();
 
           // disable boundaries (unless we have an explicit disable_features list)

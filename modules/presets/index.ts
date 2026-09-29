@@ -13,11 +13,13 @@ import { presetCollection } from './collection';
 import { presetField } from './field';
 import { presetPreset } from './preset';
 import { applyTrafficSignFieldTypes, EXTRA_TRAFFIC_SIGN_FIELDS } from './traffic_sign_fields';
+import { applyPresetCustomization, type PresetCustomization } from './customization';
 import { utilArrayUniq } from '../util';
 
 export { presetCategory };
 export { presetCollection };
 export { presetField };
+export { RADNETZ_PRESET_CUSTOMIZATION, type PresetCustomization } from './customization';
 export { presetPreset };
 
 let _mainPresetIndex = presetIndex(); // singleton
@@ -59,6 +61,8 @@ export interface presetIndex extends presetCollection {
     getPresets(): { [presetId: string]: presetPreset };
     getRawPresets(): { [presetId: string]: Preset };
     addablePresetIDs: GetSet<presetIndex, Set<string> | null>;
+    /** Project-specific fields and preset changes, see `customization.ts`. Call before the presets load. */
+    customize(customization: PresetCustomization | undefined): this;
 
     recent(): presetCollection;
     getRecents(): RibbonItem[];
@@ -103,6 +107,12 @@ export function presetIndex() {
   // Index of presets by (geometry, tag key).
   let _geometryIndex: Record<Geometry, Record<string, Record<string, presetPreset[]>>> = { point: {}, vertex: {}, line: {}, area: {}, relation: {} };
   let _loadPromise: Promise<void>;
+  let _customization: PresetCustomization | undefined;
+
+  _this.customize = (customization) => {
+    _customization = customization;
+    return _this;
+  };
 
 
   _this.ensureLoaded = (bypassCache) => {
@@ -118,8 +128,7 @@ export function presetIndex() {
         _this.merge({
           categories: vals[0],
           defaults: vals[1],
-          presets: vals[2],
-          fields: vals[3]
+          ...applyPresetCustomization(_customization, { presets: vals[2], fields: vals[3] })
         });
         osmSetAreaKeys(_this.areaKeys());
         osmSetPointTags(_this.pointTags());
