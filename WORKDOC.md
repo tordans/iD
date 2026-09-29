@@ -362,6 +362,90 @@ Notes:
 | `access:reason` | any | text field in `moreFields`, low priority |
 | `traffic_sign:forward/backward` | — | already added by feature 2 |
 
+### 16. Data index: infraVelo result ⇐ TILDA ⇐ OSM tags — 📚 (reference for validations)
+
+The Radnetz dataset for infraVelo is built by `~/Development/FMC/infravelo-radnetz` (not `FMC/scripts`). Its first step, `scripts/translate_attributes_tilda_to_rvn.py` (run by `process_tilda_data.sh`), turns three TILDA exports into the infraVelo attributes; later steps (matching, snapping onto the Detailnetz, Schutzstreifen conversion, overrides, aggregation per `elem_nr` + direction) only move and merge those values. Spec: `processing/REQUIREMENTS.md` (says it may be outdated; the Python code is the truth). So what we validate in iD is the OSM input of that one translation step.
+
+| TILDA export | infraVelo file | Rows |
+|---|---|---|
+| `bikelanes` (one row per way and side, category from the bikelane rules) | `TILDA Bikelanes Translated` | bike infrastructure |
+| `roads` (motor vehicle roads) | `TILDA Streets Translated` | `fuehr` = "Mischverkehr mit motorisiertem Verkehr" |
+| `roadsPathClasses` (footway, path, track, …) | `TILDA Paths Translated` | `fuehr` = "Sonstige Wege (…)" |
+
+Sources for the OSM side: `@tilda-geo/bicycle-infrastructure` (`categories/category-specs.ts`, `predicates.ts`, `refine-predicates.ts`, `sanitize/*`, `derive/*`) and TILDA's LUA for roads (`tilda-geo/processing/topics/roads_bikelanes/roads/road_classification.lua`, `helper/sanitize_tags.lua`).
+Note on `~/Development/FMC/tilda-geo--osm-tag-mapping` (branch `osm-tag-mapping`, last commit 2026-07-13, 29 commits ahead of develop, report uncommitted): it builds `processing/filter/osmiumTagFilter/contract.yaml`, the list of keys/values the osmium pre-filter keeps. For `roads_bikelanes` that is only the `highway` values (plus `leisure=track` as exclusion); it does not list the tags each category reads. Not useful for this index yet.
+
+**Two geometry versions.** TILDA splits every road into *self* (the way itself) plus one object per side from `cycleway:<side>:*` (prefix `cycleway`) and `sidewalk:<side>:*` (prefix `sidewalk`, only for `sidewalk:<side>:bicycle=yes` style tagging). Specificity: `cycleway:*` < `cycleway:both:*` < `cycleway:<side>:*`. Paths (`cycleway`, `footway`, `path`, `bridleway`, `steps`, …) are never split. So each attribute has two keys:
+- **Own way** (separate geometry, or the road itself for bicycle roads / bus lanes / lanes in the middle): `width`, `surface`, `oneway`, `traffic_sign`, `separation:left`, …
+- **Road side** (centerline tagging): `cycleway:<side>:width`, `cycleway:<side>:surface`, `cycleway:<side>:oneway`, `cycleway:<side>:traffic_sign[:forward]`, `cycleway:<side>:separation:left`, … (`writeKeyForSide()` in the library builds these). Surface/smoothness fall back to the road's own `surface` for on-road categories (`copySurfaceSmoothnessFromParent`).
+
+#### A. Attribute index (bikelanes)
+
+| infraVelo attribute | TILDA field | OSM tags (own way) | OSM tags (road side) | TILDA sanitizing / notes |
+|---|---|---|---|---|
+| `verkehrsri` (one / two directions) | `oneway` | `oneway`, `oneway:bicycle` | `cycleway:<side>:oneway` (+ road's `oneway`, `oneway:bicycle`) | derived: `oneway:bicycle=yes`→yes; `oneway:bicycle=no`→`car_not_bike`/no; `oneway=yes/no`; else `assumed_no` or `implicit_yes` (category default). infraVelo maps `assumed_no`/`implicit_yes` to a direction but they are guesses → **require explicit `oneway`** |
+| `fuehr` (type) | `category` (+ `traffic_sign`) | see table B | see table B | 240 / 239+1022-10 / 242+1022-10 in `traffic_sign` pick the sub-type |
+| `pflicht` (mandatory use) | `traffic_sign` (+ `_forward`, `_backward`) | `traffic_sign`, `traffic_sign:forward/backward` | `cycleway:<side>:traffic_sign[:forward/backward]` | yes if 237, 240 or 241 is in any of them. `traffic_sign=none` states "no sign". TILDA sanitizes the sign string (`DE:` prefix, German text variants) |
+| `breite` (width, 0.1 m) | `width_effective` else `width` | `width:effective`, `width` (+ `source:width`) | `cycleway:<side>:width` (+ `source:cycleway:<side>:width`) | parsed as meters; `m`/`meter` stripped, first of `a;b`. Lanes in the middle: from the road's `width:lanes` |
+| `ofm` (surface) | `surface` | `surface` (+ `sett:length` for `sett`) | `cycleway:<side>:surface`, else road `surface` | sanitized: `cobblestone`/`unhewn_cobblestone`→`large_sett`, `sett` + `sett:length` ≤0.08→mosaic, ≤0.13→small, else large; `earth/dirt/mud/clay`→`ground`; `paving_stones:20/30`→`paving_stones`; unknown values → dropped (logged). infraVelo groups into Asphalt / Beton / Gepflastert / Kopfstein / Ungebunden / Sonstige; missing → `NICHT-GEFUNDEN` |
+| `farbe` (coloured) | `surface_color` | `surface:colour` | `cycleway:<side>:surface:colour` | allowed `red`, `green`, `red;green`, `no`; `grey/gray/none/silver`→`no`, `orange`→`red`. infraVelo: yes if red or green |
+| `protek` (protection, only `cyclewayOnHighwayProtected`) | `separation_left/right`, `marking_left/right`, `traffic_mode_left/right`, `buffer_*` | `separation:left/right`, `marking:left/right`, `traffic_mode:left/right`, `buffer:left/right` | `cycleway:<side>:separation:left/right`, `…:marking:…`, `…:traffic_mode:…`, `…:buffer:…` | `<key>:<side>` → `<key>:both` → (left only) `<key>`. separation allowed: `no bollard flex_post vertical_panel studs bump planter kerb fence jersey_barrier guard_rail structure ditch greenery hedge tree_row cone yes …`; marking: `solid_line dashed_line double_solid_line barred_area pictogram surface`; traffic_mode: `no motor_vehicle parking psv bicycle foot` (`motorized`→`motor_vehicle`); buffer: meters, `no`→0 |
+| `trennstreifen` (buffer to parking on the right; bicycle roads: both sides) | `traffic_mode_right` (+ left for bicycle roads), `buffer_right`, `marking_right` | `traffic_mode:right`, `buffer:right`, `marking:right` | `cycleway:<side>:traffic_mode:right`, `…:buffer:right`, `…:marking:right` | yes if parking on the right and `buffer:right` ≥ 0.6 (bicycle roads: parking and buffer > 0 or a `solid_line`/`dashed_line` marking, either side). **Fallback:** without `traffic_mode`, TILDA infers `parking` from the road's `parking:<side>` / `parking:both` (≠ `no`) — on-road lanes use their own side, bicycle roads both sides. No parking → "entfällt" |
+| `nutz_beschr` (use restriction) | `traffic_sign` | `traffic_sign` containing `Radwegschäden`, `Gehwegschäden`, … (+ `source:traffic_sign:mapillary`) | side variant | not for mixed traffic |
+| `Kommentar` | `lifecycle` | `highway=construction` + `construction=*`, `temporary=yes` | — | construction / temporary text plus the list of missing attributes |
+
+#### B. Category index (`fuehr` ⇐ TILDA `category` ⇐ OSM)
+
+Berlin km from the TILDA export used by infravelo (Sept 2025, clipped to Berlin). "Own way" includes bicycle roads and lanes in the middle, which are the road itself.
+
+| infraVelo `fuehr` | TILDA category | km own way / road side | OSM tags, own way | OSM tags, road side |
+|---|---|---|---|---|
+| Radfahrstreifen | `cyclewayOnHighway_exclusive`, `cyclewayOnHighwayBetweenLanes` | 0.5 / 181; 3 / 0 | (rare) `highway=cycleway` + `cycleway=lane` + `lane=exclusive`; between lanes: `cycleway:lanes` has `\|lane\|` or `bicycle:lanes` has `\|designated\|` on the road | `cycleway:<side>=lane` + `cycleway:<side>:lane=exclusive` |
+| Schutzstreifen | `cyclewayOnHighway_advisory` | 0.4 / 272 | as above with `lane=advisory` | `cycleway:<side>=lane` + `cycleway:<side>:lane=advisory` |
+| *(TODO, gap)* | `cyclewayOnHighway_advisoryOrExclusive` | 2 / 20 | `lane` missing | `cycleway:<side>:lane` missing |
+| Geschützter Radfahrstreifen | `cyclewayOnHighwayProtected` | 6 / 28 | a sidepath (`is_sidepath=yes` or similar) with `separation:left` ∈ {bollard, flex_post, vertical_panel, studs, bump, planter, fence, jersey_barrier, guard_rail} (and no `traffic_mode:right=motor_vehicle`, no `segregated`), or `traffic_mode:left=parking`, or `traffic_mode:right=motor_vehicle` + such a `separation:right` | `cycleway:<side>=track\|lane` + `cycleway:<side>:separation:left=…` (+ `traffic_mode`) |
+| Radfahrstreifen mit Linienverkehr frei (237 + 1026-32) | `sharedBusLaneBikeWithBus` | 0 / 2 | `highway=cycleway` + `lane=share_busway`, or sign `DE:237` with `1024-14`/`1026-32` | `cycleway:<side>=lane` + `cycleway:<side>:lane=share_busway`, or that sign on the road |
+| Bussonderfahrstreifen mit Radverkehr frei (245 + 1022-10) | `sharedBusLaneBusWithBike` | 0 / 59 | `cycleway=share_busway`, or sign `DE:245` with `1022-10`/`1022-14` | `cycleway:<side>=share_busway` |
+| Fahrradstraße /-zone (244) | `bicycleRoad`, `bicycleRoad_vehicleDestination` | 4 + 42 / 0 | `bicycle_road=yes` or sign `DE:244*`; vehicle destination: sign with `1020-30` (or "Kfz frei" text) or `vehicle`/`motor_vehicle` = `destination`/`yes` | — (always the road itself) |
+| Radweg | `cycleway_adjoining`, `cycleway_isolated`, `cycleway_adjoiningOrIsolated`, `footAndCyclewaySegregated_*`, `footAndCyclewayShared_*` (without 240) | see below | `highway=cycleway` (+ `is_sidepath`), or `cycleway=track` on a cycleway, or sign `DE:237` on a path-like way; segregated: `segregated=yes` + `bicycle`/`foot` designated or sign `DE:241`; shared: `segregated=no` + designated, or sign `DE:240` | `cycleway:<side>=track` (+ `cycleway:<side>:segregated`, `:traffic_sign`); sidewalk variants via `sidewalk:<side>:bicycle=designated` + `:segregated` |
+| Gemeinsamer Geh- und Radweg mit Z240 | `footAndCyclewayShared_*` + `traffic_sign` has 240 | 65+21+183 / 11 | as shared, plus `traffic_sign=DE:240` | `cycleway:<side>=track` + `cycleway:<side>:traffic_sign=DE:240` |
+| Gehweg mit „Radverkehr frei“ (239 + 1022-10) | `footwayBicycleYes_*` + sign 239 and 1022-10 | 157+9+430 / 24 | `highway=footway\|path` + `bicycle=yes` (or sign with `1022-10`), not a crossing; plus `traffic_sign=DE:239,1022-10` | `sidewalk:<side>:bicycle=yes` (+ `sidewalk:<side>:traffic_sign`) |
+| Fußgängerzone „Radverkehr frei“ | `pedestrianAreaBicycleYes` + sign 242 and 1022-10 | 15 / 0 | `highway=pedestrian` + `bicycle=yes\|designated` + `traffic_sign=DE:242.1,1022-10` | — |
+| Mischverkehr mit motorisiertem Verkehr | `sharedMotorVehicleLane`; all of `roads` | 0 / 2 | `highway=cycleway` + `cycleway=shared_lane` (rare) | `cycleway:<side>=shared_lane` |
+| Sonstige Wege | `footwayBicycleYes_*` without the sign, `pedestrianAreaBicycleYes` without the sign; all of `roadsPathClasses` | | | |
+| Kreuzungsweg | `crossing` | 83 / 2 | `highway=cycleway` + `cycleway=crossing\|traffic_island`, or `cycleway=lane` + `lane=crossing`, or `highway=footway\|path` + `footway\|path=crossing\|traffic_island` + `bicycle=yes\|designated`; not longer than 100 m | rare (crossing tagged on a road side) |
+| *(TODO, "Klärung notwendig")* | `needsClarification` | 297 / 5 | `highway=cycleway` that matches nothing above (mostly missing `is_sidepath`/`segregated`/signs), `path`/`footway` + `bicycle=designated` | same on a side |
+| not in the dataset | `cyclewayLink` | 4 / 0 | `highway=cycleway` + `cycleway=link` (routing connector; Berlin: 495 ways) | — |
+| no infrastructure | `data_no`, `separate_geometry`, `not_expected` | | | `cycleway:<side>=no\|none`, `=separate`; left side of a one-way road tagged with plain `cycleway=*` |
+
+Sidepath refinement (`_adjoining` / `_isolated` / `_adjoiningOrIsolated`): adjoining if `is_sidepath=yes`, `footway=sidewalk`, `path=sidewalk|sidepath`, `cycleway=sidepath` or it is a road side; isolated if `is_sidepath=no`, `highway=service|track`; otherwise unknown → **`is_sidepath` is required on every separate cycleway/footway/path** with bike access. Berlin: 700 km of `*_adjoiningOrIsolated` (mostly `footwayBicycleYes` on footways).
+
+#### C. Roads and paths (`roads`, `roadsPathClasses`)
+
+| infraVelo attribute | TILDA field | OSM tags | Notes |
+|---|---|---|---|
+| `verkehrsri` | `oneway`, `oneway_bicycle` | `oneway`, `oneway:bicycle`, `dual_carriageway` | roads: `oneway=yes` + `dual_carriageway=yes` → `yes_dual_carriageway`; `oneway=no` is dropped (= two-way). `oneway:bicycle=no` → two-way for bikes |
+| `breite` | `width_effective` / `width` | `width:effective`, `width` (+ `source:width`) | |
+| `ofm` | `surface` | `surface` (+ `sett:length`) | same sanitizing as above |
+| `farbe` | — | — | roads have no `surface_color` column → always "Nein" |
+| `pflicht` | `traffic_sign` | — | streets: always "Nein"; paths: from `traffic_sign` (237/240/241) |
+| `protek` / `trennstreifen` | — | — | "Ohne" / "entfällt" (no `traffic_mode` on roads) |
+| no bike infrastructure on the sides | `cycleway:<side>` presence | `cycleway:both/left/right=no\|separate`, `sidewalk:<side>:bicycle` | infravelo QA layer "cycleway no": roads in the network should say explicitly that there is no lane |
+
+#### D. Required tags per TILDA category (drives the sidebar, feature 8)
+
+Key names are for the own way; on a road side they get the `cycleway:<side>:` / `sidewalk:<side>:` prefix.
+
+| Category group | Required | Conditional |
+|---|---|---|
+| all bike infrastructure | `traffic_sign` (or `none`), `width`, `surface`, `oneway` | `sett:length` if `surface=sett`; `surface:colour` if coloured; `source:width` |
+| separate ways (`cycleway_*`, `footAndCycleway*`, `footwayBicycleYes_*`, `needsClarification`) | + `is_sidepath` (yes/no) | `segregated` on shared/segregated foot+cycle ways; `bicycle`+`foot=designated` with DE:240/241 |
+| `cyclewayOnHighway_*`, `cyclewayOnHighwayBetweenLanes`, `sharedBus*` | + `lane` (advisory/exclusive) on the side | `traffic_mode:right`, `buffer:right`, `marking:right` when parking is next to the lane (`trennstreifen`) |
+| `cyclewayOnHighwayProtected` | + `separation:left/right`, `marking:left/right`, `buffer:left/right`, `traffic_mode:left/right` | |
+| `bicycleRoad*` | `traffic_sign` (DE:244.1 …), `width`, `surface`, `oneway`, `oneway:bicycle` if one-way | `traffic_mode:left/right` (or `parking:*`), `marking:left/right`, `buffer:left/right`; `vehicle`/`motor_vehicle` |
+| `crossing` | `width`, `surface`, `oneway` | `traffic_sign`, `surface:colour`, `crossing` (signals/markings) |
+| roads (mixed traffic) | `oneway` (+ `oneway:bicycle`, `dual_carriageway` if one-way), `width`, `surface`, `cycleway:both/left/right` | `surface:colour` |
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
