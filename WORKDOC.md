@@ -341,6 +341,27 @@ Notes:
 - Add a second button (eye icon) next to it: it turns on the Mapillary photo layer, opens the photo viewer panel and shows this image (`services.mapillary.selectImage` / `showViewer`), like clicking the photo on the map.
 - Disabled when the field is empty; tooltip "Show image in the viewer".
 
+### 15. Preset customization and missing fields — 🟨 (dual_carriageway done, list below)
+
+- `presetManager.customize()` (`modules/presets/customization.ts`): adds fields and appends them to existing presets' `fields` / `moreFields` while the schema loads. Set in `index.html` before `context.init()`: `iD.presetManager.customize(iD.RADNETZ_PRESET_CUSTOMIZATION)`. A field's `label` is used untranslated (small fallback in `presets/field.ts`). Test: `test/spec/presets/customization.ts`.
+- Done: `dual_carriageway` (type `check`, yes / no / unset) as a regular field on `highway/trunk`, `primary`, `secondary`, `tertiary`, `residential`, `unclassified`, `living_street`. id-tagging-schema has no field for it at all. Not on `service` and `road`.
+- Note: the TILDA library (`@tilda-geo/bicycle-infrastructure`) does not read `dual_carriageway`; it matters for our own road processing and QA.
+
+**TILDA tags without an iD field** (keys read by `@tilda-geo/bicycle-infrastructure` 0.1.x or `modules/tilda/required_attributes.ts`, checked against id-tagging-schema v6):
+
+| Tags | Where | Proposal |
+|---|---|---|
+| `separation:left/right`, `marking:left/right`, `buffer:left/right` | separate cycleways (`highway=cycleway/path`) | combo fields with the TILDA value lists (`bollard`, `flex_post`, `kerb`, `solid_line`, `dashed_line`, `parking`, …); one "Separation" group, left/right with the side indicator |
+| `cycleway:<side>:separation[:left/right]`, `:marking…`, `:buffer…` | road with a cycle lane | same fields as side variants, shown under the cycleway field when the side has a lane |
+| `traffic_mode:left/right`, `cycleway:<side>:traffic_mode…` | both | combo (`motor_vehicle`, `parking`, `foot`, `bicycle`, …) |
+| `cycleway:<side>:surface`, `:smoothness`, `:segregated`, `:oneway`, `:traffic_sign`, `:lane`, `:surface:colour` | road with a cycle lane | side variants of the existing fields; `:width` is already covered by feature 10 |
+| `is_sidepath` | separate paths next to a road | check field (`yes` / `no`), on `highway/cycleway`, `footway`, `path` |
+| `surface:colour` | lanes and cycleways | combo (`red`, `green`, …) |
+| `footway`, `path` (sub-types like `sidewalk`, `crossing`) | footways and paths | iD shows them through preset choice only; a combo would help in TILDA review |
+| `width:lanes`, `bicycle:lanes`, `cycleway:lanes` | roads | lane-based tags; rather the way table or raw tags, no field |
+| `access:reason` | any | text field in `moreFields`, low priority |
+| `traffic_sign:forward/backward` | — | already added by feature 2 |
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -410,6 +431,7 @@ Notes:
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
 - Feature 14: eye button on the Mapillary Image ID field.
+- Feature 15: fields for the TILDA tags in the table (separation, traffic_mode, side variants, `is_sidepath`).
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
