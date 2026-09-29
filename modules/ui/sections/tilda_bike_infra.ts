@@ -13,7 +13,7 @@ import {
 import { t } from '../../core/localizer';
 import { utilRebind } from '../../util/rebind';
 import { categoryForSide, planCategory, type Side, type TildaTagPlan } from '../../tilda/category_plan';
-import { requiredAttributes, type RequiredAttribute } from '../../tilda/required_attributes';
+import { requiredAttributes, roadAttributes, type RequiredAttribute } from '../../tilda/required_attributes';
 import { uiSection } from '../section';
 
 /** One card per TILDA result (self / left / right side of the way) */
@@ -27,6 +27,28 @@ type SideCard = {
 };
 
 const SIDE_ORDER: Side[] = ['self', 'left', 'right'];
+
+const MAX_BUTTONS = 6;
+
+const STATE_ICON: Record<RequiredAttribute['state'], string> = {
+    ok: '✓',
+    inherited: '✓',
+    guess: '?',
+    ignored: '✗',
+    missing: '!'
+};
+
+
+/** What TILDA makes of the tagged value, if that is worth saying */
+function stateNote(attribute: RequiredAttribute) {
+    const { state, value, tilda } = attribute;
+    if (state === 'inherited') return t('inspector.tilda.state.inherited', { value: tilda });
+    if (state === 'guess') return t('inspector.tilda.state.guess', { value: tilda });
+    if (state === 'ignored') return t('inspector.tilda.state.ignored');
+    if (state === 'ok' && tilda !== undefined && tilda !== value) return t('inspector.tilda.state.normalized', { value: tilda });
+    if (state === 'missing' && attribute.optional) return t('inspector.tilda.state.optional');
+    return '';
+}
 
 
 function categoryLabel(category: string | undefined) {
@@ -84,7 +106,7 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 gaps: gaps.find(gap => gap._side === side)?.missing ?? [],
                 target,
                 plan,
-                attributes: requiredAttributes(result, _tags)
+                attributes: requiredAttributes(result, _tags, target !== result.category ? target : undefined)
             };
         });
     }
@@ -146,7 +168,39 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
         cardSelection.select<HTMLDivElement>('.tilda-gaps').each(function(d) { drawGaps(d3_select(this), d); });
         cardSelection.select<HTMLDivElement>('.tilda-target').each(function(d) { drawTarget(d3_select(this), d); });
-        cardSelection.select<HTMLDivElement>('.tilda-attributes').each(function(d) { drawAttributes(d3_select(this), d); });
+        cardSelection.select<HTMLDivElement>('.tilda-attributes').each(function(d) {
+            const header = d.target && d.target !== d.result.category
+                ? t('inspector.tilda.required_for', { category: categoryLabel(d.target) })
+                : t('inspector.tilda.required');
+            drawAttributes(d3_select(this), d.attributes, header);
+        });
+
+        drawRoadCard(selection, data);
+    }
+
+
+    /** The road itself (TILDA `roads` export, infraVelo "mixed traffic"), unless it is bike infrastructure itself */
+    function drawRoadCard(selection: d3.Selection, data: SideCard[]) {
+        const selfIsInfrastructure = data.some(d => d.side === 'self' && d.result._infrastructureExists);
+        const attributes = selfIsInfrastructure ? [] : roadAttributes(_tags);
+
+        let card = selection.selectAll<HTMLDivElement, RequiredAttribute[]>('.tilda-road-card')
+            .data(attributes.length ? [attributes] : []);
+        card.exit().remove();
+        const cardEnter = card.enter()
+            .insert('div', '.tilda-card')   // above the cards for the sides
+            .attr('class', 'tilda-card tilda-road-card');
+        cardEnter.append('div')
+            .attr('class', 'tilda-card-header')
+            .call(t.append('inspector.tilda.side.road'));
+        cardEnter.append('div')
+            .attr('class', 'tilda-card-body')
+            .append('div')
+            .attr('class', 'tilda-attributes');
+
+        card = card.merge(cardEnter);
+        card.select<HTMLDivElement>('.tilda-attributes')
+            .each(function(d) { drawAttributes(d3_select(this), d, t('inspector.tilda.required_road')); });
     }
 
 
@@ -274,26 +328,34 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     }
 
 
-    /** Checklist of attributes the Radnetz dataset needs, with quick values for missing ones */
-    function drawAttributes(selection: d3.Selection<HTMLDivElement>, card: SideCard) {
-        const header = selection.selectAll<HTMLDivElement, number>('.tilda-attributes-header')
-            .data(card.attributes.length ? [0] : []);
+    /**
+     * Checklist of tags the Radnetz dataset needs: key, state, how TILDA reads the value,
+     * and the values TILDA accepts as buttons (plus a free input).
+     */
+    function drawAttributes(selection: d3.Selection<HTMLDivElement>, attributes: RequiredAttribute[], headerText: string) {
+        const header = selection.selectAll<HTMLDivElement, string>('.tilda-attributes-header')
+            .data(attributes.length ? [headerText] : []);
         header.exit().remove();
         header.enter()
             .append('div')
             .attr('class', 'tilda-attributes-header')
-            .call(t.append('inspector.tilda.required'));
+            .merge(header)
+            .text(d => d);
 
         let rows = selection.selectAll<HTMLDivElement, RequiredAttribute>('.tilda-attribute')
-            .data(card.attributes, d => d.key);
+            .data(attributes, d => d.key);
         rows.exit().remove();
 
         const rowsEnter = rows.enter()
             .append('div')
             .attr('class', 'tilda-attribute');
         rowsEnter.append('span').attr('class', 'tilda-attribute-state');
-        rowsEnter.append('span').attr('class', 'tilda-attribute-label');
-        rowsEnter.append('span').attr('class', 'tilda-attribute-value');
+        const labelEnter = rowsEnter.append('span').attr('class', 'tilda-attribute-label');
+        labelEnter.append('span').attr('class', 'tilda-attribute-name');
+        labelEnter.append('code').attr('class', 'tilda-attribute-key');
+        const valueEnter = rowsEnter.append('span').attr('class', 'tilda-attribute-value');
+        valueEnter.append('span').attr('class', 'tilda-attribute-tagged');
+        valueEnter.append('span').attr('class', 'tilda-attribute-note');
         const inputs = rowsEnter.append('span').attr('class', 'tilda-attribute-inputs');
         inputs.append('span').attr('class', 'tilda-buttons');
         inputs.append('input')
@@ -305,21 +367,32 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 d3_event.preventDefault();
                 changeTags({ [d.key]: this.value.trim() });
             });
+        inputs.append('datalist');
 
         rows = rows.merge(rowsEnter)
-            .classed('present', d => d.value !== undefined)
-            .classed('missing', d => d.value === undefined)
-            .attr('title', d => d.key);
+            .attr('class', d => `tilda-attribute state-${d.state}${d.optional ? ' optional' : ''}`)
+            .attr('title', d => t('inspector.tilda.feeds', { attributes: d.feeds.join(', ') }));
 
-        rows.select('.tilda-attribute-state').text(d => d.value !== undefined ? '✓' : '!');
-        rows.select('.tilda-attribute-label').text(d => t(`inspector.tilda.attribute.${d.id}`));
-        rows.select('.tilda-attribute-value').text(d => d.value ?? '');
+        rows.select('.tilda-attribute-state').text(d => STATE_ICON[d.state]);
+        rows.select('.tilda-attribute-name').text(d => t(`inspector.tilda.attribute.${d.id}`, { default: d.id }));
+        rows.select('.tilda-attribute-key').text(d => d.key);
+        rows.select('.tilda-attribute-tagged').text(d => d.value ?? '');
+        rows.select('.tilda-attribute-note').text(d => stateNote(d));
         rows.select<HTMLSpanElement>('.tilda-attribute-inputs')
-            .style('display', d => d.value === undefined ? null : 'none');
+            .style('display', d => d.state === 'ok' ? 'none' : null);
+
+        // many options: the first few as buttons, all of them as suggestions in the input
+        const datalistID = (d: RequiredAttribute) => `tilda-options-${d.key.replace(/[^\w-]/g, '_')}`;
+        rows.select('input').attr('list', d => d.options.length ? datalistID(d) : null);
+        const datalist = rows.select('datalist').attr('id', datalistID);
+        const listOptions = datalist.selectAll<HTMLOptionElement, string>('option')
+            .data(d => d.options, d => d);
+        listOptions.exit().remove();
+        listOptions.enter().append('option').merge(listOptions).attr('value', d => d);
 
         const buttons = rows.select('.tilda-buttons')
             .selectAll<HTMLButtonElement, string>('button')
-            .data(d => d.quickValues, d => d);
+            .data(d => d.options.slice(0, MAX_BUTTONS), d => d);
         buttons.exit().remove();
         buttons.enter()
             .append('button')

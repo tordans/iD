@@ -62,8 +62,8 @@ describe('tilda/required_attributes', () => {
         const right = processBikelanes(tags).find(r => r._side === 'right')!;
         const attributes = requiredAttributes(right, tags);
         expect(attributes.map(a => a.key)).toContain('cycleway:right:width');
-        expect(attributes.map(a => a.key)).toContain('cycleway:right:buffer:left');
-        expect(attributes.find(a => a.id === 'surface')?.value).toBe('asphalt');   // from the road
+        expect(attributes.map(a => a.key)).toContain('cycleway:right:traffic_mode:right');
+        expect(attributes.find(a => a.id === 'surface')?.tilda).toBe('asphalt');   // from the road
         expect(attributes.find(a => a.id === 'width')?.value).toBeUndefined();
     });
 

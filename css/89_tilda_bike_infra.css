@@ -120,10 +120,10 @@
 }
 .tilda-attribute {
     display: grid;
-    grid-template-columns: 1.2em 9em 1fr;
+    grid-template-columns: 1.2em minmax(8em, 1.1fr) 1fr;
     align-items: baseline;
     column-gap: 6px;
-    padding: 3px 0;
+    padding: 4px 0;
     font-size: 12px;
     border-top: 1px solid var(--border-color);
 }
@@ -134,11 +134,36 @@
     text-align: center;
     font-weight: bold;
 }
-.tilda-attribute.present .tilda-attribute-state { color: #2e9d3a; }
-.tilda-attribute.missing .tilda-attribute-state { color: #e06d5f; }
+.tilda-attribute.state-ok .tilda-attribute-state { color: #2e9d3a; }
+.tilda-attribute.state-inherited .tilda-attribute-state { color: var(--passive-text-color); }
+.tilda-attribute.state-guess .tilda-attribute-state,
+.tilda-attribute.state-ignored .tilda-attribute-state { color: #b27c00; }
+.tilda-attribute.state-missing .tilda-attribute-state { color: #e06d5f; }
+.tilda-attribute.optional.state-missing .tilda-attribute-state { color: var(--passive-text-color); }
+
+.tilda-attribute-label,
 .tilda-attribute-value {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+.tilda-attribute-key {
+    padding: 0;
+    background: none;
+    font-size: 11px;
+    color: var(--passive-text-color);
+    overflow-wrap: anywhere;
+}
+.tilda-attribute-tagged {
     font-family: monospace;
     overflow-wrap: anywhere;
+}
+.tilda-attribute-note {
+    color: var(--passive-text-color);
+}
+.tilda-attribute.state-ignored .tilda-attribute-note,
+.tilda-attribute.state-guess .tilda-attribute-note {
+    color: #b27c00;
 }
 .tilda-attribute-inputs {
     grid-column: 2 / 4;

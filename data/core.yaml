@@ -716,8 +716,18 @@ en:
       apply_all: Apply these tags
       remove_reason: Replaced by tags for each side
       required: Needed for the Radnetz dataset
+      required_for: "Needed for the Radnetz dataset as “{category}”"
+      required_road: Needed for the Radnetz dataset (mixed traffic)
+      feeds: "Used for the infraVelo attributes: {attributes}"
       enter_value: value, Enter
+      state:
+        inherited: "TILDA uses {value} from elsewhere (road or category)"
+        guess: "TILDA assumes {value}; please tag it"
+        ignored: TILDA does not accept this value
+        normalized: "TILDA reads it as {value}"
+        optional: only if it applies
       side:
+        road: This road
         self: This way
         left: Left side
         right: Right side
@@ -753,11 +763,21 @@ en:
         not_expected: "No bike infrastructure expected"
       attribute:
         width: "Width"
+        source_width: "Width source"
         surface: "Surface"
+        sett_length: "Sett stone size (m)"
+        surface_colour: "Surface colour"
         traffic_sign: "Traffic sign (or none)"
         oneway: "Oneway"
+        oneway_bicycle: "Oneway for bicycles"
+        dual_carriageway: "Dual carriageway"
+        is_sidepath: "Along a road (sidepath)"
+        segregated: "Foot and bike segregated"
+        lane: "Lane type"
+        cycleway: "Bike infrastructure on the sides"
         separation_left: "Separation, left"
         separation_right: "Separation, right"
+        traffic_mode_left: "Traffic next to it, left"
         traffic_mode_right: "Traffic next to it, right"
         buffer_left: "Buffer, left"
         buffer_right: "Buffer, right"
