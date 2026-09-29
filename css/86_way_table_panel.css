@@ -1,16 +1,16 @@
 /* Way table panel: selected way with previous and next ways, one row per tag */
 
+/* docked at the bottom of the map: height follows the table, up to a max height (set in JS) */
 .over-map > .way-table-panel {
     position: absolute;
     z-index: 2;
+    left: 0;
+    bottom: 0;
+    width: calc(100% - 44px); /* keep the map controls on the right usable */
     display: flex;
     flex-direction: column;
-    min-width: 240px;
-    min-height: 120px;
-    max-width: calc(100% - 44px); /* keep the map controls on the right usable */
-    border: 1px solid rgba(0, 0, 0, 0.75);
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    border-top: 1px solid rgba(0, 0, 0, 0.75);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
     color: #eee;
     overflow: hidden;
 }
@@ -24,7 +24,6 @@
     gap: 8px;
     padding: 4px 8px;
     background: rgba(0, 0, 0, 0.5);
-    cursor: move;
     user-select: none;
 }
 .way-table-header h3 {
@@ -153,11 +152,20 @@ table.way-table td.removed {
 }
 
 .way-table-resize {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    width: 16px;
-    height: 16px;
-    cursor: nwse-resize;
-    background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.4) 50%);
+    flex: 0 0 auto;
+    height: 6px;
+    cursor: ns-resize;
+    background: rgba(0, 0, 0, 0.5);
+}
+.way-table-resize::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 2px;
+    margin: 2px auto 0;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.4);
+}
+.way-table-resize:hover::after {
+    background: rgba(255, 255, 255, 0.8);
 }

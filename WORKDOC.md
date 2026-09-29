@@ -141,7 +141,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - `modules/way_table/chain.ts`: chain logic ported from `osm-way-as-table-ui` (`buildChain`, `neighborMatch`, `direction`), synchronous on the iD graph. Up to 3 ways per side; `choices` pins ways at ambiguous junctions.
 - `modules/way_table/tag_rows.ts`: one row per key, cell status `same`/`changed`/`added`/`removed`/`empty`, preset keys first.
 - `modules/ui/way_table_panel.ts`: the panel. Toggle with `K` (`T`/`Y` are the flip operations) or the checkbox in Map Data ▸ Data Layers. Layout stored in `way-table-panel-layout` as fractions of the map area.
-- Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values.
+- 2026-09-29: the panel is now docked at the bottom (full width minus the map controls). Its height follows the table up to a maximum set by dragging the top edge (`way-table-panel-max-height`, fraction of the map height; the old free move/resize and `way-table-panel-layout` are gone). Clicking a way column or previous/next selects the way and eases the map so the way is centered in the map area above the panel, zooming out if it does not fit (`flyTo()`, measured against the map surface because the map runs under the top bar).
+- Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values. Maybe a real bottom panel that shrinks the map instead of covering it.
 
 **Existing code to reuse**
 
@@ -515,6 +516,7 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 
 ## Progress log
 
+- 2026-09-29: Way table docked at the bottom, flies to the selected way.
 - 2026-09-29: Data index infraVelo ⇐ TILDA ⇐ OSM (feature 16). TILDA checklist per category with keys, values and TILDA's reading (feature 8 v2). Preset customization v1: Radnetz fields, bicycle road and cycleway link presets, shorter field lists (feature 15).
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
 - 2026-09-27: Custom data layers can be made non-selectable. Lens section and TILDA section redesigned in iD's style; TILDA section moved to the top of the inspector. Ported the toolbar label preference from v3 (feature 13).
@@ -537,7 +539,6 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 - Feature 14: eye button on the Mapillary Image ID field.
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
-- Way table: fly to the selected column; keep the table at the bottom (bottom panel).
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions

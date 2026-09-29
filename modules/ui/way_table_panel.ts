@@ -3,6 +3,7 @@ import { drag as d3_drag } from 'd3-drag';
 import { select as d3_select } from 'd3-selection';
 
 import { prefs } from '../core/preferences';
+import { geoRawMercator, geoZoomToScale } from '../geo';
 import { t } from '../core/localizer';
 import { presetManager } from '../presets';
 import { modeSelect } from '../modes/select';
@@ -14,39 +15,33 @@ import { buildWayChain, type ChainSegment, type JunctionChoice, type WayChain } 
 import { buildTagRows, type TagCell, type TagRow } from '../way_table/tag_rows';
 import { uiTooltip } from './tooltip';
 
-/** Position and size as fractions of the map area, so it survives window resizes */
-type PanelLayout = { left: number; top: number; width: number; height: number };
-
 const ENABLED_PREF = 'way-table-panel';
-const LAYOUT_PREF = 'way-table-panel-layout';
-const DEFAULT_LAYOUT: PanelLayout = { left: 0, top: 1 / 3, width: 1, height: 2 / 3 };
-const MIN_SIZE_PX = { width: 240, height: 120 };
+/** the panel's maximum height, as a fraction of the map height */
+const HEIGHT_PREF = 'way-table-panel-max-height';
+const DEFAULT_MAX_HEIGHT = 0.5;
+const MIN_HEIGHT_PX = 80;
+/** margin around a way that the map flies to */
+const FLY_PADDING_PX = 40;
 
 
-function readLayout(): PanelLayout {
-    try {
-        const stored = JSON.parse(prefs(LAYOUT_PREF) ?? 'null');
-        if (stored && ['left', 'top', 'width', 'height'].every(key => typeof stored[key] === 'number')) {
-            return stored;
-        }
-    } catch {
-        // fall through to the default
-    }
-    return { ...DEFAULT_LAYOUT };
+function readMaxHeight(): number {
+    const stored = Number(prefs(HEIGHT_PREF));
+    return stored > 0 && stored <= 1 ? stored : DEFAULT_MAX_HEIGHT;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 
 /**
- * A movable, resizable panel over the map that shows the selected way and its
- * previous and next ways as a table, one row per tag.
+ * A panel docked at the bottom of the map that shows the selected way and its
+ * previous and next ways as a table, one row per tag. Its height follows the table,
+ * up to a maximum the user sets by dragging the top edge.
  * Toggle with the `K` key or in the Map Data pane.
  */
 export function uiWayTablePanel(context: iD.Context) {
     let _container: d3.Selection<HTMLDivElement> = d3_select<HTMLDivElement, unknown>(null!);
     let _enabled = prefs(ENABLED_PREF) === 'true';
-    let _layout = readLayout();
+    let _maxHeight = readMaxHeight();
     /** chosen way per ambiguous junction node, reset when the selection leaves the chain */
     let _junctionChoices = new Map<NodeId, WayId>();
     let _chain: WayChain | undefined;
@@ -78,69 +73,73 @@ export function uiWayTablePanel(context: iD.Context) {
 
 
     function applyLayout() {
-        _container
-            .style('left', `${_layout.left * 100}%`)
-            .style('top', `${_layout.top * 100}%`)
-            .style('width', `${_layout.width * 100}%`)
-            .style('height', `${_layout.height * 100}%`);
+        _container.style('max-height', `${_maxHeight * 100}%`);
     }
 
 
-    function saveLayout() {
-        prefs(LAYOUT_PREF, JSON.stringify(_layout));
+    function mapHeight() {
+        return _container.node()?.parentElement?.clientHeight || 1;
     }
 
 
-    function mapSize() {
-        const parent = _container.node()?.parentElement;
-        return { width: parent?.clientWidth || 1, height: parent?.clientHeight || 1 };
-    }
-
-
-    /** Drag from the pointer position (the default subject would be the element's datum) */
-    function pointerSubject(d3_event: { x: number, y: number }) {
-        return { x: d3_event.x, y: d3_event.y };
-    }
-
-
-    /** Drag the header to move the panel */
-    function moveBehavior() {
-        let start: PanelLayout;
-        return d3_drag<HTMLDivElement, unknown>()
-            .filter(d3_event => !(d3_event.target as Element).closest('button'))
-            .subject(pointerSubject)
-            .on('start', () => {
-                start = { ..._layout };
-            })
-            .on('drag', (d3_event: { x: number, y: number, subject: { x: number, y: number } }) => {
-                const size = mapSize();
-                const dx = (d3_event.x - d3_event.subject.x) / size.width;
-                const dy = (d3_event.y - d3_event.subject.y) / size.height;
-                _layout.left = clamp(start.left + dx, 0, 1 - _layout.width);
-                _layout.top = clamp(start.top + dy, 0, 1 - _layout.height);
-                applyLayout();
-            })
-            .on('end', saveLayout);
-    }
-
-
-    /** Drag the corner grip to resize the panel */
+    /** Drag the top edge to change the maximum height */
     function resizeBehavior() {
-        let start: PanelLayout;
+        let startHeight: number;
         return d3_drag<HTMLDivElement, unknown>()
-            .subject(pointerSubject)
+            .subject((d3_event: { x: number, y: number }) => ({ x: d3_event.x, y: d3_event.y }))
             .on('start', () => {
-                start = { ..._layout };
+                startHeight = _container.node()!.offsetHeight;
             })
-            .on('drag', (d3_event: { x: number, y: number, subject: { x: number, y: number } }) => {
-                const size = mapSize();
-                const dx = (d3_event.x - d3_event.subject.x) / size.width;
-                const dy = (d3_event.y - d3_event.subject.y) / size.height;
-                _layout.width = clamp(start.width + dx, MIN_SIZE_PX.width / size.width, 1 - _layout.left);
-                _layout.height = clamp(start.height + dy, MIN_SIZE_PX.height / size.height, 1 - _layout.top);
+            .on('drag', (d3_event: { y: number, subject: { y: number } }) => {
+                const height = mapHeight();
+                const newHeight = startHeight - (d3_event.y - d3_event.subject.y);
+                _maxHeight = clamp(newHeight / height, MIN_HEIGHT_PX / height, 1);
                 applyLayout();
             })
-            .on('end', saveLayout);
+            .on('end', () => prefs(HEIGHT_PREF, String(_maxHeight)));
+    }
+
+
+    /**
+     * Pan (and zoom out if needed) so the way is centered in the part of the map
+     * that is not covered by the top bar, the footer or this panel.
+     */
+    function flyTo(wayID: WayId) {
+        const entity = context.hasEntity(wayID);
+        const panel = _container.node();
+        const overMap = panel?.parentElement;
+        if (!entity || !panel || !overMap) return;
+
+        // the map surface is larger than the area above the panel; measure in its pixels
+        const map = context.map();
+        const [width, height] = map.dimensions() as [number, number];
+        const surface = context.surfaceRect();
+        const area = overMap.getBoundingClientRect();
+        const bottom = _container.classed('hide') ? area.bottom : panel.getBoundingClientRect().top;
+        const visible = {
+            left: area.left - surface.left,
+            right: area.right - surface.left,
+            top: area.top - surface.top,
+            bottom: Math.max(bottom, area.top + MIN_HEIGHT_PX) - surface.top
+        };
+
+        const extent = entity.extent(context.graph());
+        const zoom = map.zoom() as number;
+        const projection = geoRawMercator().scale(geoZoomToScale(zoom)).translate([0, 0]);
+        const [x0, y1] = projection(extent[0]);
+        const [x1, y0] = projection(extent[1]);
+        const fit = Math.min(
+            (visible.right - visible.left - 2 * FLY_PADDING_PX) / Math.max(x1 - x0, 1),
+            (visible.bottom - visible.top - 2 * FLY_PADDING_PX) / Math.max(y1 - y0, 1)
+        );
+        const newZoom = fit < 1 ? Math.max(zoom + Math.log2(fit), context.minEditableZoom()) : zoom;
+
+        // the map center is where the way's center must be, shifted by the offset of the visible center
+        projection.scale(geoZoomToScale(newZoom));
+        const [cx, cy] = projection(extent.center());
+        const offsetX = width / 2 - (visible.left + visible.right) / 2;
+        const offsetY = height / 2 - (visible.top + visible.bottom) / 2;
+        map.centerZoomEase(projection.invert([cx + offsetX, cy + offsetY]), newZoom, 350);
     }
 
 
@@ -148,6 +147,7 @@ export function uiWayTablePanel(context: iD.Context) {
         if (!wayID) return;
         utilHighlightEntities([wayID], false, context);
         context.enter(modeSelect(context, [wayID]));
+        flyTo(wayID);
     }
 
 
@@ -169,10 +169,14 @@ export function uiWayTablePanel(context: iD.Context) {
             .append('div')
             .attr('class', 'way-table-panel fillD');
 
+        enter
+            .append('div')
+            .attr('class', 'way-table-resize')
+            .call(resizeBehavior());
+
         const header = enter
             .append('div')
-            .attr('class', 'way-table-header')
-            .call(moveBehavior());
+            .attr('class', 'way-table-header');
 
         header
             .append('h3')
@@ -203,11 +207,6 @@ export function uiWayTablePanel(context: iD.Context) {
         enter
             .append('div')
             .attr('class', 'way-table-body');
-
-        enter
-            .append('div')
-            .attr('class', 'way-table-resize')
-            .call(resizeBehavior());
 
         _container = _container.merge(enter);
         applyLayout();
