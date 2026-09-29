@@ -19,7 +19,8 @@ import { utilArrayUniq } from '../util';
 export { presetCategory };
 export { presetCollection };
 export { presetField };
-export { RADNETZ_PRESET_CUSTOMIZATION, type PresetCustomization } from './customization';
+export { type PresetCustomization } from './customization';
+export { RADNETZ_PRESET_CUSTOMIZATION } from './radnetz_customization';
 export { presetPreset };
 
 let _mainPresetIndex = presetIndex(); // singleton

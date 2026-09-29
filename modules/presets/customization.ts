@@ -1,4 +1,4 @@
-import type { Field, Fields, Presets } from '@openstreetmap/id-tagging-schema';
+import type { Field, Fields, Preset, Presets } from '@openstreetmap/id-tagging-schema';
 
 /**
  * Project-specific changes to the tagging schema, applied while the presets load.
@@ -7,6 +7,7 @@ import type { Field, Fields, Presets } from '@openstreetmap/id-tagging-schema';
  *
  * Set it from the page that loads iD, before `context.init()`:
  *   iD.presetManager.customize(iD.RADNETZ_PRESET_CUSTOMIZATION);
+ * The Radnetz Berlin customization is in `radnetz_customization.ts`.
  */
 export interface PresetCustomization {
     /** New fields (or replacements), like in id-tagging-schema's `fields.json`. `label` is used as is, not translated. */
@@ -15,6 +16,12 @@ export interface PresetCustomization {
     addFields?: Record<string, string[]>;
     /** preset id → field ids to append to the preset's `moreFields` */
     addMoreFields?: Record<string, string[]>;
+    /** preset id → field ids to remove from `fields` and `moreFields` */
+    removeFields?: Record<string, string[]>;
+    /** preset id → new `fields` / `moreFields` lists, replacing the schema's (for full control over the order) */
+    setFields?: Record<string, { fields?: string[]; moreFields?: string[] }>;
+    /** New presets (or replacements), like in id-tagging-schema's `presets.json`. `name` is used as is, not translated. */
+    presets?: Record<string, Preset>;
 }
 
 
@@ -29,7 +36,11 @@ export function applyPresetCustomization(
 
     let presets = raw.presets;
     if (presets) {
-        presets = { ...presets };
+        presets = { ...presets, ...customization.presets };
+        for (const [presetID, lists] of Object.entries(customization.setFields ?? {})) {
+            const preset = presets[presetID];
+            if (preset) presets[presetID] = { ...preset, ...lists };
+        }
         const append = (list: Record<string, string[]> | undefined, prop: 'fields' | 'moreFields') => {
             for (const [presetID, fieldIDs] of Object.entries(list ?? {})) {
                 const preset = presets![presetID];
@@ -45,32 +56,14 @@ export function applyPresetCustomization(
         };
         append(customization.addFields, 'fields');
         append(customization.addMoreFields, 'moreFields');
+
+        for (const [presetID, fieldIDs] of Object.entries(customization.removeFields ?? {})) {
+            const preset = presets[presetID];
+            if (!preset) continue;
+            const keep = (list: string[] | undefined) => list?.filter(id => !fieldIDs.includes(id));
+            presets[presetID] = { ...preset, fields: keep(preset.fields), moreFields: keep(preset.moreFields) };
+        }
     }
 
     return { fields, presets };
 }
-
-
-/** Presets for normal roads that Radnetz Berlin and TILDA classify; `{…}` references in other presets inherit these */
-const ROAD_PRESETS = [
-    'highway/trunk',
-    'highway/primary',       // also secondary and tertiary via `{highway/primary}`
-    'highway/secondary',
-    'highway/tertiary',
-    'highway/residential',   // also unclassified and road via `{highway/residential}`
-    'highway/unclassified',
-    'highway/living_street'
-];
-
-/** Customization used by the Radnetz Berlin editor */
-export const RADNETZ_PRESET_CUSTOMIZATION: PresetCustomization = {
-    fields: {
-        dual_carriageway: {
-            key: 'dual_carriageway',
-            type: 'check',
-            label: 'Dual Carriageway',
-            geometry: ['line']
-        } as Field
-    },
-    addFields: Object.fromEntries(ROAD_PRESETS.map(id => [id, ['dual_carriageway']]))
-};

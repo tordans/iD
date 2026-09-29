@@ -42,12 +42,26 @@ export function presetField(fieldID: string, field: Field) {
     return !_this.geometry || geometries.every(geom => _this.geometry!.indexOf(geom) !== -1);
   };
 
-  const _t: presetField['t'] = (scope, options) => t(`_tagging.presets.fields.${fieldID}.${scope}`, options);
+  // Radnetz Berlin: fields from a preset customization have untranslated `strings` (option labels, side labels)
+  // scopes are `<group>.<value>` or `<group>.<value>.title|description`; values may contain dots (`0.05`)
+  const _ownString = (scope: string): string | undefined => {
+    const [group, ...rest] = scope.split('.');
+    const strings = (field as any).strings?.[group];
+    if (!strings) return undefined;
+    const name = rest.join('.');
+    const detail = name.match(/^(.*)\.(title|description)$/);
+    const value = strings[name] ?? (detail ? strings[detail[1]]?.[detail[2]] : undefined);
+    return typeof value === 'string' ? value : undefined;
+  };
+  const _withDefault = (scope: string, options?: any) =>
+    options?.default === undefined && _ownString(scope) !== undefined ? { ...options, default: _ownString(scope) } : options;
+
+  const _t: presetField['t'] = (scope, options) => t(`_tagging.presets.fields.${fieldID}.${scope}`, _withDefault(scope, options));
   _this.t_all = (scope, options) => localizer.t_all(`_tagging.presets.fields.${fieldID}.${scope}`, options);
-  _t.append = (scope, options) => t.append(`_tagging.presets.fields.${fieldID}.${scope}`, options);
+  _t.append = (scope, options) => t.append(`_tagging.presets.fields.${fieldID}.${scope}`, _withDefault(scope, options));
   _this.t = _t;
 
-  _this.hasTextForStringId = (scope) => localizer.hasTextForStringId(`_tagging.presets.fields.${fieldID}.${scope}`);
+  _this.hasTextForStringId = (scope) => localizer.hasTextForStringId(`_tagging.presets.fields.${fieldID}.${scope}`) || _ownString(scope) !== undefined;
 
   // Radnetz Berlin: fields from a preset customization have an untranslated `label`
   _this.title = () => _this.t('label', { 'default': field.label ?? fieldID });

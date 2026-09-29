@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { applyPresetCustomization, RADNETZ_PRESET_CUSTOMIZATION } from '../../../modules/presets/customization';
+import { applyPresetCustomization } from '../../../modules/presets/customization';
+import { RADNETZ_PRESET_CUSTOMIZATION } from '../../../modules/presets/radnetz_customization';
 
 describe('applyPresetCustomization', () => {
     const raw = {
@@ -33,8 +34,23 @@ describe('applyPresetCustomization', () => {
         expect(result.presets!['highway/primary'].moreFields).toEqual(['dual_carriageway', 'lit', 'width']);
     });
 
-    it('Radnetz: dual_carriageway is a check field on the road presets', () => {
-        expect(RADNETZ_PRESET_CUSTOMIZATION.fields!.dual_carriageway.type).toBe('check');
-        expect(RADNETZ_PRESET_CUSTOMIZATION.addFields!['highway/residential']).toEqual(['dual_carriageway']);
+    it('sets, removes fields and adds presets', () => {
+        const result = applyPresetCustomization({
+            setFields: { 'highway/primary': { fields: ['name', 'width'] } },
+            removeFields: { 'highway/primary': ['lit'] },
+            presets: { 'highway/cycleway/link': { tags: { highway: 'cycleway', cycleway: 'link' }, geometry: ['line'] } as any }
+        }, raw);
+        expect(result.presets!['highway/primary'].fields).toEqual(['name', 'width']);
+        expect(result.presets!['highway/primary'].moreFields).toEqual(['dual_carriageway']);
+        expect(result.presets!['highway/cycleway/link'].tags).toEqual({ highway: 'cycleway', cycleway: 'link' });
+    });
+
+    it('Radnetz: field lists only use known or custom fields', () => {
+        const c = RADNETZ_PRESET_CUSTOMIZATION;
+        expect(c.fields!.dual_carriageway.type).toBe('check');
+        expect(c.setFields!['highway/residential'].fields).toContain('dual_carriageway');
+        expect(c.setFields!['highway/residential'].moreFields).not.toContain('incline');
+        expect(c.setFields!['highway/cycleway/bicycle_foot'].fields!.slice(0, 3)).toEqual(['name', 'is_sidepath', 'segregated']);
+        expect(c.presets!['highway/residential/bicycle_road/vehicle_destination'].tags.vehicle).toBe('destination');
     });
 });
