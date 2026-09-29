@@ -169,7 +169,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - Checklist "Needed for the Radnetz dataset" per side (width, surface, traffic sign, oneway for separate ways; separation / traffic mode / buffer / marking for protected lanes; buffer / marking for on-road lanes and bicycle roads) with quick-value buttons and a value input.
 - Code: `modules/tilda/category_plan.ts` (planner, ported from street-space-editor + fixes), `modules/tilda/required_attributes.ts`, `modules/ui/sections/tilda_bike_infra.ts`, `css/89_tilda_bike_infra.css`, labels under `inspector.tilda` in `data/core.yaml`; tests in `test/spec/tilda/`.
 - Library issues found (worked around in `category_plan.ts`, to fix in tilda-schemas): for left/right plans `planTagsForCategory` writes the presence key as `cycleway:<side>:cycleway` instead of `cycleway:<side>`, and without an existing `cycleway:<side>` it plans bare keys (`lane=…`). It also does not split `cycleway:both`. Our wrapper splits `:both`, adds `cycleway:<side>=lane|track|…` for the target, fixes the keys and checks the result with `processBikelanes`.
-- Next: preset group "TILDA Radinfrastruktur", map lens colored by category, QA validations (feature 9), German texts, "why not category X" explanations.
+- **v2 (2026-09-29): checklist per category from the data index (feature 16).** `modules/tilda/required_attributes.ts` is a rule table: per rule the own-way key (made side-specific with `writeKeyForSide`), the infraVelo attributes it feeds, TILDA's accepted values and how TILDA reads it. Each row shows label, key, tagged value (also found via `:both` / plain key, like TILDA), a state and a note: ✓ ok, ✓ grey = inherited (surface from the road, `traffic_mode` from `parking:*`, sidepath from the category), `?` guess (TILDA's `assumed_no`/`implicit_yes` oneway), ✗ ignored (TILDA drops the value), `!` missing; optional rows ("only if it applies") are grey. "TILDA reads it as …" shows sanitizing (`cobblestone` → `large_sett`, `orange` → `red`, `oneway:bicycle=no` → `car_not_bike`). Values TILDA accepts are buttons (first 6) and suggestions in the input. With a target category chosen, the checklist is for the target. Roads that are not bike infrastructure themselves get a "This road" card (mixed traffic: oneway, `oneway:bicycle`, `dual_carriageway`, width, surface, `cycleway:*` presence). Tests: `test/spec/tilda/required_attributes.ts`.
+- Next: map lens colored by category, QA validations (feature 9), German texts, "why not category X" explanations.
 
 **Original plan:**
 
@@ -341,7 +342,25 @@ Notes:
 - Add a second button (eye icon) next to it: it turns on the Mapillary photo layer, opens the photo viewer panel and shows this image (`services.mapillary.selectImage` / `showViewer`), like clicking the photo on the map.
 - Disabled when the field is empty; tooltip "Show image in the viewer".
 
-### 15. Preset customization and missing fields — 🟨 (dual_carriageway done, list below)
+### 15. Preset customization and missing fields — ✅ (v1; side variants open)
+
+**Done (2026-09-29):**
+- `customize()` also takes `setFields` (replace a preset's `fields`/`moreFields`, for order), `removeFields` and new `presets`. The Radnetz config moved to `modules/presets/radnetz_customization.ts`. `presets/field.ts` falls back to the field's own `strings` for option and side labels (`options.bollard`, `types.separation:left`), so custom fields show readable values without translations.
+- New fields: `is_sidepath` (check), `surface/colour`, `sett/length` (only for `surface=sett`; mosaic / small / large), `width/effective`, `source/width` (only with `width`), and directional (left/right/both) `separation`, `marking`, `buffer`, `traffic_mode`, `cycleway/lane` (advisory/exclusive per side). Option lists are TILDA's accepted values.
+- New presets (TILDA categories without a schema preset):
+  - `highway/cycleway/link` "Cycleway Link (Routing Connection)" — TILDA `cyclewayLink` (Berlin 2026-09: 495 ways).
+  - `highway/residential/bicycle_road` (`addTags` `bicycle=designated`, `traffic_sign=DE:244.1`) and `…/vehicle_destination` (`vehicle=destination`, `traffic_sign=DE:244.1,1020-30`) — TILDA `bicycleRoad` / `bicycleRoad_vehicleDestination`. iD's "incomplete tags" validation then asks for a missing sign or `bicycle=designated` (TILDA todos `missing_traffic_sign_244`, `missing_access_tag_bicycle_road`).
+  - `highway/cycleway/bicycle_road`.
+  - Berlin bicycle roads by highway (Overpass 2026-09-29): residential 851, service 25, construction 25, cycleway 22, unclassified 20, track 9, pedestrian 7. Signs: `DE:244.1,1020-30` 666, none 135, `DE:244.1` 56. Access: `vehicle=destination` 622 (+37 with `motor_vehicle`), `motor_vehicle=destination` 190 — the latter match the base preset; the TILDA card still shows the right category.
+- Field lists (the fields that feed the dataset first; removed `incline`, tolls, weights/heights, destination signs, hazards, trolley wire, `covered`, MTB/hiking scales, `dog`, `stroller`, …):
+  - roads (trunk … living_street, service): name, oneway, oneway (bicycles), dual carriageway, maxspeed, lanes, bike lanes, sidewalks, parking, surface, smoothness, width, traffic sign, structure, access; more: lane type, lane markings, parking orientation, surface colour, sett size, usable width, width source, directional signs.
+  - bicycle roads: + traffic mode / marking / buffer left/right (the `trennstreifen` inputs).
+  - cycleways and foot+cycle paths: name, sidepath, (segregated), oneway, surface, smoothness, width, traffic sign, separation, structure, access.
+  - footway, sidewalk, path: name, access, traffic sign, sidepath, surface, smoothness, width, structure.
+  - crossings (cycleway/footway/path): + width, oneway, access; more: surface colour, smoothness, traffic sign.
+- Open: side variants (`cycleway:<side>:separation:left`, `cycleway:<side>:surface`, …) have no fields; the TILDA section's checklist (feature 8) covers them with key + options. Fields could follow as "sub-fields" of the `cycleway` directional field.
+- Open: a preset category "TILDA Radinfrastruktur"; presets for `footwayBicycleYes` (sidewalk + `bicycle=yes` + `DE:239,1022-10`) and bicycle roads on `service`/`unclassified`.
+
 
 - `presetManager.customize()` (`modules/presets/customization.ts`): adds fields and appends them to existing presets' `fields` / `moreFields` while the schema loads. Set in `index.html` before `context.init()`: `iD.presetManager.customize(iD.RADNETZ_PRESET_CUSTOMIZATION)`. A field's `label` is used untranslated (small fallback in `presets/field.ts`). Test: `test/spec/presets/customization.ts`.
 - Done: `dual_carriageway` (type `check`, yes / no / unset) as a regular field on `highway/trunk`, `primary`, `secondary`, `tertiary`, `residential`, `unclassified`, `living_street`. id-tagging-schema has no field for it at all. Not on `service` and `road`.
@@ -496,6 +515,7 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 
 ## Progress log
 
+- 2026-09-29: Data index infraVelo ⇐ TILDA ⇐ OSM (feature 16). TILDA checklist per category with keys, values and TILDA's reading (feature 8 v2). Preset customization v1: Radnetz fields, bicycle road and cycleway link presets, shorter field lists (feature 15).
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
 - 2026-09-27: Custom data layers can be made non-selectable. Lens section and TILDA section redesigned in iD's style; TILDA section moved to the top of the inspector. Ported the toolbar label preference from v3 (feature 13).
 - 2026-09-27: Switched live touched to npm 0.1.0. Built the TILDA bike infrastructure section (feature 8 v1).
@@ -515,7 +535,9 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
 - Feature 14: eye button on the Mapillary Image ID field.
-- Feature 15: fields for the TILDA tags in the table (separation, traffic_mode, side variants, `is_sidepath`).
+- Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
+- Feature 9 validations, using the data index (feature 16) as the rule list.
+- Way table: fly to the selected column; keep the table at the bottom (bottom panel).
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
