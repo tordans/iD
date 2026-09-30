@@ -718,7 +718,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 
 **Goal.** Measure a width on the aerial image directly from the width field, instead of guessing or using a separate tool. The measured value goes into the field with 5 cm precision.
 
-**Where.** Every width input: `width`, `est_width`, `width:effective`, `cycleway:width`, `footway:width`, the side width fields (`cycleway|sidewalk:<side>:width`, feature 10), `buffer:*` in meters, and width rows of the raw tag editor. Each gets a "measure" button (ruler icon, tooltip "Measure on the map") next to iD's +/- buttons.
+**Where.** Every width input: `width`, `est_width`, `width:effective`, `cycleway:width`, `footway:width`, the side width fields (`cycleway|sidewalk:<side>:width`, feature 10), `buffer:*` in meters. Not the raw tag editor: it only ever shows the plain tags. Each gets a "measure" button (ruler icon, tooltip "Measure on the map") next to iD's +/- buttons.
 
 **Start.**
 - Clicking the button starts the tape for this key and the selected way.
@@ -750,11 +750,12 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - CSS `css/98_measure_tape.css`. Tests for the pure parts.
 
 **Status (v1, built by a Sonnet agent, reviewed):**
-- Code as planned, plus `modules/measure/measure_tape_listeners.ts` (a MutationObserver on the sidebar adds the button to width inputs and raw tag rows, also when a row's key is edited). CSS is `css/99_measure_tape.css`; icon `fas-pen-ruler` (already in the sprite).
+- Code as planned, plus `modules/measure/measure_tape_listeners.ts` (a MutationObserver on the sidebar adds the button to width fields; raw tag rows only get the live value while dragging). CSS is `css/99_measure_tape.css`; icon `fas-pen-ruler` (already in the sprite).
 - Measurable keys: `width`, `est_width`, `width:effective`, `*:width`, `buffer:*`; not `maxwidth`, not `*:source`. Needs exactly one selected way.
 - Hooks in upstream files: `svg/layers.ts` (layer `measure-tape`), `svg/width_indicator.ts` (hidden while measuring), `ui/init.js` (listeners).
 - Dragging the whole tape writes nothing (length unchanged); Esc is caught before it deselects the way.
-- Tested with a created test way (pane hidden). Open: the loupe's look and touch input, both untested; check in a visible window.
+- Magnifier: crosshair with a gap and a dot on the measured point, the tape drawn in the lens; placed away from the tape, beside it or diagonal (farther out near map edges), always inside the map (`modules/measure/loupe_position.ts`, tested). Handles use a crosshair cursor.
+- Open: touch input untested.
 
 ## Integration order (proposal)
 
