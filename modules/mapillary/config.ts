@@ -37,8 +37,22 @@ export function parseList(value: string | null | undefined): string[] {
 }
 
 
-/** A URL value wins over the configured list; an absent URL value falls back to the config */
+/**
+ * A URL value wins over the configured list, also when it is empty (the user cleared the list);
+ * an absent URL value falls back to the config
+ */
 export function effectiveList(urlValue: string | null | undefined, configured: string[]): string[] {
-    const fromUrl = parseList(urlValue);
-    return fromUrl.length ? fromUrl : configured;
+    if (urlValue === null || urlValue === undefined) return configured;
+    return parseList(urlValue);
+}
+
+
+/**
+ * The value to keep for a list the user entered: `null` (no URL parameter) when it equals the
+ * configured list, else the joined list (`''` when the user cleared it)
+ */
+export function listOverride(value: string | null | undefined, configured: string[]): string | null {
+    const list = parseList(value);
+    const same = list.length === configured.length && list.every((item, i) => item === configured[i]);
+    return same ? null : list.join(',');
 }

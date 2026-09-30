@@ -4,7 +4,7 @@ import { services } from '../services';
 import { utilRebind } from '../util/rebind';
 import { utilStringQs } from '../util';
 import { patchHash } from '../behavior';
-import { effectiveList, mapillaryConfig, parseList } from '../mapillary/config';
+import { effectiveList, listOverride, mapillaryConfig } from '../mapillary/config';
 
 
 export function rendererPhotos(context) {
@@ -16,7 +16,7 @@ export function rendererPhotos(context) {
     var _fromDate;
     var _toDate;
     var _usernames;
-    // URL values of the highlight lists (WORKDOC feature 18); the project config is the fallback
+    // URL values of the highlight lists (WORKDOC feature 18): `null` = the project config, `''` = cleared
     var _highlightUsers = null;
     var _highlightOrgs = null;
 
@@ -122,9 +122,10 @@ export function rendererPhotos(context) {
      * @param {boolean} updateUrl Whether the URL should update or not
      */
     photos.setHighlightUsers = function(val, updateUrl) {
-        _highlightUsers = parseList(val).join(',') || null;
+        _highlightUsers = listOverride(val, mapillaryConfig().highlightUsers);
         dispatch.call('change', this);
-        if (updateUrl) setUrlFilterValue('photo_highlight_users', _highlightUsers);
+        // an empty value stays in the URL: the user cleared the configured list
+        if (updateUrl) patchHash({ photo_highlight_users: _highlightUsers });
     };
 
     /**
@@ -133,9 +134,10 @@ export function rendererPhotos(context) {
      * @param {boolean} updateUrl Whether the URL should update or not
      */
     photos.setHighlightOrgs = function(val, updateUrl) {
-        _highlightOrgs = parseList(val).join(',') || null;
+        _highlightOrgs = listOverride(val, mapillaryConfig().highlightOrgs);
         dispatch.call('change', this);
-        if (updateUrl) setUrlFilterValue('photo_highlight_orgs', _highlightOrgs);
+        // an empty value stays in the URL: the user cleared the configured list
+        if (updateUrl) patchHash({ photo_highlight_orgs: _highlightOrgs });
     };
 
     /**
@@ -256,10 +258,10 @@ export function rendererPhotos(context) {
             // hide old imagery by default, see WORKDOC feature 18
             this.setDateFilter('fromDate', mapillaryConfig().defaultFromDate, false);
         }
-        if (hash.photo_highlight_users) {
+        if (hash.photo_highlight_users !== undefined) {
             this.setHighlightUsers(hash.photo_highlight_users, false);
         }
-        if (hash.photo_highlight_orgs) {
+        if (hash.photo_highlight_orgs !== undefined) {
             this.setHighlightOrgs(hash.photo_highlight_orgs, false);
         }
         if (hash.photo_username) {
