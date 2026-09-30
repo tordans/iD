@@ -78,6 +78,7 @@ export function uiSectionPresetFields(context) {
             });
 
             _fieldsArr = [];
+            _trafficSignFieldsSignature = null;   // the preset's own traffic sign fields may have changed
 
             sharedFields.forEach(function(field) {
                 if (field.matchAllGeometry(geometries)) {
@@ -130,7 +131,8 @@ export function uiSectionPresetFields(context) {
                 _entityIDs,
                 presetManager,
                 geometries,
-                dispatch
+                dispatch,
+                _fieldsArr.map(function(field) { return field.key; })
             );
         }
 

@@ -14,7 +14,7 @@ type PresetManager = { field(id: string): presetField | undefined };
 
 /**
  * Append traffic sign fields at the bottom of the inspector when matching tags exist.
- * Skips keys already covered by preset fields.
+ * Skips keys already covered by preset fields (`presetKeys`) or earlier entries of `fieldsArr`.
  */
 export function appendTrafficSignInspectorFields(
     fieldsArr: { key?: string }[],
@@ -23,9 +23,10 @@ export function appendTrafficSignInspectorFields(
     entityIDs: string[],
     presetsManager: PresetManager,
     geometries: Geometry[],
-    dispatch: Dispatch<object>
+    dispatch: Dispatch<object>,
+    presetKeys: (string | undefined)[] = []
 ) {
-    const shownKeys = new Set(fieldsArr.map(field => field.key));
+    const shownKeys = new Set([...presetKeys, ...fieldsArr.map(field => field.key)]);
 
     for (const tagKey of trafficSignTagKeysFromTags(tags)) {
         if (shownKeys.has(tagKey)) continue;
