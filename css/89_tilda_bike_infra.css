@@ -15,10 +15,6 @@
     font-size: 12px;
     line-height: 1.5;
 }
-.tilda-callout-warning {
-    margin: 4px 0;
-    border-left-color: #e06d5f;
-}
 
 .tilda-card {
     margin-bottom: 10px;
@@ -88,31 +84,6 @@
     width: 100%;
     height: 30px;
 }
-.tilda-plan {
-    font-size: 12px;
-}
-.tilda-plan ul {
-    margin: 6px 0;
-}
-.tilda-plan li {
-    margin: 4px 0;
-}
-.tilda-plan li.tilda-plan-add code::before { content: '+ '; }
-.tilda-plan li.tilda-plan-change code::before { content: '~ '; }
-.tilda-plan li.tilda-plan-remove code::before { content: '− '; }
-.tilda-plan li.tilda-plan-remove code { text-decoration: line-through; }
-.tilda-plan .tilda-reason {
-    display: block;
-    color: var(--passive-text-color);
-}
-.tilda-card button.tilda-apply-all {
-    height: auto;
-    padding: 4px 10px;
-}
-.tilda-card button.tilda-apply-all.hide {
-    display: none;
-}
-
 .tilda-attributes-header {
     margin: 10px 0 4px 0;
     font-size: 12px;

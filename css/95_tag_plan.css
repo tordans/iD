@@ -1,0 +1,35 @@
+/* Tag plan: proposed tag changes with a reason each and one apply button
+   (TILDA section, traffic sign suggestions; modules/ui/tag_plan.ts) */
+
+.tag-plan {
+    font-size: 12px;
+}
+.tag-plan ul {
+    margin: 6px 0;
+}
+.tag-plan li {
+    margin: 4px 0;
+}
+.tag-plan li.tag-plan-add code::before { content: '+ '; }
+.tag-plan li.tag-plan-change code::before { content: '~ '; }
+.tag-plan li.tag-plan-remove code::before { content: '− '; }
+.tag-plan li.tag-plan-remove code { text-decoration: line-through; }
+.tag-plan .tag-plan-reason {
+    display: block;
+    color: var(--passive-text-color);
+}
+.tag-plan-conflict-text {
+    margin: 4px 0;
+    padding: 8px 10px;
+    border-left: 4px solid #e06d5f;
+    border-radius: 4px;
+    background: var(--bg-color-2);
+    line-height: 1.5;
+}
+.tag-plan button.tag-plan-apply {
+    height: auto;
+    padding: 4px 10px;
+}
+.tag-plan button.tag-plan-apply.hide {
+    display: none;
+}

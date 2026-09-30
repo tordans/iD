@@ -15,6 +15,7 @@ import { utilRebind } from '../../util/rebind';
 import { categoryForSide, planCategory, type Side, type TildaTagPlan } from '../../tilda/category_plan';
 import { requiredAttributes, roadAttributes, type RequiredAttribute } from '../../tilda/required_attributes';
 import { uiSection } from '../section';
+import { drawTagPlan, tagPlanChanges, type TagPlanRow } from '../tag_plan';
 
 /** One card per TILDA result (self / left / right side of the way) */
 type SideCard = {
@@ -275,56 +276,21 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         select.property('value', card.target ?? current);
 
         const plan = card.plan;
-        const planBox = selection.selectAll<HTMLDivElement, TildaTagPlan>('.tilda-plan')
-            .data(plan ? [plan] : []);
-        planBox.exit().remove();
-        const planEnter = planBox.enter().append('div').attr('class', 'tilda-plan');
-        planEnter.append('ul');
-        planEnter.append('button')
-            .attr('class', 'button action tilda-apply-all')
-            .call(t.append('inspector.tilda.apply_all'));
-
-        const merged = planBox.merge(planEnter);
-        if (!plan) return;
-
-        type PlanRow = { kind: 'add' | 'change' | 'remove' | 'conflict'; key: string; value: string; from?: string; reason: string };
-        const rows: PlanRow[] = [
+        const rows: TagPlanRow[] = plan ? [
             ...plan.remove.map(key => ({ kind: 'remove' as const, key, value: _tags[key] ?? '', reason: t('inspector.tilda.remove_reason') })),
-            ...plan.add.map(entry => ({ kind: 'add' as const, key: entry.key, value: entry.value, reason: entry.reason })),
+            // add only what is still missing (the plan may repeat existing tags)
+            ...plan.add.filter(entry => _tags[entry.key] === undefined)
+                .map(entry => ({ kind: 'add' as const, key: entry.key, value: entry.value, reason: entry.reason })),
             ...plan.change.map(entry => ({ kind: 'change' as const, key: entry.key, value: entry.to, from: entry.from, reason: entry.reason })),
             ...plan.conflicts.map(entry => ({ kind: 'conflict' as const, key: entry.key, value: entry.value, reason: entry.reason }))
-        ];
+        ] : [];
 
-        const items = merged.select('ul')
-            .selectAll<HTMLLIElement, PlanRow>('li')
-            .data(rows, d => `${d.kind}-${d.key}`);
-        items.exit().remove();
-        items.enter()
-            .append('li')
-            .merge(items)
-            .attr('class', d => `tilda-plan-${d.kind}`)
-            .each(function(d) {
-                const li = d3_select(this).text('');
-                if (d.kind === 'conflict') {
-                    // a readable callout, not code
-                    li.append('div').attr('class', 'tilda-callout tilda-callout-warning').text(d.reason);
-                    return;
-                }
-                const tag = d.kind === 'change' ? `${d.key}: ${d.from} → ${d.value}` : `${d.key}=${d.value}`;  // remove shows the old tag
-                li.append('code').text(tag);
-                li.append('span').attr('class', 'tilda-reason').text(d.reason);
-            });
-
-        const editable = plan.aligned && plan.add.length + plan.change.length + plan.remove.length > 0;
-        merged.select('.tilda-apply-all')
-            .classed('hide', !editable)
-            .on('click', () => {
-                const changed: TagsUpdate = {};
-                for (const key of plan.remove) changed[key] = undefined;
-                for (const entry of plan.change) changed[entry.key] = entry.to;
-                for (const entry of plan.add) if (_tags[entry.key] === undefined) changed[entry.key] = entry.value;
-                changeTags(changed);
-            });
+        drawTagPlan(selection, plan && {
+            rows,
+            canApply: plan.aligned && rows.some(row => row.kind !== 'conflict'),
+            applyLabel: t('inspector.tilda.apply_all'),
+            onApply: () => changeTags(tagPlanChanges(rows))
+        });
     }
 
 
