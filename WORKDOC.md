@@ -696,7 +696,7 @@ Code: `modules/mapillary/tag_keys.ts` (parse keys and values, labels, preferred 
 - Auto-show: `context.on('enter')` hook (`initMapillaryAutoShow` in `ui/init.js`), pref `mapillary-auto-show-selected`, checkbox shown while the Mapillary layer is on.
 - Not supported: multi-selection. The "+" of a key is disabled while it has an empty input.
 
-### 20. "Set photo from viewer" for all image keys — 📝 (spec)
+### 20. "Set photo from viewer" for all image keys — ✅ (v1)
 
 iD's eye-dropper button in the photo viewer always writes `mapillary=<id>`. With the keys of feature 19 that is too limited.
 - Target:
@@ -706,6 +706,48 @@ iD's eye-dropper button in the photo viewer always writes `mapillary=<id>`. With
 - Keeps iD's disabled states ("already set" per target key, "too far").
 
 Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_photo.ts`.
+
+**Status (v1, built by a Sonnet agent, reviewed):**
+- `modules/mapillary/active_target.ts` (target per selection, `change` dispatch, shared by field and viewer), `modules/mapillary/set_photo.ts` (pure: target, append, disabled reason; tests), `modules/ui/mapillary_set_photo.ts` (button + caret menu). Hook at the top of `renderAddPhotoIdButton` in `photoviewer.js`: Mapillary only, other providers unchanged. CSS in `css/98_mapillary_field.css`.
+- Only an explicitly chosen target row is outlined; with the default `mapillary` nothing is. With several features selected, the menu lists the first one's keys; "already set" needs the id on all of them.
+- The button also re-renders when the viewer's image changes (iD's did not, so its disabled state could be stale).
+- Open: eyeball check of the caret menu styling in a visible window.
+
+
+### 21. Measuring tape ("Maßband") for width fields — 📝 (spec)
+
+**Goal.** Measure a width on the aerial image directly from the width field, instead of guessing or using a separate tool. The measured value goes into the field with 5 cm precision.
+
+**Where.** Every width input: `width`, `est_width`, `width:effective`, `cycleway:width`, `footway:width`, the side width fields (`cycleway|sidewalk:<side>:width`, feature 10), `buffer:*` in meters, and width rows of the raw tag editor. Each gets a "measure" button (ruler icon, tooltip "Measure on the map") next to iD's +/- buttons.
+
+**Start.**
+- Clicking the button starts the tape for this key and the selected way.
+- The width band (feature 10) is hidden while measuring and comes back afterwards.
+- Initial position: the middle of the part of the way that is visible on screen, at a right angle (90°) to the way there, centered on the way, reaching to both sides.
+- Initial length: the current value of the field, else the road width (`roadWidthFromTags`) for `width`, else 2 m.
+
+**UI on the map.**
+- A blue line with an end handle at both ends and the length as a label ("3.45 m").
+- The handles must not hide the point being measured: a thin ring with a transparent center and a small crosshair, with a larger invisible hit area around it.
+- Drag an end handle → that end moves anywhere on the map. The way only sets the start position. Drag the line itself → the whole tape moves.
+- **Magnifier** while dragging an end: a round loupe (about 160 px, 3× zoom) next to the pointer shows the selected background imagery around the handle, with a crosshair. It uses a clone of the background tiles taken at drag start; the map does not move while dragging.
+
+**Value.**
+- Length = spherical distance of the two ends, rounded to 0.05 m, written without trailing zeros (`2.35`, `2.4`).
+- While dragging, the field input shows the value live.
+- On drag end the tag is written: one undo step per drag, "Measured width".
+- Leaving the field or the way keeps the last written value; nothing is reverted.
+
+**End.** Clicking the button again, pressing Esc, or selecting something else (or nothing) ends the tape. Moving the map keeps it (the ends are geo coordinates).
+
+**Code (plan).**
+- `modules/measure/measure_tape.ts`: state singleton — active key, entity, the two ends; dispatch `change`.
+- `modules/measure/initial_tape.ts`: pure; visible middle of a way, the perpendicular line, rounding.
+- `modules/svg/measure_tape.ts`: SVG layer with the line, handles, label, d3 drag.
+- `modules/ui/measure_loupe.ts`: the magnifier.
+- Button: added by event delegation / a small hook where iD renders fields, like the width indicator (feature 10).
+- The width indicator checks the tape and hides itself while it is active.
+- CSS `css/98_measure_tape.css`. Tests for the pure parts.
 
 ## Integration order (proposal)
 
