@@ -1,0 +1,8 @@
+/* preview of the new way while hovering "Extract right cycle track" etc. (modules/operations/extract_sidepath.ts) */
+g.auxiliary path.preview.extract-sidepath-preview {
+    stroke: #ff26d4;
+    stroke-width: 4;
+    stroke-dasharray: 10, 6;
+    stroke-linecap: round;
+    pointer-events: none;
+}

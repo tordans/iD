@@ -61,6 +61,38 @@ en:
     drag_node:
       connected_to_hidden: This can't be edited because it is connected to a hidden feature.
   operations:
+    extract_sidepath:
+      title:
+        cycleway:
+          right: Extract right cycle track
+          left: Extract left cycle track
+        protected:
+          right: Extract right protected bike lane
+          left: Extract left protected bike lane
+        sidewalk:
+          right: Extract right sidewalk
+          left: Extract left sidewalk
+        path:
+          right: Extract right cycle track and sidewalk as one path
+          left: Extract left cycle track and sidewalk as one path
+      side:
+        right: right
+        left: left
+      annotation:
+        cycleway: "Extracted the {side} cycle track into a separate way."
+        protected: "Extracted the {side} protected bike lane into a separate way."
+        sidewalk: "Extracted the {side} sidewalk into a separate way."
+        path: "Extracted the {side} cycle track and sidewalk into a separate path."
+      description: "Create a separate highway={highway} about {meters} m to the {side}; {moved} tags of that side move to it. This road gets {changes}."
+      description_protected: "Usually kept on the road; only extract with a good reason (e.g. a long kerb-separated section). Creates a separate highway={highway} about {meters} m to the {side}; {moved} tags of that side move to it. This road gets {changes}."
+      flash: "Extracted into a separate way. This road: {changes}"
+      flash_kept: "Extracted into a separate way. This road: {changes}. Kept bicycle={bicycle} instead of use_sidepath."
+      loading: Loading the traffic sign rules, try again in a moment.
+      too_large: This can't be extracted because not enough of it is currently visible.
+      incomplete: This can't be extracted because not all of its nodes are downloaded.
+      closed: This can't be extracted because it is a closed way.
+      too_short: This can't be extracted because the way is too short.
+      not_eligible: This can't be extracted.
     _unavailable:
       Cannot perform “{operation}” on currently selected features.
     add:
