@@ -387,7 +387,8 @@ Notes:
   - The side value is read from `cycleway:right`, then `cycleway:both`, then `cycleway`. `value`, `values`, `valueNot` and `valuesNot` work as upstream.
   - Code: `modules/ui/fields/side_prerequisite.ts` (pure helpers + `uiSidePrerequisites`, tests in `test/spec/ui/fields/side_prerequisite.ts`); small hooks in `modules/ui/field.js` (`isAllowed`, class `has-side-prerequisite`) and `modules/ui/fields/directional_combo.js` (row state, placeholder).
   - Grouping: `cycleway/lane` moved from `moreFields` to the road `fields`, right after `cycleway`. It only appears when a side has `lane`. In the compact sidebar (feature 23), a field with a side prerequisite has no line above it, so it reads as part of the field above.
-  - **Planned upstream PR (later, separate from this branch):** "directional combo knows its parent tag". It needs `{side}` in `prerequisiteTag.key` documented in id-tagging-schema, the helpers in iD, and fields that use it (lane type, `parking:{side}:orientation` with `valuesNot: [no, separate]`, `sidewalk:{side}:surface`, …). Open for that PR: should changing the parent to `no`/`separate` also remove the detail tags of that side?
+  - **Cleanup (2026-09-30):** a change that makes a side's prerequisite stop holding also removes that field's value on that side (e.g. `cycleway:right=lane` → `no` removes `cycleway:right:lane`). A value in a common key (`cycleway:both:lane`) is first written to the other side. Only a change that breaks the prerequisite removes anything, so data that was already inconsistent stays. It is generic: it reads the declared prerequisites of the preset's fields (`removeUnmetSideValues` in `side_prerequisite.ts`, one call in `entity_editor.js` `changeTags`, so it also applies to raw tag edits). Side fields without a declared prerequisite (e.g. `cycleway:right:width`) are not touched.
+  - **Planned upstream PR (later, separate from this branch):** "directional combo knows its parent tag". It needs `{side}` in `prerequisiteTag.key` documented in id-tagging-schema, the helpers in iD, and fields that use it (lane type, `parking:{side}:orientation` with `valuesNot: [no, separate]`, `sidewalk:{side}:surface`, …). Part of it: the cleanup below.
 - Open: side variants (`cycleway:<side>:separation:left`, `cycleway:<side>:surface`, …) have no fields; the TILDA section's checklist (feature 8) covers them with key + options. Fields could follow as "sub-fields" of the `cycleway` directional field.
 - Open: a preset category "TILDA Radinfrastruktur"; presets for `footwayBicycleYes` (sidewalk + `bicycle=yes` + `DE:239,1022-10`) and bicycle roads on `service`/`unclassified`.
 
@@ -868,6 +869,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
 
 ## Progress log
 
+- 2026-09-30: Side prerequisites clean up: changing a side's parent so the prerequisite no longer holds removes that side's detail value (feature 15).
 - 2026-09-30: Compact sidebar round 3 (feature 23): no lines between fields, one muted gap color for rows and tag rows, row labels aligned with input text, flat Structure sub fields, light arrows, field titles not clickable.
 - 2026-09-30: Side prerequisites (feature 15): the lane type field only appears when a side has a lane; the other side is disabled with a hint to change the bike infrastructure first. Written to be reused for a later upstream PR.
 - 2026-09-30: Compact sidebar round 2 (feature 23): fields without boxes, no reserved scrollbar track, same-size field buttons, Mapillary field gaps fixed, no "No signs yet" text.
