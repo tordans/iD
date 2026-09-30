@@ -50,7 +50,7 @@ export function svgMeasureTape(projection: Projection, context: iD.Context, disp
 
             _dragStart = { ends: project(state.ends), pointer: [d3_event.x, d3_event.y] };
             measureTape.setEnds(state.ends, true);
-            if (d !== 'both') loupe.start(handlePoint(d));
+            if (d !== 'both') loupe.start(handlePoint(d), handlePoint(d === 'a' ? 'b' : 'a'));
         })
         .on('drag', (d3_event, d) => {
             d3_event.sourceEvent?.stopPropagation();
@@ -72,7 +72,7 @@ export function svgMeasureTape(projection: Projection, context: iD.Context, disp
                 ends = d === 'a' ? [moved, state.ends[1]] : [state.ends[0], moved];
             }
             measureTape.setEnds(ends, true);
-            if (d !== 'both') loupe.move(point);
+            if (d !== 'both') loupe.move(point, projection(ends[d === 'a' ? 1 : 0]));
         })
         .on('end', (d3_event) => {
             d3_event.sourceEvent?.stopPropagation();

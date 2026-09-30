@@ -17,7 +17,8 @@
     pointer-events: none;
 }
 .measure-tape-handle {
-    cursor: move;
+    /* a thin cursor: the move cursor would hide the measured point */
+    cursor: crosshair;
     touch-action: none;
 }
 .measure-tape-handle-hit {
@@ -67,9 +68,8 @@ button.form-field-button.measure-tape-button.active {
     border-radius: 50%;
     overflow: hidden;
     background: #222;
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 1px #000, 0 2px 8px rgba(0, 0, 0, 0.5);
-    box-sizing: border-box;
+    /* a ring outside the lens: a border would shift the image against the crosshair */
+    box-shadow: 0 0 0 3px #fff, 0 0 0 4px #000, 0 2px 10px 4px rgba(0, 0, 0, 0.5);
 }
 .measure-loupe-image {
     position: absolute;
@@ -79,23 +79,33 @@ button.form-field-button.measure-tape-button.active {
     height: 0;
     transform-origin: 0 0;
 }
+.measure-loupe-overlay {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: hidden;
+    border-radius: 50%;
+}
+.measure-loupe-tape {
+    stroke: #2f6bff;
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+    opacity: 0.9;
+}
+.measure-loupe-cross-halo {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 4;
+    stroke-linecap: round;
+}
 .measure-loupe-cross {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0;
-    height: 0;
+    fill: none;
+    stroke: #2f6bff;
+    stroke-width: 2;
+    stroke-linecap: round;
 }
-.measure-loupe-cross::before,
-.measure-loupe-cross::after {
-    content: "";
-    position: absolute;
-    background: #2f6bff;
-    box-shadow: 0 0 0 1px #fff;
-}
-.measure-loupe-cross::before {
-    left: -10px; top: -0.5px; width: 20px; height: 1px;
-}
-.measure-loupe-cross::after {
-    left: -0.5px; top: -10px; width: 1px; height: 20px;
+.measure-loupe-dot {
+    fill: #ff2f6b;
+    stroke: #fff;
+    stroke-width: 1;
 }
