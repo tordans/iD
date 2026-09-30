@@ -628,7 +628,7 @@ For "Geh- und Radweg" mapped as two side tags:
 5. ~~Fixed offsets or from the road width?~~ **Decided (2026-09-30):** from the road width with TILDA's fallbacks, stacked by parking / track / sidewalk (see Geometry).
 6. ~~`is_sidepath:of` / `is_sidepath:of:name`?~~ **Decided (2026-09-30):** no, the new way only gets `is_sidepath=yes` (cycleway, path) or `footway=sidewalk`.
 
-### 18. Mapillary layer: recent imagery, own users, the selected way's images — 📝 (spec)
+### 18. Mapillary layer: recent imagery, own users, the selected way's images — ✅ (v1)
 
 For Radnetz we map from recent imagery, and often from our own captures (user `radinfra`, organization `fixmycity`). The layer should make both visible at a glance.
 
@@ -649,6 +649,12 @@ For Radnetz we map from recent imagery, and often from our own captures (user `r
 
 Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `modules/renderer/photos.js` (defaults, URL params), `modules/ui/sections/photo_overlays.js` (marker line, legend, inputs); new TS helpers in `modules/mapillary/` (config, highlight id resolution, age bands), CSS in its own file.
 
+**Status (v1, built by a Sonnet agent, reviewed):**
+- Config: `iD.mapillaryConfig({ defaultFromDate, highlightUsers, highlightOrgs })` in `index.html` (`modules/mapillary/config.ts`; `defaultFromDate: null` turns the default filter off).
+- Classes `mly-age-new|mid|old|outdated`, `mly-highlighted` (sequence), `mly-highlight-dot`, `mly-selected-feature-image` (magenta ring); CSS `css/97_mapillary_highlight.css`.
+- Tested: at Hauptstraße/Traunsteiner Str. the radinfra images get the dot and their sequence the thicker line; bands new/mid/old show; a way's `mapillary` image older than the cutoff appears when the way is selected.
+- Limits: the cutoff line on the slider stays at the configured date when the filter is widened. An empty pane input falls back to the config lists, so the configured highlights can't be cleared from the pane. The selected way's images are only drawn if their tile is loaded (zoom ≥ 12).
+
 ### 19. Mapillary image fields: all our keys, several images, show in the viewer — 📝 (spec, replaces feature 14)
 
 **Keys in our data** (Berlin PBF 2026-08, `osmium cat -f opl`; TILDA reads the same, `extract_bikelanes.lua`: `mapillary`, `source:mapillary`, `mapillary:forward/backward` (+ `source:`), `traffic_sign:mapillary`, `source:traffic_sign(:forward|:backward):mapillary`, each also on road sides after unnesting):
@@ -664,7 +670,7 @@ Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `module
 | `cycleway:right:traffic_sign:mapillary` | 138 | | `cycleway:mapillary`, `source:traffic_sign:backward/forward:mapillary`, `mapillary:forward`, `sidewalk:*:mapillary`, `cycleway:both:mapillary:backward`, … | < 15 each |
 
 - Several images in one value (`;`) are rare: 17 of 5835 `mapillary`, 1 of 31 `source:mapillary`.
-- No numbered keys (`mapillary:1`, `:2`) in Berlin; Germany count pending (scan running). The field supports them anyway if they appear.
+- No numbered keys (`mapillary:1`, `:2`) in Berlin. Germany (`germany-latest.osm.pbf`, 70,547 `mapillary`) has the same key set plus: `mapillary:image` 220 (nonstandard), `mapillary:2019` 12 / `mapillary:2020` 8 (years; parsed as numbered keys, harmless), `mapillary:addr` 7, `source:ref|maxspeed:mapillary` 7 each, `mapillary_url` 4. Only `mapillary:image` is frequent enough to consider; not handled for now. The field supports numbered keys anyway.
 - Not image ids, excluded: `mapillary:map_feature`, `was:mapillary`.
 - Key grammar we handle: `[source:][cycleway|sidewalk[:left|:right|:both]:][traffic_sign[:forward|:backward]:]mapillary[:forward|:backward|:<n>]`, plus `source:mapillary[:forward|:backward]`. Labels from the parts, e.g. "Right bike lane · traffic sign (source)".
 
