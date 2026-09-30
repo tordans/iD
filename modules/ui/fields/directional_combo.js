@@ -5,6 +5,7 @@ import { geoWayDominantHeadingInViewport, geoWayStraightnessInViewport } from '.
 import { DIRECTIONAL_COMBO_ARROW_UP_PATH, DIRECTIONAL_COMBO_ARROW_VIEWBOX } from '../../svg/directional_combo_arrow';
 import { utilRebind } from '../../util';
 import { uiFieldCombo } from './combo';
+import { uiSidePrerequisites } from './side_prerequisite';
 
 
 export function uiFieldDirectionalCombo(field, context) {
@@ -27,6 +28,9 @@ export function uiFieldDirectionalCombo(field, context) {
             keys: field.keys.slice(1)
         };
     }
+
+    // sides whose `prerequisiteTag` (with `{side}` in its key) does not hold are disabled
+    const _sidePrerequisites = uiSidePrerequisites(field, context);
 
     function directionalCombo(selection) {
         /**
@@ -261,7 +265,8 @@ export function uiFieldDirectionalCombo(field, context) {
                 const subField = {
                     ...field,
                     type: 'combo',
-                    key
+                    key,
+                    placeholder: () => _sidePrerequisites.placeholder(key) || field.placeholder?.()
                 };
                 const combo = uiFieldCombo(subField, context);
                 combo.on('change', t => change(key, t[key]));
@@ -406,6 +411,9 @@ export function uiFieldDirectionalCombo(field, context) {
         for (const key in _combos) {
             const uniqueValues = [...combinedTags[key]];
             _combos[key].tags({ [key]: uniqueValues.length > 1 ? uniqueValues : uniqueValues[0] });
+        }
+        if (!Array.isArray(__test_tags)) {
+            _sidePrerequisites.update(items, entityTags, context.selectedIDs());
         }
     };
 

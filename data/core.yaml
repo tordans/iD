@@ -848,6 +848,9 @@ en:
     measure_tape:
       button: "Measure on the map"
       annotation: "Measured width"
+    side_prerequisite:
+      missing: "Set “{field}” for this side first"
+      other_value: "“{value}”: change “{field}” first"
     side_width:
       cycleway:
         left: Bike Lane Width, Left (Meters)

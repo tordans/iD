@@ -8,6 +8,7 @@ import { uiTooltip } from './tooltip';
 import { geoExtent } from '../geo/extent';
 import { uiFieldHelp } from './field_help';
 import { uiFields } from './fields';
+import { isSidePrerequisite, sidePrerequisiteAllowed } from './fields/side_prerequisite';
 import { LANGUAGE_SUFFIX_REGEX } from './fields/localized';
 import { uiTagReference } from './tag_reference';
 import { utilRebind, utilUniqueDomId } from '../util';
@@ -163,7 +164,9 @@ export function uiField(context, presetField, entityIDs, options) {
         var enter = container.enter()
             .append('div')
             .attr('class', function(d) { return 'form-field form-field-' + d.safeid; })
-            .classed('nowrap', !options.wrap);
+            .classed('nowrap', !options.wrap)
+            // a detail of another field's sides, drawn as part of the field above it
+            .classed('has-side-prerequisite', isSidePrerequisite(field.prerequisiteTag));
 
         if (options.wrap) {
             var labelEnter = enter
@@ -357,6 +360,12 @@ export function uiField(context, presetField, entityIDs, options) {
         }
 
         var prerequisiteTag = field.prerequisiteTag;
+
+        // `{side}` in the key: allowed when it holds on at least one side (see side_prerequisite.ts)
+        if (entityIDs && !tagsContainFieldKey() && isSidePrerequisite(prerequisiteTag)) {
+            return sidePrerequisiteAllowed(prerequisiteTag, field.keys || [],
+                entityIDs.map(entityID => context.graph().entity(entityID).tags));
+        }
 
         if (entityIDs &&
             !tagsContainFieldKey() && // ignore tagging prerequisites if a value is already present
