@@ -172,7 +172,11 @@ export function uiField(context, presetField, entityIDs, options) {
             var labelEnter = enter
                 .append('label')
                 .attr('class', 'field-label')
-                .attr('for', function(d) { return d.domId; });
+                .attr('for', function(d) { return d.domId; })
+                // Radnetz Berlin: the title is not clickable (only some fields reacted), its buttons are
+                .on('click.title', function(d3_event) {
+                    if (!d3_event.target.closest('button')) d3_event.preventDefault();
+                });
 
             var textEnter = labelEnter
                 .append('span')

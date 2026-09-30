@@ -124,6 +124,8 @@
 .entity-editor .section-raw-tag-editor .tag-row input,
 .entity-editor .section-raw-tag-editor .tag-row button {
     border-radius: 0 !important;
+    /* the same gap between rows and cells as in the fields */
+    border-color: var(--bg-color-2);
 }
 .entity-editor .section-raw-tag-editor .tag-text {
     border-width: 1px 0;
@@ -151,23 +153,23 @@
 }
 
 
-/* Experiment: fields without boxes.
-   One line above each field label, no other borders. The label is plain text in the line,
-   inputs and buttons keep their darker background. The borders inside the input area take the
-   sidebar color: the outer edges disappear and the inner ones become small gaps between the parts. */
+/* Fields without boxes and without lines between them, only space.
+   The label is plain text, inputs and buttons keep their darker background. The borders inside
+   the input area take the sidebar color: the outer edges disappear and the inner ones become
+   small gaps between the parts (the same gap separates rows, cells and tag rows everywhere). */
 .entity-editor .form-field {
     margin-bottom: 0;
     padding: 4px 0 8px;
-    border-top: 1px solid var(--border-color);
 }
 .entity-editor .wrap-form-field:first-child .form-field {
-    border-top: 0;
     padding-top: 0;
 }
 .entity-editor .field-label {
     background: none;
     border: 0;
     border-radius: 0;
+    /* titles are not clickable (field.js), only the inputs and buttons */
+    cursor: default;
 }
 .entity-editor .field-label .label-text {
     padding: 3px 0 3px 0;
@@ -192,6 +194,48 @@
     border-radius: 4px;
     overflow: hidden;
 }
+/* 1: rows and cells inside a field: no own rounded corners, the field's input area has them */
+.entity-editor .form-field ul.rows .form-field-input-wrap,
+.entity-editor .form-field ul.rows input {
+    border-radius: 0;
+}
+/* 1: directional combo rows are table rows, which draw no borders: the gap goes on the cells */
+.entity-editor .form-field ul.rows.rows-table li + li > div {
+    border-top: 1px solid var(--bg-color-2);
+}
+/* 4: row labels ("Left side", "All") start where the text of an input starts */
+.entity-editor .form-field ul.rows li.labeled-input > .label {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+/* 2: radio options (Structure) use the same gap as rows */
+.entity-editor .form-field .form-field-input-radio > label {
+    border-color: var(--bg-color-2);
+}
+/* Structure's sub fields (type, layer): flat rows like the rest, no inner box */
+.entity-editor .form-field .structure-extras-wrap {
+    padding: 0;
+    border: 0;
+    border-top: 1px solid var(--bg-color-2);
+    border-radius: 0;
+    background: none;
+}
+.entity-editor .form-field .structure-extras-wrap > ul.rows {
+    border: 0;
+    border-radius: 0;
+}
+.entity-editor .form-field .structure-extras-wrap li.labeled-input {
+    align-items: center;
+}
+/* up/down and dropdown arrows in the same light grey as the label icons */
+.entity-editor .form-field .combobox-caret::after,
+.entity-editor .form-field button.decrement::after {
+    border-top-color: color-mix(in srgb, var(--text-color) 45%, transparent);
+}
+.entity-editor .form-field button.increment::after {
+    border-bottom-color: color-mix(in srgb, var(--text-color) 45%, transparent);
+}
+
 /* the combobox dropdown hangs below the input */
 .entity-editor .form-field-input-wrap:has(.combobox-input:focus) {
     overflow: visible;
@@ -231,9 +275,8 @@
 
 
 /* A field that details the sides of the field above it (side prerequisite, e.g. the lane type
-   below the bike infrastructure): no line between them, so they read as one group */
+   below the bike infrastructure): closer to it, so they read as one group */
 .entity-editor .form-field.has-side-prerequisite {
-    border-top: 0;
     padding-top: 0;
 }
 /* a side where the field above says there is nothing to detail */
