@@ -485,7 +485,18 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 | `crossing` | `width`, `surface`, `oneway` | `traffic_sign`, `surface:colour`, `crossing` (signals/markings) |
 | roads (mixed traffic) | `oneway` (+ `oneway:bicycle`, `dual_carriageway` if one-way), `width`, `surface`, `cycleway:both/left/right` | `surface:colour` |
 
-### 17. Extract a side into a separate way — 📝 (spec, waiting for review)
+### 17. Extract a side into a separate way — ✅ (v1)
+
+**Done (2026-09-30):** built as specified below.
+- Code: `modules/sidepath/extract_tags.ts` (tag logic), `modules/sidepath/offset_line.ts`, `modules/actions/extract_sidepath.ts`, `modules/operations/extract_sidepath.ts` (added to the edit menu by a small hook in `modules/modes/select.js`, after iD's "Extract"), `css/96_extract_sidepath.css`, strings `operations.extract_sidepath.*`. Tests: `test/spec/sidepath/`, `test/spec/actions/extract_sidepath.ts`.
+- Hovering a menu entry previews the new way (magenta dashed). The tooltip gives the offset, how many side tags move, and what the road gets.
+- The operation needs the traffic sign rules (the lazy recommender bundle, loaded when a road is selected); until they are there the entry is disabled with "Loading the traffic sign rules …". If loading fails, it extracts without sign rules.
+- Question 3 (`foot=use_sidepath` for sidewalks): built with "never".
+- `use_sidepath` only when the side's **sign** designates it (237, 240, 241); a combined path without a sign is `bicycle`/`foot=designated` but the road gets no `use_sidepath`.
+- Simplified against the spec: the kerb/buffer distance is a fixed 1 m (the side's `buffer` is not used yet). Unsided meta keys (`check_date:cycleway`, `source:cycleway:width`) stay on the road.
+- Also: field "Bicycles, by Direction" (`bicycle/direction`) on the road presets; iD's edit menu no longer shows an empty "Shortcut" row for operations without a key.
+- Tested in the browser (local test edits, all undone): right cycle track with DE:237 on Torstraße, and track + sidewalk with DE:241 as one path. TILDA reads the new ways as "Cycle track, along a road" / "Segregated foot and cycle path, along a road".
+- Next: "extract along the chain" (way table, feature 6); snap the new way's ends to crossing paths; use `buffer` and the sidewalk/parking order from street-space-editor for the offset.
 
 **Goal.** Many Berlin roads carry their cycle track and sidewalk as tags on the road (`cycleway:right=track`, `sidewalk:both=yes`, …). For the Radnetz dataset, and for width, separation and surface details, a separate way is often better: it gets its own geometry, junctions and full tagging. Today that conversion is manual and error-prone. You have to draw a parallel way, copy and rename ~10 tags, change the road to `…=separate` and remember `bicycle=use_sidepath`. This feature does it with one right-click. The result is one undo step, and the new way is selected so the mapper can align it with the imagery and connect it.
 
@@ -671,6 +682,7 @@ For "Geh- und Radweg" mapped as two side tags:
 
 ## Progress log
 
+- 2026-09-30: Extract a road side into a separate way (feature 17). TILDA target select also for ways TILDA does not process (feature 8).
 - 2026-09-30: Traffic sign review; tag suggestions below the traffic sign field, in the same UI as the TILDA tag plan (feature 2).
 - 2026-09-30: Bundled lens "Radnetz QA" (feature 5): ways colored by how complete their TILDA checklist is.
 - 2026-09-29: Way table docked at the bottom, flies to the selected way.
@@ -695,7 +707,7 @@ For "Geh- und Radweg" mapped as two side tags:
 - Feature 14: eye button on the Mapillary Image ID field.
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
-- Feature 17: review the spec (open questions), then build it.
+- Feature 17 v2: extract along the chain; snap the ends.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
