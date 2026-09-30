@@ -487,7 +487,7 @@ Only for a single selected way with `highway` = a road class (not path-like clas
 | `sidewalk:<side>` = `yes` (also via `sidewalk=both|left|right|yes`, `sidewalk:both`) | "Extract <side> sidewalk" |
 | both a cycle track and a sidewalk on the same side | both entries above, plus "Extract <side> cycle track and sidewalk as one path" |
 
-So one road can offer up to 6 entries (left/right × cycleway / sidewalk / combined path). In the edit menu they sit together after "Reverse" with one icon (`temaki-bicycle_structure`/`temaki-pedestrian`, or `iD-icon-...` if missing), ordered right side first (the side cycle tracks are on in Germany). Tooltips say what will happen, e.g. "Create a separate cycleway about 10 m to the right and set `cycleway:right=separate` on this road."
+So one road can offer up to 6 entries (left/right × cycleway / sidewalk / combined path). In the edit menu they sit together after "Reverse", all with iD's `iD-operation-extract` icon, ordered right side first (the side cycle tracks are on in Germany). Tooltips say what will happen, e.g. "Create a separate cycleway about 10 m to the right and set `cycleway:right=separate` on this road."
 
 Disabled (entry shown greyed, with iD's usual reason tooltip): way not fully downloaded, too large (off-screen), or the new geometry would not fit (way shorter than 2 m).
 
