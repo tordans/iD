@@ -469,6 +469,125 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 | `crossing` | `width`, `surface`, `oneway` | `traffic_sign`, `surface:colour`, `crossing` (signals/markings) |
 | roads (mixed traffic) | `oneway` (+ `oneway:bicycle`, `dual_carriageway` if one-way), `width`, `surface`, `cycleway:both/left/right` | `surface:colour` |
 
+### 17. Extract a side into a separate way — 📝 (spec, waiting for review)
+
+**Goal.** Many Berlin roads carry their cycle track and sidewalk as tags on the road (`cycleway:right=track`, `sidewalk:both=yes`, …). For the Radnetz dataset, and for width, separation and surface details, a separate way is often better: it gets its own geometry, junctions and full tagging. Today that conversion is manual and error-prone. You have to draw a parallel way, copy and rename ~10 tags, change the road to `…=separate` and remember `bicycle=use_sidepath`. This feature does it with one right-click. The result is one undo step, and the new way is selected so the mapper can align it with the imagery and connect it.
+
+**Principle.** The side's tags are read exactly as TILDA reads them: `getTransformedObjects` from `@tilda-geo/bicycle-infrastructure`, the same unnesting as street-space-editor's `expandSidepaths`, with specificity `prefix` < `prefix:both` < `prefix:<side>`, plus `source:`/`note:` meta keys. So after the extraction TILDA sees the same attributes on the new way as it saw on the side before. Only the category changes from "road side" to "own way".
+
+#### When the operations appear
+
+Only for a single selected way with `highway` = a road class (not path-like classes, not areas), fully loaded and not locked.
+
+| Side has… (after unnesting, per side) | Offered |
+|---|---|
+| `cycleway:<side>` = `track` (also via `cycleway`, `cycleway:both`, `opposite_track`) | "Extract <side> cycle track" |
+| `cycleway:<side>` = `lane` / `share_busway` **with** a physical `separation:*` (protected lane) | "Extract <side> bike lane" (protected lanes are sometimes mapped separately) |
+| `cycleway:<side>` = `lane` / `shared_lane` / `share_busway` without separation, `no`, `separate`, `opposite` | nothing (painted lanes stay on the road) |
+| `sidewalk:<side>` = `yes` (also via `sidewalk=both|left|right|yes`, `sidewalk:both`) | "Extract <side> sidewalk" |
+| both a cycle track and a sidewalk on the same side | both entries above, plus "Extract <side> cycle track and sidewalk as one path" |
+
+So one road can offer up to 6 entries (left/right × cycleway / sidewalk / combined path). In the edit menu they sit together after "Reverse" with one icon (`temaki-bicycle_structure`/`temaki-pedestrian`, or `iD-icon-...` if missing), ordered right side first (the side cycle tracks are on in Germany). Tooltips say what will happen, e.g. "Create a separate cycleway about 10 m to the right and set `cycleway:right=separate` on this road."
+
+Disabled (entry shown greyed, with iD's usual reason tooltip): way not fully downloaded, too large (off-screen), or the new geometry would not fit (way shorter than 2 m).
+
+#### Tagging per variant
+
+Notation: `S` = the side's unnested tags (e.g. `S.surface` comes from `cycleway:right:surface` ?? `cycleway:both:surface` ?? `cycleway:surface`). `R` = the road's tags.
+
+**A. Cycle track → `highway=cycleway`**
+
+New way:
+- `highway=cycleway`, `is_sidepath=yes`, `is_sidepath:of=<R.highway>`, `is_sidepath:of:name=<R.name>` (if named). All three are common in Berlin (495 cycleway links alone use them).
+- Copied from `S`: `surface`, `smoothness`, `width` (+ `source:width`), `surface:colour`, `sett:length`, `segregated`, `traffic_sign` (+ `:forward`/`:backward`), `separation:*`, `buffer:*`, `marking:*`, `traffic_mode:*`, `lit` (else copy `R.lit`), `oneway`, `note`, `check_date`, and any other `S` key except the ones below.
+- Dropped: the presence value itself (`cycleway=track`), `lane`, and keys that only make sense on the road (`lanes`, `width:lanes`, …).
+- Access from the sign (sanitized, `DE:` prefix):
+  - 237 → `bicycle=designated`.
+  - 240 → `bicycle=designated`, `foot=designated`, `segregated=no`.
+  - 241 → the same with `segregated=yes`.
+  - No sign → only `highway=cycleway` (implies bicycle designated); `traffic_sign=none` is kept if tagged.
+- Direction: `S.oneway` if tagged. Otherwise the way is drawn in the road's direction on the right side and against it on the left, with `oneway=yes` (German default: tracks run with the traffic on their side). If the road has `oneway=yes` + `oneway:bicycle=no` and the left side has no oneway tag, we do **not** guess: `oneway` stays unset and the TILDA checklist shows it as missing.
+
+Road (centerline):
+- `cycleway:<side>=separate`. All `cycleway:<side>:*` keys and their `source:`/`note:`/`check_date:` variants are removed.
+- If the value came from `cycleway` or `cycleway:both`, it is first split into `cycleway:left` / `cycleway:right` (and `cycleway:both:*` sub-keys into both sides), so the other side keeps its tags. If both sides end up equal (`separate`), they are merged back into `cycleway:both=separate`.
+- Use-sidepath, only if the new way is designated (sign 237, 240 or 241):
+  - Right side extracted → `bicycle:forward=use_sidepath`.
+  - Left side extracted → `bicycle:backward=use_sidepath`.
+  - Both sides designated (after the second extraction) → merged into `bicycle=use_sidepath` (and the directional keys removed).
+  - On a one-way road the forward side alone → `bicycle=use_sidepath`, unless `oneway:bicycle=no`.
+  - An existing `bicycle=*` value other than `yes`/`designated`/unset is not overwritten (reported in the flash message).
+
+**B. Sidewalk → `highway=footway` + `footway=sidewalk`**
+
+New way:
+- `highway=footway`, `footway=sidewalk` (TILDA treats that as a sidepath, so no `is_sidepath` needed), `is_sidepath:of*` as above.
+- Copied from `S` (prefix `sidewalk`): `surface`, `smoothness`, `width`, `sett:length`, `lit`, `kerb`, `tactile_paving`, `traffic_sign`, `note`, `check_date`, …
+- Bicycle access from `S.bicycle`:
+  - `yes` → `bicycle=yes` (TILDA `footwayBicycleYes`; the sign `DE:239,1022-10` is kept if tagged).
+  - `designated` → `bicycle=designated` + `foot=designated` + `segregated` from `S` (TILDA foot+cycle categories need all three).
+  - `no` → `bicycle=no`.
+- No `oneway`.
+
+Road:
+- `sidewalk:<side>=separate`.
+- The old one-key schema is converted to sided keys: `sidewalk=right` means right yes, left no. The same split and merge rules as for cycleways apply.
+- `foot=use_sidepath` only on request (open question below); by default nothing, because in Germany pedestrians have no general "must use" rule like bikes do.
+
+**C. Cycle track + sidewalk on the same side → one `highway=path`**
+
+For "Geh- und Radweg" mapped as two side tags:
+- `highway=path`, `bicycle=designated`, `foot=designated`, `is_sidepath=yes`, `is_sidepath:of*`.
+- `segregated`:
+  - `yes` if a cycle track and a sidewalk are both tagged (two strips) or the sign is 241.
+  - `no` if the sign is 240.
+  - Otherwise `S_cycleway.segregated` or `S_sidewalk.segregated`.
+- Split keys (Key:segregated wiki; the same as street-space-editor's width/surface modes and what TILDA reads):
+  - `cycleway:surface`, `cycleway:smoothness`, `cycleway:width` (+ `source:cycleway:width`), `cycleway:surface:colour` ← from the cycle track.
+  - `footway:surface`, `footway:smoothness`, `footway:width` ← from the sidewalk.
+- Combined keys:
+  - `surface` / `smoothness`: only when both parts have the same value (then the split keys are left out).
+  - `width`: the sum of both widths, only if both are known.
+  - `lit`: from either part, else from the road.
+- `traffic_sign` from the cycle track side (240/241 live there), else the sidewalk side.
+- Direction: `oneway=no` for the path; the cycle direction as `oneway:bicycle` (the rules from A, where `oneway=yes` becomes `oneway:bicycle=yes`).
+- TILDA check: TILDA reads `cycleway:*` on a path as the bike values (`surface` ← `cycleway:surface`), so the Radnetz attributes stay the same.
+- Road: both A and B changes (`cycleway:<side>=separate`, `sidewalk:<side>=separate`, `bicycle:<dir>=use_sidepath` when designated).
+
+#### Geometry
+
+- A copy of the road's line offset to the chosen side: right = right of the way's direction. Distances: cycleway 8 m, path 10 m, sidewalk 12 m, so later extractions on the same side don't overlap.
+  - Each vertex is moved along the average of its two segment normals, in meters converted with `geoMetersToLat/Lon`.
+  - Very sharp angles are clamped so the line doesn't loop.
+- New nodes only. Nothing is connected to the road network. iD's "disconnected way" / "almost junction" validations then show the ends to connect, which is intended because junctions need a human.
+- Node order: see "Direction" in A.
+- After the operation: one undo step ("Extracted the right cycle track into a separate way"). The new way is selected, and the map doesn't move. Flash text: what was changed on the road.
+
+#### Edge cases
+
+- **Road split into several ways:** only the selected way is converted. The way table (feature 6) shows the neighbours. v2: "extract along the chain".
+- **Way with `cycleway:right=separate` already:** that side isn't offered.
+- **Directional traffic signs on the road** (`traffic_sign:forward=DE:237` without side keys): not moved in v1 (the flash message says so).
+- **Parking lanes between road and track** (`parking:right=lane`): only affect the offset. v1 uses the fixed distances.
+- **Roundabouts / closed ways:** not offered in v1.
+
+#### Implementation plan (after review)
+
+- `modules/sidepath/extract_tags.ts`: pure functions. `sideTags(tags, prefix, side)` via `getTransformedObjects`, `newWayTags(variant, …)`, `roadTagChanges(variant, …)`, `designation(trafficSign)`. Unit tests for every row of the tables above.
+- `modules/sidepath/offset_line.ts`: offset coordinates.
+- `modules/actions/extract_sidepath.ts`: one action that adds nodes + way and changes the road tags.
+- `modules/operations/extract_sidepath.ts`: one operation factory per variant/side (`operationExtractSidepath(context, ids, { prefix, side })`), registered in `modules/operations/index` and in the edit menu. Not named `extract` (iD already has "Extract" for points from areas).
+- Strings under `operations.extract_sidepath.*` in `data/core.yaml`.
+
+#### Open questions for review
+
+1. Offer protected bike lanes (lane + separation) as separate ways, or only `track`?
+2. Directional `bicycle:forward/backward=use_sidepath`, or always plain `bicycle=use_sidepath` (simpler, but wrong for a road with a mandatory path on one side only)?
+3. `foot=use_sidepath` for sidewalks: never, always, or as a separate option?
+4. 240/241 in variant A: `highway=cycleway` + `foot=designated` (iD preset "Cycle & Foot Path") or `highway=path` + designated (like C)? Proposal: `highway=cycleway`, because it is the side of a cycle track.
+5. Offsets: fixed 8/10/12 m, or from the road width (half the road width from feature 10 + 2–4 m)?
+6. `is_sidepath:of` / `is_sidepath:of:name`: add them (common in Berlin) or leave them out?
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -542,6 +661,7 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 - Feature 14: eye button on the Mapillary Image ID field.
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
+- Feature 17: review the spec (open questions), then build it.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
