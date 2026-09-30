@@ -402,7 +402,7 @@ Notes:
 
 ### 16. Data index: infraVelo result ⇐ TILDA ⇐ OSM tags — 📚 (reference for validations)
 
-The Radnetz dataset for infraVelo is built by `~/Development/FMC/infravelo-radnetz` (not `FMC/scripts`). Its first step, `scripts/translate_attributes_tilda_to_rvn.py` (run by `process_tilda_data.sh`), turns three TILDA exports into the infraVelo attributes; later steps (matching, snapping onto the Detailnetz, Schutzstreifen conversion, overrides, aggregation per `elem_nr` + direction) only move and merge those values. Spec: `processing/REQUIREMENTS.md` (says it may be outdated; the Python code is the truth). So what we validate in iD is the OSM input of that one translation step.
+**Reference:** the Radnetz dataset for infraVelo is built by `~/Development/FMC/infravelo-radnetz` (read at commit `56f605e`, 2026-01-29). Use that repo for this index, not the older analyses in `~/Development/FMC/scripts`. Its first step, `scripts/translate_attributes_tilda_to_rvn.py` (run by `process_tilda_data.sh`), turns three TILDA exports into the infraVelo attributes; later steps (matching, snapping onto the Detailnetz, Schutzstreifen conversion, overrides, aggregation per `elem_nr` + direction) only move and merge those values. Spec: `processing/REQUIREMENTS.md` (says it may be outdated; the Python code is the truth). So what we validate in iD is the OSM input of that one translation step.
 
 | TILDA export | infraVelo file | Rows |
 |---|---|---|
@@ -434,7 +434,7 @@ Note on `~/Development/FMC/tilda-geo--osm-tag-mapping` (branch `osm-tag-mapping`
 
 #### B. Category index (`fuehr` ⇐ TILDA `category` ⇐ OSM)
 
-Berlin km from the TILDA export used by infravelo (Sept 2025, clipped to Berlin). "Own way" includes bicycle roads and lanes in the middle, which are the road itself.
+Berlin km from the TILDA export in that repo (`infravelo-radnetz/data/TILDA Radwege Berlin.fgb`, Sept 2025, clipped to Berlin). "Own way" includes bicycle roads and lanes in the middle, which are the road itself.
 
 | infraVelo `fuehr` | TILDA category | km own way / road side | OSM tags, own way | OSM tags, road side |
 |---|---|---|---|---|
