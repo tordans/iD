@@ -651,11 +651,12 @@ Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `module
 
 **Status (v1, built by a Sonnet agent, reviewed):**
 - Config: `iD.mapillaryConfig({ defaultFromDate, highlightUsers, highlightOrgs })` in `index.html` (`modules/mapillary/config.ts`; `defaultFromDate: null` turns the default filter off).
+- Highlight inputs start with the configured lists; what the user enters replaces them, an empty input means no highlighting (`photo_highlight_users=` stays in the URL), entering the configured list again drops the parameter.
 - Classes `mly-age-new|mid|old|outdated`, `mly-highlighted` (sequence), `mly-highlight-dot`, `mly-selected-feature-image` (magenta ring); CSS `css/97_mapillary_highlight.css`.
 - Tested: at Hauptstraße/Traunsteiner Str. the radinfra images get the dot and their sequence the thicker line; bands new/mid/old show; a way's `mapillary` image older than the cutoff appears when the way is selected.
-- Limits: the cutoff line on the slider stays at the configured date when the filter is widened. An empty pane input falls back to the config lists, so the configured highlights can't be cleared from the pane. The selected way's images are only drawn if their tile is loaded (zoom ≥ 12).
+- Limits: the cutoff line on the slider stays at the configured date when the filter is widened. The selected way's images are only drawn if their tile is loaded (zoom ≥ 12).
 
-### 19. Mapillary image fields: all our keys, several images, show in the viewer — 📝 (spec, replaces feature 14)
+### 19. Mapillary image fields: all our keys, several images, show in the viewer — ✅ (v1, replaces feature 14)
 
 **Keys in our data** (Berlin PBF 2026-08, `osmium cat -f opl`; TILDA reads the same, `extract_bikelanes.lua`: `mapillary`, `source:mapillary`, `mapillary:forward/backward` (+ `source:`), `traffic_sign:mapillary`, `source:traffic_sign(:forward|:backward):mapillary`, each also on road sides after unnesting):
 
@@ -670,7 +671,7 @@ Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `module
 | `cycleway:right:traffic_sign:mapillary` | 138 | | `cycleway:mapillary`, `source:traffic_sign:backward/forward:mapillary`, `mapillary:forward`, `sidewalk:*:mapillary`, `cycleway:both:mapillary:backward`, … | < 15 each |
 
 - Several images in one value (`;`) are rare: 17 of 5835 `mapillary`, 1 of 31 `source:mapillary`.
-- No numbered keys (`mapillary:1`, `:2`) in Berlin. Germany (`germany-latest.osm.pbf`, 70,547 `mapillary`) has the same key set plus: `mapillary:image` 220 (nonstandard), `mapillary:2019` 12 / `mapillary:2020` 8 (years; parsed as numbered keys, harmless), `mapillary:addr` 7, `source:ref|maxspeed:mapillary` 7 each, `mapillary_url` 4. Only `mapillary:image` is frequent enough to consider; not handled for now. The field supports numbered keys anyway.
+- No numbered keys (`mapillary:1`, `:2`) in Berlin. Germany (`germany-latest.osm.pbf`, 70,547 `mapillary`) has the same key set plus: `mapillary:image` 220 (nonstandard), `mapillary:2019` 12 / `mapillary:2020` 8 (years; **not supported**, numbered keys have at most 3 digits), `mapillary:addr` 7, `source:ref|maxspeed:mapillary` 7 each, `mapillary_url` 4. Only `mapillary:image` is frequent enough to consider; not handled for now. The field supports numbered keys anyway.
 - Not image ids, excluded: `mapillary:map_feature`, `was:mapillary`.
 - Key grammar we handle: `[source:][cycleway|sidewalk[:left|:right|:both]:][traffic_sign[:forward|:backward]:]mapillary[:forward|:backward|:<n>]`, plus `source:mapillary[:forward|:backward]`. Labels from the parts, e.g. "Right bike lane · traffic sign (source)".
 
@@ -687,6 +688,13 @@ Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `module
    - Stored in `prefs`.
 
 Code: `modules/mapillary/tag_keys.ts` (parse keys and values, labels, preferred image; shared with features 18 and 20, with tests), `modules/ui/fields/mapillary_images.ts`, `modules/presets/…` (field type override), strings in `data/core.yaml`.
+
+**Status (v1, built by a Sonnet agent, reviewed):**
+- Field type `mapillaryImages` (`modules/ui/fields/mapillary_images.ts`, CSS `css/98_mapillary_field.css`), helpers `modules/mapillary/{field_rows,image_info,viewer,auto_show}.ts` with tests.
+- The customization replaces the `mapillary` field with `universal: true` instead of adding it to each preset's `moreFields`: every preset offers it, and it shows once any image key is tagged. `presets/field.ts`: `allKeys` includes all image keys of the tags (present/modified/revert), and the field's own label wins over the schema's translated "Mapillary Image ID".
+- Pasting a Mapillary URL (`pKey=`) stores the id. Removing the last image of a key removes the tag.
+- Auto-show: `context.on('enter')` hook (`initMapillaryAutoShow` in `ui/init.js`), pref `mapillary-auto-show-selected`, checkbox shown while the Mapillary layer is on.
+- Not supported: multi-selection. The "+" of a key is disabled while it has an empty input.
 
 ### 20. "Set photo from viewer" for all image keys — 📝 (spec)
 
