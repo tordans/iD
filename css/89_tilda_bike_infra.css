@@ -35,9 +35,65 @@
     background: var(--bg-color);
 }
 
+/* the way itself, collapsed when its bike infrastructure is on the sides */
+.tilda-card.collapsible .tilda-card-header {
+    cursor: pointer;
+}
+.tilda-card.collapsible .tilda-card-header::before {
+    content: '▾';
+    display: inline-block;
+    width: 1em;
+    color: var(--link-color);
+}
+.tilda-card.collapsed .tilda-card-header::before {
+    content: '▸';
+}
+.tilda-card.collapsed .tilda-card-header {
+    border-radius: 4px;
+}
+.tilda-card.collapsed .tilda-card-body {
+    display: none;
+}
+.tilda-card-hint:not(:empty) {
+    margin-inline-start: 6px;
+    font-weight: normal;
+    font-size: 12px;
+    color: var(--muted-text-color);
+}
+
+.tilda-headline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 6px;
+    margin-top: 4px;
+    font-weight: normal;
+}
+.tilda-target-name:not(:empty) {
+    font-size: 12px;
+}
+.tilda-card button.tilda-edit {
+    width: 24px;
+    height: 24px;
+    margin-inline-start: auto;
+    padding: 0;
+    background: transparent;
+    color: var(--text-color);
+}
+.tilda-card button.tilda-edit.active,
+.tilda-card button.tilda-edit:hover {
+    background: var(--link-focus-color);
+    color: var(--bg-color);
+}
+.tilda-card button.tilda-edit .icon {
+    width: 14px;
+    height: 14px;
+}
+.tilda-card.collapsed .tilda-headline {
+    display: none;
+}
 .tilda-category {
     display: inline-block;
-    margin-bottom: 8px;
     padding: 2px 8px;
     border-radius: 3px;
     background: #2e7d32;
@@ -112,6 +168,11 @@
 .tilda-attribute.state-missing .tilda-attribute-state { color: #e06d5f; }
 .tilda-attribute.optional.state-missing .tilda-attribute-state { color: var(--passive-text-color); }
 
+.tilda-attribute-optional:not(:empty) {
+    margin-inline-start: 6px;
+    font-size: 12px;
+    color: var(--muted-text-color);
+}
 .tilda-attribute-label,
 .tilda-attribute-value {
     display: flex;

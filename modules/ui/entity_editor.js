@@ -91,11 +91,11 @@ export function uiEntityEditor(context) {
         if (!_sections) {
             _sections = [
                 uiSectionSelectionList(context),
-                // Radnetz Berlin: TILDA helper first, it is the main task in this editor
-                uiSectionTildaBikeInfra(context).on('change', changeTags),
                 uiSectionFeatureType(context).on('choose', function(presets) {
                     dispatch.call('choose', this, presets);
                 }),
+                // Radnetz Berlin: TILDA helper right below the preset, it is the main task in this editor
+                uiSectionTildaBikeInfra(context).on('change', changeTags),
                 uiSectionEntityIssues(context),
                 uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
                 uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags),

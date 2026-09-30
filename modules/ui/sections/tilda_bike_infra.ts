@@ -11,9 +11,12 @@ import {
 } from '@tilda-geo/bicycle-infrastructure';
 
 import { t } from '../../core/localizer';
+import { svgIcon } from '../../svg/icon';
 import { utilRebind } from '../../util/rebind';
 import { categoryForSide, planCategory, type Side, type TildaTagPlan } from '../../tilda/category_plan';
+import { categoryGroupLabel, categoryLabel, groupCategories } from '../../tilda/category_labels';
 import { requiredAttributes, roadAttributes, type RequiredAttribute } from '../../tilda/required_attributes';
+import { uiPaneTooltip } from '../pane_tooltip';
 import { uiSection } from '../section';
 import { drawTagPlan, tagPlanChanges, type TagPlanRow } from '../tag_plan';
 
@@ -25,6 +28,11 @@ type SideCard = {
     target: string | undefined;
     plan: TildaTagPlan | undefined;
     attributes: RequiredAttribute[];
+    /** mixed traffic checklist, for a way that is not bike infrastructure itself */
+    roadAttributes: RequiredAttribute[];
+    /** can be collapsed: the way itself when its bike infrastructure is mapped on the sides */
+    collapsible: boolean;
+    collapsed: boolean;
 };
 
 const SIDE_ORDER: Side[] = ['self', 'left', 'right'];
@@ -47,14 +55,7 @@ function stateNote(attribute: RequiredAttribute) {
     if (state === 'guess') return t('inspector.tilda.state.guess', { value: tilda });
     if (state === 'ignored') return t('inspector.tilda.state.ignored');
     if (state === 'ok' && tilda !== undefined && tilda !== value) return t('inspector.tilda.state.normalized', { value: tilda });
-    if (state === 'missing' && attribute.optional) return t('inspector.tilda.state.optional');
     return '';
-}
-
-
-function categoryLabel(category: string | undefined) {
-    if (!category) return t('inspector.tilda.no_category');
-    return t(`inspector.tilda.category.${category}`, { default: category });
 }
 
 
@@ -74,11 +75,40 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     let _tags: Tags = {};
     /** target category per side, chosen by the user */
     let _targets = new Map<Side, string>();
+    /** the user opened or closed the card of the way itself; undefined = automatic */
+    let _selfExpanded: boolean | undefined;
+    let _showIntro = false;
+    /** sides whose "Change to" select is open */
+    let _editing = new Set<Side>();
 
     const section = (uiSection('tilda-bike-infra', context) as any)
         .label(() => t.append('inspector.tilda.title'))
+        .disclosureHeaderOptions(renderHeaderOptions)
         .shouldDisplay(() => _entityIDs.length === 1 && _entityIDs[0].startsWith('w') && !!_tags.highway)
         .disclosureContent(renderDisclosureContent);
+
+
+    /** Info button like the one on fields: shows what the section is about */
+    function renderHeaderOptions(selection: d3.Selection) {
+        selection.selectAll('button.tilda-info')
+            .data([0])
+            .enter()
+            .append('button')
+            .attr('class', 'disclosure-header-option tilda-info')
+            .attr('aria-label', t('inspector.tilda.info'))
+            .call(uiPaneTooltip()
+                .title(() => t.append('inspector.tilda.info'))
+            )
+            .on('click', function(this: HTMLButtonElement, d3_event: MouseEvent) {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                this.blur();
+                _showIntro = !_showIntro;
+                d3_select(this).classed('active', _showIntro);
+                section.reRender();
+            })
+            .call(svgIcon('#iD-icon-inspect', ''));
+    }
 
 
     function changeTags(changed: TagsUpdate) {
@@ -101,18 +131,25 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         }
         results.sort((a, b) => SIDE_ORDER.indexOf(a._side) - SIDE_ORDER.indexOf(b._side));
         const gaps = analyzeCategoryGaps(_tags, results);
+        const selfIsInfrastructure = results.some(result => result._side === 'self' && result._infrastructureExists);
+        const sidesHaveInfrastructure = results.some(result => result._side !== 'self' && result._infrastructureExists);
 
         return results.map(result => {
             const side = result._side;
             const target = _targets.get(side);
             const plan = target && target !== result.category ? planCategory(_tags, target, side) : undefined;
+            // bike infrastructure on the sides: the way itself (mixed traffic) matters less
+            const collapsible = side === 'self' && !selfIsInfrastructure && sidesHaveInfrastructure;
             return {
                 side,
                 result,
                 gaps: gaps.find(gap => gap._side === side)?.missing ?? [],
                 target,
                 plan,
-                attributes: requiredAttributes(result, _tags, target !== result.category ? target : undefined)
+                attributes: requiredAttributes(result, _tags, target !== result.category ? target : undefined),
+                roadAttributes: side === 'self' && !selfIsInfrastructure ? roadAttributes(_tags) : [],
+                collapsible,
+                collapsed: collapsible && !(_selfExpanded ?? !!target)
             };
         });
     }
@@ -121,10 +158,11 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     function renderDisclosureContent(selection: d3.Selection) {
         const data = cards();
 
-        selection.selectAll('.tilda-intro')
-            .data([0])
-            .enter()
-            .append('div')
+        const intro = selection.selectAll('.tilda-intro')
+            .data(_showIntro ? [0] : []);
+        intro.exit().remove();
+        intro.enter()
+            .insert('div', ':first-child')
             .attr('class', 'tilda-callout tilda-intro')
             .call(t.append('inspector.tilda.intro'));
 
@@ -139,17 +177,57 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .on('mouseleave', () => showSide(undefined));
 
         // header bar like a field label, body like a field input
-        cardEnter.append('div')
+        const headerEnter = cardEnter.append('div')
             .attr('class', 'tilda-card-header')
-            .append('span')
-            .attr('class', 'tilda-side');
+            .on('click', (_d3_event: MouseEvent, d: SideCard) => {
+                if (!d.collapsible) return;
+                _selfExpanded = d.collapsed;
+                section.reRender();
+            });
+        headerEnter.append('span').attr('class', 'tilda-side');
+        headerEnter.append('span').attr('class', 'tilda-card-hint');
+        // what TILDA makes of it, and the button to change it
+        const headlineEnter = headerEnter.append('div').attr('class', 'tilda-headline');
+        headlineEnter.append('span').attr('class', 'tilda-category');
+        headlineEnter.append('span').attr('class', 'tilda-target-name');
+        headlineEnter.append('button')
+            .attr('class', 'tilda-edit')
+            .call(uiPaneTooltip()
+                .title(() => t.append('inspector.tilda.edit'))
+            )
+            .on('click', function(this: HTMLButtonElement, d3_event: MouseEvent) {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                this.blur();
+                const d = d3_select(this.closest('.tilda-card')!).datum() as SideCard;
+                if (_editing.has(d.side) || d.target) {
+                    _editing.delete(d.side);
+                    _targets.delete(d.side);
+                } else {
+                    _editing.add(d.side);
+                    if (d.collapsible) _selfExpanded = true;
+                }
+                section.reRender();
+            })
+            .call(svgIcon('#iD-icon-edit', ''));
         const bodyEnter = cardEnter.append('div').attr('class', 'tilda-card-body');
-        bodyEnter.append('div').attr('class', 'tilda-category');
         bodyEnter.append('div').attr('class', 'tilda-gaps');
         bodyEnter.append('div').attr('class', 'tilda-target');
         bodyEnter.append('div').attr('class', 'tilda-attributes');
+        bodyEnter.append('div').attr('class', 'tilda-road-attributes');
 
-        cardSelection = cardSelection.merge(cardEnter);
+        cardSelection = cardSelection.merge(cardEnter)
+            .classed('collapsible', d => d.collapsible)
+            .classed('collapsed', d => d.collapsed);
+
+        cardSelection.select('.tilda-target-name')
+            .text(d => d.target && d.target !== d.result.category ? `→ ${categoryLabel(d.target)}` : '');
+        cardSelection.select('.tilda-edit')
+            .classed('active', d => _editing.has(d.side) || !!d.target)
+            .attr('aria-label', t('inspector.tilda.edit'));
+
+        cardSelection.select('.tilda-card-hint')
+            .text(d => d.collapsed ? t('inspector.tilda.collapsed_hint') : '');
 
         cardSelection.select('.tilda-side')
             .text(d => t(`inspector.tilda.side.${d.side}`));
@@ -172,33 +250,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 : t('inspector.tilda.required');
             drawAttributes(d3_select(this), d.attributes, header);
         });
-
-        drawRoadCard(selection, data);
-    }
-
-
-    /** The road itself (TILDA `roads` export, infraVelo "mixed traffic"), unless it is bike infrastructure itself */
-    function drawRoadCard(selection: d3.Selection, data: SideCard[]) {
-        const selfIsInfrastructure = data.some(d => d.side === 'self' && d.result._infrastructureExists);
-        const attributes = selfIsInfrastructure ? [] : roadAttributes(_tags);
-
-        let card = selection.selectAll<HTMLDivElement, RequiredAttribute[]>('.tilda-road-card')
-            .data(attributes.length ? [attributes] : []);
-        card.exit().remove();
-        const cardEnter = card.enter()
-            .insert('div', '.tilda-card')   // above the cards for the sides
-            .attr('class', 'tilda-card tilda-road-card');
-        cardEnter.append('div')
-            .attr('class', 'tilda-card-header')
-            .call(t.append('inspector.tilda.side.road'));
-        cardEnter.append('div')
-            .attr('class', 'tilda-card-body')
-            .append('div')
-            .attr('class', 'tilda-attributes');
-
-        card = card.merge(cardEnter);
-        card.select<HTMLDivElement>('.tilda-attributes')
-            .each(function(d) { drawAttributes(d3_select(this), d, t('inspector.tilda.required_road')); });
+        cardSelection.select<HTMLDivElement>('.tilda-road-attributes').each(function(d) {
+            drawAttributes(d3_select(this), d.roadAttributes, t('inspector.tilda.required_road'));
+        });
     }
 
 
@@ -242,14 +296,21 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     /** Target category select, and the tags to add or change to reach it */
     function drawTarget(selection: d3.Selection<HTMLDivElement>, card: SideCard) {
         const current = card.result.category;
-        const targets = listTargetCategories({ fromCategory: current, fromIncomplete: isIncompleteCategoryId(current) });
-        const options = [current, ...targets.filter(target => target !== current)];
+        const targets = listTargetCategories({ fromCategory: current, fromIncomplete: isIncompleteCategoryId(current) })
+            .filter(target => target !== current);
+        // the current category first, then the targets in groups (<optgroup>)
+        const groups = [{ id: 'current', categories: [current] }, ...groupCategories(targets)];
 
         let label = selection.selectAll<HTMLLabelElement, number>('label')
-            .data([0]);
+            .data(_editing.has(card.side) || card.target ? [0] : []);
+        label.exit().remove();
         const labelEnter = label.enter().append('label').attr('class', 'tilda-target-label');
         labelEnter.append('div').attr('class', 'tilda-subheading').call(t.append('inspector.tilda.target'));
-        labelEnter.append('select')
+        labelEnter.append('select');
+        label = label.merge(labelEnter);
+
+        const select = label.select<HTMLSelectElement>('select')
+            // set on every render: the card is reused when another way is selected
             .on('change', function(this: HTMLSelectElement) {
                 const value = this.value;
                 if (value === current) {
@@ -259,16 +320,15 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 }
                 section.reRender();
             });
-        label = label.merge(labelEnter);
-
-        const select = label.select('select');
-        const optionSelection = select.selectAll<HTMLOptionElement, string>('option')
-            .data(options, d => d);
-        optionSelection.exit().remove();
-        optionSelection.enter()
-            .append('option')
-            .merge(optionSelection)
+        const optgroups = select.selectAll<HTMLOptGroupElement, { id: string; categories: string[] }>('optgroup')
+            .data(groups, d => d.id)
+            .join('optgroup')
             .order()   // the card is reused when another way is selected
+            .attr('label', d => d.id === 'current' ? t('inspector.tilda.current_group') : categoryGroupLabel(d.id));
+        optgroups.selectAll<HTMLOptionElement, string>('option')
+            .data(d => d.categories, d => d)
+            .join('option')
+            .order()
             .attr('value', d => d)
             .text(d => d === current ? `${categoryLabel(d)} (${t('inspector.tilda.current')})` : categoryLabel(d));
         select.property('value', card.target ?? current);
@@ -315,7 +375,10 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .attr('class', 'tilda-attribute');
         rowsEnter.append('span').attr('class', 'tilda-attribute-state');
         const labelEnter = rowsEnter.append('span').attr('class', 'tilda-attribute-label');
-        labelEnter.append('span').attr('class', 'tilda-attribute-name');
+        const titleEnter = labelEnter.append('span').attr('class', 'tilda-attribute-title');
+        titleEnter.append('span').attr('class', 'tilda-attribute-name');
+        // for optional rows next to the name: it stands in for the value until one is tagged
+        titleEnter.append('span').attr('class', 'tilda-attribute-optional');
         labelEnter.append('code').attr('class', 'tilda-attribute-key');
         const valueEnter = rowsEnter.append('span').attr('class', 'tilda-attribute-value');
         valueEnter.append('span').attr('class', 'tilda-attribute-tagged');
@@ -339,6 +402,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
         rows.select('.tilda-attribute-state').text(d => STATE_ICON[d.state]);
         rows.select('.tilda-attribute-name').text(d => t(`inspector.tilda.attribute.${d.id}`, { default: d.id }));
+        rows.select('.tilda-attribute-optional')
+            .text(d => d.optional && d.state === 'missing' ? t('inspector.tilda.state.optional') : '');
         rows.select('.tilda-attribute-key').text(d => d.key);
         rows.select('.tilda-attribute-tagged').text(d => d.value ?? '');
         rows.select('.tilda-attribute-note').text(d => stateNote(d));
@@ -372,7 +437,11 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
     section.entityIDs = function(val?: string[]) {
         if (val === undefined) return _entityIDs;
-        if (val.join() !== _entityIDs.join()) _targets = new Map();
+        if (val.join() !== _entityIDs.join()) {
+            _targets = new Map();
+            _selfExpanded = undefined;
+            _editing = new Set();
+        }
         _entityIDs = val;
         return section;
     };
@@ -382,7 +451,10 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         _tags = val;
         // drop targets that are reached now
         for (const [side, target] of _targets) {
-            if (categoryForSide(_tags, side) === target) _targets.delete(side);
+            if (categoryForSide(_tags, side) === target) {
+                _targets.delete(side);
+                _editing.delete(side);
+            }
         }
         return section;
     };
