@@ -804,6 +804,14 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Buttons we added use Font Awesome icons (measuring tape `fas-pen-ruler`, Mapillary `fas-eye`), which fill the whole icon box, while iD's icons have a margin. They are drawn at 14px so they look the same size.
   - Mapillary images field: the input fills the whole row height (the compact input height had left a gap below it), and the row buttons line up with the label buttons.
   - Not changed yet: the TILDA cards still have their boxes.
+- **Round 3 (2026-09-30):** the borderless fields stay.
+  - No line between fields any more, only space.
+  - One gap color everywhere: rows of the directional combo (its rows are table rows, so the gap goes on the cells), access rows, Structure's radio options and the raw tag rows all use the sidebar color (`--bg-color-2`).
+  - No rounded corners on cells inside a field's rows; only the field's input area is rounded.
+  - Row labels ("Left side", "All") start where the text of an input starts (8px).
+  - Structure's sub fields (bridge type, layer) are flat rows like the rest, without the inner box.
+  - Dropdown and up/down arrows use the same light grey as the label icons.
+  - Field titles are no longer clickable (before, some focused their input and some did nothing): `field.js` prevents the label's click unless it is on a button, and the cursor stays the default one.
 - **Open ideas (to discuss):**
   - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
@@ -860,6 +868,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
 
 ## Progress log
 
+- 2026-09-30: Compact sidebar round 3 (feature 23): no lines between fields, one muted gap color for rows and tag rows, row labels aligned with input text, flat Structure sub fields, light arrows, field titles not clickable.
 - 2026-09-30: Side prerequisites (feature 15): the lane type field only appears when a side has a lane; the other side is disabled with a hint to change the bike infrastructure first. Written to be reused for a later upstream PR.
 - 2026-09-30: Compact sidebar round 2 (feature 23): fields without boxes, no reserved scrollbar track, same-size field buttons, Mapillary field gaps fixed, no "No signs yet" text.
 - 2026-09-30: Compact sidebar, round 1 (feature 23): Feature type as the header, sections edge to edge, fields and tags tighter.
