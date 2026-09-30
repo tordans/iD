@@ -179,7 +179,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         // header bar like a field label, body like a field input
         const headerEnter = cardEnter.append('div')
             .attr('class', 'tilda-card-header')
-            .on('click', (_d3_event: MouseEvent, d: SideCard) => {
+            .on('click', function(this: HTMLDivElement) {
+                // the card's datum: the header keeps the one from when the card was created
+                const d = d3_select(this.closest('.tilda-card')!).datum() as SideCard;
                 if (!d.collapsible) return;
                 _selfExpanded = d.collapsed;
                 section.reRender();
@@ -221,7 +223,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .classed('collapsed', d => d.collapsed);
 
         cardSelection.select('.tilda-target-name')
-            .text(d => d.target && d.target !== d.result.category ? `→ ${categoryLabel(d.target)}` : '');
+            .text(d => d.target && d.target !== d.result.category ? `→ ${categoryLabel(d.target)}` : '')
+            .attr('title', d => d.target && d.target !== d.result.category ? categoryLabel(d.target) : null);
         cardSelection.select('.tilda-edit')
             .classed('active', d => _editing.has(d.side) || !!d.target)
             .attr('aria-label', t('inspector.tilda.edit'));
@@ -238,9 +241,11 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 isIncompleteCategoryId(d.result.category) ? 'incomplete' : '',
                 d.result._infrastructureExists ? 'exists' : 'absent'
             ].filter(Boolean).join(' '))
-            .text(d => d.result.category ? categoryLabel(d.result.category) : t('inspector.tilda.not_processed'))
-            // the TILDA category id is the value in the TILDA dataset
-            .attr('title', d => d.result.category ? t('inspector.tilda.category_id', { id: d.result.category }) : null);
+            .text(d => d.result.category ? categoryLabel(d.result.category) : t('inspector.tilda.mixed_traffic'))
+            // the full name (the label may be cut), and the TILDA category id: the value in the TILDA dataset
+            .attr('title', d => d.result.category
+                ? `${categoryLabel(d.result.category)}\n${t('inspector.tilda.category_id', { id: d.result.category })}`
+                : null);
 
         cardSelection.select<HTMLDivElement>('.tilda-gaps').each(function(d) { drawGaps(d3_select(this), d); });
         cardSelection.select<HTMLDivElement>('.tilda-target').each(function(d) { drawTarget(d3_select(this), d); });
@@ -251,7 +256,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             drawAttributes(d3_select(this), d.attributes, header);
         });
         cardSelection.select<HTMLDivElement>('.tilda-road-attributes').each(function(d) {
-            drawAttributes(d3_select(this), d.roadAttributes, t('inspector.tilda.required_road'));
+            // no header: "mixed traffic" is the category above, why the data is needed is in the info text
+            drawAttributes(d3_select(this), d.roadAttributes);
         });
     }
 
@@ -356,9 +362,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
      * Checklist of tags the Radnetz dataset needs: key, state, how TILDA reads the value,
      * and the values TILDA accepts as buttons (plus a free input).
      */
-    function drawAttributes(selection: d3.Selection<HTMLDivElement>, attributes: RequiredAttribute[], headerText: string) {
+    function drawAttributes(selection: d3.Selection<HTMLDivElement>, attributes: RequiredAttribute[], headerText?: string) {
         const header = selection.selectAll<HTMLDivElement, string>('.tilda-attributes-header')
-            .data(attributes.length ? [headerText] : []);
+            .data(attributes.length && headerText ? [headerText] : []);
         header.exit().remove();
         header.enter()
             .append('div')

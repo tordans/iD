@@ -761,7 +761,7 @@ en:
       info: About this section
       intro: "How TILDA, the bike infrastructure dataset, reads this way. Check the category of the way and of each side. If it does not match what is on the ground, choose the right one under “Change to” and apply the tags. Then fill in what is missing below."
       category_id: "TILDA category: {id}"
-      not_processed: TILDA does not process this way as bike infrastructure.
+      mixed_traffic: Mixed traffic
       no_category: No category
       current: current
       current_group: Current category
@@ -772,7 +772,6 @@ en:
       remove_reason: Replaced by tags for each side
       required: Needed for the Radnetz dataset
       required_for: "Needed for the Radnetz dataset as “{category}”"
-      required_road: Needed for the Radnetz dataset (mixed traffic)
       feeds: "Used for the infraVelo attributes: {attributes}"
       enter_value: value, Enter
       state:
