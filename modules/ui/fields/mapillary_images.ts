@@ -8,6 +8,7 @@ import { mapillaryKeyLabel } from '../../mapillary/tag_keys';
 import { addableKeys, buildImageRows, removeImageChange, setImageChange, type ImageRow } from '../../mapillary/field_rows';
 import { formatRelativeAge, loadImageInfo, type MapillaryImageInfo } from '../../mapillary/image_info';
 import { showMapillaryImage } from '../../mapillary/viewer';
+import { activeTargetEvents, getActiveTarget, setActiveTarget } from '../../mapillary/active_target';
 
 /**
  * "Mapillary images" field (WORKDOC feature 19): every Mapillary image key of the feature as a row
@@ -55,6 +56,13 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
 
     function change(changes: TagsUpdate) {
         dispatch.call('change', mapillaryImages, changes);
+    }
+
+
+    /** the row "set photo from viewer" writes to gets an outline */
+    function updateActiveTarget() {
+        const active = getActiveTarget(_entityIDs.join(','));
+        _wrap.selectAll<HTMLDivElement, ImageRow>('.mly-key-row').classed('mly-active-target', d => d.key === active);
     }
 
 
@@ -240,6 +248,7 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
 
         const merged = rowEnter.merge(rowSel)
             .attr('data-key', d => d.key)
+            .on('focusin.activeTarget click.activeTarget', (d3_event, d) => setActiveTarget(_entityIDs.join(','), d.key))
             .order();
         merged.select('.mly-key-label').text(d => d.label);
         merged.select('.mly-key-name').text(d => d.key);
@@ -250,6 +259,8 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
         drawAddRow(_wrap);
         // (`select` would overwrite the children's data with the wrapper's)
         _wrap.selectAll('.mly-add-row, .mly-add-image').raise();
+
+        updateActiveTarget();
 
         if (_focusSelector) {
             const node = _wrap.node()?.querySelector<HTMLInputElement>(_focusSelector);
@@ -266,6 +277,7 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
             .append('div')
             .attr('class', 'form-field-input-mapillary-images');
         _wrap = wrapEnter.merge(wrap) as unknown as typeof _wrap;
+        activeTargetEvents.on('change.mapillaryField', updateActiveTarget);
         render();
     }
 
