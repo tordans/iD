@@ -54,8 +54,9 @@ export function presetField(fieldID: string, field: Field) {
     const value = strings[name] ?? (detail ? strings[detail[1]]?.[detail[2]] : undefined);
     return typeof value === 'string' ? value : undefined;
   };
+  // our own string wins over a caller's fallback (e.g. the radio field's raw `"value"`)
   const _withDefault = (scope: string, options?: any) =>
-    options?.default === undefined && _ownString(scope) !== undefined ? { ...options, default: _ownString(scope) } : options;
+    _ownString(scope) !== undefined ? { ...options, default: _ownString(scope) } : options;
 
   const _t: presetField['t'] = (scope, options) => t(`_tagging.presets.fields.${fieldID}.${scope}`, _withDefault(scope, options));
   _this.t_all = (scope, options) => localizer.t_all(`_tagging.presets.fields.${fieldID}.${scope}`, options);

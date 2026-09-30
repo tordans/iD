@@ -93,11 +93,12 @@ const FIELDS: Record<string, Field> = {
     } as Field,
     'sett/length': {
         key: 'sett:length',
-        type: 'combo',
-        label: 'Sett Stone Size (Meters)',
+        // the three sizes TILDA tells apart (≤ 8 cm mosaic, ≤ 13 cm small, else large), in cm
+        type: 'radio',
+        label: 'Sett Stone Size',
         geometry: ['line', 'area'],
         options: ['0.05', '0.1', '0.16'],
-        strings: { options: { '0.05': 'Mosaic sett (≈5 cm)', '0.1': 'Small sett (≈10 cm)', '0.16': 'Large sett (≈16 cm)' } },
+        strings: { options: { '0.05': 'Mosaic sett, 5 cm', '0.1': 'Small sett, 10 cm', '0.16': 'Large sett, 16 cm' } },
         prerequisiteTag: { key: 'surface', value: 'sett' }
     } as Field,
     'width/effective': {

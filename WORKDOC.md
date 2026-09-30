@@ -900,6 +900,7 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
 
 ## Progress log
 
+- 2026-09-30: `sett:length` as a radio group with cm labels ("Mosaic sett, 5 cm", "Small sett, 10 cm", "Large sett, 16 cm"; the sizes TILDA tells apart). Other tagged values (e.g. `0.15`) show as an extra option, like iD does for radio fields. Fixed: option labels of our own fields were ignored when the field passed its own fallback (radio fields showed `"0.05"`); our strings now win (`modules/presets/field.ts`).
 - 2026-09-30: TILDA checklist as plain tags with "is missing; add below" links to the fields, the same orange / yellow on the field titles, value buttons only where no field exists (feature 8).
 - 2026-09-30: TILDA "Change to" as iD's tag diff; lane type no longer counted as set by the chosen target category (feature 8).
 - 2026-09-30: TILDA section in the compact style (feature 8): one-line card headers, framed edit button, no empty card bodies, plain intro text, "Mixed traffic" for the way itself, "This way" collapses again.
