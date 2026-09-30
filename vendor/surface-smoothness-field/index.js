@@ -826,7 +826,7 @@ function g(e) {
 function _(e) {
 	typeof e != "function" && (e = g(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = Array(o), c, l, u = 0; u < o; ++u) (c = a[u]) && (l = e.call(c, c.__data__, u, a)) && ("__data__" in c && (l.__data__ = c.__data__), s[u] = l);
-	return new H(r, this._parents);
+	return new W(r, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/array.js
@@ -850,73 +850,73 @@ function x(e) {
 		return v(e.apply(this, arguments));
 	};
 }
-function S(e) {
+function ee(e) {
 	e = typeof e == "function" ? x(e) : b(e);
 	for (var t = this._groups, n = t.length, r = [], i = [], a = 0; a < n; ++a) for (var o = t[a], s = o.length, c, l = 0; l < s; ++l) (c = o[l]) && (r.push(e.call(c, c.__data__, l, o)), i.push(c));
-	return new H(r, i);
+	return new W(r, i);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/matcher.js
-function C(e) {
+function S(e) {
 	return function() {
 		return this.matches(e);
 	};
 }
-function w(e) {
+function C(e) {
 	return function(t) {
 		return t.matches(e);
 	};
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/selectChild.js
-var T = Array.prototype.find;
-function E(e) {
+var w = Array.prototype.find;
+function T(e) {
 	return function() {
-		return T.call(this.children, e);
+		return w.call(this.children, e);
 	};
 }
-function D() {
+function E() {
 	return this.firstElementChild;
 }
-function O(e) {
-	return this.select(e == null ? D : E(typeof e == "function" ? e : w(e)));
+function D(e) {
+	return this.select(e == null ? E : T(typeof e == "function" ? e : C(e)));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/selectChildren.js
-var k = Array.prototype.filter;
-function A() {
+var O = Array.prototype.filter;
+function k() {
 	return Array.from(this.children);
 }
-function j(e) {
+function A(e) {
 	return function() {
-		return k.call(this.children, e);
+		return O.call(this.children, e);
 	};
 }
-function ee(e) {
-	return this.selectAll(e == null ? A : j(typeof e == "function" ? e : w(e)));
+function j(e) {
+	return this.selectAll(e == null ? k : A(typeof e == "function" ? e : C(e)));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/filter.js
-function te(e) {
-	typeof e != "function" && (e = C(e));
+function M(e) {
+	typeof e != "function" && (e = S(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = [], c, l = 0; l < o; ++l) (c = a[l]) && e.call(c, c.__data__, l, a) && s.push(c);
-	return new H(r, this._parents);
+	return new W(r, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/sparse.js
-function M(e) {
+function N(e) {
 	return Array(e.length);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/enter.js
-function ne() {
-	return new H(this._enter || this._groups.map(M), this._parents);
+function P() {
+	return new W(this._enter || this._groups.map(N), this._parents);
 }
-function N(e, t) {
+function F(e, t) {
 	this.ownerDocument = e.ownerDocument, this.namespaceURI = e.namespaceURI, this._next = null, this._parent = e, this.__data__ = t;
 }
-N.prototype = {
-	constructor: N,
+F.prototype = {
+	constructor: F,
 	appendChild: function(e) {
 		return this._parent.insertBefore(e, this._next);
 	},
@@ -932,71 +932,71 @@ N.prototype = {
 };
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/constant.js
-function re(e) {
+function te(e) {
 	return function() {
 		return e;
 	};
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/data.js
-function ie(e, t, n, r, i, a) {
-	for (var o = 0, s, c = t.length, l = a.length; o < l; ++o) (s = t[o]) ? (s.__data__ = a[o], r[o] = s) : n[o] = new N(e, a[o]);
+function ne(e, t, n, r, i, a) {
+	for (var o = 0, s, c = t.length, l = a.length; o < l; ++o) (s = t[o]) ? (s.__data__ = a[o], r[o] = s) : n[o] = new F(e, a[o]);
 	for (; o < c; ++o) (s = t[o]) && (i[o] = s);
 }
-function ae(e, t, n, r, i, a, o) {
+function re(e, t, n, r, i, a, o) {
 	var s, c, l = /* @__PURE__ */ new Map(), u = t.length, d = a.length, f = Array(u), p;
 	for (s = 0; s < u; ++s) (c = t[s]) && (f[s] = p = o.call(c, c.__data__, s, t) + "", l.has(p) ? i[s] = c : l.set(p, c));
-	for (s = 0; s < d; ++s) p = o.call(e, a[s], s, a) + "", (c = l.get(p)) ? (r[s] = c, c.__data__ = a[s], l.delete(p)) : n[s] = new N(e, a[s]);
+	for (s = 0; s < d; ++s) p = o.call(e, a[s], s, a) + "", (c = l.get(p)) ? (r[s] = c, c.__data__ = a[s], l.delete(p)) : n[s] = new F(e, a[s]);
 	for (s = 0; s < u; ++s) (c = t[s]) && l.get(f[s]) === c && (i[s] = c);
 }
-function oe(e) {
+function ie(e) {
 	return e.__data__;
 }
-function se(e, t) {
-	if (!arguments.length) return Array.from(this, oe);
-	var n = t ? ae : ie, r = this._parents, i = this._groups;
-	typeof e != "function" && (e = re(e));
+function ae(e, t) {
+	if (!arguments.length) return Array.from(this, ie);
+	var n = t ? re : ne, r = this._parents, i = this._groups;
+	typeof e != "function" && (e = te(e));
 	for (var a = i.length, o = Array(a), s = Array(a), c = Array(a), l = 0; l < a; ++l) {
-		var u = r[l], d = i[l], f = d.length, p = ce(e.call(u, u && u.__data__, l, r)), m = p.length, h = s[l] = Array(m), g = o[l] = Array(m);
+		var u = r[l], d = i[l], f = d.length, p = oe(e.call(u, u && u.__data__, l, r)), m = p.length, h = s[l] = Array(m), g = o[l] = Array(m);
 		n(u, d, h, g, c[l] = Array(f), p, t);
 		for (var _ = 0, v = 0, y, b; _ < m; ++_) if (y = h[_]) {
 			for (_ >= v && (v = _ + 1); !(b = g[v]) && ++v < m;);
 			y._next = b || null;
 		}
 	}
-	return o = new H(o, r), o._enter = s, o._exit = c, o;
+	return o = new W(o, r), o._enter = s, o._exit = c, o;
 }
-function ce(e) {
+function oe(e) {
 	return typeof e == "object" && "length" in e ? e : Array.from(e);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/exit.js
-function le() {
-	return new H(this._exit || this._groups.map(M), this._parents);
+function se() {
+	return new W(this._exit || this._groups.map(N), this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/join.js
-function ue(e, t, n) {
+function ce(e, t, n) {
 	var r = this.enter(), i = this, a = this.exit();
 	return typeof e == "function" ? (r = e(r), r &&= r.selection()) : r = r.append(e + ""), t != null && (i = t(i), i &&= i.selection()), n == null ? a.remove() : n(a), r && i ? r.merge(i).order() : i;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/merge.js
-function de(e) {
+function le(e) {
 	for (var t = e.selection ? e.selection() : e, n = this._groups, r = t._groups, i = n.length, a = r.length, o = Math.min(i, a), s = Array(i), c = 0; c < o; ++c) for (var l = n[c], u = r[c], d = l.length, f = s[c] = Array(d), p, m = 0; m < d; ++m) (p = l[m] || u[m]) && (f[m] = p);
 	for (; c < i; ++c) s[c] = n[c];
-	return new H(s, this._parents);
+	return new W(s, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/order.js
-function fe() {
+function ue() {
 	for (var e = this._groups, t = -1, n = e.length; ++t < n;) for (var r = e[t], i = r.length - 1, a = r[i], o; --i >= 0;) (o = r[i]) && (a && o.compareDocumentPosition(a) ^ 4 && a.parentNode.insertBefore(o, a), a = o);
 	return this;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/sort.js
-function pe(e) {
-	e ||= me;
+function de(e) {
+	e ||= fe;
 	function t(t, n) {
 		return t && n ? e(t.__data__, n.__data__) : !t - !n;
 	}
@@ -1004,25 +1004,25 @@ function pe(e) {
 		for (var o = n[a], s = o.length, c = i[a] = Array(s), l, u = 0; u < s; ++u) (l = o[u]) && (c[u] = l);
 		c.sort(t);
 	}
-	return new H(i, this._parents).order();
+	return new W(i, this._parents).order();
 }
-function me(e, t) {
+function fe(e, t) {
 	return e < t ? -1 : e > t ? 1 : e >= t ? 0 : NaN;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/call.js
-function he() {
+function pe() {
 	var e = arguments[0];
 	return arguments[0] = this, e.apply(null, arguments), this;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/nodes.js
-function ge() {
+function me() {
 	return Array.from(this);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/node.js
-function _e() {
+function he() {
 	for (var e = this._groups, t = 0, n = e.length; t < n; ++t) for (var r = e[t], i = 0, a = r.length; i < a; ++i) {
 		var o = r[i];
 		if (o) return o;
@@ -1031,126 +1031,126 @@ function _e() {
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/size.js
-function ve() {
+function ge() {
 	let e = 0;
 	for (let t of this) ++e;
 	return e;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/empty.js
-function ye() {
+function _e() {
 	return !this.node();
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/each.js
-function be(e) {
+function ve(e) {
 	for (var t = this._groups, n = 0, r = t.length; n < r; ++n) for (var i = t[n], a = 0, o = i.length, s; a < o; ++a) (s = i[a]) && e.call(s, s.__data__, a, i);
 	return this;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/attr.js
-function xe(e) {
+function ye(e) {
 	return function() {
 		this.removeAttribute(e);
 	};
 }
-function Se(e) {
+function be(e) {
 	return function() {
 		this.removeAttributeNS(e.space, e.local);
 	};
 }
-function Ce(e, t) {
+function xe(e, t) {
 	return function() {
 		this.setAttribute(e, t);
 	};
 }
-function we(e, t) {
+function Se(e, t) {
 	return function() {
 		this.setAttributeNS(e.space, e.local, t);
 	};
 }
-function Te(e, t) {
+function Ce(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? this.removeAttribute(e) : this.setAttribute(e, n);
 	};
 }
-function Ee(e, t) {
+function we(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? this.removeAttributeNS(e.space, e.local) : this.setAttributeNS(e.space, e.local, n);
 	};
 }
-function De(e, t) {
+function Te(e, t) {
 	var n = d(e);
 	if (arguments.length < 2) {
 		var r = this.node();
 		return n.local ? r.getAttributeNS(n.space, n.local) : r.getAttribute(n);
 	}
-	return this.each((t == null ? n.local ? Se : xe : typeof t == "function" ? n.local ? Ee : Te : n.local ? we : Ce)(n, t));
+	return this.each((t == null ? n.local ? be : ye : typeof t == "function" ? n.local ? we : Ce : n.local ? Se : xe)(n, t));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/window.js
-function P(e) {
+function I(e) {
 	return e.ownerDocument && e.ownerDocument.defaultView || e.document && e || e.defaultView;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/style.js
-function Oe(e) {
+function Ee(e) {
 	return function() {
 		this.style.removeProperty(e);
 	};
 }
-function ke(e, t, n) {
+function De(e, t, n) {
 	return function() {
 		this.style.setProperty(e, t, n);
 	};
 }
-function Ae(e, t, n) {
+function Oe(e, t, n) {
 	return function() {
 		var r = t.apply(this, arguments);
 		r == null ? this.style.removeProperty(e) : this.style.setProperty(e, r, n);
 	};
 }
-function je(e, t, n) {
-	return arguments.length > 1 ? this.each((t == null ? Oe : typeof t == "function" ? Ae : ke)(e, t, n ?? "")) : Me(this.node(), e);
+function ke(e, t, n) {
+	return arguments.length > 1 ? this.each((t == null ? Ee : typeof t == "function" ? Oe : De)(e, t, n ?? "")) : Ae(this.node(), e);
 }
-function Me(e, t) {
-	return e.style.getPropertyValue(t) || P(e).getComputedStyle(e, null).getPropertyValue(t);
+function Ae(e, t) {
+	return e.style.getPropertyValue(t) || I(e).getComputedStyle(e, null).getPropertyValue(t);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/property.js
-function Ne(e) {
+function je(e) {
 	return function() {
 		delete this[e];
 	};
 }
-function Pe(e, t) {
+function Me(e, t) {
 	return function() {
 		this[e] = t;
 	};
 }
-function Fe(e, t) {
+function Ne(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? delete this[e] : this[e] = n;
 	};
 }
-function Ie(e, t) {
-	return arguments.length > 1 ? this.each((t == null ? Ne : typeof t == "function" ? Fe : Pe)(e, t)) : this.node()[e];
+function Pe(e, t) {
+	return arguments.length > 1 ? this.each((t == null ? je : typeof t == "function" ? Ne : Me)(e, t)) : this.node()[e];
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/classed.js
-function F(e) {
+function L(e) {
 	return e.trim().split(/^|\s+/);
 }
-function I(e) {
-	return e.classList || new L(e);
+function R(e) {
+	return e.classList || new z(e);
 }
-function L(e) {
-	this._node = e, this._names = F(e.getAttribute("class") || "");
+function z(e) {
+	this._node = e, this._names = L(e.getAttribute("class") || "");
 }
-L.prototype = {
+z.prototype = {
 	add: function(e) {
 		this._names.indexOf(e) < 0 && (this._names.push(e), this._node.setAttribute("class", this._names.join(" ")));
 	},
@@ -1162,92 +1162,92 @@ L.prototype = {
 		return this._names.indexOf(e) >= 0;
 	}
 };
-function R(e, t) {
-	for (var n = I(e), r = -1, i = t.length; ++r < i;) n.add(t[r]);
+function B(e, t) {
+	for (var n = R(e), r = -1, i = t.length; ++r < i;) n.add(t[r]);
 }
-function z(e, t) {
-	for (var n = I(e), r = -1, i = t.length; ++r < i;) n.remove(t[r]);
+function V(e, t) {
+	for (var n = R(e), r = -1, i = t.length; ++r < i;) n.remove(t[r]);
 }
-function Le(e) {
+function Fe(e) {
 	return function() {
-		R(this, e);
+		B(this, e);
 	};
 }
-function Re(e) {
+function Ie(e) {
 	return function() {
-		z(this, e);
+		V(this, e);
 	};
 }
-function ze(e, t) {
+function Le(e, t) {
 	return function() {
-		(t.apply(this, arguments) ? R : z)(this, e);
+		(t.apply(this, arguments) ? B : V)(this, e);
 	};
 }
-function Be(e, t) {
-	var n = F(e + "");
+function Re(e, t) {
+	var n = L(e + "");
 	if (arguments.length < 2) {
-		for (var r = I(this.node()), i = -1, a = n.length; ++i < a;) if (!r.contains(n[i])) return !1;
+		for (var r = R(this.node()), i = -1, a = n.length; ++i < a;) if (!r.contains(n[i])) return !1;
 		return !0;
 	}
-	return this.each((typeof t == "function" ? ze : t ? Le : Re)(n, t));
+	return this.each((typeof t == "function" ? Le : t ? Fe : Ie)(n, t));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/text.js
-function Ve() {
+function ze() {
 	this.textContent = "";
 }
-function He(e) {
+function Be(e) {
 	return function() {
 		this.textContent = e;
 	};
 }
-function Ue(e) {
+function Ve(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.textContent = t ?? "";
 	};
 }
-function We(e) {
-	return arguments.length ? this.each(e == null ? Ve : (typeof e == "function" ? Ue : He)(e)) : this.node().textContent;
+function He(e) {
+	return arguments.length ? this.each(e == null ? ze : (typeof e == "function" ? Ve : Be)(e)) : this.node().textContent;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/html.js
-function Ge() {
+function Ue() {
 	this.innerHTML = "";
 }
-function Ke(e) {
+function We(e) {
 	return function() {
 		this.innerHTML = e;
 	};
 }
-function qe(e) {
+function Ge(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.innerHTML = t ?? "";
 	};
 }
-function Je(e) {
-	return arguments.length ? this.each(e == null ? Ge : (typeof e == "function" ? qe : Ke)(e)) : this.node().innerHTML;
+function Ke(e) {
+	return arguments.length ? this.each(e == null ? Ue : (typeof e == "function" ? Ge : We)(e)) : this.node().innerHTML;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/raise.js
-function Ye() {
+function qe() {
 	this.nextSibling && this.parentNode.appendChild(this);
+}
+function Je() {
+	return this.each(qe);
+}
+//#endregion
+//#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/lower.js
+function Ye() {
+	this.previousSibling && this.parentNode.insertBefore(this, this.parentNode.firstChild);
 }
 function Xe() {
 	return this.each(Ye);
 }
 //#endregion
-//#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/lower.js
-function Ze() {
-	this.previousSibling && this.parentNode.insertBefore(this, this.parentNode.firstChild);
-}
-function Qe() {
-	return this.each(Ze);
-}
-//#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/append.js
-function $e(e) {
+function Ze(e) {
 	var t = typeof e == "function" ? e : m(e);
 	return this.select(function() {
 		return this.appendChild(t.apply(this, arguments));
@@ -1255,50 +1255,50 @@ function $e(e) {
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/insert.js
-function et() {
+function Qe() {
 	return null;
 }
-function tt(e, t) {
-	var n = typeof e == "function" ? e : m(e), r = t == null ? et : typeof t == "function" ? t : g(t);
+function $e(e, t) {
+	var n = typeof e == "function" ? e : m(e), r = t == null ? Qe : typeof t == "function" ? t : g(t);
 	return this.select(function() {
 		return this.insertBefore(n.apply(this, arguments), r.apply(this, arguments) || null);
 	});
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/remove.js
-function nt() {
+function et() {
 	var e = this.parentNode;
 	e && e.removeChild(this);
 }
-function rt() {
-	return this.each(nt);
+function tt() {
+	return this.each(et);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/clone.js
-function it() {
+function nt() {
 	var e = this.cloneNode(!1), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function at() {
+function rt() {
 	var e = this.cloneNode(!0), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function ot(e) {
-	return this.select(e ? at : it);
+function it(e) {
+	return this.select(e ? rt : nt);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/datum.js
-function st(e) {
+function at(e) {
 	return arguments.length ? this.property("__data__", e) : this.node().__data__;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/on.js
-function ct(e) {
+function ot(e) {
 	return function(t) {
 		e.call(this, t, this.__data__);
 	};
 }
-function lt(e) {
+function st(e) {
 	return e.trim().split(/^|\s+/).map(function(e) {
 		var t = "", n = e.indexOf(".");
 		return n >= 0 && (t = e.slice(n + 1), e = e.slice(0, n)), {
@@ -1307,7 +1307,7 @@ function lt(e) {
 		};
 	});
 }
-function ut(e) {
+function ct(e) {
 	return function() {
 		var t = this.__on;
 		if (t) {
@@ -1316,9 +1316,9 @@ function ut(e) {
 		}
 	};
 }
-function dt(e, t, n) {
+function lt(e, t, n) {
 	return function() {
-		var r = this.__on, i, a = ct(t);
+		var r = this.__on, i, a = ot(t);
 		if (r) {
 			for (var o = 0, s = r.length; o < s; ++o) if ((i = r[o]).type === e.type && i.name === e.name) {
 				this.removeEventListener(i.type, i.listener, i.options), this.addEventListener(i.type, i.listener = a, i.options = n), i.value = t;
@@ -1334,8 +1334,8 @@ function dt(e, t, n) {
 		}, r ? r.push(i) : this.__on = [i];
 	};
 }
-function ft(e, t, n) {
-	var r = lt(e + ""), i, a = r.length, o;
+function ut(e, t, n) {
+	var r = st(e + ""), i, a = r.length, o;
 	if (arguments.length < 2) {
 		var s = this.node().__on;
 		if (s) {
@@ -1343,126 +1343,130 @@ function ft(e, t, n) {
 		}
 		return;
 	}
-	for (s = t ? dt : ut, i = 0; i < a; ++i) this.each(s(r[i], t, n));
+	for (s = t ? lt : ct, i = 0; i < a; ++i) this.each(s(r[i], t, n));
 	return this;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/dispatch.js
-function B(e, t, n) {
-	var r = P(e), i = r.CustomEvent;
+function H(e, t, n) {
+	var r = I(e), i = r.CustomEvent;
 	typeof i == "function" ? i = new i(t, n) : (i = r.document.createEvent("Event"), n ? (i.initEvent(t, n.bubbles, n.cancelable), i.detail = n.detail) : i.initEvent(t, !1, !1)), e.dispatchEvent(i);
 }
+function dt(e, t) {
+	return function() {
+		return H(this, e, t);
+	};
+}
+function ft(e, t) {
+	return function() {
+		return H(this, e, t.apply(this, arguments));
+	};
+}
 function pt(e, t) {
-	return function() {
-		return B(this, e, t);
-	};
-}
-function mt(e, t) {
-	return function() {
-		return B(this, e, t.apply(this, arguments));
-	};
-}
-function ht(e, t) {
-	return this.each((typeof t == "function" ? mt : pt)(e, t));
+	return this.each((typeof t == "function" ? ft : dt)(e, t));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/iterator.js
-function* gt() {
+function* mt() {
 	for (var e = this._groups, t = 0, n = e.length; t < n; ++t) for (var r = e[t], i = 0, a = r.length, o; i < a; ++i) (o = r[i]) && (yield o);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/index.js
-var V = [null];
-function H(e, t) {
+var U = [null];
+function W(e, t) {
 	this._groups = e, this._parents = t;
 }
-function _t() {
-	return new H([[document.documentElement]], V);
+function ht() {
+	return new W([[document.documentElement]], U);
 }
-function vt() {
+function gt() {
 	return this;
 }
-H.prototype = _t.prototype = {
-	constructor: H,
+W.prototype = ht.prototype = {
+	constructor: W,
 	select: _,
-	selectAll: S,
-	selectChild: O,
-	selectChildren: ee,
-	filter: te,
-	data: se,
-	enter: ne,
-	exit: le,
-	join: ue,
-	merge: de,
-	selection: vt,
-	order: fe,
-	sort: pe,
-	call: he,
-	nodes: ge,
-	node: _e,
-	size: ve,
-	empty: ye,
-	each: be,
-	attr: De,
-	style: je,
-	property: Ie,
-	classed: Be,
-	text: We,
-	html: Je,
-	raise: Xe,
-	lower: Qe,
-	append: $e,
-	insert: tt,
-	remove: rt,
-	clone: ot,
-	datum: st,
-	on: ft,
-	dispatch: ht,
-	[Symbol.iterator]: gt
+	selectAll: ee,
+	selectChild: D,
+	selectChildren: j,
+	filter: M,
+	data: ae,
+	enter: P,
+	exit: se,
+	join: ce,
+	merge: le,
+	selection: gt,
+	order: ue,
+	sort: de,
+	call: pe,
+	nodes: me,
+	node: he,
+	size: ge,
+	empty: _e,
+	each: ve,
+	attr: Te,
+	style: ke,
+	property: Pe,
+	classed: Re,
+	text: He,
+	html: Ke,
+	raise: Je,
+	lower: Xe,
+	append: Ze,
+	insert: $e,
+	remove: tt,
+	clone: it,
+	datum: at,
+	on: ut,
+	dispatch: pt,
+	[Symbol.iterator]: mt
 };
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/select.js
-function U(e) {
-	return typeof e == "string" ? new H([[document.querySelector(e)]], [document.documentElement]) : new H([[e]], V);
+function G(e) {
+	return typeof e == "string" ? new W([[document.querySelector(e)]], [document.documentElement]) : new W([[e]], U);
 }
 //#endregion
 //#region src/logic.ts
-var W = {
+var K = {
 	surfaceKey: "surface",
 	smoothnessKey: "smoothness"
 };
-function G(e = {}) {
+function q(e = {}) {
 	return {
-		surfaceKey: e.surfaceKey ?? W.surfaceKey,
-		smoothnessKey: e.smoothnessKey ?? W.smoothnessKey
+		surfaceKey: e.surfaceKey ?? K.surfaceKey,
+		smoothnessKey: e.smoothnessKey ?? K.smoothnessKey
 	};
 }
-function K(e) {
+function J(e) {
 	return e ? r(e).map((e) => e.smoothness) : [];
 }
-function q(e, t) {
-	return t ? K(e).includes(t) : !0;
+function Y(e, t) {
+	return t ? J(e).includes(t) : !0;
 }
-function J(e, t, n = W) {
+function X(e, t, n = K) {
 	let r = { [n.surfaceKey]: t || void 0 };
-	return q(t, e) || (r[n.smoothnessKey] = void 0), r;
+	return Y(t, e) || (r[n.smoothnessKey] = void 0), r;
 }
-function Y(e, t = W) {
+function _t(e, t = K) {
 	return { [t.smoothnessKey]: e || void 0 };
 }
-var X = [
+var Z = [
 	"asphalt",
 	"paving_stones",
 	"concrete",
 	"sett",
 	"unhewn_cobblestone",
+	"concrete:lanes",
 	"compacted",
 	"fine_gravel",
-	"grass_paver"
+	"gravel",
+	"grass_paver",
+	"ground",
+	"dirt"
 ];
-function Z() {
+function vt() {
 	let t = Object.keys(e.surfaces);
-	return [...X.filter((e) => t.includes(e)), ...t.filter((e) => !X.includes(e))];
+	return [...Z.filter((e) => t.includes(e)), ...t.filter((e) => !Z.includes(e))];
 }
 function Q(t) {
 	let n = t ? r(t) : [];
@@ -1484,7 +1488,7 @@ function $(t) {
 //#endregion
 //#region src/createSurfaceSmoothnessField.impl.ts
 function yt(t = {}, r = {}, i = {}) {
-	let o = a("change"), s = G(t), c = i.t ?? ((e, t) => t), l = r.assetUrl ?? ((e) => e), u = {}, d = U(null), f = "images", p, m = !1, h = (e) => {
+	let o = a("change"), s = q(t), c = i.t ?? ((e, t) => t), l = r.assetUrl ?? ((e) => e), u = {}, d = G(null), f = "images", p, m = !1, h = (e) => {
 		let t = u[e];
 		return typeof t == "string" && t ? t : void 0;
 	}, g = (e) => Array.isArray(u[e]), _ = (e) => i.optionLabel?.("surface", e) ?? n(e)?.title ?? e, v = (t) => i.optionLabel?.("smoothness", t) ?? e.smoothnessLevels[t]?.title ?? t;
@@ -1492,24 +1496,24 @@ function yt(t = {}, r = {}, i = {}) {
 		u = {
 			...u,
 			...e
-		}, w(), o.call("change", j, e);
+		}, C(), o.call("change", P, e);
 	}
 	function b(e) {
-		if (m = !1, p = e ? "smoothness" : void 0, e === h(s.surfaceKey)) return w();
-		y(J(h(s.smoothnessKey), e, s));
+		if (m = !1, p = e ? "smoothness" : void 0, e === h(s.surfaceKey)) return C();
+		y(X(h(s.smoothnessKey), e, s));
 	}
 	function x(e) {
-		p = void 0, y(Y(e, s));
+		p = void 0, y(_t(e, s));
 	}
-	function S(e) {
+	function ee(e) {
 		let t = e === "smoothness" && !h(s.surfaceKey) ? "surface" : e;
-		p = p === t ? void 0 : t, m = !1, w();
+		p = p === t ? void 0 : t, m = !1, C();
 	}
-	function C(e, t, n) {
+	function S(e, t, n) {
 		let r = `.${n.split(" ").join(".")}`, i = e.selectAll(`:scope > ${r}`).data([0]);
 		return i.enter().append(t).attr("class", n).merge(i);
 	}
-	function w() {
+	function C() {
 		if (d.empty() || !d.node()) return;
 		d.attr("data-mode", f);
 		let e = d.selectAll(":scope > .ssf-images").data(f === "images" ? [0] : []);
@@ -1517,18 +1521,18 @@ function yt(t = {}, r = {}, i = {}) {
 		let t = e.enter().append("div").attr("class", "ssf-images").merge(e), n = d.selectAll(":scope > .ssf-text").data(f === "text" ? [0] : []);
 		n.exit().remove();
 		let r = n.enter().append("div").attr("class", "ssf-text").merge(n);
-		f === "images" ? T(t) : k(r);
+		f === "images" ? w(t) : A(r);
 	}
-	function T(t) {
-		let r = h(s.surfaceKey), i = h(s.smoothnessKey), a = Q(r).find((e) => e.smoothness === i), o = c("multiple_values", "Multiple values"), l = C(t, "div", "ssf-pair");
-		E(l, {
+	function w(t) {
+		let r = h(s.surfaceKey), i = h(s.smoothnessKey), a = Q(r).find((e) => e.smoothness === i), o = c("multiple_values", "Multiple values"), l = S(t, "div", "ssf-pair");
+		T(l, {
 			id: "surface",
 			photo: r ? n(r)?.icon ?? void 0 : void 0,
 			emoji: void 0,
 			title: g(s.surfaceKey) ? o : r ? _(r) : void 0,
 			placeholder: c("surface", "Surface"),
 			tag: r ? `${s.surfaceKey}=${r}` : void 0
-		}), E(l, {
+		}), T(l, {
 			id: "smoothness",
 			photo: a?.cell?.photo,
 			emoji: i ? e.smoothnessLevels[i]?.emoji ?? void 0 : void 0,
@@ -1539,22 +1543,22 @@ function yt(t = {}, r = {}, i = {}) {
 		let u = t.selectAll(":scope > .ssf-picker").data(p ? [p] : [], (e) => e);
 		u.exit().remove();
 		let d = u.enter().append("div").attr("class", (e) => `ssf-picker ssf-picker-${e}`).merge(u);
-		p === "surface" && D(d, r), p === "smoothness" && r && O(d, r, Q(r), i);
+		p === "surface" && E(d, r), p === "smoothness" && r && D(d, r, Q(r), i), p && j(d, p);
 	}
-	function E(e, t) {
-		let n = C(e, "button", `ssf-value ssf-value-${t.id}`).attr("type", "button").classed("empty", !t.title).classed("open", p === t.id).attr("aria-expanded", String(p === t.id)).attr("title", [t.tag, $(t.photo) ? `${c("photo", "Photo")}: ${$(t.photo)}` : ""].filter(Boolean).join("\n") || null).on("click", (e) => {
-			e.preventDefault(), S(t.id);
+	function T(e, t) {
+		let n = S(e, "button", `ssf-value ssf-value-${t.id}`).attr("type", "button").classed("empty", !t.title).classed("open", p === t.id).attr("aria-expanded", String(p === t.id)).attr("title", [t.tag, $(t.photo) ? `${c("photo", "Photo")}: ${$(t.photo)}` : ""].filter(Boolean).join("\n") || null).on("click", (e) => {
+			e.preventDefault(), ee(t.id);
 		});
 		n.html("");
 		let r = n.append("span").attr("class", "ssf-value-visual");
 		t.photo ? r.append("img").attr("src", l(t.photo)).attr("alt", "") : t.emoji && r.append("span").attr("class", "ssf-value-emoji").text(t.emoji), n.append("span").attr("class", "ssf-value-title").text(t.title ? `${t.photo && t.emoji ? `${t.emoji} ` : ""}${t.title}` : t.placeholder);
 	}
-	function D(e, t) {
-		let r = Z(), i = m ? r : r.filter((e) => X.includes(e) || e === t), a = [...i.map((e) => ({ surface: e })), { more: !0 }], o = C(e, "div", "ssf-tiles").selectAll("button.ssf-tile").data(a, (e) => "more" in e ? "_more" : e.surface);
+	function E(e, t) {
+		let r = vt(), i = m ? r : r.filter((e) => Z.includes(e) || e === t), a = [...i.map((e) => ({ surface: e })), { more: !0 }], o = S(e, "div", "ssf-tiles").selectAll("button.ssf-tile").data(a, (e) => "more" in e ? "_more" : e.surface);
 		o.exit().remove();
 		let u = o.enter().append("button").attr("type", "button").attr("class", (e) => "more" in e ? "ssf-tile ssf-tile-more" : "ssf-tile");
 		u.each(function(e) {
-			let t = U(this), r = t.append("span").attr("class", "ssf-tile-visual");
+			let t = G(this), r = t.append("span").attr("class", "ssf-tile-visual");
 			if (t.append("span").attr("class", "ssf-tile-title"), "more" in e) return;
 			let i = n(e.surface)?.icon;
 			i && r.append("img").attr("loading", "lazy").attr("src", l(i)).attr("alt", "");
@@ -1564,18 +1568,18 @@ function yt(t = {}, r = {}, i = {}) {
 			let t = $(n(e.surface)?.icon);
 			return `${s.surfaceKey}=${e.surface}${t ? `\n${c("photo", "Photo")}: ${t}` : ""}`;
 		}).on("click", (e, t) => {
-			e.preventDefault(), "more" in t ? (m = !m, w()) : b(t.surface);
+			e.preventDefault(), "more" in t ? (m = !m, C()) : b(t.surface);
 		});
 		d.select(".ssf-tile-title").text((e) => "more" in e ? m ? c("fewer", "Fewer") : c("more", "More") : _(e.surface)), d.filter((e) => "more" in e).select(".ssf-tile-visual").text(m ? "−" : `+${r.length - i.length}`);
 	}
-	function O(e, t, n, r) {
+	function D(e, t, n, r) {
 		let i = n.some((e) => e.cell);
 		e.selectAll(i ? ":scope > .ssf-levels" : ":scope > .ssf-cards").remove();
-		let a = C(e, "div", i ? "ssf-cards" : "ssf-levels").selectAll("button.ssf-card").data(n, (e) => `${t}/${e.smoothness}`);
+		let a = S(e, "div", i ? "ssf-cards" : "ssf-levels").selectAll("button.ssf-card").data(n, (e) => `${t}/${e.smoothness}`);
 		a.exit().remove();
 		let o = a.enter().append("button").attr("type", "button").attr("class", "ssf-card");
 		o.each(function(e) {
-			let t = U(this);
+			let t = G(this);
 			e.cell && t.append("img").attr("class", "ssf-card-photo").attr("loading", "lazy").attr("src", l(e.cell.photo)).attr("alt", "");
 			let n = t.append("span").attr("class", "ssf-card-head");
 			n.append("span").attr("class", "ssf-card-emoji").text(e.level?.emoji ?? ""), n.append("span").attr("class", "ssf-card-title").text(v(e.smoothness));
@@ -1588,46 +1592,58 @@ function yt(t = {}, r = {}, i = {}) {
 			e.preventDefault(), x(t.smoothness === r ? void 0 : t.smoothness);
 		});
 	}
-	function k(t) {
-		let n = C(t, "ul", "rows rows-table ssf-text-rows"), r = [{
-			name: "surface",
+	function O(t) {
+		let n = t === "surface" ? vt() : Object.keys(e.smoothnessLevels), r = i.options?.(t) ?? [];
+		return [...n, ...r.filter((e) => !n.includes(e))];
+	}
+	function k(e) {
+		return e === "surface" ? {
+			name: e,
 			key: s.surfaceKey,
 			label: c("surface", "Surface"),
-			values: Z(),
+			values: O("surface"),
 			title: _
-		}, {
-			name: "smoothness",
+		} : {
+			name: e,
 			key: s.smoothnessKey,
 			label: c("smoothness", "Smoothness"),
-			values: Object.keys(e.smoothnessLevels),
+			values: O("smoothness"),
 			title: v
-		}], i = n.selectAll(":scope > li").data(r, (e) => e.key), a = i.enter().append("li").attr("class", "labeled-input");
-		a.append("div").attr("class", "label");
-		let o = a.append("div").attr("class", "ssf-text-cell");
-		o.append("input").attr("type", "text").attr("autocomplete", "off").attr("class", "ssf-text-input"), o.append("ul").attr("class", "ssf-combo-list").style("display", "none");
-		let l = a.merge(i);
-		l.select(".label").text((e) => e.label), l.select("input").each((e, t, n) => {
+		};
+	}
+	function A(e) {
+		let t = S(e, "ul", "rows rows-table ssf-text-rows").selectAll(":scope > li").data([k("surface"), k("smoothness")], (e) => e.key), n = t.enter().append("li").attr("class", "labeled-input");
+		n.append("div").attr("class", "label"), n.append("div").attr("class", "ssf-text-cell");
+		let r = n.merge(t);
+		r.select(".label").text((e) => e.label), r.select(".ssf-text-cell").each((e, t, n) => {
 			let r = n[t];
-			if (!r) return;
-			let i = u[e.key];
-			document.activeElement !== r && (r.value = typeof i == "string" ? e.title(i) : ""), r.placeholder = Array.isArray(i) ? c("multiple_values", "Multiple values") : c(`${e.name}_placeholder`, `${e.title(e.values[0] ?? "")}…`);
-			let a = U(r.parentNode).select(".ssf-combo-list"), o = (t) => {
-				t !== (typeof u[e.key] == "string" ? u[e.key] : void 0) && (e.key === s.surfaceKey ? b(t) : x(t));
-			}, l = () => {
-				let t = r.value.trim(), n = e.values.find((n) => n === t || e.title(n).toLowerCase() === t.toLowerCase());
-				o(t ? n ?? t : void 0);
-			};
-			U(r).on("focus input", () => A(a, e, r.value)).on("keydown", (e) => {
-				e.key === "Enter" ? (e.preventDefault(), r.blur()) : e.key === "Escape" && a.style("display", "none");
-			}).on("blur", () => {
-				a.style("display", "none"), l();
-			}), a.on("mousedown", (t) => {
-				let n = t.target.closest("li");
-				n?.__data__ && (t.preventDefault(), r.value = e.title(n.__data__), a.style("display", "none"), o(n.__data__));
-			});
+			r && M(G(r), e);
 		});
 	}
-	function A(e, t, n) {
+	function j(e, t) {
+		M(S(e, "div", "ssf-picker-dropdown ssf-text-cell"), k(t));
+	}
+	function M(e, t) {
+		let n = S(e, "input", "ssf-text-input").attr("type", "text").attr("autocomplete", "off"), r = S(e, "ul", "ssf-combo-list"), i = n.node();
+		if (!i) return;
+		let a = u[t.key];
+		document.activeElement !== i && (i.value = typeof a == "string" ? t.title(a) : "", r.style("display", "none")), i.placeholder = Array.isArray(a) ? c("multiple_values", "Multiple values") : c(`${t.name}_placeholder`, `${t.title(t.values[0] ?? "")}…`);
+		let o = (e) => {
+			e !== (typeof u[t.key] == "string" ? u[t.key] : void 0) && (t.key === s.surfaceKey ? b(e) : x(e));
+		}, l = () => {
+			let e = i.value.trim(), n = t.values.find((n) => n === e || t.title(n).toLowerCase() === e.toLowerCase());
+			o(e ? n ?? e : void 0);
+		};
+		n.on("focus input", () => N(r, t, i.value)).on("keydown", (e) => {
+			e.key === "Enter" ? (e.preventDefault(), i.blur()) : e.key === "Escape" && r.style("display", "none");
+		}).on("blur", () => {
+			r.style("display", "none"), l();
+		}), r.on("mousedown", (e) => {
+			let n = e.target.closest("li");
+			n?.__data__ && (e.preventDefault(), i.value = t.title(n.__data__), r.style("display", "none"), i.blur(), o(n.__data__));
+		});
+	}
+	function N(e, t, n) {
 		let r = n.trim().toLowerCase(), i = t.values.filter((e) => !r || e.toLowerCase().includes(r) || t.title(e).toLowerCase().includes(r));
 		e.style("display", i.length ? "block" : "none");
 		let a = e.selectAll("li").data(i, (e) => e);
@@ -1637,11 +1653,11 @@ function yt(t = {}, r = {}, i = {}) {
 		let s = o.merge(a).order();
 		s.select(".ssf-combo-title").text((e) => t.title(e)), s.select(".ssf-combo-code").text((e) => e);
 	}
-	let j = ((e) => {
+	let P = ((e) => {
 		let t = e.selectAll(".surface-smoothness-field").data([0]);
-		d = t.enter().append("div").attr("class", "surface-smoothness-field").merge(t), w();
+		d = t.enter().append("div").attr("class", "surface-smoothness-field").merge(t), C();
 	});
-	return j.tags = (e) => (u = e ?? {}, w(), j), j.entityIDs = () => (p = void 0, m = !1, j), j.focus = () => (d.select("button, input").node()?.focus(), j), j.mode = ((e) => e === void 0 ? f : (f = e, w(), j)), j.on = (e, t) => (o.on(e, t), j), j;
+	return P.tags = (e) => (u = e ?? {}, C(), P), P.entityIDs = () => (p = void 0, m = !1, P), P.focus = () => (d.select("button, input").node()?.focus(), P), P.mode = ((e) => e === void 0 ? f : (f = e, C(), P)), P.on = (e, t) => (o.on(e, t), P), P;
 }
 //#endregion
-export { yt as createSurfaceSmoothnessField, q as isSmoothnessValidForSurface, G as resolveKeys, Y as smoothnessChangePatch, K as smoothnessValuesForSurface, J as surfaceChangePatch };
+export { yt as createSurfaceSmoothnessField, Y as isSmoothnessValidForSurface, q as resolveKeys, _t as smoothnessChangePatch, J as smoothnessValuesForSurface, X as surfaceChangePatch };

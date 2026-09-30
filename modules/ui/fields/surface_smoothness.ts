@@ -24,6 +24,7 @@ type FieldModule = {
         adapters: {
             t?: (key: string, fallback: string) => string;
             optionLabel?: (key: 'surface' | 'smoothness', value: string) => string | undefined;
+            options?: (key: 'surface' | 'smoothness') => string[] | undefined;
         }
     ) => FieldImpl;
 };
@@ -110,7 +111,9 @@ export function uiFieldSurfaceSmoothness(field: { keys?: string[]; safeid: strin
                     if (key === 'smoothness_placeholder') return fieldPlaceholder('smoothness', fallback);
                     return t(`inspector.surface_smoothness.${key}`, { default: fallback });
                 },
-                optionLabel
+                optionLabel,
+                // the dropdowns offer the schema's values as well
+                options: key => (presetManager.field(key) as unknown as { options?: string[] } | undefined)?.options
             }
         ).on('change', patch => dispatch.call('change', surfaceSmoothness, patch));
     }
