@@ -833,6 +833,9 @@ en:
         buffer_right: "Buffer, right"
         marking_left: "Marking, left"
         marking_right: "Marking, right"
+    measure_tape:
+      button: "Measure on the map"
+      annotation: "Measured width"
     side_width:
       cycleway:
         left: Bike Lane Width, Left (Meters)

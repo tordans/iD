@@ -3,6 +3,7 @@ import type { Dispatch } from 'd3-dispatch';
 import { geoMetersToLon } from '../geo/geo';
 import type { Projection } from '../geo/raw_mercator';
 import type { Vec2 } from '../geo/vector';
+import { measureTape } from '../measure/measure_tape';
 import { widthIndicator } from '../width/width_indicator';
 import { parseOsmWidth, roadWidthFromTags, widthTargetForKey, type WidthSide } from '../width/width_tags';
 
@@ -77,7 +78,8 @@ export function svgWidthIndicator(projection: Projection, context: iD.Context, d
 
 
     function bandsForState(): Band[] {
-        const state = widthIndicator.state();
+        // the band is hidden while the measuring tape is active
+        const state = measureTape.state() ? null : widthIndicator.state();
         const target = state && widthTargetForKey(state.key);
         const meters = parseOsmWidth(state?.value);
         if (!state || !target || !meters || meters <= 0) return [];

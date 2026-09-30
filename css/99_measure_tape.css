@@ -1,0 +1,101 @@
+/* Measuring tape (Maßband) for width fields */
+
+.data-layer.measure-tape {
+    pointer-events: none;
+}
+
+.measure-tape-hit {
+    stroke: transparent;
+    stroke-width: 20px;
+    pointer-events: stroke;
+    cursor: move;
+    touch-action: none;
+}
+.measure-tape-line {
+    stroke: #2f6bff;
+    stroke-width: 2px;
+    pointer-events: none;
+}
+.measure-tape-handle {
+    cursor: move;
+    touch-action: none;
+}
+.measure-tape-handle-hit {
+    fill: transparent;
+    stroke: none;
+    pointer-events: all;
+}
+.measure-tape-ring {
+    fill: none;
+    stroke: #2f6bff;
+    stroke-width: 2px;
+    pointer-events: none;
+}
+.measure-tape-cross {
+    fill: none;
+    stroke: #2f6bff;
+    stroke-width: 1px;
+    pointer-events: none;
+}
+.measure-tape-label {
+    fill: #fff;
+    stroke: #000;
+    stroke-width: 3px;
+    paint-order: stroke;
+    font-size: 12px;
+    font-weight: bold;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    pointer-events: none;
+}
+
+button.form-field-button.measure-tape-button.active {
+    background: var(--active-bg-color, #dfe9ff);
+}
+
+/* Magnifier while dragging a tape end */
+.measure-loupe {
+    position: absolute;
+    width: 160px;
+    height: 160px;
+    z-index: 5;
+    pointer-events: none;
+}
+.measure-loupe-lens {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #222;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 1px #000, 0 2px 8px rgba(0, 0, 0, 0.5);
+    box-sizing: border-box;
+}
+.measure-loupe-image {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 0;
+    transform-origin: 0 0;
+}
+.measure-loupe-cross {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+}
+.measure-loupe-cross::before,
+.measure-loupe-cross::after {
+    content: "";
+    position: absolute;
+    background: #2f6bff;
+    box-shadow: 0 0 0 1px #fff;
+}
+.measure-loupe-cross::before {
+    left: -10px; top: -0.5px; width: 20px; height: 1px;
+}
+.measure-loupe-cross::after {
+    left: -0.5px; top: -10px; width: 1px; height: 20px;
+}

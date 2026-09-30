@@ -25,6 +25,7 @@ import { uiGeolocate } from './geolocate';
 import { uiInfo } from './info';
 import { uiWayTablePanel } from './way_table_panel';
 import { installWidthIndicatorListeners } from '../width/width_indicator';
+import { installMeasureTapeListeners } from '../measure/measure_tape_listeners';
 import { setupLiveTouched } from '../live_touched/live_touched';
 import { applyInterfacePrefs } from './sections/interface';
 import { setupReadOnlyFeatures } from '../renderer/readonly_features';
@@ -260,6 +261,7 @@ export function uiInit(context) {
             .call(ui.wayTable);
 
         installWidthIndicatorListeners(context);
+        installMeasureTapeListeners(context);
         setupReadOnlyFeatures(context);
 
         overMap

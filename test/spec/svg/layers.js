@@ -29,7 +29,7 @@ describe('iD.svgLayers', function () {
     it('creates default data layers', function () {
         container.call(iD.svgLayers(projection, context));
         var nodes = container.selectAll('svg .data-layer').nodes();
-        expect(nodes.length).toEqual(19);
+        expect(nodes.length).toEqual(20);
         /* eslint-disable no-useless-assignment */
         let i = 0;
         expect(d3_select(nodes[i++]).classed('osm')).toBe(true);
@@ -48,6 +48,7 @@ describe('iD.svgLayers', function () {
         expect(d3_select(nodes[i++]).classed('panoramax')).toBe(true);
         expect(d3_select(nodes[i++]).classed('local-photos')).toBe(true);
         expect(d3_select(nodes[i++]).classed('width-indicator')).toBe(true);
+        expect(d3_select(nodes[i++]).classed('measure-tape')).toBe(true);
         expect(d3_select(nodes[i++]).classed('debug')).toBe(true);
         expect(d3_select(nodes[i++]).classed('geolocate')).toBe(true);
         expect(d3_select(nodes[i++]).classed('touch')).toBe(true);
