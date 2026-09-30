@@ -25,7 +25,8 @@ export function uiSectionFeatureType(context) {
 
     var section = uiSection('feature-type', context)
         .label(() => t.append('inspector.feature_type'))
-        .disclosureContent(renderDisclosureContent);
+        // Radnetz Berlin: the preset is the sidebar's header, not a collapsible section
+        .content(renderDisclosureContent);
 
     function renderDisclosureContent(selection) {
 
@@ -105,6 +106,15 @@ export function uiSectionFeatureType(context) {
         ].filter(Boolean) : [ t.append('inspector.multiple_types') ];
 
         var label = selection.select('.label-inner');
+
+        // Radnetz Berlin: "Feature type" as a small line above the preset name
+        label.selectAll('.feature-type-kicker')
+            .data([0])
+            .enter()
+            .insert('div', ':first-child')
+            .attr('class', 'feature-type-kicker')
+            .call(t.append('inspector.feature_type'));
+
         var nameparts = label.selectAll('.namepart')
             .data(names, d => d.stringId);
 

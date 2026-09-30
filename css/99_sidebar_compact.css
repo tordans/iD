@@ -1,0 +1,146 @@
+/* Radnetz Berlin: a more compact entity editor.
+   Sections run edge to edge, separated by a line; the section headers are full-width rows.
+   Fields keep a small side gutter, the raw tag editor uses the full width.
+   Overrides `80_app.css` so upstream stays untouched. */
+
+.entity-editor {
+    --sidebar-gutter: 10px;
+    padding: 0;
+}
+.entity-editor .section:not(:last-child) {
+    margin-bottom: 0;
+}
+.entity-editor > .section:not(.hide) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+
+/* Feature type: the header of the sidebar, no disclosure */
+.entity-editor .section-feature-type .preset-list-button-wrap {
+    min-height: 52px;
+    border: 0;
+    border-radius: 0;
+}
+.entity-editor .section-feature-type .preset-icon-container {
+    width: 52px;
+    height: 52px;
+}
+.entity-editor .section-feature-type .preset-list-button .label {
+    padding: 4px var(--sidebar-gutter);
+}
+.ideditor[dir] .entity-editor .section-feature-type .preset-list-button-wrap .accessory-buttons > button {
+    border-radius: 0;
+}
+.entity-editor .section-feature-type .tag-reference-body.expanded {
+    padding: 0 var(--sidebar-gutter) var(--sidebar-gutter);
+}
+.section-feature-type .label-inner .feature-type-kicker {
+    font-size: 11px;
+    font-weight: normal;
+    line-height: 1.3;
+    color: var(--muted-text-color);
+}
+.section-feature-type .label-inner .namepart:nth-child(1) {
+    font-weight: normal;
+}
+.section-feature-type .label-inner .feature-type-kicker + .namepart {
+    font-weight: bold;
+}
+
+
+/* Section headers: full-width rows, the body indented by the gutter */
+.entity-editor summary.hide-toggle {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 5px var(--sidebar-gutter);
+    line-height: 22px;
+}
+.entity-editor details.disclosure-wrap:open > summary.hide-toggle {
+    margin-bottom: 0;
+}
+@media (hover: hover) {
+    .entity-editor summary.hide-toggle:hover {
+        background: var(--bg-color-3);
+    }
+}
+.entity-editor .disclosure-content {
+    padding: 2px var(--sidebar-gutter) var(--sidebar-gutter);
+}
+
+
+/* Fields: no grey box around them */
+.entity-editor .section .grouped-items-area {
+    padding: 0;
+    margin: 0 0 8px 0;
+    border-radius: 0;
+    background: none;
+}
+
+
+/* Fields: a bit tighter */
+.entity-editor .form-field {
+    margin-bottom: 8px;
+}
+.entity-editor .field-label .label-text {
+    padding: 3px 0 2px 8px;
+}
+.ideditor[dir='rtl'] .entity-editor .field-label .label-text {
+    padding: 3px 8px 2px 0;
+}
+.entity-editor .field-label button {
+    width: 28px;
+}
+.entity-editor .form-field input[type=text],
+.entity-editor .form-field input[type=number],
+.entity-editor .form-field input[type=url],
+.entity-editor .form-field input[type=tel],
+.entity-editor .form-field input[type=email],
+.entity-editor .form-field input[type=date] {
+    height: 2.3em;
+    padding: 0 8px;
+}
+.entity-editor .form-field-button {
+    width: 28px;
+}
+
+
+/* Raw tag editor: edge to edge, the rows are the only frame */
+.entity-editor .section-raw-tag-editor .disclosure-content {
+    padding: 0;
+}
+.entity-editor .section-raw-tag-editor .tag-list,
+.entity-editor .section-raw-tag-editor .tag-text {
+    margin-top: 0;
+}
+.entity-editor .section-raw-tag-editor .tag-row input {
+    height: 2.3em;
+    padding: 0 8px;
+}
+.ideditor[dir='ltr'] .entity-editor .section-raw-tag-editor .tag-row input.key,
+.ideditor[dir='rtl'] .entity-editor .section-raw-tag-editor .tag-row button:last-child {
+    border-left: 0;
+}
+.ideditor[dir='rtl'] .entity-editor .section-raw-tag-editor .tag-row input.key,
+.ideditor[dir='ltr'] .entity-editor .section-raw-tag-editor .tag-row button:last-child {
+    border-right: 0;
+}
+.entity-editor .section-raw-tag-editor .tag-row input,
+.entity-editor .section-raw-tag-editor .tag-row button {
+    border-radius: 0 !important;
+}
+.entity-editor .section-raw-tag-editor .tag-text {
+    border-width: 1px 0;
+    border-radius: 0;
+}
+/* the list ends in the section's bottom line */
+.entity-editor .section-raw-tag-editor .tag-row:last-child input,
+.entity-editor .section-raw-tag-editor .tag-row:last-child button {
+    border-bottom: 0;
+}
+.entity-editor .section-raw-tag-editor .tag-text {
+    border-bottom: 0;
+}
+.entity-editor .section-raw-tag-editor .tag-reference-body.expanded {
+    padding-right: var(--sidebar-gutter);
+    padding-left: var(--sidebar-gutter);
+}
