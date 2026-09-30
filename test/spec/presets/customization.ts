@@ -52,5 +52,7 @@ describe('applyPresetCustomization', () => {
         expect(c.setFields!['highway/residential'].moreFields).not.toContain('incline');
         expect(c.setFields!['highway/cycleway/bicycle_foot'].fields!.slice(0, 3)).toEqual(['name', 'is_sidepath', 'segregated']);
         expect(c.presets!['highway/residential/bicycle_road/vehicle_destination'].tags.vehicle).toBe('destination');
+        expect(c.setFields!['highway/secondary'].moreFields).toContain('bicycle/direction');
+        expect(c.presets!['highway/residential/bicycle_road'].moreFields).not.toContain('bicycle/direction');
     });
 });

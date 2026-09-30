@@ -112,6 +112,27 @@ const FIELDS: Record<string, Field> = {
     marking: sideField('marking', 'Marking', MARKING_OPTIONS),
     buffer: sideField('buffer', 'Buffer Width (Meters)', { no: 'No buffer', '0.25': '0.25', '0.5': '0.5', '0.75': '0.75', '1': '1' }, true),
     traffic_mode: sideField('traffic_mode', 'Traffic Next To It', TRAFFIC_MODE_OPTIONS),
+    // `bicycle=use_sidepath` per direction, merged into `bicycle` when equal (feature 17, sidepath extraction)
+    'bicycle/direction': {
+        key: 'bicycle',
+        keys: ['bicycle:forward', 'bicycle:backward'],
+        type: 'directionalCombo',
+        label: 'Bicycles, by Direction',
+        geometry: ['line'],
+        options: ['use_sidepath', 'optional_sidepath', 'yes', 'designated', 'no'],
+        customValues: false,
+        autoSuggestions: false,
+        strings: {
+            options: {
+                use_sidepath: 'Use the separate cycleway (mandatory)',
+                optional_sidepath: 'Separate cycleway, not mandatory',
+                yes: 'Allowed',
+                designated: 'Designated',
+                no: 'Not allowed'
+            },
+            types: { 'bicycle:forward': 'Forward', 'bicycle:backward': 'Backward' }
+        }
+    } as Field,
     'cycleway/lane': {
         key: 'cycleway:both:lane',
         keys: ['cycleway:left:lane', 'cycleway:right:lane'],
@@ -140,7 +161,7 @@ const ROAD_FIELDS = [
     'cycleway', 'sidewalk', 'parking/side/parking', ...WAY_DETAILS, 'structure', 'access'
 ];
 const ROAD_MORE_FIELDS = [
-    'cycleway/lane', 'lane_markings', 'parking/side/orientation', 'traffic_calming_road', ...WAY_DETAILS_MORE
+    'cycleway/lane', 'bicycle/direction', 'lane_markings', 'parking/side/orientation', 'traffic_calming_road', ...WAY_DETAILS_MORE
 ];
 
 const BICYCLE_ROAD_FIELDS = [
