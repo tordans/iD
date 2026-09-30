@@ -776,6 +776,22 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - Same "+ in the field label" pattern as the Mapillary images field (feature 19).
 - Tested: a road with `bicycle=designated`, `motorcar=destination`, `hgv=no` shows Cars and Heavy goods vehicle as extra rows.
 
+### 23. Compact sidebar — 🟨 (round 1 done)
+
+Goal: more room for the data in the entity editor, keeping iD's look and feel.
+
+- **Round 1 (2026-09-30):**
+  - Feature type is the header of the sidebar: no disclosure, edge to edge, with a small "Feature type" line above the preset name (`modules/ui/sections/feature_type.js` uses `.content()` instead of `.disclosureContent()`).
+  - All sections run edge to edge, separated by a line. The section headers are full-width rows. Their bodies keep a small gutter (`--sidebar-gutter`, 10px).
+  - Fields: no grey box around them, tighter labels, inputs and spacing.
+  - Tags: the raw tag editor has no side padding; the rows are the only frame.
+  - Relations only follow the general section changes.
+  - All in `css/99_sidebar_compact.css`, which overrides `80_app.css`. Everything is scoped to `.entity-editor`, so the preset list and the other panes are unchanged.
+- **Open ideas (to discuss):**
+  - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
+  - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
+  - Sticky section headers, so the current section stays visible while scrolling.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -827,6 +843,8 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 
 ## Progress log
 
+- 2026-09-30: Compact sidebar, round 1 (feature 23): Feature type as the header, sections edge to edge, fields and tags tighter.
+- 2026-09-30: TILDA section UI rework (feature 8): right after Feature type, category chip and edit button in each card header, grouped target select, info button for the intro, German category names generated from tilda-geo's topic docs.
 - 2026-09-30: Custom data layers get an optional key=value filter (feature 4). Pane tooltips of read-only/hidden rows no longer see-through. English fallback for our UI strings in other locales. Mapillary field: input and buttons fill the row height.
 
 - 2026-09-30: Mapillary features 18–20 and the measuring tape (21) built with Sonnet agents and reviewed; Mapillary field redesigned as a directional-combo table; magnifier fixed (crosshair, placement). Netlify now gets the project setup (`dist/index.html`). Merged the access field branch (feature 22).
