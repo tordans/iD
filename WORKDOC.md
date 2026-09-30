@@ -381,6 +381,13 @@ Notes:
   - cycleways and foot+cycle paths: name, sidepath, (segregated), oneway, surface, smoothness, width, traffic sign, separation, structure, access.
   - footway, sidewalk, path: name, access, traffic sign, sidepath, surface, smoothness, width, structure.
   - crossings (cycleway/footway/path): + width, oneway, access; more: surface colour, smoothness, traffic sign.
+- **Side prerequisites (2026-09-30):** iD's field option `prerequisiteTag` can now name the side in its key, e.g. `cycleway/lane` has `{ key: 'cycleway:{side}', value: 'lane' }`.
+  - The field is allowed (shown, or offered in "Add field") only when the prerequisite holds on at least one side, or when the field already has a value. This is the same rule as upstream's `prerequisiteTag`.
+  - In the directional combo, a side where it does not hold is disabled, and its placeholder (and tooltip) names the field to change first, e.g. "“Keiner”: change “Fahrradinfrastruktur” first". A side value that is already there stays editable.
+  - The side value is read from `cycleway:right`, then `cycleway:both`, then `cycleway`. `value`, `values`, `valueNot` and `valuesNot` work as upstream.
+  - Code: `modules/ui/fields/side_prerequisite.ts` (pure helpers + `uiSidePrerequisites`, tests in `test/spec/ui/fields/side_prerequisite.ts`); small hooks in `modules/ui/field.js` (`isAllowed`, class `has-side-prerequisite`) and `modules/ui/fields/directional_combo.js` (row state, placeholder).
+  - Grouping: `cycleway/lane` moved from `moreFields` to the road `fields`, right after `cycleway`. It only appears when a side has `lane`. In the compact sidebar (feature 23), a field with a side prerequisite has no line above it, so it reads as part of the field above.
+  - **Planned upstream PR (later, separate from this branch):** "directional combo knows its parent tag". It needs `{side}` in `prerequisiteTag.key` documented in id-tagging-schema, the helpers in iD, and fields that use it (lane type, `parking:{side}:orientation` with `valuesNot: [no, separate]`, `sidewalk:{side}:surface`, …). Open for that PR: should changing the parent to `no`/`separate` also remove the detail tags of that side?
 - Open: side variants (`cycleway:<side>:separation:left`, `cycleway:<side>:surface`, …) have no fields; the TILDA section's checklist (feature 8) covers them with key + options. Fields could follow as "sub-fields" of the `cycleway` directional field.
 - Open: a preset category "TILDA Radinfrastruktur"; presets for `footwayBicycleYes` (sidewalk + `bicycle=yes` + `DE:239,1022-10`) and bicycle roads on `service`/`unclassified`.
 
@@ -787,6 +794,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Tags: the raw tag editor has no side padding; the rows are the only frame.
   - Relations only follow the general section changes.
   - All in `css/99_sidebar_compact.css`, which overrides `80_app.css`. Everything is scoped to `.entity-editor`, so the preset list and the other panes are unchanged.
+- **Grouping (2026-09-30):** a field with a side prerequisite sits right below its parent field, without the separator line (see feature 15, side prerequisites). General field grouping is still to be discussed.
 - **Round 2 (2026-09-30), experiment: fields without boxes:**
   - A line above each field label is the only separator. The label is plain text; its buttons have no borders.
   - Inputs and buttons keep their darker background. The borders inside the input area take the sidebar color: the outer edges disappear, and the inner ones become small gaps between input, caret and buttons. The input area has rounded corners, but not while a combobox is open, so its dropdown can hang below.
@@ -852,6 +860,8 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
 
 ## Progress log
 
+- 2026-09-30: Side prerequisites (feature 15): the lane type field only appears when a side has a lane; the other side is disabled with a hint to change the bike infrastructure first. Written to be reused for a later upstream PR.
+- 2026-09-30: Compact sidebar round 2 (feature 23): fields without boxes, no reserved scrollbar track, same-size field buttons, Mapillary field gaps fixed, no "No signs yet" text.
 - 2026-09-30: Compact sidebar, round 1 (feature 23): Feature type as the header, sections edge to edge, fields and tags tighter.
 - 2026-09-30: TILDA section UI rework (feature 8): right after Feature type, category chip and edit button in each card header, grouped target select, info button for the intro, German category names generated from tilda-geo's topic docs.
 - 2026-09-30: Custom data layers get an optional key=value filter (feature 4). Pane tooltips of read-only/hidden rows no longer see-through. English fallback for our UI strings in other locales. Mapillary field: input and buttons fill the row height.
