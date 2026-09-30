@@ -102,6 +102,12 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   1. Read Rapid's VectorTileService for PMTiles handling (`pmtiles` lib, header/directory reads).
   2. Map it onto iD's `modules/svg/data.js` (d3/SVG, not Pixi) and `modules/ui/sections/data_layers.js`.
   3. Reuse the storage/id model from multiple custom backgrounds.
+- **Filter (2026-09-30, ✅):** each layer can have an optional `key` + `value` filter in its settings.
+  - Only features whose properties match are drawn: no key = all features; key without value = the property is set; key and value = the property equals the value (as a string, so numbers match too).
+  - The row shows `Name (key=value)` (`key=*` without a value), the filter part smaller and muted; the tooltip adds "Only features with key=value".
+  - The same URL can be added several times with different filters, e.g. `radverkehrsnetz.pmtiles` once with `ist_radvorrangnetz=Radvorrangnetz` and once with `ist_radvorrangnetz=Ergänzungsnetz` in different colors.
+  - Code: `matchesCustomDataFilter` / `customDataFilterLabel` in `modules/renderer/custom_data_layers.ts`, applied in `layerFeatures()` of `modules/svg/custom_data.ts`. Stored as `filterKey` / `filterValue` (left out when empty).
+  - Tooltip fix: read-only and hidden rows dimmed their whole label, including the tooltip inside it, so the tooltip was see-through. Now only the label's content is dimmed.
 
 ### 5. Map style "lenses" — ✅ (Radnetz QA lens bundled)
 
@@ -814,11 +820,13 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - A fresh worktree needs the SVG sprites: `npx run-p "dist:svg:*"`, and the traffic sign assets: `npx run-p dist:traffic-sign-field dist:traffic-sign-converter`.
 - The traffic sign packages are vendored in `vendor/` (built files from `~/Development/OSM/osm-traffic-sign-tools-id-field`, which is WIP and not fully on npm). Refresh with `npm run vendor:traffic-signs`, see `vendor/README.md`.
 - `npm run build:data` merges `data/traffic_sign_field_locales.yaml` into the committed `dist/locales/de*.min.json`.
-- New UI strings exist only in English (`data/core.yaml`). With a German browser they show as "Missing translation". Use `&locale=en` or add German strings to a fork locale file like `data/traffic_sign_field_locales.yaml`.
+- New UI strings exist only in English (`data/core.yaml`). The localizer now always loads the English UI strings as a fallback (`modules/core/localizer.ts`), so a German browser shows German upstream strings and English for ours instead of "Missing translation". German strings for our UI are still open.
 
 - Since the lens merge, all iD CSS is in `@layer ideditor`. CSS loaded later without a layer (e.g. `vendor/traffic-sign-field/id-field.css`) always wins over it; overriding such CSS from `css/` needs `!important` (see `css/93_traffic_sign_field.css`).
 
 ## Progress log
+
+- 2026-09-30: Custom data layers get an optional key=value filter (feature 4). Pane tooltips of read-only/hidden rows no longer see-through. English fallback for our UI strings in other locales. Mapillary field: input and buttons fill the row height.
 
 - 2026-09-30: Mapillary features 18–20 and the measuring tape (21) built with Sonnet agents and reviewed; Mapillary field redesigned as a directional-combo table; magnifier fixed (crosshair, placement). Netlify now gets the project setup (`dist/index.html`). Merged the access field branch (feature 22).
 - 2026-09-30: Extract a road side into a separate way (feature 17). TILDA target select also for ways TILDA does not process (feature 8).
