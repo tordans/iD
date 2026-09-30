@@ -836,7 +836,6 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
   - Round 4: no text mode and no switch in the field label any more. An open picker shows its photos, then one label | input row (iD's row style, e.g. "Oberfläche | Asphalt") that takes any value; its suggestions are the catalogue's values plus the schema's (`concrete:plates`, …). All 26 surfaces show at once (no "More"). 10px space between the two tiles and the open picker. 4 surfaces have no photo (`artificial_turf`, `paved`, `unpaved`, `acrylic`); 3 have no German schema label and show the English catalogue title (`rock`, `rubber`, `acrylic`).
   - Choosing the current value again removes it. Changing the surface removes a smoothness the new surface does not offer (the package's tested rule, e.g. asphalt `excellent` → sett).
   - Tooltips show the tag and the photo credit (license from the catalogue).
-  - Text mode: two rows like the directional fields (surface, smoothness) with a suggestion list; any value is accepted.
 - **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, options, titles and placeholders from the schema's `surface` / `smoothness` fields). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
 - **Open:**
   - The field label is English ("Surface & Smoothness").
