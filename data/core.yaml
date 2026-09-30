@@ -1188,14 +1188,14 @@ en:
       title: "Highlight organizations"
       tooltip: "Mark images and sequences of these Mapillary organizations (comma separated organization names as in the Mapillary URL)"
     auto_show:
-      title: "Show the way's Mapillary image when selecting it"
+      title: "Show image on select"
       tooltip: "When you select a feature with a Mapillary image tag, turn on the Mapillary layer and show its image in the viewer"
     age_legend:
       outdated: "older than {date}"
       old: "oldest third"
       mid: "middle third"
       new: "newest third"
-    age_cutoff_marker: "{date}: older imagery"
+    age_cutoff_marker: "{date}"
     age_slider_filter:
       title: "Date Range"
       tooltip: "Shows only photos that are newer than the selected date"
