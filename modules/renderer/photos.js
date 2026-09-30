@@ -4,6 +4,7 @@ import { services } from '../services';
 import { utilRebind } from '../util/rebind';
 import { utilStringQs } from '../util';
 import { patchHash } from '../behavior';
+import { effectiveList, mapillaryConfig, parseList } from '../mapillary/config';
 
 
 export function rendererPhotos(context) {
@@ -15,6 +16,9 @@ export function rendererPhotos(context) {
     var _fromDate;
     var _toDate;
     var _usernames;
+    // URL values of the highlight lists (WORKDOC feature 18); the project config is the fallback
+    var _highlightUsers = null;
+    var _highlightOrgs = null;
 
     function photos() {}
 
@@ -113,6 +117,28 @@ export function rendererPhotos(context) {
     };
 
     /**
+     * Sets the users whose Mapillary images are highlighted
+     * @param {string} val Comma separated usernames
+     * @param {boolean} updateUrl Whether the URL should update or not
+     */
+    photos.setHighlightUsers = function(val, updateUrl) {
+        _highlightUsers = parseList(val).join(',') || null;
+        dispatch.call('change', this);
+        if (updateUrl) setUrlFilterValue('photo_highlight_users', _highlightUsers);
+    };
+
+    /**
+     * Sets the organizations (slugs) whose Mapillary images are highlighted
+     * @param {string} val Comma separated organization slugs
+     * @param {boolean} updateUrl Whether the URL should update or not
+     */
+    photos.setHighlightOrgs = function(val, updateUrl) {
+        _highlightOrgs = parseList(val).join(',') || null;
+        dispatch.call('change', this);
+        if (updateUrl) setUrlFilterValue('photo_highlight_orgs', _highlightOrgs);
+    };
+
+    /**
      * Util function to set the slider date filter
      * @param {*} val Either 'panoramic' or 'flat'
      * @param {boolean} updateUrl Whether the URL should update or not
@@ -200,6 +226,21 @@ export function rendererPhotos(context) {
         return _usernames;
     };
 
+    /** @returns The highlighted usernames (URL, else project config) */
+    photos.highlightUsers = function() {
+        return effectiveList(_highlightUsers, mapillaryConfig().highlightUsers);
+    };
+
+    /** @returns The highlighted organization slugs (URL, else project config) */
+    photos.highlightOrgs = function() {
+        return effectiveList(_highlightOrgs, mapillaryConfig().highlightOrgs);
+    };
+
+    /** @returns The date from which imagery counts as recent: the "from" filter, else the configured default */
+    photos.ageCutoff = function() {
+        return _fromDate || mapillaryConfig().defaultFromDate || null;
+    };
+
     /**
      * Inits the streetlevel layer given the saved values in the URL
      */
@@ -211,6 +252,15 @@ export function rendererPhotos(context) {
             parts = /^(.*)[–_](.*)$/g.exec(hash.photo_dates.trim());
             this.setDateFilter('fromDate', parts && parts.length >= 2 && parts[1], false);
             this.setDateFilter('toDate', parts && parts.length >= 3 && parts[2], false);
+        } else if (mapillaryConfig().defaultFromDate) {
+            // hide old imagery by default, see WORKDOC feature 18
+            this.setDateFilter('fromDate', mapillaryConfig().defaultFromDate, false);
+        }
+        if (hash.photo_highlight_users) {
+            this.setHighlightUsers(hash.photo_highlight_users, false);
+        }
+        if (hash.photo_highlight_orgs) {
+            this.setHighlightOrgs(hash.photo_highlight_orgs, false);
         }
         if (hash.photo_username) {
             this.setUsernameFilter(hash.photo_username, false);

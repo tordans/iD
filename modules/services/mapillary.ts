@@ -17,7 +17,7 @@ import type { Vec2 } from '../geo/vector';
 import type { Feature, LineString, Point } from 'geojson';
 import type { coreContext } from '../core';
 
-const accessToken = 'MLY|4100327730013843|5bb78b81720791946a9a7b956c57b7cf';
+export const accessToken = 'MLY|4100327730013843|5bb78b81720791946a9a7b956c57b7cf';
 const apiUrl = 'https://graph.mapillary.com/';
 const baseTileUrl = 'https://tiles.mapillary.com/maps/vtp';
 const mapFeatureTileUrl = `${baseTileUrl}/mly_map_feature_point/2/{z}/{x}/{y}?access_token=${accessToken}`;
@@ -50,12 +50,16 @@ export interface MlyImage {
     unsafeId?: boolean;
     is_pano?: boolean;
     sequence_id?: string;
+    creator_id?: string | number;
+    organization_id?: string | number;
 }
 
 export type MlySequence = Feature<LineString, {
     id: string;
     captured_at: string;
     is_pano?: boolean;
+    creator_id?: string | number;
+    organization_id?: string | number;
 }>;
 
 
@@ -72,6 +76,8 @@ type RawImage = Feature<Point, {
     id: string;
     is_pano: boolean;
     sequence_id: string;
+    creator_id?: string | number;
+    organization_id?: string | number;
 }>;
 
 interface Detection {
@@ -213,6 +219,8 @@ function loadTileDataToCache(data: ArrayBuffer, tile: Tile, which: Which) {
                 unsafeId,
                 is_pano: feature.properties.is_pano,
                 sequence_id: feature.properties.sequence_id,
+                creator_id: feature.properties.creator_id,
+                organization_id: feature.properties.organization_id,
             };
             cache.forImageId[d.id] = d;
             features.push({

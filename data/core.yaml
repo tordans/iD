@@ -1164,6 +1164,18 @@ en:
     username_filter:
       title: "Username"
       tooltip: "Show only photos by this user"
+    highlight_users_filter:
+      title: "Highlight users"
+      tooltip: "Mark images and sequences of these Mapillary users (comma separated usernames)"
+    highlight_orgs_filter:
+      title: "Highlight organizations"
+      tooltip: "Mark images and sequences of these Mapillary organizations (comma separated organization names as in the Mapillary URL)"
+    age_legend:
+      outdated: "older than {date}"
+      old: "oldest third"
+      mid: "middle third"
+      new: "newest third"
+    age_cutoff_marker: "{date}: older imagery"
     age_slider_filter:
       title: "Date Range"
       tooltip: "Shows only photos that are newer than the selected date"
