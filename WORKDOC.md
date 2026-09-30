@@ -818,6 +818,30 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
   - Sticky section headers, so the current section stays visible while scrolling.
 
+### 24. Surface and smoothness by photo — 🟨 (first version, for review)
+
+Goal: one field for `surface` and `smoothness` where mappers choose by photo first, with a text fallback. Two steps that depend on each other: first the surface, then the smoothness for that surface.
+
+- **Sources:**
+  - Data: `@osm-editor-kit/surface-smoothness-data` (catalogue + photos extracted from StreetComplete: 26 surfaces, 8 smoothness levels, 43 surface × smoothness reference photos).
+  - UI: `@osm-editor-kit/surface-smoothness-id-field` (D3), both from `~/Development/OSM/osm-surface-smoothness-workspace/osm-surface-smoothness-tagging`.
+  - The flow follows the parking-lanes app's picker (`parking-lanes/app/src/modes/surface/controls/SurfaceSmoothnessPicker.tsx`).
+  - Earlier iD integration (combo + smoothness cards): worktree `iD-surface-smoothness-worktree`, branch `surface-smoothness-field`.
+- **Where the work happens:** the UI is improved in the package itself (branch `image-first-ui` in that repo, with a changeset; not pushed, not published). Both packages are on npm only as 0.0.0 with the older UI (the data package also still GPL with vehicle icons), so the fork vendors the local build: `npm run vendor:surface-smoothness` → `vendor/surface-smoothness-field/` (`index.js` with d3 and the catalogue bundled in, CSS, `images/`), copied to `dist/surface-smoothness-field/` by `npm run dist`. Switch to npm once a new version is published.
+- **UI (package):**
+  - Step 1, surface: a grid of photos. It shows the usual surfaces first (asphalt, paving stones, concrete, sett, cobblestone, compacted, fine gravel, grass paver) and the other 18 behind "More".
+  - Step 2, smoothness (after a surface): StreetComplete's reference photos for that surface, best to worst, or all 8 levels with their emoji where there are no photos.
+  - A chosen step becomes one compact row with its photo, the label and `key=value`. Clicking it opens the grid again.
+  - Choosing the current value again removes it. Changing the surface removes a smoothness the new surface does not offer (the package's tested rule, e.g. asphalt `excellent` → sett).
+  - Tooltips show the tag and the photo credit (license from the catalogue).
+  - Text mode: two rows like the directional fields (surface, smoothness) with a suggestion list; any value is accepted.
+- **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, titles and placeholders from the schema's `surface` / `smoothness` fields). A button in the field label switches photos ↔ text; the choice is remembered (`radnetz.surface-smoothness.mode`). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
+- **Open:**
+  - The field label is English ("Surface & Smoothness").
+  - Side keys (`cycleway:right:surface`) are not covered yet; the package already takes custom keys.
+  - `sett:length` could become a third step for sett.
+  - Crossings still use the plain `smoothness` field in "more fields".
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -869,6 +893,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
 
 ## Progress log
 
+- 2026-09-30: Surface and smoothness by photo (feature 24): photo-first UI built in the surface-smoothness package (branch `image-first-ui`), vendored here as a new field that replaces `surface` + `smoothness`.
 - 2026-09-30: Side prerequisites clean up: changing a side's parent so the prerequisite no longer holds removes that side's detail value (feature 15).
 - 2026-09-30: Compact sidebar round 3 (feature 23): no lines between fields, one muted gap color for rows and tag rows, row labels aligned with input text, flat Structure sub fields, light arrows, field titles not clickable.
 - 2026-09-30: Side prerequisites (feature 15): the lane type field only appears when a side has a lane; the other side is disabled with a hint to change the bike infrastructure first. Written to be reused for a later upstream PR.
