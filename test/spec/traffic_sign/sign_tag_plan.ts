@@ -83,4 +83,15 @@ describe('signTagPlan', () => {
             'remove bicycle', 'remove foot', 'remove segregated'
         ]);
     });
+
+    it('restores the downloaded value instead of removing it', () => {
+        // downloaded with foot=no and DE:237; the mapper tried DE:240 (applied) and went back to DE:237
+        const originalTags = { highway: 'cycleway', traffic_sign: 'DE:237', bicycle: 'designated', foot: 'no' };
+        const tags = { highway: 'path', traffic_sign: 'DE:237', bicycle: 'designated', foot: 'designated', segregated: 'no' };
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: 'DE:240', originalTags, recommend })).toEqual([
+            { kind: 'change', key: 'highway', value: 'cycleway', from: 'path', cause: 'sign' },
+            { kind: 'change', key: 'foot', value: 'no', from: 'designated', cause: 'restore' },
+            { kind: 'remove', key: 'segregated', value: 'no', cause: 'previous_sign' }
+        ]);
+    });
 });

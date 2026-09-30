@@ -8,7 +8,7 @@
 export type SignTags = Record<string, string | string[]>;
 export type Recommend = (trafficSignValue: string) => SignTags;
 
-export type SignPlanCause = 'sign' | 'normalize' | 'previous_sign';
+export type SignPlanCause = 'sign' | 'normalize' | 'previous_sign' | 'restore';
 
 export type SignPlanRow = {
     kind: 'add' | 'change' | 'remove';
@@ -84,16 +84,19 @@ function applicableTags(signTags: SignTags, target: SignTarget, tags: Tags): Rec
  * Changes to make the tags match the sign in `key`:
  * - add / change the tags the sign implies (highway only for separate paths),
  * - normalize the sign value (`DE:241` → `DE:241-30`),
- * - remove tags that the previous sign implied and the new one does not.
+ * - remove tags that the previous sign implied and the new one does not, or restore their
+ *   value from the downloaded version (`originalTags`) if it had a different one.
  *
  * `previousSign` is the value before the mapper changed it (in this editing session, else
  * the downloaded version). Returns `undefined` when the sign did not change (existing ways
  * are left alone), and an empty list when everything matches.
  */
-export function signTagPlan({ key, tags, previousSign, recommend }: {
+export function signTagPlan({ key, tags, previousSign, originalTags, recommend }: {
     key: string;
     tags: Tags;
     previousSign: string | undefined;
+    /** tags of the downloaded version, if any */
+    originalTags?: Tags;
     recommend: Recommend;
 }): SignPlanRow[] | undefined {
     const target = signTarget(key);
@@ -121,7 +124,11 @@ export function signTagPlan({ key, tags, previousSign, recommend }: {
         const previous = applicableTags(safeRecommend(recommend, previousSign), target, tags);
         for (const [previousKey, previousValue] of Object.entries(previous)) {
             if (previousKey === 'highway' || previousKey in wanted) continue;
-            if (tags[previousKey] === previousValue) {
+            if (tags[previousKey] !== previousValue) continue;
+            const original = originalTags?.[previousKey];
+            if (original !== undefined && original !== previousValue) {
+                rows.push({ kind: 'change', key: previousKey, value: original, from: previousValue, cause: 'restore' });
+            } else {
                 rows.push({ kind: 'remove', key: previousKey, value: previousValue, cause: 'previous_sign' });
             }
         }

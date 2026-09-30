@@ -93,6 +93,7 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
 
     function rowReason(row: SignPlanRow, tags: Tags, previousSign: string | undefined) {
         if (row.cause === 'normalize') return t('inspector.traffic_sign_plan.cause.normalize');
+        if (row.cause === 'restore') return t('inspector.traffic_sign_plan.cause.restore', { sign: previousSign ?? '' });
         if (row.cause === 'previous_sign') return t('inspector.traffic_sign_plan.cause.previous_sign', { sign: previousSign ?? '' });
         return t('inspector.traffic_sign_plan.cause.sign', { sign: tags[fieldKey] ?? '' });
     }
@@ -111,10 +112,9 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
         if (single && _recommend) {
             const plainTags = tags as Tags;
             // changed while selected, else compared with the downloaded version
-            const previousSign = _previousSign !== null
-                ? _previousSign
-                : context.history().base().hasEntity(_entityIDs[0])?.tags[fieldKey];
-            const plan = signTagPlan({ key: fieldKey, tags: plainTags, previousSign, recommend: _recommend });
+            const originalTags = context.history().base().hasEntity(_entityIDs[0])?.tags;
+            const previousSign = _previousSign !== null ? _previousSign : originalTags?.[fieldKey];
+            const plan = signTagPlan({ key: fieldKey, tags: plainTags, previousSign, originalTags, recommend: _recommend });
             rows = (plan ?? []).map(row => ({ ...row, reason: rowReason(row, plainTags, previousSign) }));
         }
 
