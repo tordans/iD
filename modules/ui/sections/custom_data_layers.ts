@@ -1,5 +1,11 @@
 import { t } from '../../core/localizer';
-import { customDataLabel, customDataLayers, isSelectable, type CustomDataLayer } from '../../renderer/custom_data_layers';
+import {
+    customDataFilterLabel,
+    customDataLabel,
+    customDataLayers,
+    isSelectable,
+    type CustomDataLayer
+} from '../../renderer/custom_data_layers';
 import { svgIcon } from '../../svg/icon';
 import { uiConfirm } from '../confirm';
 import { uiLayerModeToggle, type LayerMode } from '../layer_mode_toggle';
@@ -78,6 +84,11 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             .call(uiPaneTooltip()
                 .title((d: CustomDataLayer) => (selection: d3.Selection) => {
                     selection.append('code').text(d.url);
+                    const filter = customDataFilterLabel(d);
+                    if (filter) {
+                        selection.append('div').attr('class', 'custom-data-filter-tooltip')
+                            .call(t.append('map_data.custom_data_layers.filter_tooltip', { filter }));
+                    }
                 })
             );
 
@@ -127,11 +138,21 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             if (toggle && label && label.nextSibling !== toggle) label.after(toggle);
         });
 
+        // pass the edited layer on to the label, whose tooltip reads it
+        items.select('label');
+
         items.select('.custom-data-swatch')
             .style('background-color', d => d.color);
 
-        items.select('.custom-data-name')
+        // "NAME (key=value)"; the filter part is smaller and muted
+        const names = items.select('.custom-data-name')
             .text(layerName);
+
+        names.selectAll<HTMLSpanElement, string>('.custom-data-filter')
+            .data(d => customDataFilterLabel(d) ? [customDataFilterLabel(d)] : [])
+            .join('span')
+            .attr('class', 'custom-data-filter')
+            .text(d => `(${d})`);
     }
 
 

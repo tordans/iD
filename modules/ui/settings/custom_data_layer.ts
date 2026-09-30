@@ -52,6 +52,42 @@ export function uiSettingsCustomDataLayer(context: iD.Context, layer?: CustomDat
 
     textSection
         .append('label')
+        .call(t.append('map_data.custom_data_layers.settings.filter'));
+
+    const filterRow = textSection
+        .append('div')
+        .attr('class', 'filter-row');
+
+    const filterKeyInput = filterRow
+        .append('input')
+        .attr('class', 'field-filter-key')
+        .attr('type', 'text')
+        .attr('placeholder', t('map_data.custom_data_layers.settings.filter_key'))
+        .attr('aria-label', t('map_data.custom_data_layers.settings.filter_key'))
+        .call(utilNoAuto)
+        .property('value', layer?.filterKey ?? '');
+
+    filterRow
+        .append('span')
+        .attr('class', 'filter-equals')
+        .text('=');
+
+    const filterValueInput = filterRow
+        .append('input')
+        .attr('class', 'field-filter-value')
+        .attr('type', 'text')
+        .attr('placeholder', t('map_data.custom_data_layers.settings.filter_value'))
+        .attr('aria-label', t('map_data.custom_data_layers.settings.filter_value'))
+        .call(utilNoAuto)
+        .property('value', layer?.filterValue ?? '');
+
+    textSection
+        .append('div')
+        .attr('class', 'instructions-filter deemphasize')
+        .call(t.append('map_data.custom_data_layers.settings.filter_help'));
+
+    textSection
+        .append('label')
         .call(t.append('map_data.custom_data_layers.settings.color'));
 
     const colorInput = textSection
@@ -90,12 +126,16 @@ export function uiSettingsCustomDataLayer(context: iD.Context, layer?: CustomDat
 
         const name = String(nameInput.property('value'));
         const color = String(colorInput.property('value'));
+        const filter = {
+            filterKey: String(filterKeyInput.property('value')),
+            filterValue: String(filterValueInput.property('value'))
+        };
         modal.close();
 
         if (layer) {
-            customDataLayers.update(layer.id, { name, url, color });
+            customDataLayers.update(layer.id, { name, url, color, ...filter });
         } else {
-            const added = customDataLayers.add(url, name);
+            const added = customDataLayers.add(url, name, filter);
             customDataLayers.update(added.id, { color });
         }
     }

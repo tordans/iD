@@ -1,8 +1,10 @@
 import { prefs } from '../../../modules/core/preferences';
 import {
+    customDataFilterLabel,
     customDataFormat,
     customDataLabel,
-    customDataLayers
+    customDataLayers,
+    matchesCustomDataFilter
 } from '../../../modules/renderer/custom_data_layers';
 
 
@@ -62,5 +64,49 @@ describe('customDataLayers', () => {
         customDataLayers.update(a.id, { name: ' New ', color: '#000000' });
         customDataLayers.reset();
         expect(customDataLayers.get(a.id)).toMatchObject({ name: 'New', color: '#000000' });
+    });
+
+    describe('filter', () => {
+        it('shows every feature without a filter key', () => {
+            expect(matchesCustomDataFilter({}, { a: 1 })).toBe(true);
+            expect(matchesCustomDataFilter({ filterKey: ' ', filterValue: 'x' }, null)).toBe(true);
+        });
+
+        it('matches the value, also for numbers', () => {
+            const layer = { filterKey: 'category', filterValue: ' vorrang ' };
+            expect(matchesCustomDataFilter(layer, { category: 'vorrang' })).toBe(true);
+            expect(matchesCustomDataFilter(layer, { category: 'netz' })).toBe(false);
+            expect(matchesCustomDataFilter(layer, {})).toBe(false);
+            expect(matchesCustomDataFilter({ filterKey: 'level', filterValue: '2' }, { level: 2 })).toBe(true);
+        });
+
+        it('matches any set value when the value is empty', () => {
+            const layer = { filterKey: 'category' };
+            expect(matchesCustomDataFilter(layer, { category: 'netz' })).toBe(true);
+            expect(matchesCustomDataFilter(layer, { category: '' })).toBe(false);
+            expect(matchesCustomDataFilter(layer, { other: 'x' })).toBe(false);
+        });
+
+        it('labels the filter', () => {
+            expect(customDataFilterLabel({})).toBe('');
+            expect(customDataFilterLabel({ filterKey: 'category', filterValue: 'vorrang' })).toBe('category=vorrang');
+            expect(customDataFilterLabel({ filterKey: 'category' })).toBe('category=*');
+        });
+
+        it('adds the same url again with another filter', () => {
+            const a = customDataLayers.add('https://example.com/a.pmtiles');
+            const b = customDataLayers.add('https://example.com/a.pmtiles', '', { filterKey: 'category', filterValue: 'vorrang' });
+            expect(b.id).not.toBe(a.id);
+            expect(customDataLayers.add('https://example.com/a.pmtiles', '', { filterKey: ' category', filterValue: 'vorrang ' }).id)
+                .toBe(b.id);
+        });
+
+        it('stores trimmed filters and drops empty ones', () => {
+            const a = customDataLayers.add('https://example.com/a.pmtiles', '', { filterKey: ' category ', filterValue: ' x ' });
+            expect(customDataLayers.get(a.id)).toMatchObject({ filterKey: 'category', filterValue: 'x' });
+            customDataLayers.update(a.id, { filterKey: '', filterValue: 'x' });
+            expect(customDataLayers.get(a.id)?.filterKey).toBeUndefined();
+            expect(customDataLayers.get(a.id)?.filterValue).toBeUndefined();
+        });
     });
 });

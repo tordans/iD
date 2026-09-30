@@ -6,7 +6,13 @@ import { select as d3_select } from 'd3-selection';
 import stringify from 'fast-json-stable-stringify';
 import type { Feature, FeatureCollection } from 'geojson';
 
-import { customDataFormat, customDataLayers, isSelectable, type CustomDataLayer } from '../renderer/custom_data_layers';
+import {
+    customDataFormat,
+    customDataLayers,
+    isSelectable,
+    matchesCustomDataFilter,
+    type CustomDataLayer
+} from '../renderer/custom_data_layers';
 import { services } from '../services';
 import { utilHashcode } from '../util';
 import { svgPath } from './helpers';
@@ -118,10 +124,12 @@ export function svgCustomData(projection: Projection, context: iD.Context, dispa
     }
 
 
+    /** The layer's features that pass its key/value filter */
     function layerFeatures(layer: CustomDataLayer) {
-        return customDataFormat(layer.url) === 'geojson'
+        const features = customDataFormat(layer.url) === 'geojson'
             ? geojsonFeatures(layer)
             : vectorTileFeatures(layer);
+        return features.filter(feature => matchesCustomDataFilter(layer, feature.properties));
     }
 
 

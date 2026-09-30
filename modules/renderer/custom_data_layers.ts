@@ -16,6 +16,10 @@ export interface CustomDataLayer {
     enabled: boolean;
     /** features can be hovered and clicked; `false` makes the layer a visual overlay only (default `true`) */
     selectable?: boolean;
+    /** only features with this property are shown (empty: all features) */
+    filterKey?: string;
+    /** …with this value; empty: any value */
+    filterValue?: string;
 }
 
 export type CustomDataFormat = 'geojson' | 'vectortile';
@@ -51,6 +55,38 @@ export function customDataLabel(url: string) {
 
 export function isSelectable(layer: CustomDataLayer) {
     return layer.selectable !== false;
+}
+
+
+/** The layer's filter as `key=value` (`key=*` without a value), `''` without a filter */
+export function customDataFilterLabel(layer: Pick<CustomDataLayer, 'filterKey' | 'filterValue'>) {
+    const key = layer.filterKey?.trim();
+    if (!key) return '';
+    return `${key}=${layer.filterValue?.trim() || '*'}`;
+}
+
+
+/**
+ * Whether a feature with these `properties` passes the layer's filter:
+ * no filter key: every feature; no value: the property is set; else the property equals the value.
+ */
+export function matchesCustomDataFilter(
+    layer: Pick<CustomDataLayer, 'filterKey' | 'filterValue'>,
+    properties: Record<string, unknown> | null | undefined
+) {
+    const key = layer.filterKey?.trim();
+    if (!key) return true;
+    const actual = properties?.[key];
+    if (actual === undefined || actual === null || actual === '') return false;
+    const value = layer.filterValue?.trim();
+    return !value || String(actual) === value;
+}
+
+
+/** Trimmed filter fields; `undefined` when empty, so they are left out of the stored JSON */
+function cleanFilter(filter: Pick<CustomDataLayer, 'filterKey' | 'filterValue'>) {
+    const filterKey = filter.filterKey?.trim() || undefined;
+    return { filterKey, filterValue: (filterKey && filter.filterValue?.trim()) || undefined };
 }
 
 
@@ -110,10 +146,14 @@ function createCustomDataLayers() {
             return load().find(layer => layer.id === id);
         },
 
-        /** Adds an enabled layer, or enables the existing layer with the same URL */
-        add(url: string, name = ''): CustomDataLayer {
+        /**
+         * Adds an enabled layer, or enables the existing layer with the same URL and filter.
+         * The same URL can be added several times with different filters.
+         */
+        add(url: string, name = '', filter: Pick<CustomDataLayer, 'filterKey' | 'filterValue'> = {}): CustomDataLayer {
             const cleanUrl = url.trim();
-            const existing = load().find(layer => layer.url === cleanUrl);
+            const filterLabel = customDataFilterLabel(filter);
+            const existing = load().find(layer => layer.url === cleanUrl && customDataFilterLabel(layer) === filterLabel);
             if (existing) {
                 customDataLayers.update(existing.id, { enabled: true });
                 return customDataLayers.get(existing.id)!;
@@ -124,7 +164,8 @@ function createCustomDataLayers() {
                 name: name.trim(),
                 url: cleanUrl,
                 color: CUSTOM_DATA_COLORS[load().length % CUSTOM_DATA_COLORS.length],
-                enabled: true
+                enabled: true,
+                ...cleanFilter(filter)
             };
             save([...load(), layer]);
             return layer;
@@ -132,7 +173,13 @@ function createCustomDataLayers() {
 
         update(id: string, changes: Partial<Omit<CustomDataLayer, 'id'>>) {
             save(load().map(layer => layer.id === id
-                ? { ...layer, ...changes, url: (changes.url ?? layer.url).trim(), name: (changes.name ?? layer.name).trim() }
+                ? {
+                    ...layer,
+                    ...changes,
+                    url: (changes.url ?? layer.url).trim(),
+                    name: (changes.name ?? layer.name).trim(),
+                    ...cleanFilter({ ...layer, ...changes })
+                }
                 : layer
             ));
             return customDataLayers;
