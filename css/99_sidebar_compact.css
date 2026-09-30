@@ -228,3 +228,20 @@
 .entity-editor .more-fields input {
     min-width: 0;
 }
+
+
+/* A field that details the sides of the field above it (side prerequisite, e.g. the lane type
+   below the bike infrastructure): no line between them, so they read as one group */
+.entity-editor .form-field.has-side-prerequisite {
+    border-top: 0;
+    padding-top: 0;
+}
+/* a side where the field above says there is nothing to detail */
+.entity-editor .form-field ul.rows li.side-prerequisite-unmet input:disabled {
+    background: var(--bg-color-2);
+    font-style: italic;
+    cursor: not-allowed;
+}
+.entity-editor .form-field ul.rows li.side-prerequisite-unmet .combobox-caret {
+    display: none;
+}

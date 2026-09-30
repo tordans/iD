@@ -148,6 +148,8 @@ const FIELDS: Record<string, Field> = {
         geometry: ['line'],
         options: ['advisory', 'exclusive'],
         customValues: false,
+        // only on a side with a painted lane; shown right below the bike infrastructure field
+        prerequisiteTag: { key: 'cycleway:{side}', value: 'lane' },
         strings: {
             options: { advisory: 'Advisory (Schutzstreifen)', exclusive: 'Exclusive (Radfahrstreifen)' },
             types: { 'cycleway:left:lane': 'Left', 'cycleway:right:lane': 'Right' }
@@ -165,10 +167,11 @@ const WAY_DETAILS_MORE = [
 
 const ROAD_FIELDS = [
     'name', 'oneway', 'oneway/bicycle', 'dual_carriageway', 'maxspeed', 'lanes',
-    'cycleway', 'sidewalk', 'parking/side/parking', ...WAY_DETAILS, 'structure', 'access'
+    // `cycleway/lane` only appears when a side has a lane (side prerequisite)
+    'cycleway', 'cycleway/lane', 'sidewalk', 'parking/side/parking', ...WAY_DETAILS, 'structure', 'access'
 ];
 const ROAD_MORE_FIELDS = [
-    'cycleway/lane', 'bicycle/direction', 'lane_markings', 'parking/side/orientation', 'traffic_calming_road', ...WAY_DETAILS_MORE
+    'bicycle/direction', 'lane_markings', 'parking/side/orientation', 'traffic_calming_road', ...WAY_DETAILS_MORE
 ];
 
 const BICYCLE_ROAD_FIELDS = [
