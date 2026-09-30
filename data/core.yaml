@@ -774,12 +774,14 @@ en:
       required_for: "Needed for the Radnetz dataset as “{category}”"
       feeds: "Used for the infraVelo attributes: {attributes}"
       enter_value: value, Enter
+      missing: is missing
+      add_below: add below
+      add_below_optional: add below if relevant
       state:
-        inherited: "TILDA uses {value} from elsewhere (road or category)"
+        inherited: "TILDA takes {value} from other tags (e.g. of the road)"
         guess: "TILDA assumes {value}; please tag it"
         ignored: TILDA does not accept this value
         normalized: "TILDA reads it as {value}"
-        optional: only if it applies
       side:
         self: This way
         left: Left side

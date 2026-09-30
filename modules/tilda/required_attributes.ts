@@ -33,6 +33,10 @@ export type RequiredAttribute = {
     key: string;
     /** the tagged value (also found via `:both` or the plain key, like TILDA reads it) */
     value: string | undefined;
+    /** the tags that were found, with the key they are tagged on (`cycleway:both:width=2`) */
+    tagged: { key: string; value: string }[];
+    /** all keys TILDA reads for this attribute, most specific first; to find the inspector field */
+    lookup: string[];
     /** the value TILDA reads, after sanitizing (may come from the parent road) */
     tilda: string | undefined;
     state: AttributeState;
@@ -230,6 +234,12 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
         .filter(rule => !rule.when || rule.when(ctx))
         .map(rule => {
             const value = rule.alsoKeys ? summary(ctx, [rule.key, ...rule.alsoKeys]) : ctx.value(rule.key);
+            const ownKeys = [rule.key, ...(rule.alsoKeys ?? [])];
+            const lookup = [...new Set(ownKeys.flatMap(key => lookupKeys(key, ctx.side, ctx.prefix)))];
+            const tagged = ownKeys
+                .map(key => lookupKeys(key, ctx.side, ctx.prefix).find(k => ctx.tags[k] !== undefined))
+                .filter((key, i, keys): key is string => !!key && keys.indexOf(key) === i)
+                .map(key => ({ key, value: ctx.tags[key] }));
             const tilda = displayValue(rule.tilda?.(ctx));
             const options = [...(typeof rule.options === 'function' ? rule.options(ctx) : rule.options ?? [])];
             const optional = typeof rule.optional === 'function' ? rule.optional(ctx) : !!rule.optional;
@@ -249,6 +259,8 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 id: rule.id,
                 key: writeKeyForSide(rule.key, ctx.side, ctx.prefix),
                 value,
+                tagged,
+                lookup,
                 tilda,
                 state,
                 options,

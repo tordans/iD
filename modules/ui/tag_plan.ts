@@ -105,6 +105,7 @@ function drawDiff(box: d3.Selection<HTMLDivElement>, plan: TagPlanView) {
         }
     }
     const diff = plan.diff ? utilTagDiff(oldTags, newTags) : [];
+    type DiffRow = (typeof diff)[number];
 
     const table = box.selectAll<HTMLTableElement, number>('table.tagDiff-table')
         .data(diff.length ? [0] : []);
@@ -114,7 +115,7 @@ function drawDiff(box: d3.Selection<HTMLDivElement>, plan: TagPlanView) {
         .attr('class', 'tagDiff-table');
 
     tableEnter.merge(table)
-        .selectAll<HTMLTableRowElement, (typeof diff)[number]>('tr')
+        .selectAll<HTMLTableRowElement, DiffRow>('tr')
         .data(diff, d => `${d.type}${d.key}`)
         .join(enter => {
             const row = enter.append('tr').attr('class', 'tagDiff-row');

@@ -1,4 +1,5 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
+import { select as d3_select } from 'd3-selection';
 
 import { presetManager } from '../../presets';
 import { t, localizer } from '../../core/localizer';
@@ -28,6 +29,13 @@ export function uiSectionPresetFields(context) {
     var _trafficSignFieldsArr = [];
     var _trafficSignFieldsSignature = '';
     var _sideWidthFields = uiSideWidthFields(context, dispatch);
+    // Radnetz Berlin: another section (TILDA) can color field titles and bring a field into view
+    var _fieldStatus = null;
+    var _allFields = [];
+
+    function fieldKeys(field) {
+        return [field.key].concat(field.keys || []).filter(Boolean);
+    }
 
     function trafficSignFieldsSignature(tags) {
         return trafficSignTagKeysFromTags(tags).join('\0');
@@ -156,7 +164,45 @@ export function uiSectionPresetFields(context) {
                 .state(_state)
                 .klass('grouped-items-area')
             );
+
+        _allFields = fieldsToShow;
+        selection.selectAll('.wrap-form-field')
+            .each(function(d) {
+                var status = _fieldStatus ? _fieldStatus(fieldKeys(d)) : undefined;
+                d3_select(this)
+                    .classed('field-status-required', status === 'required')
+                    .classed('field-status-optional', status === 'optional');
+            });
     }
+
+    /** `function(keys) → 'required' | 'optional' | undefined`: marks the titles of fields with these keys */
+    section.fieldStatus = function(val) {
+        if (!arguments.length) return _fieldStatus;
+        _fieldStatus = val;
+        return section;
+    };
+
+    /** Shows the field for one of `keys` (also a "more field"), scrolls to it and highlights it */
+    section.revealField = function(keys) {
+        var container = d3_select('.entity-editor .section-preset-fields');
+        var summary = container.select('summary.hide-toggle');
+        if (!summary.empty() && !summary.classed('expanded')) summary.node().click();   // renders the fields
+
+        var field = _allFields.find(function(f) {
+            return fieldKeys(f).some(function(key) { return keys.indexOf(key) !== -1; });
+        });
+        if (!field) return false;
+        if (field.show && !field.isShown()) field.show();
+        section.reRender();
+
+        var wrap = container.select('.wrap-form-field-' + field.safeid);
+        if (wrap.empty()) return false;
+        wrap.node().scrollIntoView({ block: 'center', behavior: 'smooth' });
+        wrap.classed('field-reveal', false);
+        wrap.node().getBoundingClientRect();   // restart the animation (reflow)
+        wrap.classed('field-reveal', true);
+        return true;
+    };
 
     section.presets = function(val) {
         if (!arguments.length) return _presets;

@@ -90,15 +90,20 @@ export function uiEntityEditor(context) {
             .merge(bodyEnter);
 
         if (!_sections) {
+            // Radnetz Berlin: TILDA helper right below the preset, it is the main task in this editor.
+            // Its checklist colors the field titles and links to the fields.
+            var tildaSection = uiSectionTildaBikeInfra(context).on('change', changeTags);
+            var presetFieldsSection = uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags)
+                .fieldStatus(tildaSection.fieldStatus);
+            tildaSection.on('reveal', presetFieldsSection.revealField);
             _sections = [
                 uiSectionSelectionList(context),
                 uiSectionFeatureType(context).on('choose', function(presets) {
                     dispatch.call('choose', this, presets);
                 }),
-                // Radnetz Berlin: TILDA helper right below the preset, it is the main task in this editor
-                uiSectionTildaBikeInfra(context).on('change', changeTags),
+                tildaSection,
                 uiSectionEntityIssues(context),
-                uiSectionPresetFields(context).on('change', changeTags).on('revert', revertTags),
+                presetFieldsSection,
                 uiSectionRawTagEditor('raw-tag-editor', context).on('change', changeTags),
                 uiSectionRawMemberEditor(context),
                 uiSectionRawMembershipEditor(context)
