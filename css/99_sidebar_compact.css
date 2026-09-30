@@ -87,9 +87,6 @@
 .ideditor[dir='rtl'] .entity-editor .field-label .label-text {
     padding: 3px 8px 2px 0;
 }
-.entity-editor .field-label button {
-    width: 28px;
-}
 .entity-editor .form-field input[type=text],
 .entity-editor .form-field input[type=number],
 .entity-editor .form-field input[type=url],
@@ -100,7 +97,7 @@
     padding: 0 8px;
 }
 .entity-editor .form-field-button {
-    width: 28px;
+    width: 26px;
 }
 
 
@@ -143,4 +140,91 @@
 .entity-editor .section-raw-tag-editor .tag-reference-body.expanded {
     padding-right: var(--sidebar-gutter);
     padding-left: var(--sidebar-gutter);
+}
+
+
+/* No scrollbar track when nothing scrolls, and a thin one when something does
+   (upstream always reserves it with `overflow-y: scroll`) */
+.inspector-body {
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+
+/* Experiment: fields without boxes.
+   One line above each field label, no other borders. The label is plain text in the line,
+   inputs and buttons keep their darker background. The borders inside the input area take the
+   sidebar color: the outer edges disappear and the inner ones become small gaps between the parts. */
+.entity-editor .form-field {
+    margin-bottom: 0;
+    padding: 4px 0 8px;
+    border-top: 1px solid var(--border-color);
+}
+.entity-editor .wrap-form-field:first-child .form-field {
+    border-top: 0;
+    padding-top: 0;
+}
+.entity-editor .field-label {
+    background: none;
+    border: 0;
+    border-radius: 0;
+}
+.entity-editor .field-label .label-text {
+    padding: 3px 0 3px 0;
+}
+.ideditor[dir='rtl'] .entity-editor .field-label .label-text {
+    padding: 3px 0 3px 0;
+}
+.ideditor[dir] .entity-editor .field-label button {
+    border: 0;
+    /* as wide as the buttons in the input row below */
+    width: 26px;
+}
+.entity-editor .form-field-input-wrap,
+.entity-editor .form-field-input-wrap *,
+.entity-editor .form-field ul.rows,
+.entity-editor .form-field ul.rows *,
+.entity-editor .form-field .structure-extras-wrap {
+    border-color: var(--bg-color-2);
+}
+.entity-editor .form-field-input-wrap,
+.entity-editor .form-field ul.rows {
+    border-radius: 4px;
+    overflow: hidden;
+}
+/* the combobox dropdown hangs below the input */
+.entity-editor .form-field-input-wrap:has(.combobox-input:focus) {
+    overflow: visible;
+}
+.ideditor .entity-editor .form-field .form-field-input-traffic-sign,
+.ideditor .entity-editor .form-field .form-field-input-traffic-sign * {
+    border-color: var(--bg-color-2) !important;
+}
+
+/* Traffic sign field: no text for "no signs yet", the "Add sign…" input says enough */
+.ideditor .entity-editor .traffic-sign-empty {
+    display: none !important;
+}
+
+
+/* Our buttons in fields: Font Awesome icons fill the whole icon box, iD's icons have a margin,
+   so they are drawn smaller to look the same size */
+.entity-editor .form-field-button.measure-tape-button .icon,
+.entity-editor .form-field-button.mly-image-show .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Mapillary images field: the input and the buttons fill the whole row,
+   the buttons as wide as the ones in the field label */
+.entity-editor .form-field-input-mapillary-images .mly-image-value .mly-image-input {
+    height: 100%;
+}
+.entity-editor .form-field-input-mapillary-images .mly-image-value .form-field-button {
+    width: 26px;
+}
+
+/* "Add field:" – the input shrinks instead of running past the gutter when the label wraps */
+.entity-editor .more-fields input {
+    min-width: 0;
 }

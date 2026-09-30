@@ -787,6 +787,15 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Tags: the raw tag editor has no side padding; the rows are the only frame.
   - Relations only follow the general section changes.
   - All in `css/99_sidebar_compact.css`, which overrides `80_app.css`. Everything is scoped to `.entity-editor`, so the preset list and the other panes are unchanged.
+- **Round 2 (2026-09-30), experiment: fields without boxes:**
+  - A line above each field label is the only separator. The label is plain text; its buttons have no borders.
+  - Inputs and buttons keep their darker background. The borders inside the input area take the sidebar color: the outer edges disappear, and the inner ones become small gaps between input, caret and buttons. The input area has rounded corners, but not while a combobox is open, so its dropdown can hang below.
+  - The label buttons and the input buttons are both 26px wide, so they line up.
+  - No scrollbar track when nothing scrolls, and a thin one otherwise (`.inspector-body`: `auto` instead of `scroll`).
+  - Traffic sign field: the "No signs yet" text is hidden, since other fields have no empty text either.
+  - Buttons we added use Font Awesome icons (measuring tape `fas-pen-ruler`, Mapillary `fas-eye`), which fill the whole icon box, while iD's icons have a margin. They are drawn at 14px so they look the same size.
+  - Mapillary images field: the input fills the whole row height (the compact input height had left a gap below it), and the row buttons line up with the label buttons.
+  - Not changed yet: the TILDA cards still have their boxes.
 - **Open ideas (to discuss):**
   - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
