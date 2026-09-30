@@ -193,12 +193,14 @@ export class coreLocalizer {
                 let loadStringsPromises: Promise<string>[] = [];
 
                 indexes.forEach((index, i) => {
+                    let scopeId = Object.keys(localeDirs)[i];
                     // Will always return the index for `en` if nothing else
-                    const fullCoverageIndex = this._localeCodes.findIndex((locale) =>
-                        index[locale] && index[locale].pct === 1);
+                    // (Radnetz Berlin: our own UI strings exist only in English, so `general` always loads `en`)
+                    const fullCoverageIndex = scopeId === 'general'
+                        ? this._localeCodes.indexOf('en')
+                        : this._localeCodes.findIndex((locale) => index[locale] && index[locale].pct === 1);
                     // We only need to load locales up until we find one with full coverage
                     this._localeCodes.slice(0, fullCoverageIndex + 1).forEach((code) => {
-                        let scopeId = Object.keys(localeDirs)[i];
                         let directory = Object.values(localeDirs)[i];
                         if (index[code]) loadStringsPromises.push(this.loadLocale(code, scopeId, directory));
                     });
