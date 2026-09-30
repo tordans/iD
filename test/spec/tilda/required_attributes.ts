@@ -38,7 +38,9 @@ describe('requiredAttributes', () => {
         expect(attributes.traffic_mode_right.tilda).toBe('parking');
         // parking on the right → the buffer to it is needed
         expect(attributes.buffer_right.key).toBe('cycleway:right:buffer:right');
-        expect(attributes.oneway.optional).toBe(true);
+        // lanes run with the traffic: TILDA's default is reliable, a notice to check
+        expect(attributes.oneway.state).toBe('assumed');
+        expect(attributes.oneway.tilda).toBe('yes');
     });
 
     it('a chosen target category is no source for the tag that makes it', () => {
@@ -83,6 +85,12 @@ describe('requiredAttributes', () => {
 });
 
 describe('roadAttributes', () => {
+    it('road without oneway: two-way is assumed, not asked for', () => {
+        const attributes = byId(roadAttributes({ highway: 'residential' }));
+        expect(attributes.oneway.state).toBe('assumed');
+        expect(attributes.oneway.tilda).toBe('no');
+    });
+
     it('one-way road: oneway:bicycle and dual_carriageway, cycleway presence from any side key', () => {
         const attributes = byId(roadAttributes({ highway: 'residential', oneway: 'yes', 'cycleway:left': 'no' }));
         expect(attributes.oneway_bicycle.state).toBe('missing');

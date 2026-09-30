@@ -46,6 +46,7 @@ const STATE_ICON: Record<RequiredAttribute['state'], string> = {
     ok: '✓',
     inherited: '✓',
     guess: '?',
+    assumed: 'i',
     ignored: '✗',
     missing: '!'
 };
@@ -56,6 +57,7 @@ function stateNote(attribute: RequiredAttribute) {
     const { state, value, tilda } = attribute;
     if (state === 'inherited') return t('inspector.tilda.state.inherited', { value: tilda });
     if (state === 'guess') return t('inspector.tilda.state.guess', { value: tilda });
+    if (state === 'assumed') return t('inspector.tilda.state.assumed', { tag: `${attribute.key}=${tilda}` });
     if (state === 'ignored') return t('inspector.tilda.state.ignored');
     if (state === 'ok' && tilda !== undefined && tilda !== value) return t('inspector.tilda.state.normalized', { value: tilda });
     return '';
@@ -453,13 +455,15 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 const line = cell.append('span').attr('class', 'tilda-attribute-missing');
                 line.append('code').text(d.key);
                 if (d.state === 'inherited') return;
-                line.append('span').text(` ${t('inspector.tilda.missing')}`);
+                // assumed: a notice to check the default, not a request to tag it
+                line.append('span').text(` ${t(d.state === 'assumed' ? 'inspector.tilda.not_tagged' : 'inspector.tilda.missing')}`);
                 if (!hasField(d)) return;
                 line.append('span').text('; ');
                 line.append('a')
                     .attr('href', '#')
                     .attr('class', 'tilda-reveal')
-                    .text(d.optional ? t('inspector.tilda.add_below_optional') : t('inspector.tilda.add_below'))
+                    .text(t(d.state === 'assumed' ? 'inspector.tilda.check_below'
+                        : d.optional ? 'inspector.tilda.add_below_optional' : 'inspector.tilda.add_below'))
                     .on('click', (d3_event: MouseEvent) => {
                         d3_event.preventDefault();
                         dispatch.call('reveal', section, d.lookup);
@@ -468,7 +472,7 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         rows.select('.tilda-attribute-note').text(d => stateNote(d));
 
         // values as buttons only where no field below can edit the tag
-        const needsInputs = (d: RequiredAttribute) => d.state !== 'ok' && d.state !== 'inherited' && !hasField(d);
+        const needsInputs = (d: RequiredAttribute) => d.state !== 'ok' && d.state !== 'inherited' && d.state !== 'assumed' && !hasField(d);
         rows.select<HTMLSpanElement>('.tilda-attribute-inputs')
             .style('display', d => needsInputs(d) ? null : 'none');
 

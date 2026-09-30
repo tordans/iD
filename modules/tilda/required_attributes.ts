@@ -1,4 +1,5 @@
 import {
+    CATEGORY_DEFINITIONS,
     MAJOR_ROAD_CLASSES,
     MINOR_ROAD_CLASSES,
     TRUNK_MOTORWAY_CLASSES,
@@ -21,10 +22,11 @@ export type InfraveloAttribute = 'verkehrsri' | 'fuehr' | 'pflicht' | 'breite' |
  * - `ok`: tagged, TILDA reads it
  * - `inherited`: not tagged here, but TILDA gets a value elsewhere (road surface, `parking:*`, category)
  * - `guess`: not tagged, TILDA guesses (oneway)
+ * - `assumed`: not tagged, and the default is reliable (a road is two-way); to check, not to tag
  * - `ignored`: tagged, but TILDA drops the value
  * - `missing`: not tagged
  */
-export type AttributeState = 'ok' | 'inherited' | 'guess' | 'ignored' | 'missing';
+export type AttributeState = 'ok' | 'inherited' | 'guess' | 'assumed' | 'ignored' | 'missing';
 
 export type RequiredAttribute = {
     /** id for the label: `inspector.tilda.attribute.<id>` */
@@ -75,6 +77,8 @@ type Rule = {
     tilda?: (ctx: RuleContext) => string | number | null | undefined;
     /** TILDA values that are only a guess, not tagged information */
     guesses?: readonly string[];
+    /** the value assumed when the tag is missing, if that default is reliable (state `assumed`) */
+    assumed?: (ctx: RuleContext) => string | undefined;
     when?: (ctx: RuleContext) => boolean;
     optional?: boolean | ((ctx: RuleContext) => boolean);
 };
@@ -136,6 +140,19 @@ function parkingOn(side: 'left' | 'right') {
 }
 
 
+/** Categories whose oneway default TILDA rates as reliable (lanes run with the traffic, bicycle roads are two-way) */
+const RELIABLE_ONEWAY_DEFAULT = new Set(CATEGORY_DEFINITIONS
+    .filter(category => category.implicitOneWayConfidence === 'high' || category.implicitOneWayConfidence === 'medium')
+    .map(category => category.id));
+
+/** TILDA's oneway default for the category, as a tag value, where it is reliable */
+function assumedOneway(ctx: RuleContext) {
+    if (!RELIABLE_ONEWAY_DEFAULT.has(ctx.category)) return undefined;
+    const category = CATEGORY_DEFINITIONS.find(c => c.id === ctx.category);
+    return category?.implicitOneWay ? 'yes' : 'no';
+}
+
+
 const COMMON: Rule[] = [
     { id: 'traffic_sign', key: 'traffic_sign', feeds: ['pflicht', 'fuehr', 'nutz_beschr'], options: trafficSignOptions, tilda: field('traffic_sign') },
     { id: 'width', key: 'width', feeds: ['breite'], options: [], tilda: field('width') },
@@ -146,8 +163,8 @@ const COMMON: Rule[] = [
         when: ctx => ctx.value('surface') === 'sett' },
     { id: 'surface_colour', key: 'surface:colour', feeds: ['farbe'], options: SURFACE_COLOUR_OPTIONS, strict: true, tilda: field('surface_color'), optional: true },
     { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], tilda: field('oneway'), guesses: ['assumed_no', 'implicit_yes'],
-        // lanes on the road run with the traffic; TILDA's guess is reliable there
-        optional: ctx => ctx.side !== 'self' && isOnRoadLaneCategory(ctx.category) }
+        // lanes on the road run with the traffic, bicycle roads are two-way: TILDA's default is reliable there
+        assumed: assumedOneway }
 ];
 
 const SEPARATE_WAY: Rule[] = [
@@ -240,7 +257,9 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 .map(key => lookupKeys(key, ctx.side, ctx.prefix).find(k => ctx.tags[k] !== undefined))
                 .filter((key, i, keys): key is string => !!key && keys.indexOf(key) === i)
                 .map(key => ({ key, value: ctx.tags[key] }));
-            const tilda = displayValue(rule.tilda?.(ctx));
+            const tilda = value === undefined && rule.assumed?.(ctx) !== undefined
+                ? rule.assumed(ctx)
+                : displayValue(rule.tilda?.(ctx));
             const options = [...(typeof rule.options === 'function' ? rule.options(ctx) : rule.options ?? [])];
             const optional = typeof rule.optional === 'function' ? rule.optional(ctx) : !!rule.optional;
 
@@ -249,6 +268,8 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 const dropped = rule.tilda !== undefined && tilda === undefined;
                 const invalid = rule.tilda === undefined && rule.strict && !options.includes(value);
                 state = dropped || invalid ? 'ignored' : 'ok';
+            } else if (rule.assumed?.(ctx) !== undefined) {
+                state = 'assumed';
             } else if (tilda !== undefined) {
                 state = rule.guesses?.includes(tilda) ? 'guess' : 'inherited';
             } else {
@@ -302,7 +323,8 @@ export function isRoad(tags: Tags) {
 }
 
 const ROAD: Rule[] = [
-    { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], optional: true },
+    // a road without `oneway` is two-way (infraVelo drops `oneway=no` anyway)
+    { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], assumed: () => 'no' },
     { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
         when: ctx => ctx.value('oneway') === 'yes',
         optional: ctx => ctx.value('dual_carriageway') === 'yes' },

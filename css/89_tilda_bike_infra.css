@@ -194,6 +194,12 @@
 .tilda-attribute.state-ok .tilda-attribute-state,
 .tilda-attribute.state-inherited .tilda-attribute-state { color: #2e9d3a; }
 .tilda-attribute.state-inherited .tilda-attribute-state { opacity: 0.6; }
+/* assumed default: a notice, not a request (no color, also not on the field title) */
+.tilda-attribute.state-assumed .tilda-attribute-state {
+    font-family: serif;
+    font-style: italic;
+    color: var(--link-color);
+}
 
 /* missing tags: orange = needed, yellow = only if it applies (or TILDA guesses);
    the field titles below get the same color (preset_fields.js `fieldStatus`) */

@@ -775,11 +775,14 @@ en:
       feeds: "Used for the infraVelo attributes: {attributes}"
       enter_value: value, Enter
       missing: is missing
+      not_tagged: is not tagged
+      check_below: check below
       add_below: add below
       add_below_optional: add below if relevant
       state:
         inherited: "TILDA takes {value} from other tags (e.g. of the road)"
         guess: "TILDA assumes {value}; please tag it"
+        assumed: "TILDA assumes {tag}. Check it; no need to tag it."
         ignored: TILDA does not accept this value
         normalized: "TILDA reads it as {value}"
       side:
