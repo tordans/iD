@@ -18,6 +18,7 @@ import { uiSectionRawMemberEditor } from './sections/raw_member_editor';
 import { uiSectionRawMembershipEditor } from './sections/raw_membership_editor';
 import { uiSectionRawTagEditor } from './sections/raw_tag_editor';
 import { uiSectionSelectionList } from './sections/selection_list';
+import { presetFieldsOf, removeUnmetSideValues } from './fields/side_prerequisite';
 
 export function uiEntityEditor(context) {
     var dispatch = d3_dispatch('choose');
@@ -186,6 +187,8 @@ export function uiEntityEditor(context) {
 
             if (!onInput) {
                 tags = utilCleanTags(tags);
+                // e.g. `cycleway:right=lane` → `no` also removes `cycleway:right:lane` (side_prerequisite.ts)
+                tags = removeUnmetSideValues(presetFieldsOf(context, entityID), entity.tags, tags);
             }
 
             if (!deepEqual(entity.tags, tags)) {

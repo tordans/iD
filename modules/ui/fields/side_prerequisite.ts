@@ -81,15 +81,63 @@ export function sidePrerequisiteAllowed(prerequisite: SidePrerequisiteTag, keys:
 }
 
 
-/** The field that edits the prerequisite key on the entity's preset, for its label and value labels */
-function prerequisiteField(context: iD.Context, entityID: string, key: string, side: string): FieldLike | undefined {
+/** The common forms of a side key: `cycleway:right:lane` → `cycleway:both:lane`, `cycleway:lane` */
+function commonKeys(key: string, side: string) {
+    return [key.replace(`:${side}`, ':both'), key.replace(`:${side}`, '')];
+}
+
+
+/**
+ * Removes the side values that a change made pointless: for each field with a side prerequisite,
+ * a side whose prerequisite held in `before` but not in `after` loses its value of that field
+ * (e.g. `cycleway:right=lane` → `no` removes `cycleway:right:lane`). A value in a common key
+ * (`cycleway:both:lane`) is first written to the other sides. Data that did not match before stays.
+ */
+export function removeUnmetSideValues(fields: Pick<FieldLike, 'keys' | 'prerequisiteTag'>[], before: Tags, after: Tags): Tags {
+    let tags = after;
+    for (const field of fields) {
+        const prerequisite = field.prerequisiteTag;
+        if (!isSidePrerequisite(prerequisite) || !field.keys) continue;
+
+        for (const key of field.keys) {
+            const side = sideOfKey(key);
+            if (!side) continue;
+            const held = matchesPrerequisite(prerequisite, sideValue(before, prerequisite.key, side));
+            const holds = matchesPrerequisite(prerequisite, sideValue(tags, prerequisite.key, side));
+            if (!held || holds || !hasOwnValue(tags, key, side)) continue;
+
+            tags = { ...tags };
+            for (const common of commonKeys(key, side)) {
+                const value = tags[common];
+                if (value === undefined) continue;
+                // keep the common value on the other sides
+                for (const other of field.keys) {
+                    if (other !== key && tags[other] === undefined) tags[other] = value;
+                }
+                delete tags[common];
+            }
+            delete tags[key];
+        }
+    }
+    return tags;
+}
+
+
+/** The fields of the entity's preset, for `removeUnmetSideValues` */
+export function presetFieldsOf(context: iD.Context, entityID: string) {
     const graph = context.graph();
     const entity = graph.hasEntity(entityID as Parameters<typeof graph.hasEntity>[0]);
-    if (!entity) return undefined;
+    if (!entity) return [];
     const preset = presetManager.match(entity, graph);
+    return [...(preset.fields?.() ?? []), ...(preset.moreFields?.() ?? [])] as unknown as FieldLike[];
+}
+
+
+/** The field that edits the prerequisite key on the entity's preset, for its label and value labels */
+function prerequisiteField(context: iD.Context, entityID: string, key: string, side: string): FieldLike | undefined {
     const sideKey = key.replace(SIDE, side);
     const plainKey = key.replace(`:${SIDE}`, '');
-    const fields = [...(preset.fields?.() ?? []), ...(preset.moreFields?.() ?? [])] as unknown as FieldLike[];
+    const fields = presetFieldsOf(context, entityID);
     return fields.find(field => field.keys?.includes(sideKey))
         ?? fields.find(field => field.key === plainKey || field.key === sideKey);
 }
