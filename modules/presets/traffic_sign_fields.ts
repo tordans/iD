@@ -82,13 +82,26 @@ export function fieldIdForTrafficSignTagKey(tagKey: string) {
 }
 
 
+const SIDE_PREFIX_LABEL: Record<string, string> = { cycleway: 'Bike Lane', sidewalk: 'Sidewalk' };
+const SIDE_LABEL: Record<string, string> = { left: 'Left', right: 'Right', both: 'Both Sides' };
+
+
+/**
+ * English label for a traffic sign key. Side keys of roads get the side and the infrastructure:
+ * `cycleway:right:traffic_sign:forward` → "Traffic Sign (Right Bike Lane, forward)".
+ */
 export function labelForTrafficSignTagKey(tagKey: string) {
     if (LABEL_BY_TAG_KEY[tagKey]) return LABEL_BY_TAG_KEY[tagKey];
 
-    const suffix = tagKey.split('traffic_sign').pop() ?? '';
-    if (suffix.startsWith(':')) {
-        return `Traffic Sign (${suffix.slice(1)})`;
+    const [head, suffix = ''] = tagKey.split(/:?traffic_sign/);
+    const parts: string[] = [];
+    const side = head.match(/^(cycleway|sidewalk)(?::(left|right|both))?$/);
+    if (side) {
+        parts.push(side[2] ? `${SIDE_LABEL[side[2]]} ${SIDE_PREFIX_LABEL[side[1]]}` : SIDE_PREFIX_LABEL[side[1]]);
+    } else if (head) {
+        parts.push(head);
     }
+    if (suffix.startsWith(':')) parts.push(suffix.slice(1));
 
-    return tagKey;
+    return parts.length ? `Traffic Sign (${parts.join(', ')})` : tagKey;
 }
