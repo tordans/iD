@@ -781,6 +781,7 @@ en:
       add_below_optional: add below if relevant
       state:
         inherited: "TILDA takes {value} from other tags (e.g. of the road)"
+        derived: "TILDA reads {value} from {tag}"
         guess: "TILDA assumes {value}; please tag it"
         assumed: "TILDA assumes {tag}. Check it; no need to tag it."
         ignored: TILDA does not accept this value

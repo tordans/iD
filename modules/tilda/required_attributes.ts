@@ -41,6 +41,8 @@ export type RequiredAttribute = {
     lookup: string[];
     /** the value TILDA reads, after sanitizing (may come from the parent road) */
     tilda: string | undefined;
+    /** the tag TILDA derives an untagged value from (`parking:right=lane`) */
+    source?: string;
     state: AttributeState;
     /** values TILDA accepts, offered as buttons */
     options: string[];
@@ -79,6 +81,8 @@ type Rule = {
     guesses?: readonly string[];
     /** the value assumed when the tag is missing, if that default is reliable (state `assumed`) */
     assumed?: (ctx: RuleContext) => string | undefined;
+    /** the tag TILDA derives the value from when the key is missing (state `inherited`, with that tag) */
+    derivedFrom?: (ctx: RuleContext) => { tag: string; tilda: string } | undefined;
     when?: (ctx: RuleContext) => boolean;
     optional?: boolean | ((ctx: RuleContext) => boolean);
 };
@@ -134,6 +138,28 @@ function field(name: keyof BikelaneResult) {
     return (ctx: RuleContext) => ctx.result?.[name] as string | number | null | undefined;
 }
 
+/** Values of `parking:*` TILDA reads (`derive-traffic-mode.ts`) */
+const PARKING_VALUES = ['no', 'yes', 'lane', 'street_side', 'on_kerb', 'half_on_kerb', 'shoulder', 'separate'];
+/** Categories where TILDA infers `traffic_mode` from `parking:*` (besides bicycle roads) */
+const PARKING_INFERENCE_CATEGORIES = new Set([
+    'cyclewayOnHighway_advisory', 'cyclewayOnHighway_advisoryOrExclusive', 'cyclewayOnHighway_exclusive',
+    'cyclewayOnHighwayBetweenLanes', 'cyclewayOnHighwayProtected'
+]);
+
+/**
+ * `traffic_mode:*` from the road's `parking:<side>` (or `parking:both`), like TILDA infers it for bicycle
+ * roads and lanes on the road: any parking → `parking`, `no` → nothing next to it
+ */
+function trafficModeFromParking(parkingSide: (ctx: RuleContext) => string) {
+    return (ctx: RuleContext) => {
+        if (!PARKING_INFERENCE_CATEGORIES.has(ctx.category) && !ctx.category.startsWith('bicycleRoad')) return undefined;
+        const key = [`parking:${parkingSide(ctx)}`, 'parking:both'].find(k => ctx.tags[k] !== undefined);
+        const value = key && ctx.tags[key];
+        if (!key || !value || !PARKING_VALUES.includes(value)) return undefined;
+        return { tag: `${key}=${value}`, tilda: value === 'no' ? 'no' : 'parking' };
+    };
+}
+
 /** `traffic_mode` on this side is parking (tagged, or inferred from `parking:*` by TILDA) */
 function parkingOn(side: 'left' | 'right') {
     return (ctx: RuleContext) => (ctx.value(`traffic_mode:${side}`) ?? ctx.result?.[`traffic_mode_${side}`]) === 'parking';
@@ -161,7 +187,8 @@ const COMMON: Rule[] = [
     { id: 'surface', key: 'surface', feeds: ['ofm'], options: SURFACE_OPTIONS, tilda: field('surface') },
     { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: ['0.05', '0.1', '0.16'],
         when: ctx => ctx.value('surface') === 'sett' },
-    { id: 'surface_colour', key: 'surface:colour', feeds: ['farbe'], options: SURFACE_COLOUR_OPTIONS, strict: true, tilda: field('surface_color'), optional: true },
+    { id: 'surface_colour', key: 'surface:colour', feeds: ['farbe'], options: SURFACE_COLOUR_OPTIONS, strict: true, tilda: field('surface_color'), optional: true,
+        assumed: () => 'no' },
     { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], tilda: field('oneway'), guesses: ['assumed_no', 'implicit_yes'],
         // lanes on the road run with the traffic, bicycle roads are two-way: TILDA's default is reliable there
         assumed: assumedOneway }
@@ -185,7 +212,9 @@ const LANE: Rule[] = [
 /** Parking next to the lane: needs a buffer (`trennstreifen`); TILDA infers parking from `parking:<side>` */
 const NEXT_TO_PARKING: Rule[] = [
     // without parking TILDA has "entfällt"; so only needed where parking is not tagged on the road
-    { id: 'traffic_mode_right', key: 'traffic_mode:right', feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field('traffic_mode_right'), optional: true },
+    { id: 'traffic_mode_right', key: 'traffic_mode:right', feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field('traffic_mode_right'), optional: true,
+        // TILDA reads the road's parking on the lane's side
+        derivedFrom: trafficModeFromParking(ctx => ctx.side), assumed: () => 'no' },
     { id: 'buffer_right', key: 'buffer:right', feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field('buffer_right'), when: parkingOn('right') },
     { id: 'marking_right', key: 'marking:right', feeds: ['trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field('marking_right'), when: parkingOn('right') }
 ];
@@ -202,7 +231,8 @@ const BICYCLE_ROAD: Rule[] = [
     { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
         when: ctx => ctx.value('oneway') === 'yes' },
     ...(['left', 'right'] as const).flatMap(side => [
-        { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`), optional: true },
+        { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`), optional: true,
+            derivedFrom: trafficModeFromParking(() => side), assumed: () => 'no' },
         { id: `buffer_${side}`, key: `buffer:${side}`, feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field(`buffer_${side}`), when: parkingOn(side) },
         { id: `marking_${side}`, key: `marking:${side}`, feeds: ['trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field(`marking_${side}`), when: parkingOn(side) }
     ] as Rule[])
@@ -257,9 +287,9 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 .map(key => lookupKeys(key, ctx.side, ctx.prefix).find(k => ctx.tags[k] !== undefined))
                 .filter((key, i, keys): key is string => !!key && keys.indexOf(key) === i)
                 .map(key => ({ key, value: ctx.tags[key] }));
-            const tilda = value === undefined && rule.assumed?.(ctx) !== undefined
-                ? rule.assumed(ctx)
-                : displayValue(rule.tilda?.(ctx));
+            const derived = value === undefined ? rule.derivedFrom?.(ctx) : undefined;
+            const assumed = value === undefined && !derived ? rule.assumed?.(ctx) : undefined;
+            const tilda = derived?.tilda ?? assumed ?? displayValue(rule.tilda?.(ctx));
             const options = [...(typeof rule.options === 'function' ? rule.options(ctx) : rule.options ?? [])];
             const optional = typeof rule.optional === 'function' ? rule.optional(ctx) : !!rule.optional;
 
@@ -268,7 +298,9 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 const dropped = rule.tilda !== undefined && tilda === undefined;
                 const invalid = rule.tilda === undefined && rule.strict && !options.includes(value);
                 state = dropped || invalid ? 'ignored' : 'ok';
-            } else if (rule.assumed?.(ctx) !== undefined) {
+            } else if (derived) {
+                state = 'inherited';
+            } else if (assumed !== undefined) {
                 state = 'assumed';
             } else if (tilda !== undefined) {
                 state = rule.guesses?.includes(tilda) ? 'guess' : 'inherited';
@@ -283,6 +315,7 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 tagged,
                 lookup,
                 tilda,
+                source: derived?.tag,
                 state,
                 options,
                 optional,
@@ -329,6 +362,7 @@ const ROAD: Rule[] = [
         when: ctx => ctx.value('oneway') === 'yes',
         optional: ctx => ctx.value('dual_carriageway') === 'yes' },
     { id: 'dual_carriageway', key: 'dual_carriageway', feeds: ['verkehrsri'], options: ['yes', 'no'], strict: true, optional: true,
+        assumed: () => 'no',
         when: ctx => ctx.value('oneway') === 'yes' },
     { id: 'width', key: 'width', feeds: ['breite'], options: [] },
     { id: 'surface', key: 'surface', feeds: ['ofm'], options: SURFACE_OPTIONS },

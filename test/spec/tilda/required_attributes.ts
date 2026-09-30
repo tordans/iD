@@ -36,6 +36,10 @@ describe('requiredAttributes', () => {
         expect(attributes.lane.state).toBe('ok');
         expect(attributes.traffic_mode_right.state).toBe('inherited');
         expect(attributes.traffic_mode_right.tilda).toBe('parking');
+        expect(attributes.traffic_mode_right.source).toBe('parking:right=lane');
+        // not coloured is the default
+        expect(attributes.surface_colour.state).toBe('assumed');
+        expect(attributes.surface_colour.tilda).toBe('no');
         // parking on the right → the buffer to it is needed
         expect(attributes.buffer_right.key).toBe('cycleway:right:buffer:right');
         // lanes run with the traffic: TILDA's default is reliable, a notice to check
@@ -85,6 +89,17 @@ describe('requiredAttributes', () => {
 });
 
 describe('roadAttributes', () => {
+    it('lane without parking tags: nothing next to it is assumed', () => {
+        const tags = { highway: 'secondary', 'cycleway:right': 'lane', 'cycleway:right:lane': 'exclusive' };
+        const attributes = byId(requiredAttributes(resultFor(tags, 'right'), tags));
+        expect(attributes.traffic_mode_right.state).toBe('assumed');
+
+        const noParking = { ...tags, 'parking:both': 'no' };
+        const derived = byId(requiredAttributes(resultFor(noParking, 'right'), noParking));
+        expect(derived.traffic_mode_right.state).toBe('inherited');
+        expect(derived.traffic_mode_right.source).toBe('parking:both=no');
+    });
+
     it('road without oneway: two-way is assumed, not asked for', () => {
         const attributes = byId(roadAttributes({ highway: 'residential' }));
         expect(attributes.oneway.state).toBe('assumed');
@@ -94,6 +109,7 @@ describe('roadAttributes', () => {
     it('one-way road: oneway:bicycle and dual_carriageway, cycleway presence from any side key', () => {
         const attributes = byId(roadAttributes({ highway: 'residential', oneway: 'yes', 'cycleway:left': 'no' }));
         expect(attributes.oneway_bicycle.state).toBe('missing');
+        expect(attributes.dual_carriageway.state).toBe('assumed');
         expect(attributes.dual_carriageway.optional).toBe(true);
         expect(attributes.cycleway.state).toBe('ok');
         expect(attributes.cycleway.value).toBe('no');

@@ -55,6 +55,7 @@ const STATE_ICON: Record<RequiredAttribute['state'], string> = {
 /** What TILDA makes of the tagged value, if that is worth saying */
 function stateNote(attribute: RequiredAttribute) {
     const { state, value, tilda } = attribute;
+    if (state === 'inherited' && attribute.source) return t('inspector.tilda.state.derived', { value: tilda, tag: attribute.source });
     if (state === 'inherited') return t('inspector.tilda.state.inherited', { value: tilda });
     if (state === 'guess') return t('inspector.tilda.state.guess', { value: tilda });
     if (state === 'assumed') return t('inspector.tilda.state.assumed', { tag: `${attribute.key}=${tilda}` });
