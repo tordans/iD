@@ -42,7 +42,7 @@ function inputsForKey(context: iD.Context, key: string): HTMLInputElement[] {
 
 
 /**
- * Adds the "Measure on the map" button to width inputs, starts and ends the
+ * Adds the "Measure on the map" button to width fields, starts and ends the
  * measuring tape, and shows the measured value live in the input.
  * Uses event delegation and a MutationObserver on the sidebar, so the field
  * implementations stay unchanged.
@@ -82,23 +82,16 @@ export function installMeasureTapeListeners(context: iD.Context) {
     }
 
 
+    // only in preset fields: the raw tag editor shows the plain tags, without extra tools
     function refreshButtons() {
         const sidebar = context.container().select('.sidebar').node() as HTMLElement | null;
         if (!sidebar) return;
 
-        const targets = [
-            ...sidebar.querySelectorAll<HTMLElement>('.form-field'),
-            ...sidebar.querySelectorAll<HTMLElement>('li.tag-row'),
-        ];
-
-        for (const element of targets) {
-            const isRow = element.matches('li.tag-row');
+        for (const element of sidebar.querySelectorAll<HTMLElement>('.form-field')) {
             const key = measurableKey(element);
-            const host = isRow
-                ? element.querySelector<HTMLElement>('.inner-wrap')
-                : element.querySelector<HTMLElement>('.form-field-input-wrap');
+            const host = element.querySelector<HTMLElement>('.form-field-input-wrap');
             // only fields with a plain text/number input, not combos etc.
-            const hasInput = isRow || !!host?.querySelector(':scope > input');
+            const hasInput = !!host?.querySelector(':scope > input');
             const existing = host?.querySelector<HTMLElement>(`:scope > .${BUTTON_CLASS}`) ?? null;
 
             if (!host || !key || !hasInput) {
@@ -108,7 +101,6 @@ export function installMeasureTapeListeners(context: iD.Context) {
 
             const button = d3_select(existing ?? document.createElement('button'))
                 .attr('type', 'button')
-                .attr('tabindex', isRow ? -1 : null)
                 .attr('class', `form-field-button ${BUTTON_CLASS}`)
                 .classed('active', measureTape.state()?.key === key)
                 .datum(key);
@@ -118,13 +110,10 @@ export function installMeasureTapeListeners(context: iD.Context) {
                 button.on('click', (d3_event: Event, k: string) => {
                     d3_event.preventDefault();
                     d3_event.stopPropagation();
-                    toggle(isRow
-                        ? (element.querySelector<HTMLInputElement>('input.key')?.value ?? k)
-                        : k);
+                    toggle(k);
                 });
-                // tag rows: before the remove button; fields: after the +/- buttons
-                const remove = isRow ? host.querySelector(':scope > button.remove') : null;
-                host.insertBefore(button.node()!, remove);
+                // after the +/- buttons
+                host.appendChild(button.node()!);
             }
         }
     }
@@ -144,12 +133,6 @@ export function installMeasureTapeListeners(context: iD.Context) {
     const sidebar = context.container().select('.sidebar').node() as HTMLElement | null;
     if (sidebar) {
         new MutationObserver(scheduleRefresh).observe(sidebar, { childList: true, subtree: true });
-        // typing a key into a raw tag editor row
-        d3_select(sidebar)
-            .on('change.measureTape', scheduleRefresh)
-            .on('input.measureTape', (d3_event: Event) => {
-                if ((d3_event.target as Element).matches('li.tag-row input.key')) scheduleRefresh();
-            });
     }
 
 
@@ -163,9 +146,7 @@ export function installMeasureTapeListeners(context: iD.Context) {
             }
         }
         for (const button of context.container().selectAll<HTMLElement, string>(`.${BUTTON_CLASS}`).nodes()) {
-            const key = state?.key;
-            const rowKey = button.closest('li.tag-row')?.querySelector<HTMLInputElement>('input.key')?.value;
-            button.classList.toggle('active', !!key && (rowKey ?? d3_select(button).datum()) === key);
+            button.classList.toggle('active', !!state && d3_select(button).datum() === state.key);
         }
     });
 
