@@ -49,6 +49,7 @@ import { uiZoom } from './zoom';
 import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
 
+import { initMapillaryAutoShow } from '../mapillary/auto_show';
 import { uiPaneBackground } from './panes/background';
 import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
@@ -462,6 +463,8 @@ export function uiInit(context) {
                 container
                     .classed('mode-' + exited.id, false);
             });
+
+        initMapillaryAutoShow(context);
 
         context.enter(modeBrowse(context));
 

@@ -9,6 +9,7 @@ import { uiSettingsLocalPhotos } from '../settings/local_photos';
 import { svgIcon } from '../../svg';
 import { mapillaryConfig } from '../../mapillary/config';
 import { AGE_BANDS, ageBandClass } from '../../mapillary/age_bands';
+import { autoShowEnabled, setAutoShowEnabled } from '../../mapillary/auto_show';
 
 export function uiSectionPhotoOverlays(context) {
 
@@ -45,6 +46,7 @@ export function uiSectionPhotoOverlays(context) {
             .call(drawDateSlider)
             .call(drawUsernameFilter)
             .call(drawHighlightFilters)
+            .call(drawAutoShowOption)
             .call(drawLocalPhotos);
     }
 
@@ -522,6 +524,52 @@ export function uiSectionPhotoOverlays(context) {
             .classed('active', d => d.get().length > 0)
             .select('input')
             .property('value', d => d.get().join(', '));
+    }
+
+    /**
+     * Draws the option to show the selected feature's Mapillary image (WORKDOC feature 19)
+     */
+    function drawAutoShowOption(selection) {
+        let ul = selection
+            .selectAll('.layer-list-mapillary-auto-show')
+            .data([0]);
+
+        ul = ul.enter()
+            .append('ul')
+            .attr('class', 'layer-list layer-list-mapillary-auto-show')
+            .merge(ul);
+
+        const li = ul.selectAll('.list-item-mapillary-auto-show')
+            .data(showsLayer('mapillary') ? [0] : []);
+
+        li.exit()
+            .remove();
+
+        const liEnter = li.enter()
+            .append('li')
+            .attr('class', 'list-item-mapillary-auto-show');
+
+        const labelEnter = liEnter
+            .append('label')
+            .call(uiTooltip()
+                .title(() => t.append('photo_overlays.auto_show.tooltip'))
+                .placement('top')
+            );
+
+        labelEnter
+            .append('input')
+            .attr('type', 'checkbox')
+            .on('change', function() {
+                setAutoShowEnabled(d3_select(this).property('checked'));
+            });
+
+        labelEnter
+            .append('span')
+            .call(t.append('photo_overlays.auto_show.title'));
+
+        li.merge(liEnter)
+            .select('input')
+            .property('checked', autoShowEnabled());
     }
 
     /**
