@@ -13,6 +13,7 @@ export * from './textarea';
 export * from './wikidata';
 export * from './wikipedia';
 export * from './mapillary_images';
+export * from './surface_smoothness';
 export * from './traffic_sign';
 
 import {
@@ -58,6 +59,7 @@ import { uiFieldTextarea } from './textarea';
 import { uiFieldWikidata } from './wikidata';
 import { uiFieldWikipedia } from './wikipedia';
 import { uiFieldMapillaryImages } from './mapillary_images';
+import { uiFieldSurfaceSmoothness } from './surface_smoothness';
 import { uiFieldTrafficSign } from './traffic_sign';
 
 export var uiFields = {
@@ -90,6 +92,7 @@ export var uiFields = {
     text: uiFieldText,
     textarea: uiFieldTextarea,
     mapillaryImages: uiFieldMapillaryImages,
+    surfaceSmoothness: uiFieldSurfaceSmoothness,
     trafficSign: uiFieldTrafficSign,
     typeCombo: uiFieldTypeCombo,
     url: uiFieldUrl,

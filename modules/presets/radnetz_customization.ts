@@ -140,6 +140,14 @@ const FIELDS: Record<string, Field> = {
             types: { 'bicycle:forward': 'Forward', 'bicycle:backward': 'Backward' }
         }
     } as Field,
+    // surface and smoothness in one field, photos first (feature 24)
+    surface_smoothness: {
+        key: 'surface',
+        keys: ['surface', 'smoothness'],
+        type: 'surfaceSmoothness',
+        label: 'Surface & Smoothness',
+        geometry: ['line', 'area']
+    } as unknown as Field,
     'cycleway/lane': {
         key: 'cycleway:both:lane',
         keys: ['cycleway:left:lane', 'cycleway:right:lane'],
@@ -159,7 +167,7 @@ const FIELDS: Record<string, Field> = {
 
 
 /** Fields that feed the Radnetz dataset, in the order mappers check them */
-const WAY_DETAILS = ['surface', 'smoothness', 'width', 'traffic_sign'];
+const WAY_DETAILS = ['surface_smoothness', 'width', 'traffic_sign'];
 const WAY_DETAILS_MORE = [
     'surface/colour', 'sett/length', 'width/effective', 'source/width',
     'traffic_sign/forward', 'traffic_sign/backward', 'lit', 'bridge/name', 'tunnel/name', 'not/name'
@@ -176,7 +184,7 @@ const ROAD_MORE_FIELDS = [
 
 const BICYCLE_ROAD_FIELDS = [
     'name', 'traffic_sign', 'access', 'oneway', 'oneway/bicycle', 'maxspeed',
-    'surface', 'smoothness', 'width', 'parking/side/parking', 'traffic_mode', 'marking', 'buffer',
+    'surface_smoothness', 'width', 'parking/side/parking', 'traffic_mode', 'marking', 'buffer',
     'sidewalk', 'cycleway', 'structure'
 ];
 
@@ -185,7 +193,7 @@ const SEPARATE_WAY_FIELDS = [
 ];
 const SEPARATE_WAY_MORE_FIELDS = ['marking', 'buffer', 'traffic_mode', 'segregated', ...WAY_DETAILS_MORE];
 
-const FOOTWAY_FIELDS = ['name', 'access', 'traffic_sign', 'is_sidepath', 'surface', 'smoothness', 'width', 'structure'];
+const FOOTWAY_FIELDS = ['name', 'access', 'traffic_sign', 'is_sidepath', 'surface_smoothness', 'width', 'structure'];
 const FOOTWAY_MORE_FIELDS = ['oneway', 'segregated', 'tactile_paving', 'wheelchair', ...WAY_DETAILS_MORE];
 
 
@@ -225,7 +233,7 @@ const PRESETS: Record<string, Preset> = {
         tags: { highway: 'cycleway', cycleway: 'link' },
         geometry: ['line'],
         icon: 'fas-biking',
-        fields: ['oneway', 'surface', 'smoothness', 'width', 'traffic_sign', 'lit'],
+        fields: ['oneway', 'surface_smoothness', 'width', 'traffic_sign', 'lit'],
         moreFields: ['is_sidepath', 'surface/colour', 'access']
     } as Preset,
     'highway/residential/bicycle_road': {
