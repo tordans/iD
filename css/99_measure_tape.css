@@ -65,6 +65,8 @@ button.form-field-button.measure-tape-button.active {
 .measure-loupe-lens {
     position: absolute;
     inset: 0;
+    /* keeps the cloned background layer's z-index inside the lens, below the crosshair */
+    isolation: isolate;
     border-radius: 50%;
     overflow: hidden;
     background: #222;
@@ -81,6 +83,7 @@ button.form-field-button.measure-tape-button.active {
 }
 .measure-loupe-overlay {
     position: absolute;
+    z-index: 1;
     left: 0;
     top: 0;
     overflow: hidden;
