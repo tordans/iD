@@ -41,6 +41,14 @@ describe('requiredAttributes', () => {
         expect(attributes.oneway.optional).toBe(true);
     });
 
+    it('a chosen target category is no source for the tag that makes it', () => {
+        const tags = { highway: 'secondary', 'cycleway:both': 'no' };
+        const attributes = byId(requiredAttributes(resultFor(tags, 'left'), tags, 'cyclewayOnHighway_advisory'));
+
+        expect(attributes.lane.key).toBe('cycleway:left:lane');
+        expect(attributes.lane.state).toBe('missing');
+    });
+
     it('separate cycleway needs is_sidepath', () => {
         const without = { highway: 'cycleway', 'cycleway': 'track' };
         expect(byId(requiredAttributes(resultFor(without, 'self'), without)).is_sidepath.state).toBe('missing');

@@ -353,7 +353,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             rows,
             canApply: plan.aligned && rows.some(row => row.kind !== 'conflict'),
             applyLabel: t('inspector.tilda.apply_all'),
-            onApply: () => changeTags(tagPlanChanges(rows))
+            onApply: () => changeTags(tagPlanChanges(rows)),
+            diff: true
         });
     }
 

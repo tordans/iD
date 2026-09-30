@@ -52,6 +52,8 @@ type RuleContext = {
     prefix: string | null;
     /** the target category, or the current one */
     category: string;
+    /** `category` is a target the mapper chose, not what TILDA reads now */
+    isTarget: boolean;
     /** tagged value for an own-way key on this side */
     value: (key: string) => string | undefined;
 };
@@ -119,11 +121,6 @@ function sidepathFromCategory(category: string) {
     return undefined;
 }
 
-function laneFromCategory(category: string) {
-    if (category.endsWith('_advisory')) return 'advisory';
-    if (category.endsWith('_exclusive')) return 'exclusive';
-    return undefined;
-}
 
 function field(name: keyof BikelaneResult) {
     return (ctx: RuleContext) => ctx.result?.[name] as string | number | null | undefined;
@@ -151,15 +148,16 @@ const COMMON: Rule[] = [
 
 const SEPARATE_WAY: Rule[] = [
     { id: 'is_sidepath', key: 'is_sidepath', feeds: ['fuehr'], options: ['yes', 'no'], strict: true,
-        tilda: ctx => sidepathFromCategory(ctx.category),
+        // TILDA derives it from `footway=sidewalk` and similar; a chosen target category is no source
+        tilda: ctx => ctx.isTarget ? undefined : sidepathFromCategory(ctx.category),
         when: ctx => ctx.side === 'self' && isSeparateWayCategory(ctx.category) },
     { id: 'segregated', key: 'segregated', feeds: ['fuehr'], options: ['yes', 'no'], strict: true,
         when: ctx => ctx.category.startsWith('footAndCycleway') }
 ];
 
 const LANE: Rule[] = [
+    // TILDA has `_advisory` / `_exclusive` only from this tag, so the category is no source for it
     { id: 'lane', key: 'lane', feeds: ['fuehr'], options: ['advisory', 'exclusive'], strict: true,
-        tilda: ctx => laneFromCategory(ctx.category),
         when: ctx => ctx.category.startsWith('cyclewayOnHighway_') }
 ];
 
@@ -261,9 +259,10 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
 }
 
 
-function contextFor(tags: Tags, result: BikelaneResult | undefined, side: Side, prefix: string | null, category: string): RuleContext {
+function contextFor(tags: Tags, result: BikelaneResult | undefined, side: Side, prefix: string | null, category: string,
+    isTarget = false): RuleContext {
     return {
-        tags, result, side, prefix, category,
+        tags, result, side, prefix, category, isTarget,
         value: key => lookupKeys(key, side, prefix).map(k => tags[k]).find(v => v !== undefined)
     };
 }
@@ -278,7 +277,7 @@ export function requiredAttributes(result: BikelaneResult, tags: Tags, targetCat
     if (!targetCategory && !result._infrastructureExists) return [];
     if (category === 'cyclewayLink' || category === 'data_no' || category === 'separate_geometry' || category === 'not_expected') return [];
 
-    const ctx = contextFor(tags, result, result._side, result._prefix, category);
+    const ctx = contextFor(tags, result, result._side, result._prefix, category, category !== result.category);
     return evaluate(rulesForCategory(category), ctx);
 }
 

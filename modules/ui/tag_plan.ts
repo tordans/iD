@@ -1,5 +1,7 @@
 import { select as d3_select } from 'd3-selection';
 
+import { utilTagDiff } from '../util/util';
+
 /** One row of a tag plan: a tag to add, change or remove, or a conflict to explain */
 export type TagPlanRow = {
     kind: 'add' | 'change' | 'remove' | 'conflict';
@@ -17,6 +19,11 @@ export type TagPlanView = {
     canApply: boolean;
     applyLabel: string;
     onApply: () => void;
+    /**
+     * Show the tags as iD's tag diff ("suggested changes" of the outdated tags issue), one
+     * `- key=old` / `+ key=new` row each, with the reason as tooltip. Else a list with the reason below each tag.
+     */
+    diff?: boolean;
 };
 
 
@@ -51,9 +58,11 @@ export function drawTagPlan<E extends HTMLElement>(selection: d3.Selection<E>, p
     const merged = box.merge(boxEnter);
     if (!plan) return;
 
+    drawDiff(merged, plan);
     const items = merged.select('ul')
         .selectAll<HTMLLIElement, TagPlanRow>('li')
-        .data(plan.rows, d => `${d.kind}-${d.key}`);
+        // in diff mode only the conflicts are listed, the tags are in the diff table
+        .data(plan.rows.filter(row => !plan.diff || row.kind === 'conflict'), d => `${d.kind}-${d.key}`);
     items.exit().remove();
     items.enter()
         .append('li')
@@ -75,4 +84,48 @@ export function drawTagPlan<E extends HTMLElement>(selection: d3.Selection<E>, p
         .classed('hide', !plan.canApply)
         .text(plan.applyLabel)
         .on('click', () => plan.onApply());
+}
+
+
+/** The add / change / remove rows as iD's tag diff table (`utilTagDiff`, styled like `.issue-info`) */
+function drawDiff(box: d3.Selection<HTMLDivElement>, plan: TagPlanView) {
+    const oldTags: Tags = {};
+    const newTags: Tags = {};
+    const reasons = new Map<string, string>();
+    if (plan.diff) {
+        for (const row of plan.rows) {
+            if (row.kind === 'conflict') continue;
+            reasons.set(row.key, row.reason);
+            if (row.kind === 'remove') oldTags[row.key] = row.value;
+            if (row.kind === 'change') {
+                oldTags[row.key] = row.from ?? '';
+                newTags[row.key] = row.value;
+            }
+            if (row.kind === 'add') newTags[row.key] = row.value;
+        }
+    }
+    const diff = plan.diff ? utilTagDiff(oldTags, newTags) : [];
+
+    const table = box.selectAll<HTMLTableElement, number>('table.tagDiff-table')
+        .data(diff.length ? [0] : []);
+    table.exit().remove();
+    const tableEnter = table.enter()
+        .insert('table', 'ul')
+        .attr('class', 'tagDiff-table');
+
+    tableEnter.merge(table)
+        .selectAll<HTMLTableRowElement, (typeof diff)[number]>('tr')
+        .data(diff, d => `${d.type}${d.key}`)
+        .join(enter => {
+            const row = enter.append('tr').attr('class', 'tagDiff-row');
+            row.append('td');
+            return row;
+        })
+        .order()
+        .attr('title', d => reasons.get(d.key) ?? null)
+        .select('td')
+        .attr('class', d => `tagDiff-cell ${d.type === '+' ? 'tagDiff-cell-add' : 'tagDiff-cell-remove'}`)
+        .each(function(d) {
+            d.render(d3_select(this as HTMLElement).text('') as unknown as Parameters<typeof d.render>[0]);
+        });
 }
