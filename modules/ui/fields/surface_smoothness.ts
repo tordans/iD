@@ -3,13 +3,15 @@ import { select as d3_select, type Selection } from 'd3-selection';
 
 import { t } from '../../core/localizer';
 import { presetManager } from '../../presets';
-import { utilRebind } from '../../util';
+import { utilRebind, utilUniqueDomId } from '../../util';
 import { importableAssetUrl } from '../../traffic_sign/asset_url';
+import { uiFieldCombo } from './combo';
 
 /**
  * Surface and smoothness in one field, photos first (WORKDOC feature 24). The UI is
  * `@osm-editor-kit/surface-smoothness-id-field`, vendored in `vendor/surface-smoothness-field/`
  * and copied to `dist/surface-smoothness-field/`; it is loaded when the field is first shown.
+ * The input row below the photos is iD's own combo for the schema's surface / smoothness field.
  */
 
 type FieldModule = {
@@ -20,6 +22,12 @@ type FieldModule = {
             t?: (key: string, fallback: string) => string;
             optionLabel?: (key: 'surface' | 'smoothness', value: string) => string | undefined;
             options?: (key: 'surface' | 'smoothness') => string[] | undefined;
+            renderInput?: (
+                cell: HTMLElement,
+                key: 'surface' | 'smoothness',
+                value: string | string[] | undefined,
+                choose: (value: string | undefined) => void
+            ) => void;
         }
     ) => FieldImpl;
 };
@@ -84,6 +92,27 @@ export function uiFieldSurfaceSmoothness(field: { keys?: string[]; safeid: strin
     let _entityIDs: string[] = [];
 
     const [surfaceKey = 'surface', smoothnessKey = 'smoothness'] = field.keys ?? [];
+    const _combos: Partial<Record<'surface' | 'smoothness', any>> = {};
+
+
+    /** iD's combo for the schema's surface / smoothness field, in the row below the photos */
+    function renderCombo(cell: HTMLElement, name: 'surface' | 'smoothness', value: string | string[] | undefined,
+        choose: (value: string | undefined) => void) {
+        const schemaField = presetManager.field(name);
+        if (!schemaField) return;
+        const key = name === 'surface' ? surfaceKey : smoothnessKey;
+        let combo = _combos[name];
+        if (!combo) {
+            combo = uiFieldCombo({ ...schemaField, key, domId: utilUniqueDomId(`form-field-${name}`) }, context);
+            _combos[name] = combo;
+        }
+        // typing only shows suggestions; the value is set on choosing or leaving the input
+        combo.on('change', (tags: TagsUpdate, onInput?: boolean) => {
+            if (!onInput) choose(tags[key] as string | undefined);
+        });
+        d3_select(cell).call(combo);
+        combo.tags({ [key]: value });
+    }
 
     function create(module: FieldModule) {
         return module.createSurfaceSmoothnessField(
@@ -99,7 +128,8 @@ export function uiFieldSurfaceSmoothness(field: { keys?: string[]; safeid: strin
                 },
                 optionLabel,
                 // the input below the photos offers the schema's values as well
-                options: key => (presetManager.field(key) as unknown as { options?: string[] } | undefined)?.options
+                options: key => (presetManager.field(key) as unknown as { options?: string[] } | undefined)?.options,
+                renderInput: renderCombo
             }
         ).on('change', patch => dispatch.call('change', surfaceSmoothness, patch));
     }

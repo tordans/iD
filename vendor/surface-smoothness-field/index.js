@@ -1601,7 +1601,11 @@ function yt(t = {}, r = {}, i = {}) {
 	}
 	function O(e, t) {
 		let n = D(t), r = x(x(e, "ul", "rows rows-table ssf-picker-row"), "li", "labeled-input");
-		x(r, "div", "label").text(n.label), k(x(r, "div", "ssf-text-cell"), n);
+		x(r, "div", "label").text(n.label);
+		let a = x(r, "div", "ssf-text-cell"), o = a.node();
+		i.renderInput && o ? i.renderInput(o, t, u[n.key], (e) => {
+			e !== p(n.key) && (t === "surface" ? v(e) : y(e));
+		}) : k(a, n);
 	}
 	function k(e, t) {
 		let n = x(e, "input", "ssf-text-input").attr("type", "text").attr("autocomplete", "off"), r = x(e, "ul", "ssf-combo-list"), i = n.node();
@@ -1640,4 +1644,4 @@ function yt(t = {}, r = {}, i = {}) {
 	return j.tags = (e) => (u = e ?? {}, S(), j), j.entityIDs = () => (f = void 0, j), j.focus = () => (d.select("button, input").node()?.focus(), j), j.on = (e, t) => (o.on(e, t), j), j;
 }
 //#endregion
-export { yt as createSurfaceSmoothnessField, q as isSmoothnessValidForSurface, G as resolveKeys, Y as smoothnessChangePatch, K as smoothnessValuesForSurface, J as surfaceChangePatch };
+export { X as COMMON_SURFACES, yt as createSurfaceSmoothnessField, q as isSmoothnessValidForSurface, Z as orderedSurfaces, $ as photoCredit, G as resolveKeys, Y as smoothnessChangePatch, Q as smoothnessChoices, K as smoothnessValuesForSurface, J as surfaceChangePatch };

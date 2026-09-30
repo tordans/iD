@@ -818,7 +818,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
   - Sticky section headers, so the current section stays visible while scrolling.
 
-### 24. Surface and smoothness by photo — 🟨 (first version, for review)
+### 24. Surface and smoothness by photo — ✅ (v1; package local, not released)
 
 Goal: one field for `surface` and `smoothness` where mappers choose by photo first, with a text fallback. Two steps that depend on each other: first the surface, then the smoothness for that surface.
 
@@ -827,18 +827,21 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
   - UI: `@osm-editor-kit/surface-smoothness-id-field` (D3), both from `~/Development/OSM/osm-surface-smoothness-workspace/osm-surface-smoothness-tagging`.
   - The flow follows the parking-lanes app's picker (`parking-lanes/app/src/modes/surface/controls/SurfaceSmoothnessPicker.tsx`).
   - Earlier iD integration (combo + smoothness cards): worktree `iD-surface-smoothness-worktree`, branch `surface-smoothness-field`.
-- **Where the work happens:** the UI is improved in the package itself (branch `image-first-ui` in that repo, with a changeset; not pushed, not published). Both packages are on npm only as 0.0.0 with the older UI (the data package also still GPL with vehicle icons), so the fork vendors the local build: `npm run vendor:surface-smoothness` → `vendor/surface-smoothness-field/` (`index.js` with d3 and the catalogue bundled in, CSS, `images/`), copied to `dist/surface-smoothness-field/` by `npm run dist`. Switch to npm once a new version is published.
+- **Where the work happens:** the UI is improved in the package itself: branch `image-first-ui` in `osm-surface-smoothness-tagging` (6 commits on `main`, changeset `.changeset/image-first-ui.md`, README updated, `bun run check` green). **Status 2026-09-30: local only — not pushed, not released (decided: fine for now).** Both packages are on npm only as 0.0.0 with the older UI (the data package also still GPL with vehicle icons), so the fork vendors the local build: `npm run vendor:surface-smoothness` → `vendor/surface-smoothness-field/` (`index.js` with d3 and the catalogue bundled in, CSS, `images/`), copied to `dist/surface-smoothness-field/` by `npm run dist`. Switch to npm once a new version is published.
 - **UI (package):**
   - Two tiles side by side: the surface and its smoothness, each with its photo (or emoji) and label; an empty frame in the border color with the name while not set. Tags only in the tooltip.
   - Clicking a tile opens its picker below. Surface first: a grid of small photos, the usual surfaces first, the others behind "More" (see round 3). Choosing a surface opens the smoothness picker: StreetComplete's reference photos for that surface, best to worst, or all 8 levels with their emoji where there are none. Clicking the smoothness tile without a surface opens the surface picker.
   - Round 2 (after review): first version had a separate "Oberflächenglätte" heading and large rows with `key=value`; now the two compact tiles only.
   - Round 3: each open picker has a dropdown below the photos, for values without a photo. It offers the catalogue's values plus the schema's `surface` / `smoothness` options (package adapter `options`; e.g. `concrete:plates` "Betonplatten"), with iD's translated labels; any typed value works. The grid shows 12 surfaces (three rows of four: asphalt, paving stones, concrete, sett, cobblestone, concrete lanes, compacted, fine gravel, gravel, grass paver, ground, dirt); the 14 rare or unspecific ones (`paved`, `unpaved`, `wood`, `metal`, `rubber`, `sand`, …) are behind "More".
   - Round 4: no text mode and no switch in the field label any more. An open picker shows its photos, then one label | input row (iD's row style, e.g. "Oberfläche | Asphalt") that takes any value; its suggestions are the catalogue's values plus the schema's (`concrete:plates`, …). All 26 surfaces show at once (no "More"). 10px space between the two tiles and the open picker. 4 surfaces have no photo (`artificial_turf`, `paved`, `unpaved`, `acrylic`); 3 have no German schema label and show the English catalogue title (`rock`, `rubber`, `acrylic`).
+  - Round 5: the label | input row is iD's own combo field for the schema's `surface` / `smoothness` field (translated dropdown, iD's styles), rendered by the wrapper through the package's new `adapters.renderInput` hook. The package's own simple dropdown stays as the fallback for other hosts.
   - Choosing the current value again removes it. Changing the surface removes a smoothness the new surface does not offer (the package's tested rule, e.g. asphalt `excellent` → sett).
   - Tooltips show the tag and the photo credit (license from the catalogue).
-- **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, options, titles and placeholders from the schema's `surface` / `smoothness` fields). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
+- **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, options, titles and placeholders from the schema's `surface` / `smoothness` fields, and renders `uiFieldCombo` into the input row). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
 - **Open:**
+  - Push the package branch, merge it, and release a new version of both packages (the data package on npm is still 0.0.0 GPL with vehicle icons); then switch the fork from `vendor/` to npm.
   - The field label is English ("Surface & Smoothness").
+  - Surfaces without a photo (`artificial_turf`, `paved`, `unpaved`, `acrylic`) show empty tiles; maybe sort them last or drop them from the grid.
   - Side keys (`cycleway:right:surface`) are not covered yet; the package already takes custom keys.
   - `sett:length` could become a third step for sett.
   - Crossings still use the plain `smoothness` field in "more fields".
@@ -894,6 +897,7 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
 
 ## Progress log
 
+- 2026-09-30: Surface and smoothness by photo, round 5 (feature 24): the input row below the photos is iD's own combo (translated dropdown). Package in a clean local state (branch `image-first-ui`, not pushed or released).
 - 2026-09-30: Surface and smoothness by photo, round 4 (feature 24): label | input row in the open picker, all surfaces at once, no text mode.
 - 2026-09-30: Surface and smoothness by photo, round 3 (feature 24): dropdown below each picker, 12 surfaces before "More".
 - 2026-09-30: Surface and smoothness by photo, round 2 (feature 24): two compact tiles side by side, pickers open below.
