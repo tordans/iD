@@ -849,11 +849,6 @@ en:
       button: "Measure on the map"
       annotation: "Measured width"
     surface_smoothness:
-      show_text: "Enter as text"
-      show_photos: "Choose by photo"
-      change: "Change"
-      more: "More"
-      fewer: "Fewer"
       photo: "Photo"
       multiple_values: "Multiple values"
     side_prerequisite:

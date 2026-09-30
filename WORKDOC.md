@@ -833,10 +833,11 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
   - Clicking a tile opens its picker below. Surface first: a grid of small photos, the usual surfaces first, the others behind "More" (see round 3). Choosing a surface opens the smoothness picker: StreetComplete's reference photos for that surface, best to worst, or all 8 levels with their emoji where there are none. Clicking the smoothness tile without a surface opens the surface picker.
   - Round 2 (after review): first version had a separate "Oberflächenglätte" heading and large rows with `key=value`; now the two compact tiles only.
   - Round 3: each open picker has a dropdown below the photos, for values without a photo. It offers the catalogue's values plus the schema's `surface` / `smoothness` options (package adapter `options`; e.g. `concrete:plates` "Betonplatten"), with iD's translated labels; any typed value works. The grid shows 12 surfaces (three rows of four: asphalt, paving stones, concrete, sett, cobblestone, concrete lanes, compacted, fine gravel, gravel, grass paver, ground, dirt); the 14 rare or unspecific ones (`paved`, `unpaved`, `wood`, `metal`, `rubber`, `sand`, …) are behind "More".
+  - Round 4: no text mode and no switch in the field label any more. An open picker shows its photos, then one label | input row (iD's row style, e.g. "Oberfläche | Asphalt") that takes any value; its suggestions are the catalogue's values plus the schema's (`concrete:plates`, …). All 26 surfaces show at once (no "More"). 10px space between the two tiles and the open picker. 4 surfaces have no photo (`artificial_turf`, `paved`, `unpaved`, `acrylic`); 3 have no German schema label and show the English catalogue title (`rock`, `rubber`, `acrylic`).
   - Choosing the current value again removes it. Changing the surface removes a smoothness the new surface does not offer (the package's tested rule, e.g. asphalt `excellent` → sett).
   - Tooltips show the tag and the photo credit (license from the catalogue).
   - Text mode: two rows like the directional fields (surface, smoothness) with a suggestion list; any value is accepted.
-- **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, titles and placeholders from the schema's `surface` / `smoothness` fields). A button in the field label switches photos ↔ text; the choice is remembered (`radnetz.surface-smoothness.mode`). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
+- **iD side:** field type `surfaceSmoothness` (`modules/ui/fields/surface_smoothness.ts`: lazy-loads the bundle, passes iD's translated value labels, options, titles and placeholders from the schema's `surface` / `smoothness` fields). Radnetz field `surface_smoothness` (keys `surface`, `smoothness`) replaces `surface` + `smoothness` in the road, bicycle road, separate way, footway and cycleway-link field lists. Strings `inspector.surface_smoothness.*` (English only).
 - **Open:**
   - The field label is English ("Surface & Smoothness").
   - Side keys (`cycleway:right:surface`) are not covered yet; the package already takes custom keys.
@@ -894,6 +895,7 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
 
 ## Progress log
 
+- 2026-09-30: Surface and smoothness by photo, round 4 (feature 24): label | input row in the open picker, all surfaces at once, no text mode.
 - 2026-09-30: Surface and smoothness by photo, round 3 (feature 24): dropdown below each picker, 12 surfaces before "More".
 - 2026-09-30: Surface and smoothness by photo, round 2 (feature 24): two compact tiles side by side, pickers open below.
 - 2026-09-30: Surface and smoothness by photo (feature 24): photo-first UI built in the surface-smoothness package (branch `image-first-ui`), vendored here as a new field that replaces `surface` + `smoothness`.
