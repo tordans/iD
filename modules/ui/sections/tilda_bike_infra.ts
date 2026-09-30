@@ -93,8 +93,13 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
 
 
     function cards(): SideCard[] {
-        const results = processBikelanes(_tags)
-            .sort((a, b) => SIDE_ORDER.indexOf(a._side) - SIDE_ORDER.indexOf(b._side));
+        const results = processBikelanes(_tags);
+        // no result for the way itself (e.g. a sidewalk without bike access): still offer
+        // a card with the target select, to see what would make it bike infrastructure
+        if (!results.some(result => result._side === 'self')) {
+            results.push({ _side: 'self', _prefix: null, _infrastructureExists: false, category: '' });
+        }
+        results.sort((a, b) => SIDE_ORDER.indexOf(a._side) - SIDE_ORDER.indexOf(b._side));
         const gaps = analyzeCategoryGaps(_tags, results);
 
         return results.map(result => {
@@ -122,14 +127,6 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             .append('div')
             .attr('class', 'tilda-callout tilda-intro')
             .call(t.append('inspector.tilda.intro'));
-
-        const empty = selection.selectAll<HTMLParagraphElement, number>('.tilda-empty')
-            .data(data.length ? [] : [0]);
-        empty.exit().remove();
-        empty.enter()
-            .append('p')
-            .attr('class', 'tilda-empty deemphasize')
-            .call(t.append('inspector.tilda.not_processed'));
 
         let cardSelection = selection.selectAll<HTMLDivElement, SideCard>('.tilda-card')
             .data(data, d => d.side);
@@ -163,9 +160,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 isIncompleteCategoryId(d.result.category) ? 'incomplete' : '',
                 d.result._infrastructureExists ? 'exists' : 'absent'
             ].filter(Boolean).join(' '))
-            .text(d => categoryLabel(d.result.category))
+            .text(d => d.result.category ? categoryLabel(d.result.category) : t('inspector.tilda.not_processed'))
             // the TILDA category id is the value in the TILDA dataset
-            .attr('title', d => t('inspector.tilda.category_id', { id: d.result.category }));
+            .attr('title', d => d.result.category ? t('inspector.tilda.category_id', { id: d.result.category }) : null);
 
         cardSelection.select<HTMLDivElement>('.tilda-gaps').each(function(d) { drawGaps(d3_select(this), d); });
         cardSelection.select<HTMLDivElement>('.tilda-target').each(function(d) { drawTarget(d3_select(this), d); });
@@ -271,6 +268,7 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         optionSelection.enter()
             .append('option')
             .merge(optionSelection)
+            .order()   // the card is reused when another way is selected
             .attr('value', d => d)
             .text(d => d === current ? `${categoryLabel(d)} (${t('inspector.tilda.current')})` : categoryLabel(d));
         select.property('value', card.target ?? current);
