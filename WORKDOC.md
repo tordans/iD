@@ -356,11 +356,7 @@ Notes:
 - Preferences ▸ Interface ▸ "Show button labels". Unchecked, the captions under the top toolbar buttons ("Add Feature", "Undo / Redo", …) are hidden and the toolbar is 60 px instead of 71 px high. Stored in the pref `preferences.interface.labels` (same key as in v3).
 - Code: `modules/ui/sections/interface.ts`, `css/91_interface_prefs.css`, applied at startup in `ui/init.js`.
 
-### 14. Show Mapillary image from the field — ⬜ (idea)
-
-- The `mapillary` field (Mapillary Image ID) only has the external-link button, which opens mapillary.com.
-- Add a second button (eye icon) next to it: it turns on the Mapillary photo layer, opens the photo viewer panel and shows this image (`services.mapillary.selectImage` / `showViewer`), like clicking the photo on the map.
-- Disabled when the field is empty; tooltip "Show image in the viewer".
+### 14. Show Mapillary image from the field — ➡️ (now part of feature 19)
 
 ### 15. Preset customization and missing fields — ✅ (v1; side variants open)
 
@@ -632,6 +628,71 @@ For "Geh- und Radweg" mapped as two side tags:
 5. ~~Fixed offsets or from the road width?~~ **Decided (2026-09-30):** from the road width with TILDA's fallbacks, stacked by parking / track / sidewalk (see Geometry).
 6. ~~`is_sidepath:of` / `is_sidepath:of:name`?~~ **Decided (2026-09-30):** no, the new way only gets `is_sidepath=yes` (cycleway, path) or `footway=sidewalk`.
 
+### 18. Mapillary layer: recent imagery, own users, the selected way's images — 📝 (spec)
+
+For Radnetz we map from recent imagery, and often from our own captures (user `radinfra`, organization `fixmycity`). The layer should make both visible at a glance.
+
+**Data (checked 2026-09-30):** Mapillary's vector tiles (`mly1_public/2`, layer `image`) carry `id`, `captured_at`, `compass_angle`, `creator_id`, `is_pano`, `quality_score`, `sequence_id`, and on some images `organization_id` (320 of 181,216 images in one Mitte z14 tile). No usernames.
+- Username → `creator_id`: Graph API `images?creator_username=<name>&limit=1&fields=creator` (`radinfra` → `750463990876291`).
+- Organization slug → id: no search endpoint. Collect the `organization_id`s seen in tiles and resolve each once with `/{id}?fields=slug` (`fixmycity` → `231009332916068`); cache per session.
+
+1. **Default age filter from 2024-01-01** — `context.photos()` starts with `fromDate = 2024-01-01` unless the URL has `photo_dates`. The age slider's histogram gets a marker line at that date ("2024-01-01: older imagery"), so mappers see how much older imagery they hide. The default comes from the project config (below).
+2. **Age colors** — markers and sequence lines are colored by capture date instead of iD's single green:
+   - Images older than the cutoff date are red. The cutoff is the "from" filter date, else 2024-01-01; they are only visible when the filter is widened.
+   - The time from the cutoff to today is split into three equal parts: newest third green, middle yellow, oldest orange. With cutoff 2024-01-01 and today 2026-09: green from 2025-10, yellow from 2024-12, orange before.
+   - The bands adapt when the filter changes. A small legend sits under the age slider.
+   - Open for review: the request said "all after 1.1.2024 is red". Read here as "all *older than* 1.1.2024 is red", since newer is the preferred imagery.
+3. **Highlight users and organizations** — images from listed users/orgs get an extra white-ringed dot (their own color, e.g. blue) in the middle of the marker, and their sequences a slightly thicker line.
+   - Lists are comma-separated usernames and org slugs, in the URL (`photo_highlight_users=radinfra`, `photo_highlight_orgs=fixmycity`) and in the project config (`index.html`: `iD.mapillaryHighlight({ users: ['radinfra'], orgs: ['fixmycity'] })` or similar), editable in the Photo Overlays pane ("Highlight users" / "Highlight organizations" inputs next to the existing username filter).
+   - URL wins over the config; the pane writes the URL.
+4. **The selected way's images** — when a way is selected, every Mapillary image id in its tags (all keys of feature 19) that is in the loaded tiles gets a distinct marker (e.g. a magenta dot + a larger ring). It is shown even when the age/type/username filters would hide it. Deselecting removes it.
+
+Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `modules/renderer/photos.js` (defaults, URL params), `modules/ui/sections/photo_overlays.js` (marker line, legend, inputs); new TS helpers in `modules/mapillary/` (config, highlight id resolution, age bands), CSS in its own file.
+
+### 19. Mapillary image fields: all our keys, several images, show in the viewer — 📝 (spec, replaces feature 14)
+
+**Keys in our data** (Berlin PBF 2026-08, `osmium cat -f opl`; TILDA reads the same, `extract_bikelanes.lua`: `mapillary`, `source:mapillary`, `mapillary:forward/backward` (+ `source:`), `traffic_sign:mapillary`, `source:traffic_sign(:forward|:backward):mapillary`, each also on road sides after unnesting):
+
+| Key | Berlin | | Key | Berlin |
+|---|---|---|---|---|
+| `mapillary` | 5835 | | `cycleway:left:traffic_sign:mapillary` | 67 |
+| `cycleway:right:mapillary` | 1187 | | `cycleway:both:mapillary` | 47 |
+| `source:traffic_sign:mapillary` | 1046 | | `source:mapillary` | 31 |
+| `source:cycleway:right:traffic_sign:mapillary` | 675 | | `mapillary:backward` | 23 |
+| `cycleway:left:mapillary` | 352 | | `traffic_sign:mapillary` | 16 |
+| `source:cycleway:left:traffic_sign:mapillary` | 144 | | `source:sidewalk:right:traffic_sign:mapillary` | 15 |
+| `cycleway:right:traffic_sign:mapillary` | 138 | | `cycleway:mapillary`, `source:traffic_sign:backward/forward:mapillary`, `mapillary:forward`, `sidewalk:*:mapillary`, `cycleway:both:mapillary:backward`, … | < 15 each |
+
+- Several images in one value (`;`) are rare: 17 of 5835 `mapillary`, 1 of 31 `source:mapillary`.
+- No numbered keys (`mapillary:1`, `:2`) in Berlin; Germany count pending (scan running). The field supports them anyway if they appear.
+- Not image ids, excluded: `mapillary:map_feature`, `was:mapillary`.
+- Key grammar we handle: `[source:][cycleway|sidewalk[:left|:right|:both]:][traffic_sign[:forward|:backward]:]mapillary[:forward|:backward|:<n>]`, plus `source:mapillary[:forward|:backward]`. Labels from the parts, e.g. "Right bike lane · traffic sign (source)".
+
+1. **One "Mapillary images" field** replaces the `mapillary` identifier field (custom field type, like the traffic sign field):
+   - It lists every image key of the feature, one row per key.
+   - Each row lists its images: `;`-separated values become a small list.
+   - Per image: the id (editable), the external link (as today), and an eye button "Show in viewer". The eye button turns on the Mapillary layer, opens the viewer and selects the image (`services.mapillary.selectImage`, `showViewer`). This was feature 14.
+   - Under each image: its age in relative time ("3 months ago", with the date on hover), the username, and "360°" if it is a panorama. This comes from the Graph API `/{id}?fields=captured_at,creator,is_pano`, cached per id, loaded when the row is visible.
+   - "+" on a row adds another image to that key. "+ Add image" at the bottom adds a row with a key chooser: the keys above that make sense for this feature — road sides only on roads that have that side, the sign keys only with a sign.
+   - The field shows when any of its keys is tagged, and is in `moreFields` of the Radnetz presets.
+2. **Auto-show on select** — a checkbox in the Mapillary part of the Photo Overlays pane, on by default: "Show the way's Mapillary image when selecting it".
+   - When on and a way with image keys is selected, the layer turns on and the viewer shows the first image.
+   - Order: `mapillary:forward`, then `mapillary`, then the other keys in field order; the first id of a list.
+   - Stored in `prefs`.
+
+Code: `modules/mapillary/tag_keys.ts` (parse keys and values, labels, preferred image; shared with features 18 and 20, with tests), `modules/ui/fields/mapillary_images.ts`, `modules/presets/…` (field type override), strings in `data/core.yaml`.
+
+### 20. "Set photo from viewer" for all image keys — 📝 (spec)
+
+iD's eye-dropper button in the photo viewer always writes `mapillary=<id>`. With the keys of feature 19 that is too limited.
+- Target:
+  - The main button writes to the **active target**: the image key row that was last focused or clicked in the Mapillary images field (the row gets an "active target" outline); otherwise `mapillary`.
+  - A caret next to the button opens a short list of targets: the feature's existing image keys, plus the likely new ones (`mapillary:forward`, `mapillary:backward`, `cycleway:right:mapillary`, …, `source:traffic_sign:mapillary`). Each entry has a tooltip "Add to `<key>`".
+- Append, don't overwrite: if the key already has images, the id is added to its `;` list (no duplicates). The button tooltip says where it goes.
+- Keeps iD's disabled states ("already set" per target key, "too far").
+
+Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_photo.ts`.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -704,7 +765,7 @@ For "Geh- und Radweg" mapped as two side tags:
 - Feature 12 (read-only categories): ready to build (v1 without interaction).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
-- Feature 14: eye button on the Mapillary Image ID field.
+- Features 18–20: Mapillary layer, image fields, set-photo targets.
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
 - Feature 17 v2: extract along the chain; snap the ends.
