@@ -29,6 +29,7 @@
     "dist:pannellum": "shx mkdir -p dist/pannellum && shx cp -R node_modules/pannellum/build/* dist/pannellum/",
     "dist:traffic-sign-field": "shx mkdir -p dist/traffic-sign-field && shx cp -R vendor/traffic-sign-field/* dist/traffic-sign-field/",
     "dist:traffic-sign-converter": "shx mkdir -p dist/traffic-sign-converter && shx cp -R vendor/traffic-sign-converter/* dist/traffic-sign-converter/",
+    "dist:traffic-sign-recommender": "esbuild scripts/traffic_sign_recommender_entry.js --bundle --format=esm --minify --log-level=warning --alias:opening_hours=./scripts/traffic_sign_recommender_opening_hours_shim.js --outfile=dist/traffic-sign-converter/recommender.js",
     "dist:min": "node config/esbuild.config.min.js",
     "dist:svg:iD": "svg-sprite --symbol --symbol-dest . --shape-id-generator \"iD-%s\" --symbol-sprite dist/img/iD-sprite.svg \"svg/iD-sprite/**/*.svg\"",
     "dist:svg:community": "svg-sprite --symbol --symbol-dest . --shape-id-generator \"community-%s\" --symbol-sprite dist/img/community-sprite.svg node_modules/osm-community-index/dist/img/*.svg",
