@@ -29,6 +29,7 @@
     "dist:mapillary": "shx mkdir -p dist/mapillary-js && shx cp -R node_modules/mapillary-js/dist/* dist/mapillary-js/",
     "dist:pannellum": "shx mkdir -p dist/pannellum && shx cp -R node_modules/pannellum/build/* dist/pannellum/",
     "dist:traffic-sign-field": "shx mkdir -p dist/traffic-sign-field && shx cp -R vendor/traffic-sign-field/* dist/traffic-sign-field/",
+    "dist:surface-smoothness-field": "shx mkdir -p dist/surface-smoothness-field && shx cp -R vendor/surface-smoothness-field/* dist/surface-smoothness-field/",
     "dist:traffic-sign-converter": "shx mkdir -p dist/traffic-sign-converter && shx cp -R vendor/traffic-sign-converter/* dist/traffic-sign-converter/",
     "dist:traffic-sign-recommender": "esbuild scripts/traffic_sign_recommender_entry.js --bundle --format=esm --minify --log-level=warning --alias:opening_hours=./scripts/traffic_sign_recommender_opening_hours_shim.js --outfile=dist/traffic-sign-converter/recommender.js",
     "dist:min": "node config/esbuild.config.min.js",
@@ -54,6 +55,7 @@
     "test:once": "vitest run --no-isolate",
     "test:coverage": "vitest run --no-isolate --coverage.enabled",
     "translations": "node scripts/update_locales.js",
+    "vendor:surface-smoothness": "rsync -a --delete --exclude '*.d.ts' ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/id-field/dist/ vendor/surface-smoothness-field/ && rsync -a --delete ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/data/dist/generated/images vendor/surface-smoothness-field/",
     "vendor:traffic-signs": "rsync -a --delete --exclude '*.map' --exclude '*.d.ts' ../osm-traffic-sign-tools-id-field/packages/traffic-sign-id-field/dist/ vendor/traffic-sign-field/ && rsync -a --delete --exclude '*.map' --exclude '*.d.ts' ../osm-traffic-sign-tools-id-field/packages/traffic-sign-converter/dist/ vendor/traffic-sign-converter/"
   },
   "dependencies": {

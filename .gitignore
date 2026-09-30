@@ -18,6 +18,7 @@ transifex.auth
 /dist/mapillary-js/
 /dist/pannellum/
 /dist/traffic-sign-field/
+/dist/surface-smoothness-field/
 /dist/traffic-sign-converter/
 
 /coverage/
