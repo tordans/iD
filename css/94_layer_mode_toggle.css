@@ -14,8 +14,9 @@
     opacity: 0;
     pointer-events: none;
 }
-.map-data-pane .layer-list li[data-mode="readonly"] > label,
-.map-data-pane .layer-list li[data-mode="hidden"] > label {
+/* dim the label's content, not the label: its tooltip is a child and would fade too */
+.map-data-pane .layer-list li[data-mode="readonly"] > label > :not(.popover, input),
+.map-data-pane .layer-list li[data-mode="hidden"] > label > :not(.popover, input) {
     opacity: 0.6;
 }
 .map-data-pane .layer-mode {
