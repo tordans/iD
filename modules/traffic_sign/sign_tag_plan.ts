@@ -84,22 +84,21 @@ function applicableTags(signTags: SignTags, target: SignTarget, tags: Tags): Rec
  * Changes to make the tags match the sign in `key`:
  * - add / change the tags the sign implies (highway only for separate paths),
  * - normalize the sign value (`DE:241` → `DE:241-30`),
- * - remove tags that the previous sign (`baseTags`, the downloaded version) implied and the new one does not.
+ * - remove tags that the previous sign implied and the new one does not.
  *
- * Returns `undefined` when the sign did not change against `baseTags` (existing ways are left alone),
- * and an empty list when everything matches.
+ * `previousSign` is the value before the mapper changed it (in this editing session, else
+ * the downloaded version). Returns `undefined` when the sign did not change (existing ways
+ * are left alone), and an empty list when everything matches.
  */
-export function signTagPlan({ key, tags, baseTags, recommend }: {
+export function signTagPlan({ key, tags, previousSign, recommend }: {
     key: string;
     tags: Tags;
-    /** tags of the downloaded version; `undefined` for a new way */
-    baseTags: Tags | undefined;
+    previousSign: string | undefined;
     recommend: Recommend;
 }): SignPlanRow[] | undefined {
     const target = signTarget(key);
     const value = tags[key];
-    const baseValue = baseTags?.[key];
-    if (!target || baseValue === value) return undefined;
+    if (!target || previousSign === value) return undefined;
 
     const rows: SignPlanRow[] = [];
     const signTags = value ? safeRecommend(recommend, value) : {};
@@ -118,8 +117,8 @@ export function signTagPlan({ key, tags, baseTags, recommend }: {
         }
     }
 
-    if (baseValue) {
-        const previous = applicableTags(safeRecommend(recommend, baseValue), target, baseTags ?? {});
+    if (previousSign) {
+        const previous = applicableTags(safeRecommend(recommend, previousSign), target, tags);
         for (const [previousKey, previousValue] of Object.entries(previous)) {
             if (previousKey === 'highway' || previousKey in wanted) continue;
             if (tags[previousKey] === previousValue) {

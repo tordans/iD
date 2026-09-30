@@ -705,6 +705,13 @@ en:
     locating: "Locating, please wait..."
     location_unavailable: Your location is unavailable.
   inspector:
+    traffic_sign_plan:
+      header: "The traffic sign suggests these tags:"
+      apply: Apply these tags
+      cause:
+        sign: "{sign} implies this"
+        normalize: The usual way to write this sign
+        previous_sign: "Was implied by the previous sign {sign}"
     tilda:
       title: TILDA Bike Infrastructure
       intro: "How TILDA, the bike infrastructure dataset, reads this way. Check the category of each side. If it does not match what is on the ground, choose the right one under “Change to” and apply the tags. Then fill in what is missing below."

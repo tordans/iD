@@ -3,9 +3,13 @@ import { select as d3_select } from 'd3-selection';
 import * as countryCoder from '@rapideditor/country-coder';
 
 import { t } from '../../core/localizer';
+import { importableAssetUrl } from '../../traffic_sign/asset_url';
+import { loadSignRecommender } from '../../traffic_sign/recommender';
+import { signTagPlan, type Recommend, type SignPlanRow } from '../../traffic_sign/sign_tag_plan';
 import { svgIcon } from '../../svg/icon';
 import { utilGetSetValue, utilNoAuto, utilRebind, utilTotalExtent } from '../../util';
 import { uiCombobox } from '../combobox';
+import { drawTagPlan, tagPlanChanges, type TagPlanRow } from '../tag_plan';
 import { uiTooltip } from '../tooltip';
 
 type TrafficSignFieldModule = {
@@ -13,18 +17,6 @@ type TrafficSignFieldModule = {
 };
 
 let _loadFieldPromise: Promise<[void, TrafficSignFieldModule]> | null = null;
-
-
-/**
- * `import()` needs a `./`-relative or absolute URL; `context.asset()` returns paths like `dist/...`.
- */
-function importableAssetUrl(context: iD.Context, path: string) {
-    const asset = context.asset(path);
-    if (/^https?:\/\//i.test(asset)) return asset;
-    if (asset.startsWith('./') || asset.startsWith('../')) return asset;
-    if (asset.startsWith('/')) return new URL(asset, window.location.origin).href;
-    return new URL('./' + asset, window.location.href).href;
-}
 
 
 function loadTrafficSignFieldCss(context: iD.Context) {
@@ -75,9 +67,75 @@ function ensureTrafficSignFieldLoaded(context: iD.Context) {
 
 export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
     const dispatch = d3_dispatch('change');
+    const fieldKey = (field as { key: string }).key;
     let _impl: any;
     let _entityIDs: string[] = [];
     let _pendingTags: TagsMulti | null = null;
+    let _tags: TagsMulti = {};
+    let _selection: d3.Selection | null = null;
+    let _recommend: Recommend | null = null;
+    /** sign values seen while this way is selected: the previous one explains which tags to remove */
+    let _seenSign = false;
+    let _lastSign: string | undefined;
+    let _previousSign: string | undefined | null = null;   // null: not changed while selected
+
+
+    function trackSign(value: string | undefined) {
+        if (!_seenSign) {
+            _seenSign = true;
+            _lastSign = value;
+        } else if (value !== _lastSign) {
+            _previousSign = _lastSign;
+            _lastSign = value;
+        }
+    }
+
+
+    function rowReason(row: SignPlanRow, tags: Tags, previousSign: string | undefined) {
+        if (row.cause === 'normalize') return t('inspector.traffic_sign_plan.cause.normalize');
+        if (row.cause === 'previous_sign') return t('inspector.traffic_sign_plan.cause.previous_sign', { sign: previousSign ?? '' });
+        return t('inspector.traffic_sign_plan.cause.sign', { sign: tags[fieldKey] ?? '' });
+    }
+
+
+    /**
+     * Below the field: the tags the (changed) sign implies, with an apply button, like the
+     * TILDA section's tag plan. After applying, the TILDA section reads the new tags.
+     */
+    function drawSuggestions() {
+        if (!_selection) return;
+
+        let rows: TagPlanRow[] = [];
+        const tags = _tags;
+        const single = _entityIDs.length === 1 && Object.values(tags).every(value => !Array.isArray(value));
+        if (single && _recommend) {
+            const plainTags = tags as Tags;
+            // changed while selected, else compared with the downloaded version
+            const previousSign = _previousSign !== null
+                ? _previousSign
+                : context.history().base().hasEntity(_entityIDs[0])?.tags[fieldKey];
+            const plan = signTagPlan({ key: fieldKey, tags: plainTags, previousSign, recommend: _recommend });
+            rows = (plan ?? []).map(row => ({ ...row, reason: rowReason(row, plainTags, previousSign) }));
+        }
+
+        let box = _selection.selectAll<HTMLDivElement, number>('.traffic-sign-suggestions')
+            .data(rows.length ? [0] : []);
+        box.exit().remove();
+        const boxEnter = box.enter()
+            .append('div')
+            .attr('class', 'traffic-sign-suggestions');
+        boxEnter.append('div')
+            .attr('class', 'traffic-sign-suggestions-header')
+            .call(t.append('inspector.traffic_sign_plan.header'));
+        box = box.merge(boxEnter);
+
+        drawTagPlan(box, rows.length ? {
+            rows,
+            canApply: true,
+            applyLabel: t('inspector.traffic_sign_plan.apply'),
+            onApply: () => dispatch.call('change', trafficSign, tagPlanChanges(rows))
+        } : undefined);
+    }
 
 
     function createImpl(fieldModule: TrafficSignFieldModule) {
@@ -125,6 +183,14 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
                 }
 
                 selection.call(_impl);
+                _selection = selection;
+                drawSuggestions();
+                return loadSignRecommender(context);
+            })
+            .then(function(recommend) {
+                if (_recommend) return;
+                _recommend = recommend;
+                drawSuggestions();
             })
             .catch(function(err: unknown) {
                 console.error('traffic sign field:', err);  // eslint-disable-line no-console
@@ -133,6 +199,10 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
 
 
     trafficSign.tags = function(tags: TagsMulti) {
+        _tags = tags;
+        const value = tags[fieldKey];
+        trackSign(typeof value === 'string' ? value : undefined);
+        drawSuggestions();
         if (_impl) {
             _impl.tags(tags);
         } else {
@@ -144,6 +214,10 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
 
     trafficSign.entityIDs = function(val?: string[]) {
         if (val === undefined) return _entityIDs;
+        if (val.join() !== _entityIDs.join()) {
+            _seenSign = false;
+            _previousSign = null;
+        }
         _entityIDs = val;
         if (_impl) _impl.entityIDs(_entityIDs);
         return trafficSign;

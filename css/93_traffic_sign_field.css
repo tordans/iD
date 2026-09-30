@@ -56,3 +56,16 @@
 .ideditor .form-field .form-field-input-traffic-sign .traffic-sign-add-row input {
     border-radius: 0 !important;
 }
+
+/* tags the sign implies, below the field (modules/ui/fields/traffic_sign.ts, tag plan UI) */
+.traffic-sign-suggestions {
+    flex-basis: 100%;
+    width: 100%;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-color-2);
+}
+.traffic-sign-suggestions-header {
+    font-size: 12px;
+    font-weight: bold;
+}

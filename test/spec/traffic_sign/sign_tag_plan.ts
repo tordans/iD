@@ -23,13 +23,13 @@ describe('signTarget', () => {
 describe('signTagPlan', () => {
     it('leaves unchanged signs alone', () => {
         const tags = { highway: 'cycleway', traffic_sign: 'DE:237' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags: tags, recommend })).toBeUndefined();
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: 'DE:237', recommend })).toBeUndefined();
     });
 
     it('237 → 240: highway, designations and segregated; nothing to remove', () => {
         const baseTags = { highway: 'cycleway', traffic_sign: 'DE:237', bicycle: 'designated' };
         const tags = { ...baseTags, traffic_sign: 'DE:240' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags, recommend })).toEqual([
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: 'DE:237', recommend })).toEqual([
             { kind: 'change', key: 'highway', value: 'path', from: 'cycleway', cause: 'sign' },
             { kind: 'add', key: 'foot', value: 'designated', cause: 'sign' },
             { kind: 'add', key: 'segregated', value: 'no', cause: 'sign' }
@@ -39,7 +39,7 @@ describe('signTagPlan', () => {
     it('240 → 237: removes what only the old sign implied, normalizes nothing', () => {
         const baseTags = { highway: 'path', traffic_sign: 'DE:240', bicycle: 'designated', foot: 'designated', segregated: 'no' };
         const tags = { ...baseTags, traffic_sign: 'DE:237' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags, recommend })).toEqual([
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: 'DE:240', recommend })).toEqual([
             { kind: 'change', key: 'highway', value: 'cycleway', from: 'path', cause: 'sign' },
             { kind: 'remove', key: 'foot', value: 'designated', cause: 'previous_sign' },
             { kind: 'remove', key: 'segregated', value: 'no', cause: 'previous_sign' }
@@ -48,19 +48,19 @@ describe('signTagPlan', () => {
 
     it('normalizes the sign value', () => {
         const tags = { highway: 'path', traffic_sign: 'DE:241', bicycle: 'designated', foot: 'designated', segregated: 'yes' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags: undefined, recommend })).toEqual([
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: undefined, recommend })).toEqual([
             { kind: 'change', key: 'traffic_sign', value: 'DE:241-30', from: 'DE:241', cause: 'normalize' }
         ]);
     });
 
     it('does not apply a sign for another kind of way to a road', () => {
         const tags = { highway: 'primary', traffic_sign: 'DE:245,1022-10' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags: { highway: 'primary' }, recommend })).toEqual([]);
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: undefined, recommend })).toEqual([]);
     });
 
     it('applies signs without a highway to roads', () => {
         const tags = { highway: 'residential', traffic_sign: 'DE:274[30]' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags: { highway: 'residential' }, recommend })).toEqual([
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: undefined, recommend })).toEqual([
             { kind: 'change', key: 'traffic_sign', value: 'DE:274-30', from: 'DE:274[30]', cause: 'normalize' },
             { kind: 'add', key: 'maxspeed', value: '30', cause: 'sign' },
             { kind: 'add', key: 'source:maxspeed', value: 'sign', cause: 'sign' }
@@ -70,7 +70,7 @@ describe('signTagPlan', () => {
     it('road side: only access and segregated, with side keys', () => {
         const baseTags = { highway: 'secondary', 'cycleway:right': 'track' };
         const tags = { ...baseTags, 'cycleway:right:traffic_sign': 'DE:240' };
-        expect(signTagPlan({ key: 'cycleway:right:traffic_sign', tags, baseTags, recommend })).toEqual([
+        expect(signTagPlan({ key: 'cycleway:right:traffic_sign', tags, previousSign: undefined, recommend })).toEqual([
             { kind: 'add', key: 'cycleway:right:bicycle', value: 'designated', cause: 'sign' },
             { kind: 'add', key: 'cycleway:right:foot', value: 'designated', cause: 'sign' },
             { kind: 'add', key: 'cycleway:right:segregated', value: 'no', cause: 'sign' }
@@ -78,9 +78,8 @@ describe('signTagPlan', () => {
     });
 
     it('removed sign: removes the tags it implied', () => {
-        const baseTags = { highway: 'path', traffic_sign: 'DE:240', bicycle: 'designated', foot: 'designated', segregated: 'no' };
         const tags = { highway: 'path', bicycle: 'designated', foot: 'designated', segregated: 'no' };
-        expect(signTagPlan({ key: 'traffic_sign', tags, baseTags, recommend })!.map(row => `${row.kind} ${row.key}`)).toEqual([
+        expect(signTagPlan({ key: 'traffic_sign', tags, previousSign: 'DE:240', recommend })!.map(row => `${row.kind} ${row.key}`)).toEqual([
             'remove bicycle', 'remove foot', 'remove segregated'
         ]);
     });
