@@ -1025,6 +1025,10 @@ en:
       select: Lens
       default: Default
       default_tooltip: iD's normal map style
+      bundled:
+        radnetz_qa:
+          name: Radnetz QA
+          tooltip: "How complete the tags for the Radnetz dataset are (TILDA checklist). Green: complete. Orange: tags missing. Red: TILDA cannot tell the category. Wide: bike infrastructure, thin: roads."
       select_tooltip: Show the map with this lens
       add: Import a lens
       edit_tooltip: Edit name and shortcut

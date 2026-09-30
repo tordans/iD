@@ -4,6 +4,7 @@ import { localizer, t } from '../../core/localizer';
 import { prefs } from '../../core/preferences';
 import {
     DEFAULT_LENS_SHORTCUT,
+    getBundledLens,
     LENS_PREF,
     LENS_SHORTCUTS_PREF,
     UPLOADED_LENSES_PREF,
@@ -40,7 +41,15 @@ export function uiSectionLenses(context: iD.Context) {
 
 
     function lensName(entry: LensEntry) {
-        return entry.source === 'default' ? t('map_data.lens.default') : (entry.name || entry.id);
+        if (entry.source === 'default') return t('map_data.lens.default');
+        const bundled = getBundledLens(entry.id);
+        if (bundled) return t(bundled.nameID);
+        return entry.name || entry.id;
+    }
+
+    function lensTooltipID(entry: LensEntry) {
+        if (entry.source === 'default') return 'map_data.lens.default_tooltip';
+        return getBundledLens(entry.id)?.tooltipID ?? 'map_data.lens.select_tooltip';
     }
 
     function lensShortcut(entry: LensEntry) {
@@ -143,7 +152,7 @@ export function uiSectionLenses(context: iD.Context) {
             .each(function(d) {
                 const shortcut = lensShortcut(d);
                 const tooltip = uiPaneTooltip()
-                    .title(() => t.append(d.source === 'default' ? 'map_data.lens.default_tooltip' : 'map_data.lens.select_tooltip'))
+                    .title(() => t.append(lensTooltipID(d)))
                     .keys(shortcut ? [uiCmd('⌥' + shortcut.toUpperCase())] : null);
                 d3_select(this).call((uiTooltip() as any).destroyAny).call(tooltip);
             });

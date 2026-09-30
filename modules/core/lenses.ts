@@ -1,4 +1,5 @@
 import { prefs } from './preferences';
+import { BUNDLED_LENSES } from '../lenses';
 
 // UI lens support. A lens is a CSS file imported by the user and kept in
 // localStorage (a single stylesheet is well within the ~5 MB quota). The active
@@ -17,11 +18,33 @@ export const DEFAULT_LENS_ID = 'default';
 /** Fixed `⌥`+letter shortcut that switches back to the default lens (lens off). */
 export const DEFAULT_LENS_SHORTCUT = 'd';
 /**
+ * A lens that is part of the editor (`modules/lenses/`), not imported by the user.
+ * It can add computed classes to map elements (e.g. a QA state), next to the `tag-*` classes.
+ */
+export interface BundledLens {
+    id: string;
+    /** string ids for the name and the tooltip in the lens list */
+    nameID: string;
+    tooltipID: string;
+    /** fixed `⌥`+letter shortcut */
+    shortcut: string;
+    css: string;
+    /** extra classes for a map element with these tags, while this lens is active */
+    classes?: (tags: Record<string, string>) => string[];
+}
+
+/**
  * Letters that cannot be assigned to a lens because `⌥`+letter is already taken:
  *   - `w` -> global `⌥W` toggles the OSM layer (see modules/ui/init.js)
  *   - `d` -> reserved here for the default lens (DEFAULT_LENS_SHORTCUT)
+ *   - the fixed letters of the bundled lenses
  */
-export const RESERVED_LENS_SHORTCUTS = new Set(['w', DEFAULT_LENS_SHORTCUT]);
+export const RESERVED_LENS_SHORTCUTS = new Set(['w', DEFAULT_LENS_SHORTCUT, ...BUNDLED_LENSES.map(lens => lens.shortcut)]);
+
+/** @returns the bundled lens with this id, if any */
+export function getBundledLens(id: string): BundledLens | undefined {
+    return BUNDLED_LENSES.find(lens => lens.id === id);
+}
 
 /** A CSS lens imported by the user and stored in localStorage. */
 export interface UploadedLens {
@@ -34,7 +57,7 @@ export interface UploadedLens {
 export interface LensEntry {
     id: string;
     name?: string;
-    source: 'default' | 'uploaded';
+    source: 'default' | 'bundled' | 'uploaded';
 }
 
 /**
@@ -127,14 +150,17 @@ export function setSelectedLensId(id: string): void {
 export function getActiveLensCss(): string {
     const id = getSelectedLensId();
     if (id === DEFAULT_LENS_ID) return '';
+    const bundled = getBundledLens(id);
+    if (bundled) return bundled.css;
     const uploaded = getUploadedLenses().find((t) => t.id === id);
     return uploaded ? uploaded.css : '';
 }
 
-/** All selectable lenses: built-in default, then uploaded ones. */
+/** All selectable lenses: built-in default, bundled ones, then uploaded ones. */
 export function listLenses(): LensEntry[] {
     return [
         { id: DEFAULT_LENS_ID, source: 'default' },
+        ...BUNDLED_LENSES.map(lens => ({ id: lens.id, source: 'bundled' as const })),
         ...getUploadedLenses().map((t) => ({ id: t.id, name: t.name, source: 'uploaded' as const }))
     ];
 }
@@ -185,6 +211,8 @@ function saveLensShortcuts(shortcuts: Record<string, string>): void {
  * @returns the letter, or undefined
  */
 export function getShortcutForLens(id: string): string | undefined {
+    const bundled = getBundledLens(id);
+    if (bundled) return bundled.shortcut;
     const shortcuts = getLensShortcuts();
     return Object.keys(shortcuts).find((letter) => shortcuts[letter] === id);
 }
@@ -195,6 +223,8 @@ export function getShortcutForLens(id: string): string | undefined {
  * @returns the lens id, or undefined
  */
 export function getLensIdByShortcut(letter: string): string | undefined {
+    const bundled = BUNDLED_LENSES.find(lens => lens.shortcut === letter);
+    if (bundled) return bundled.id;
     return getLensShortcuts()[letter];
 }
 
@@ -309,6 +339,11 @@ export function extractTagKeysFromCss(css: string): string[] {
  * @param t - entity tags
  */
 export function appendLensTagClasses(classes: string[], t: Record<string, string>): void {
+    if (lensClassProvider) {
+        for (const klass of lensClassProvider(t)) {
+            if (classes.indexOf(klass) === -1) classes.push(klass);
+        }
+    }
     if (lensSecondaryTagKeys.size === 0) return;
     for (const realKey in t) {
         const classKey = realKey.replace(/:/g, '_');
@@ -327,7 +362,11 @@ export function appendLensTagClasses(classes: string[], t: Record<string, string
  */
 export function refreshLensTagKeys(): void {
     setLensSecondaryTagKeys(extractTagKeysFromCss(getActiveLensCss()));
+    lensClassProvider = getBundledLens(getSelectedLensId())?.classes;
 }
+
+/** Computed classes of the active bundled lens (see `BundledLens.classes`) */
+let lensClassProvider: BundledLens['classes'];
 
 /** id of the <style> element holding the active lens's CSS. */
 const LENS_STYLE_ELEMENT_ID = 'id-lens-css';

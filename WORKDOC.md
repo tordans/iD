@@ -88,7 +88,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   2. Map it onto iD's `modules/svg/data.js` (d3/SVG, not Pixi) and `modules/ui/sections/data_layers.js`.
   3. Reuse the storage/id model from multiple custom backgrounds.
 
-### 5. Map style "lenses" — 🟨
+### 5. Map style "lenses" — ✅ (Radnetz QA lens bundled)
 
 - Idea: a lens is a CSS file that restyles the OSM data on the map for one mapping theme or for QA (issue openstreetmap/iD#11189).
 - Source A: kaligrafy's PR openstreetmap/iD#12473 "Add Lens support" (branch `kaligrafy/iD:feat/theme-css-upstream`, 5 commits, Jun 2026):
@@ -106,7 +106,10 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - Done (2026-09-27): merged Source A. Cherry-picked the v6 shortcut commits `b50a25d67`, `484e80ecf`, `4d4c0047d` (Alt+letter, shortcut UI). `lens_shortcuts` converted to TS, strings moved to `data/core.yaml` (v6 uses its own `data/locales/custom/*.json`).
 - Not taken yet: maxspeed tag classes (`dfadc0451`) and build-time bundling (`46bb85bdc`, `1c5a20e12`, `1d1f563f9`). They are mixed with Québec lens files. Build our own bundling once we have a Radnetz Berlin lens.
 - Note: the lens only overrides core styles when `dist/iD.css` is wrapped in `@layer ideditor` (done by `scripts/build_css.js`). Restart the dev server after pulling changes to `build_css.js`.
-- TODO: write the Radnetz Berlin lens CSS.
+- Done (2026-09-30): **bundled lenses** and the first one, **"Radnetz QA"** (`modules/lenses/radnetz_qa.ts`, listed in `modules/lenses/index.ts`). The lens list is now: Default (iD's normal style, `⌥D`) and Radnetz QA (`⌥Q`), then imported lenses. A bundled lens has a fixed shortcut (reserved for imported lenses), localized name/tooltip, its CSS as a string, and optional computed classes: while it is active, `appendLensTagClasses` adds `classes(tags)` to every map element.
+  - Radnetz QA colors ways by the TILDA checklist (feature 8, `modules/tilda/qa_state.ts`, cached per tags object): green = all required tags there, orange = a required tag missing / not accepted by TILDA / only guessed, red = TILDA cannot decide the category (`needsClarification`, `*_adjoiningOrIsolated`, `*_advisoryOrExclusive`). Wide = bike infrastructure (way or its sides), thin = roads without it (road checklist); everything else fades to 30 %. Classes `tilda-qa`, `tilda-qa-complete|incomplete|unclear`, `tilda-qa-bike|road`.
+  - Around Rosenthaler Platz (z17): 192 ways, 21 complete, 167 incomplete (mostly roads without `width`), 4 unclear.
+- Open: a legend on the map; separate colors per side (lanes are drawn on the road's line); "why incomplete" on hover.
 - Fetch without adding a remote: `git fetch https://github.com/kaligrafy/iD.git feat/theme-css-upstream:kg-lens v6:kg-v6`.
 
 ### 6. Way-as-table comparison — ✅ (v1, read-only)
@@ -516,6 +519,7 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 
 ## Progress log
 
+- 2026-09-30: Bundled lens "Radnetz QA" (feature 5): ways colored by how complete their TILDA checklist is.
 - 2026-09-29: Way table docked at the bottom, flies to the selected way.
 - 2026-09-29: Data index infraVelo ⇐ TILDA ⇐ OSM (feature 16). TILDA checklist per category with keys, values and TILDA's reading (feature 8 v2). Preset customization v1: Radnetz fields, bicycle road and cycleway link presets, shorter field lists (feature 15).
 - 2026-09-27: `develop` updated from upstream. Created worktree and branch `radnetz-berlin` on tordans/iD. Took stock of the feature sources. Decided on the traffic-sign source branch.
@@ -533,7 +537,6 @@ Key names are for the own way; on a road side they get the `cycleway:<side>:` / 
 - Features 8–10 (plans above).
 - T10: two-account test of live touched (feature 11).
 - Feature 12 (read-only categories): ready to build (v1 without interaction).
-- Write the Radnetz Berlin lens CSS, then add build-time bundling for it (see feature 5).
 - German strings for the new UI (favorites, custom data layers, lenses, way table).
 - Way table v2: raw tag editing.
 - Feature 14: eye button on the Mapillary Image ID field.

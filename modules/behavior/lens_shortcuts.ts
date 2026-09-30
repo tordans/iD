@@ -2,6 +2,7 @@ import { t } from '../core/localizer';
 import {
     DEFAULT_LENS_ID,
     DEFAULT_LENS_SHORTCUT,
+    getBundledLens,
     getLensIdByShortcut,
     getSelectedLensId,
     getUploadedLenses,
@@ -27,6 +28,8 @@ export function behaviorLensShortcuts(context: iD.Context) {
     /** Display label for the now-active lens (default is localized). */
     function lensLabel(id: string) {
         if (id === DEFAULT_LENS_ID) return t('map_data.lens.default');
+        const bundled = getBundledLens(id);
+        if (bundled) return t(bundled.nameID);
         const lens = getUploadedLenses().find((l) => l.id === id);
         return lens ? lens.name : id;
     }
