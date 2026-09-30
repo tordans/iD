@@ -1,85 +1,80 @@
-/* Mapillary images field (WORKDOC feature 19) */
+/* Mapillary images field (WORKDOC feature 19): one row per image, like the directional combo */
 
-.form-field-input-mapillary-images {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.form-field-input-mapillary-images ul.rows.empty {
+    display: none;
 }
 
-.mly-key-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+/* label cell: key label, below it small the age and image type */
+.form-field-input-mapillary-images li.labeled-input > .mly-image-label {
+    padding: 4px 10px;
+    white-space: nowrap;
+    vertical-align: middle;
 }
-.mly-key-label {
-    font-weight: bold;
-}
-.mly-key-name {
-    flex: 1;
-    min-width: 0;
+.mly-image-label .mly-image-title,
+.mly-image-label .mly-image-info {
+    display: block;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+}
+.mly-image-label .mly-image-info {
+    margin-top: 2px;
     font-size: 11px;
+    line-height: 1.2;
     opacity: .7;
 }
+.mly-image-label .mly-image-info:empty {
+    display: none;
+}
+.mly-image-label select.mly-add-key {
+    width: 100%;
+    max-width: 150px;
+    height: 2em;
+    padding: 0 4px;
+    border: 0;
+    font-size: 12px;
+}
 
-.mly-image-list {
-    list-style: none;
-    margin: 2px 0 0;
-    padding: 0;
+/* value cell: the id (cut off, it is not important) and the buttons */
+.form-field-input-mapillary-images li.labeled-input > .mly-image-value {
+    width: 100%;
 }
-.mly-image + .mly-image {
-    margin-top: 4px;
-}
-.mly-image-main {
+.form-field-input-mapillary-images .mly-image-value-inner {
     display: flex;
-    align-items: center;
-}
-.mly-image-main .mly-image-input {
-    flex: 1;
-    min-width: 0;
-}
-.mly-image-main .form-field-button {
-    flex: 0 0 auto;
+    align-items: stretch;
     height: 100%;
+    min-height: 2.5em;
 }
-.mly-image-main .form-field-button.disabled,
-.mly-image-main .form-field-button:disabled {
+.form-field-input-mapillary-images .mly-image-value .mly-image-input {
+    flex: 1 1 auto;
+    min-width: 3em;
+    text-overflow: ellipsis;
+}
+.form-field-input-mapillary-images .mly-image-value .form-field-button {
+    flex: 0 0 auto;
+    height: auto;
+    border-radius: 0;
+}
+.form-field-input-mapillary-images .mly-image-value .form-field-button.disabled,
+.form-field-input-mapillary-images .mly-image-value .form-field-button:disabled {
     opacity: .4;
     pointer-events: none;
 }
-.mly-image-info {
-    min-height: 1em;
-    padding: 1px 2px 0;
-    font-size: 11px;
-    opacity: .75;
+.ideditor[dir='ltr'] .form-field-input-mapillary-images .mly-image-value .form-field-button {
+    border-left: 1px solid var(--border-color);
+}
+.ideditor[dir='rtl'] .form-field-input-mapillary-images .mly-image-value .form-field-button {
+    border-right: 1px solid var(--border-color);
 }
 
-.mly-add-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-.mly-add-row .mly-add-key {
-    flex: 0 1 45%;
-    min-width: 0;
-}
-.mly-add-row .mly-add-input {
-    flex: 1;
-    min-width: 0;
-}
-.mly-add-image {
-    align-self: flex-start;
+/* "+" in the field label */
+.field-label .mly-add-icon.active .icon {
+    opacity: 1;
+    fill: var(--link-color, #7092ff);
 }
 
 /* the row "set photo from viewer" writes to (feature 20) */
-.mly-key-row {
-    border-radius: 4px;
-}
-.mly-key-row.mly-active-target {
-    outline: 2px solid #7c3aed;
-    outline-offset: 3px;
+.form-field-input-mapillary-images li.labeled-input.mly-active-target > .mly-image-label {
+    box-shadow: inset 3px 0 0 #7c3aed;
 }
 
 /* Mapillary "set photo from viewer" with target list (feature 20) */

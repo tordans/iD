@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addableKeys, buildImageRows, normalizeImageId, removeImageChange, setImageChange } from '../../../modules/mapillary/field_rows';
+import { buildImageRows, normalizeImageId, removeImageChange, setImageChange } from '../../../modules/mapillary/field_rows';
 
 describe('buildImageRows', () => {
     const tags = { mapillary: '1;2', 'cycleway:right:mapillary': '3', name: 'x', 'mapillary:map_feature': '9' };
@@ -17,17 +17,6 @@ describe('buildImageRows', () => {
 
     it('is empty without image keys', () => {
         expect(buildImageRows({ highway: 'residential' })).toEqual([]);
-    });
-});
-
-
-describe('addableKeys', () => {
-    it('lists suggested keys without those already tagged', () => {
-        const keys = addableKeys({ highway: 'residential', mapillary: '1', 'cycleway:right': 'lane' });
-        expect(keys).not.toContain('mapillary');
-        expect(keys).toContain('mapillary:forward');
-        expect(keys).toContain('cycleway:right:mapillary');
-        expect(keys).not.toContain('cycleway:left:mapillary');
     });
 });
 

@@ -1,4 +1,4 @@
-import { compareMapillaryKeys, joinImageIds, mapillaryKeyLabel, mapillaryKeysOf, splitImageIds, suggestedMapillaryKeys } from './tag_keys';
+import { joinImageIds, mapillaryKeyLabel, mapillaryKeysOf, splitImageIds } from './tag_keys';
 
 /**
  * Row model of the Mapillary images field (WORKDOC feature 19): one row per image key,
@@ -25,13 +25,6 @@ export function buildImageRows(tags: TagsLike, pendingKeys: ReadonlySet<string> 
         label: mapillaryKeyLabel(key),
         ids: [...splitImageIds(tags[key] as string), ...(pendingKeys.has(key) ? [''] : [])]
     }));
-}
-
-
-/** Keys offered by "+ Add image": the suggested keys that have no images yet */
-export function addableKeys(tags: TagsLike): string[] {
-    const present = new Set(mapillaryKeysOf(tags));
-    return suggestedMapillaryKeys(tags).filter(key => !present.has(key)).sort(compareMapillaryKeys);
 }
 
 

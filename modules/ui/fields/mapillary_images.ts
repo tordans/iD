@@ -4,21 +4,25 @@ import { select as d3_select, type Selection } from 'd3-selection';
 import { localizer, t } from '../../core/localizer';
 import { svgIcon } from '../../svg/icon';
 import { utilNoAuto, utilRebind } from '../../util';
-import { mapillaryKeyLabel } from '../../mapillary/tag_keys';
-import { addableKeys, buildImageRows, removeImageChange, setImageChange, type ImageRow } from '../../mapillary/field_rows';
+import { mapillaryKeyLabel, suggestedMapillaryKeys } from '../../mapillary/tag_keys';
+import { buildImageRows, removeImageChange, setImageChange } from '../../mapillary/field_rows';
 import { formatRelativeAge, loadImageInfo, type MapillaryImageInfo } from '../../mapillary/image_info';
 import { showMapillaryImage } from '../../mapillary/viewer';
 import { activeTargetEvents, getActiveTarget, setActiveTarget } from '../../mapillary/active_target';
 
 /**
- * "Mapillary images" field (WORKDOC feature 19): every Mapillary image key of the feature as a row
- * with its images (`;`-separated ids), each with link, "show in viewer" button, capture age, user
- * and panorama flag. Replaces the schema's `mapillary` identifier field.
+ * "Mapillary images" field (WORKDOC feature 19): one table row per image (`;`-separated ids of all
+ * Mapillary image keys), laid out like the directional combo. The label cell has the key's label
+ * and, small below it, the capture age and image type; the value cell the id with link, "show in
+ * viewer" and remove buttons. "+" in the field label adds an image to a chosen key.
+ * Replaces the schema's `mapillary` identifier field.
  */
 
-type ImageEntry = { key: string; index: number; id: string };
+/** One row of the table: an image of a key, or the new-image row with a key chooser (`key` = '') */
+type ImageEntry = { key: string; index: number; id: string; label: string };
 
 
+/** Second label line: capture age and image type ("last year · 360°"); the date as tooltip */
 function imageInfoText(info: MapillaryImageInfo): { text: string; title: string } {
     const parts: string[] = [];
     let title = '';
@@ -27,8 +31,7 @@ function imageInfoText(info: MapillaryImageInfo): { text: string; title: string 
         if (age) parts.push(age);
         title = new Date(info.capturedAt).toLocaleString(localizer.localeCode());
     }
-    if (info.username) parts.push(info.username);
-    if (info.isPano) parts.push(t('inspector.mapillary_images.panorama'));
+    parts.push(t(info.isPano ? 'inspector.mapillary_images.panorama' : 'inspector.mapillary_images.flat'));
     return { text: parts.join(' · '), title };
 }
 
@@ -37,13 +40,12 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
     const dispatch = d3_dispatch('change');
     let _tags: TagsMulti = {};
     let _entityIDs: string[] = [];
-    /** keys with an extra empty input ("+" clicked) */
-    let _pendingKeys = new Set<string>();
-    /** "Add image" was clicked: a key chooser row is shown */
+    /** "+" in the field label was clicked: a row with a key chooser is shown */
     let _adding = false;
     let _addKey: string | undefined;
-    let _wrap = d3_select<HTMLDivElement, unknown>(null!);
-    let _focusSelector: string | null = null;
+    let _container = d3_select<HTMLElement, unknown>(null!);
+    let _list = d3_select<HTMLUListElement, unknown>(null!);
+    let _focusNew = false;
 
     const singleTags = (): Tags => {
         const tags: Tags = {};
@@ -59,64 +61,137 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
     }
 
 
+    /** Keys offered for a new image: existing ones (another image) and the likely new ones */
+    function chooserKeys() {
+        return suggestedMapillaryKeys(singleTags());
+    }
+
+
+    function entries(): ImageEntry[] {
+        const list: ImageEntry[] = buildImageRows(singleTags()).flatMap(row =>
+            row.ids.map((id, index) => ({
+                key: row.key,
+                index,
+                id,
+                label: index ? `${row.label} ${index + 1}` : row.label
+            })));
+        if (_adding) list.push({ key: '', index: -1, id: '', label: '' });
+        return list;
+    }
+
+
     /** the row "set photo from viewer" writes to gets an outline */
     function updateActiveTarget() {
         const active = getActiveTarget(_entityIDs.join(','));
-        _wrap.selectAll<HTMLDivElement, ImageRow>('.mly-key-row').classed('mly-active-target', d => d.key === active);
+        _list.selectAll<HTMLLIElement, ImageEntry>('li.labeled-input')
+            .classed('mly-active-target', d => !!d.key && d.key === active);
     }
 
 
     function fillInfo(node: HTMLElement, id: string) {
         const info = d3_select(node);
         if (!id) {
-            info.text('').attr('title', null);
+            info.text('').attr('title', null).datum('');
             return;
         }
         info.text('…').attr('title', null).datum(id);
         loadImageInfo(id).then(result => {
             if (info.datum() !== id) return;   // the row shows another image by now
-            if (!result) {
-                info.text('');
-                return;
-            }
-            const { text, title } = imageInfoText(result);
+            const { text, title } = result ? imageInfoText(result) : { text: '', title: '' };
             info.text(text).attr('title', title || null);
         });
     }
 
 
-    function drawImages(selection: Selection<any, ImageRow, any, any>) {
-        const list = selection.selectAll<HTMLUListElement, ImageRow>('.mly-image-list')
-            .data(d => [d]);
-        const listEnter = list.enter().append('ul').attr('class', 'mly-image-list');
+    /** "+" in the field label, in front of the trash icon */
+    function drawAddButton() {
+        const label = _container.select('.field-label');
+        if (label.empty()) return;
+        let button = label.selectAll<HTMLButtonElement, number>('.mly-add-icon').data([0]);
+        button = button.enter()
+            .insert('button', '.remove-icon')
+            .attr('type', 'button')
+            .attr('class', 'mly-add-icon')
+            .attr('title', t('inspector.mapillary_images.add_image'))
+            .call(svgIcon('#iD-icon-plus', ''))
+            .on('click', function(d3_event) {
+                d3_event.preventDefault();
+                d3_event.stopPropagation();
+                _adding = !_adding;
+                _focusNew = _adding;
+                render();
+            })
+            .merge(button);
+        button.classed('active', _adding);
+    }
 
-        const items = listEnter.merge(list).selectAll<HTMLLIElement, ImageEntry>('.mly-image')
-            .data(row => row.ids.map((id, index) => ({ key: row.key, index, id })), d => d.index);
-        items.exit().remove();
 
-        const itemEnter = items.enter().append('li').attr('class', 'mly-image');
-        const main = itemEnter.append('div').attr('class', 'mly-image-main');
+    function drawLabelCell(selection: Selection<HTMLLIElement, ImageEntry, any, any>) {
+        const label = selection.append('div').attr('class', 'label mly-image-label');
+        label.append('span').attr('class', 'mly-image-title');
+        label.append('span').attr('class', 'mly-image-info');
+    }
 
-        main.append('input')
+
+    function drawChooser(row: Selection<HTMLLIElement, ImageEntry, any, any>) {
+        const keys = chooserKeys();
+        if (!_addKey || !keys.includes(_addKey)) _addKey = keys[0];
+
+        let select = row.select('.mly-image-label').selectAll<HTMLSelectElement, number>('select').data([0]);
+        select = select.enter()
+            .append('select')
+            .attr('class', 'mly-add-key')
+            .attr('title', t('inspector.mapillary_images.choose_key'))
+            .on('change', function() { _addKey = (this as HTMLSelectElement).value; })
+            .merge(select);
+        const options = select.selectAll<HTMLOptionElement, string>('option').data(keys, d => d);
+        options.exit().remove();
+        options.enter().append('option')
+            .attr('value', d => d)
+            .text(d => mapillaryKeyLabel(d))
+            .attr('title', d => d);
+        select.selectAll('option').order();
+        select.property('value', _addKey!);
+    }
+
+
+    function render() {
+        if (_list.empty()) return;
+        drawAddButton();
+
+        const rows = _list.selectAll<HTMLLIElement, ImageEntry>('li.labeled-input')
+            .data(entries(), d => `${d.key}#${d.index}`);
+        rows.exit().remove();
+
+        const enter = rows.enter().append('li').attr('class', 'labeled-input mly-image');
+        enter.call(drawLabelCell);
+
+        const inputCell = enter.append('div').attr('class', 'mly-image-value')
+            .append('div').attr('class', 'mly-image-value-inner');
+        inputCell.append('input')
             .attr('type', 'text')
             .attr('class', 'mly-image-input')
             .attr('placeholder', t('inspector.mapillary_images.image_id'))
             .call(utilNoAuto)
             .on('change', function(d3_event, d) {
                 const value = (this as HTMLInputElement).value;
-                _pendingKeys.delete(d.key);
-                change(setImageChange(_tags, d.key, d.index, value));
-                if (!value.trim()) render();
+                if (d.key) {
+                    change(setImageChange(_tags, d.key, d.index, value));
+                } else if (_addKey && value.trim()) {
+                    // new image: appended to the chosen key
+                    const key = _addKey;
+                    _adding = false;
+                    _addKey = undefined;
+                    change(setImageChange(_tags, key, Number.MAX_SAFE_INTEGER, value));
+                }
             });
-
-        main.append('a')
+        inputCell.append('a')
             .attr('class', 'form-field-button mly-image-link')
             .attr('target', '_blank')
             .attr('rel', 'noopener noreferrer')
             .attr('title', t('inspector.mapillary_images.view_on_mapillary'))
             .call(svgIcon('#iD-icon-out-link', ''));
-
-        main.append('button')
+        inputCell.append('button')
             .attr('type', 'button')
             .attr('class', 'form-field-button mly-image-show')
             .attr('title', t('inspector.mapillary_images.show_in_viewer'))
@@ -125,158 +200,71 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
                 d3_event.preventDefault();
                 if (d.id) showMapillaryImage(context, d.id);
             });
-
-        main.append('button')
+        inputCell.append('button')
             .attr('type', 'button')
             .attr('class', 'form-field-button mly-image-remove')
             .attr('title', t('inspector.mapillary_images.remove_image'))
-            .call(svgIcon('#iD-icon-close', ''))
+            .call(svgIcon('#iD-operation-delete', ''))
             .on('click', function(d3_event, d) {
                 d3_event.preventDefault();
-                if (!d.id) {
-                    _pendingKeys.delete(d.key);
-                    render();
-                } else {
+                if (d.key) {
                     change(removeImageChange(_tags, d.key, d.index));
+                } else {
+                    _adding = false;
+                    render();
                 }
             });
 
-        itemEnter.append('div').attr('class', 'mly-image-info');
+        const merged = enter.merge(rows)
+            .attr('data-key', d => d.key || null)
+            .classed('mly-new-image', d => !d.key)
+            .on('focusin.activeTarget click.activeTarget', (d3_event, d) => {
+                if (d.key) setActiveTarget(_entityIDs.join(','), d.key);
+            })
+            .order();
 
-        const merged = itemEnter.merge(items);
-        merged.classed('empty', d => !d.id);
+        merged.select<HTMLElement>('.mly-image-label').attr('title', d => d.key || null);
+        merged.select('.mly-image-title').text(d => d.label);
+        merged.filter(d => !d.key).call(drawChooser);
+        merged.select<HTMLElement>('.mly-image-info').each(function(d) {
+            if (d3_select(this).datum() !== d.id || !this.textContent) fillInfo(this, d.id);
+        });
         merged.select<HTMLInputElement>('.mly-image-input').each(function(d) {
             if (this !== document.activeElement) this.value = d.id;
+            this.title = d.id;
         });
         merged.select<HTMLAnchorElement>('.mly-image-link')
             .attr('href', d => d.id ? `https://www.mapillary.com/app/?pKey=${encodeURIComponent(d.id)}` : null)
             .classed('disabled', d => !d.id);
         merged.select('.mly-image-show').property('disabled', d => !d.id);
-        merged.select<HTMLElement>('.mly-image-info').each(function(d) {
-            if (d3_select(this).datum() !== d.id || !this.textContent) fillInfo(this, d.id);
-        });
-    }
 
-
-    function drawAddRow(wrap: Selection<HTMLDivElement, unknown, any, any>) {
-        const keys = addableKeys(_tags);
-        if (!_addKey || !keys.includes(_addKey)) _addKey = keys[0];
-
-        const data = _adding && keys.length ? [0] : [];
-        const row = wrap.selectAll<HTMLDivElement, number>('.mly-add-row').data(data);
-        row.exit().remove();
-
-        const rowEnter = row.enter().append('div').attr('class', 'mly-add-row');
-        rowEnter.append('select')
-            .attr('class', 'mly-add-key')
-            .on('change', function() { _addKey = (this as HTMLSelectElement).value; });
-        rowEnter.append('input')
-            .attr('type', 'text')
-            .attr('class', 'mly-add-input')
-            .attr('placeholder', t('inspector.mapillary_images.image_id'))
-            .call(utilNoAuto)
-            .on('change', function() {
-                const value = (this as HTMLInputElement).value;
-                if (!_addKey || !value.trim()) return;
-                const key = _addKey;
-                _adding = false;
-                _addKey = undefined;
-                change(setImageChange(_tags, key, 0, value));
-            });
-        rowEnter.append('button')
-            .attr('type', 'button')
-            .attr('class', 'form-field-button mly-add-cancel')
-            .call(svgIcon('#iD-icon-close', ''))
-            .on('click', function(d3_event) {
-                d3_event.preventDefault();
-                _adding = false;
-                render();
-            });
-
-        const options = row.merge(rowEnter).select('select').selectAll<HTMLOptionElement, string>('option')
-            .data(keys, d => d);
-        options.exit().remove();
-        options.enter().append('option')
-            .attr('value', d => d)
-            .text(d => mapillaryKeyLabel(d) + ' — ' + d);
-        row.merge(rowEnter).select<HTMLSelectElement>('select')
-            .property('value', _addKey!)
-            .selectAll<HTMLOptionElement, string>('option')
-            .order();
-
-        // the button
-        const button = wrap.selectAll<HTMLButtonElement, number>('.mly-add-image')
-            .data(_adding || !keys.length ? [] : [0]);
-        button.exit().remove();
-        button.enter().append('button')
-            .attr('type', 'button')
-            .attr('class', 'mly-add-image')
-            .call(svgIcon('#iD-icon-plus', 'inline'))
-            .call(t.append('inspector.mapillary_images.add_image'))
-            .on('click', function(d3_event) {
-                d3_event.preventDefault();
-                _adding = true;
-                _focusSelector = '.mly-add-input';
-                render();
-            });
-    }
-
-
-    function render() {
-        if (_wrap.empty()) return;
-        const rows = buildImageRows(singleTags(), _pendingKeys);
-
-        const rowSel = _wrap.selectAll<HTMLDivElement, ImageRow>('.mly-key-row')
-            .data(rows, d => d.key);
-        rowSel.exit().remove();
-
-        const rowEnter = rowSel.enter().append('div').attr('class', 'mly-key-row');
-        const header = rowEnter.append('div').attr('class', 'mly-key-header');
-        header.append('span').attr('class', 'mly-key-label');
-        header.append('code').attr('class', 'mly-key-name');
-        header.append('button')
-            .attr('type', 'button')
-            .attr('class', 'form-field-button mly-key-add')
-            .attr('title', t('inspector.mapillary_images.add_to_key'))
-            .call(svgIcon('#iD-icon-plus', ''))
-            .on('click', function(d3_event, d) {
-                d3_event.preventDefault();
-                _pendingKeys.add(d.key);
-                _focusSelector = `.mly-key-row[data-key="${d.key}"] .mly-image:last-child .mly-image-input`;
-                render();
-            });
-
-        const merged = rowEnter.merge(rowSel)
-            .attr('data-key', d => d.key)
-            .on('focusin.activeTarget click.activeTarget', (d3_event, d) => setActiveTarget(_entityIDs.join(','), d.key))
-            .order();
-        merged.select('.mly-key-label').text(d => d.label);
-        merged.select('.mly-key-name').text(d => d.key);
-        merged.select<HTMLButtonElement>('.mly-key-add').property('disabled', d => _pendingKeys.has(d.key));
-        merged.call(drawImages);
-
-        // the add row/button always come last
-        drawAddRow(_wrap);
-        // (`select` would overwrite the children's data with the wrapper's)
-        _wrap.selectAll('.mly-add-row, .mly-add-image').raise();
-
+        _list.classed('empty', merged.empty());
         updateActiveTarget();
 
-        if (_focusSelector) {
-            const node = _wrap.node()?.querySelector<HTMLInputElement>(_focusSelector);
-            _focusSelector = null;
-            node?.focus();
+        if (_focusNew) {
+            _focusNew = false;
+            _list.node()?.querySelector<HTMLInputElement>('.mly-new-image .mly-image-input')?.focus();
         }
     }
 
 
     function mapillaryImages(selection: Selection<any, unknown, any, any>) {
-        const wrap = selection.selectAll<HTMLDivElement, number>('.form-field-input-mapillary-images')
+        _container = selection;
+
+        let wrap = selection.selectAll<HTMLDivElement, number>('.form-field-input-wrap')
             .data([0]);
-        const wrapEnter = wrap.enter()
+        wrap = wrap.enter()
             .append('div')
-            .attr('class', 'form-field-input-mapillary-images');
-        _wrap = wrapEnter.merge(wrap) as unknown as typeof _wrap;
+            .attr('class', 'form-field-input-wrap form-field-input-mapillary-images')
+            .merge(wrap);
+
+        let list = wrap.selectAll<HTMLUListElement, number>('ul.rows').data([0]);
+        list = list.enter()
+            .append('ul')
+            .attr('class', 'rows rows-table')
+            .merge(list);
+        _list = list as unknown as typeof _list;
+
         activeTargetEvents.on('change.mapillaryField', updateActiveTarget);
         render();
     }
@@ -284,8 +272,6 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
 
     mapillaryImages.tags = function(tags: TagsMulti) {
         _tags = tags;
-        // pending inputs whose key got its first image are real rows now
-        _pendingKeys = new Set([..._pendingKeys].filter(key => typeof tags[key] === 'string'));
         render();
         return mapillaryImages;
     };
@@ -294,7 +280,6 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
     mapillaryImages.entityIDs = function(val?: string[]) {
         if (val === undefined) return _entityIDs;
         if (val.join() !== _entityIDs.join()) {
-            _pendingKeys = new Set();
             _adding = false;
             _addKey = undefined;
         }
@@ -304,7 +289,7 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
 
 
     mapillaryImages.focus = function() {
-        _wrap.node()?.querySelector<HTMLInputElement>('.mly-image-input')?.focus();
+        _list.node()?.querySelector<HTMLInputElement>('.mly-image-input')?.focus();
     };
 
 
