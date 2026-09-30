@@ -6,6 +6,7 @@ import { utilDetect } from '../util/detect';
 import { utilExpandLocaleCode, utilStringQs } from '../util';
 import { utilArrayUniq } from '../util/array';
 import { presetsCdnUrl } from '../../config/id.js';
+import { applyAccessFieldTypes } from '../presets/access_field_type_strings.js';
 
 export type LanguagesJSON = {
     [localeCode: string]: {
@@ -299,7 +300,13 @@ export class coreLocalizer {
         return fileFetcher.get(key)
             .then(d => {
                 if (!this._localeStrings[scopeId]) this._localeStrings[scopeId] = {};
-                this._localeStrings[scopeId][locale] = d[locale];
+                const strings = d[locale];
+
+                if (scopeId === 'tagging' && locale === 'en') {
+                    applyAccessFieldTypes(strings);
+                }
+
+                this._localeStrings[scopeId][locale] = strings;
                 return locale;
             });
     };
