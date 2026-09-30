@@ -20,8 +20,11 @@ export type MapillaryKey = {
     number?: number;
 };
 
-const KEY_PATTERN = /^(source:)?(?:(cycleway|sidewalk)(?::(left|right|both))?:)?(traffic_sign(?::(forward|backward))?:)?mapillary(?::(forward|backward|\d+))?$/;
-/** `source:mapillary:forward` (source before a direction suffix) is covered by the pattern; these keys are not image ids */
+const KEY_PATTERN = /^(source:)?(?:(cycleway|sidewalk)(?::(left|right|both))?:)?(traffic_sign(?::(forward|backward))?:)?mapillary(?::(forward|backward|\d{1,3}))?$/;
+/**
+ * `source:mapillary:forward` (source before a direction suffix) is covered by the pattern; these keys are not image ids.
+ * Year suffixes (`mapillary:2019`, 20 in Germany) are not supported: numbered keys have at most 3 digits.
+ */
 const NOT_IMAGE_KEYS = new Set(['mapillary:map_feature']);
 
 

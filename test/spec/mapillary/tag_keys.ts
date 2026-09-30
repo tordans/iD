@@ -22,6 +22,7 @@ describe('mapillary/tag_keys', () => {
         expect(parseMapillaryKey('mapillary:2')).toMatchObject({ number: 2 });
         expect(parseMapillaryKey('mapillary:map_feature')).toBeUndefined();
         expect(parseMapillaryKey('was:mapillary')).toBeUndefined();
+        expect(parseMapillaryKey('mapillary:2019')).toBeUndefined();
     });
 
     it('splits and joins id lists', () => {
