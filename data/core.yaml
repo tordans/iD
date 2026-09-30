@@ -737,6 +737,16 @@ en:
     locating: "Locating, please wait..."
     location_unavailable: Your location is unavailable.
   inspector:
+    mapillary_images:
+      label: "Mapillary images"
+      image_id: "Image ID"
+      view_on_mapillary: "View this image on Mapillary"
+      show_in_viewer: "Show in viewer"
+      remove_image: "Remove this image"
+      add_to_key: "Add another image to this key"
+      add_image: "Add image"
+      choose_key: "Choose the tag for the image…"
+      panorama: "360°"
     traffic_sign_plan:
       header: "The traffic sign suggests these tags:"
       apply: Apply these tags
@@ -1170,6 +1180,9 @@ en:
     highlight_orgs_filter:
       title: "Highlight organizations"
       tooltip: "Mark images and sequences of these Mapillary organizations (comma separated organization names as in the Mapillary URL)"
+    auto_show:
+      title: "Show the way's Mapillary image when selecting it"
+      tooltip: "When you select a feature with a Mapillary image tag, turn on the Mapillary layer and show its image in the viewer"
     age_legend:
       outdated: "older than {date}"
       old: "oldest third"

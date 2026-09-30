@@ -12,6 +12,7 @@ export * from './restrictions';
 export * from './textarea';
 export * from './wikidata';
 export * from './wikipedia';
+export * from './mapillary_images';
 export * from './traffic_sign';
 
 import {
@@ -56,6 +57,7 @@ import { uiFieldRestrictions } from './restrictions';
 import { uiFieldTextarea } from './textarea';
 import { uiFieldWikidata } from './wikidata';
 import { uiFieldWikipedia } from './wikipedia';
+import { uiFieldMapillaryImages } from './mapillary_images';
 import { uiFieldTrafficSign } from './traffic_sign';
 
 export var uiFields = {
@@ -87,6 +89,7 @@ export var uiFields = {
     tel: uiFieldTel,
     text: uiFieldText,
     textarea: uiFieldTextarea,
+    mapillaryImages: uiFieldMapillaryImages,
     trafficSign: uiFieldTrafficSign,
     typeCombo: uiFieldTypeCombo,
     url: uiFieldUrl,

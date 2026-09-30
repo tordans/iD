@@ -64,6 +64,13 @@ function sideField(key: string, label: string, options: Record<string, string>, 
 }
 
 const FIELDS: Record<string, Field> = {
+    // replaces the schema's `mapillary` identifier field: all image keys, several images each (feature 19)
+    mapillary: {
+        key: 'mapillary',
+        type: 'mapillaryImages',
+        label: 'Mapillary Images',
+        universal: true
+    } as unknown as Field,
     dual_carriageway: {
         key: 'dual_carriageway',
         type: 'check',

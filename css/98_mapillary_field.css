@@ -1,0 +1,74 @@
+/* Mapillary images field (WORKDOC feature 19) */
+
+.form-field-input-mapillary-images {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mly-key-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.mly-key-label {
+    font-weight: bold;
+}
+.mly-key-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    opacity: .7;
+}
+
+.mly-image-list {
+    list-style: none;
+    margin: 2px 0 0;
+    padding: 0;
+}
+.mly-image + .mly-image {
+    margin-top: 4px;
+}
+.mly-image-main {
+    display: flex;
+    align-items: center;
+}
+.mly-image-main .mly-image-input {
+    flex: 1;
+    min-width: 0;
+}
+.mly-image-main .form-field-button {
+    flex: 0 0 auto;
+    height: 100%;
+}
+.mly-image-main .form-field-button.disabled,
+.mly-image-main .form-field-button:disabled {
+    opacity: .4;
+    pointer-events: none;
+}
+.mly-image-info {
+    min-height: 1em;
+    padding: 1px 2px 0;
+    font-size: 11px;
+    opacity: .75;
+}
+
+.mly-add-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.mly-add-row .mly-add-key {
+    flex: 0 1 45%;
+    min-width: 0;
+}
+.mly-add-row .mly-add-input {
+    flex: 1;
+    min-width: 0;
+}
+.mly-add-image {
+    align-self: flex-start;
+}

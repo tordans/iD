@@ -2,6 +2,7 @@ import type { Field, Geometry } from '@openstreetmap/id-tagging-schema';
 import { localizer, t, type ReplacementsSimple, type LocalizedTextRenderer } from '../core/localizer';
 import { utilSafeClassName } from '../util/util';
 import { LANGUAGE_SUFFIX_REGEX } from '../ui/fields';
+import { isMapillaryKey } from '../mapillary/tag_keys';
 
 export interface presetField extends Omit<Field, 'label' | 'terms' | 'placeholder'> {
   id: string;
@@ -66,6 +67,11 @@ export function presetField(fieldID: string, field: Field) {
   // Radnetz Berlin: fields from a preset customization have an untranslated `label`
   _this.title = () => _this.t('label', { 'default': field.label ?? fieldID });
   _this.label = () => _this.t.append('label', { 'default': field.label ?? fieldID });
+  if ((field.type as string) === 'mapillaryImages') {
+    // replaces the schema's `mapillary` field, whose translated label would win
+    _this.title = () => t('inspector.mapillary_images.label');
+    _this.label = () => t.append('inspector.mapillary_images.label');
+  }
 
   _this.placeholder = () => _this.t('placeholder', { 'default': '' });
 
@@ -100,6 +106,10 @@ export function presetField(fieldID: string, field: Field) {
         Object.keys(tags)
             .filter(k => k.startsWith(prefix))
             .forEach(key => allKeys.add(key));
+    }
+    if (field.type === ('mapillaryImages' as typeof field.type) && tags) {
+        // the image keys of the feature vary (road sides, signs, directions)
+        Object.keys(tags).filter(isMapillaryKey).forEach(key => allKeys.add(key));
     }
     return [...allKeys];
   };
