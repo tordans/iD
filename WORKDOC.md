@@ -714,7 +714,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - Open: eyeball check of the caret menu styling in a visible window.
 
 
-### 21. Measuring tape ("Maßband") for width fields — 📝 (spec)
+### 21. Measuring tape ("Maßband") for width fields — ✅ (v1)
 
 **Goal.** Measure a width on the aerial image directly from the width field, instead of guessing or using a separate tool. The measured value goes into the field with 5 cm precision.
 
@@ -748,6 +748,13 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - Button: added by event delegation / a small hook where iD renders fields, like the width indicator (feature 10).
 - The width indicator checks the tape and hides itself while it is active.
 - CSS `css/98_measure_tape.css`. Tests for the pure parts.
+
+**Status (v1, built by a Sonnet agent, reviewed):**
+- Code as planned, plus `modules/measure/measure_tape_listeners.ts` (a MutationObserver on the sidebar adds the button to width inputs and raw tag rows, also when a row's key is edited). CSS is `css/99_measure_tape.css`; icon `fas-pen-ruler` (already in the sprite).
+- Measurable keys: `width`, `est_width`, `width:effective`, `*:width`, `buffer:*`; not `maxwidth`, not `*:source`. Needs exactly one selected way.
+- Hooks in upstream files: `svg/layers.ts` (layer `measure-tape`), `svg/width_indicator.ts` (hidden while measuring), `ui/init.js` (listeners).
+- Dragging the whole tape writes nothing (length unchanged); Esc is caught before it deselects the way.
+- Tested with a created test way (pane hidden). Open: the loupe's look and touch input, both untested; check in a visible window.
 
 ## Integration order (proposal)
 
