@@ -1,3 +1,4 @@
+import tildaLabelsDe from '../../data/tilda_labels.de.json' with { type: 'json' };
 import { localizer, t } from '../core/localizer';
 
 /**
@@ -33,38 +34,11 @@ export const CATEGORY_GROUPS: { id: string; categories: string[] }[] = [
 
 
 /**
- * German category names as TILDA shows them
- * (tilda-geo `topic-docs/roads_bikelanes/bikelanes.yaml`, attribute `category`).
+ * German labels as TILDA shows them, generated from tilda-geo's processed topic docs
+ * (`npm run update:tilda-labels`). Keys like `category=cycleway_adjoining`.
  * Our UI strings exist only in English (`data/core.yaml`), so German users get these instead.
  */
-const CATEGORY_LABELS_DE: Record<string, string> = {
-    bicycleRoad: 'Fahrradstraße',
-    bicycleRoad_vehicleDestination: 'Fahrradstraße mit Anlieger/Kfz frei',
-    crossing: 'Straßenquerung',
-    cycleway_adjoining: 'Radweg (straßenbegleitend)',
-    cycleway_adjoiningOrIsolated: 'Radweg (straßenbegleitend oder selbstständig geführt; Kategorisierung unklar)',
-    cycleway_isolated: 'Radweg, selbstständig geführt',
-    cyclewayLink: 'Radweg-Verbindungsstück',
-    cyclewayOnHighway_advisory: 'Schutzstreifen',
-    cyclewayOnHighway_advisoryOrExclusive: 'Radfahrstreifen oder Schutzstreifen (Kategorisierung unklar)',
-    cyclewayOnHighway_exclusive: 'Radfahrstreifen',
-    cyclewayOnHighwayBetweenLanes: 'Radfahrstreifen in Mittellage (Fahrradweiche)',
-    cyclewayOnHighwayProtected: 'Geschützter Radfahrstreifen (PBL)',
-    footAndCyclewaySegregated_adjoining: 'Getrennter Rad- und Gehweg, straßenbegleitend',
-    footAndCyclewaySegregated_adjoiningOrIsolated: 'Getrennter Rad- und Gehweg (straßenbegleitend oder selbstständig geführt; Kategorisierung unklar)',
-    footAndCyclewaySegregated_isolated: 'Getrennter Rad- und Gehweg, selbstständig geführt',
-    footAndCyclewayShared_adjoining: 'Gemeinsamer Geh- und Radweg, straßenbegleitend',
-    footAndCyclewayShared_adjoiningOrIsolated: 'Gemeinsamer Geh- und Radweg (straßenbegleitend oder selbstständig geführt; Kategorisierung unklar)',
-    footAndCyclewayShared_isolated: 'Gemeinsamer Geh- und Radweg, selbstständig geführt',
-    footwayBicycleYes_adjoining: 'Gehweg mit Radfahrer frei, straßenbegleitend',
-    footwayBicycleYes_adjoiningOrIsolated: 'Gehweg mit Radfahrer frei (straßenbegleitend oder selbstständig geführt; Kategorisierung unklar)',
-    footwayBicycleYes_isolated: 'Gehweg mit Radfahrer frei, selbstständig geführt',
-    pedestrianAreaBicycleYes: 'Fußgängerzone, Fahrrad frei',
-    sharedBusLaneBikeWithBus: 'Radfahrstreifen mit Freigabe Busverkehr',
-    sharedBusLaneBusWithBike: 'Bussonderfahrstreifen mit Fahrrad frei',
-    sharedMotorVehicleLane: 'Anteilig genutzter Fahrstreifen (Sharrows)',
-    needsClarification: 'Führungsform unklar'
-};
+const LABELS_DE: Record<string, string> = tildaLabelsDe;
 
 const GROUP_LABELS_DE: Record<string, string> = {
     track: 'Radwege',
@@ -84,7 +58,8 @@ function isGerman() {
 
 export function categoryLabel(category: string | undefined) {
     if (!category) return t('inspector.tilda.no_category');
-    if (isGerman() && CATEGORY_LABELS_DE[category]) return CATEGORY_LABELS_DE[category];
+    const german = LABELS_DE[`category=${category}`];
+    if (isGerman() && german) return german;
     return t(`inspector.tilda.category.${category}`, { default: category });
 }
 
