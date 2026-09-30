@@ -46,6 +46,21 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - The worktree has **uncommitted changes** (`data/core.yaml`, `data/traffic_sign_field_locales.yaml`, `package.json`, `scripts/server.js`, …). Review them before taking the branch over.
 - Decision (2026-09-27): use this branch. The old `traffic-signs` branch (2025-02) was an early prototype (combo field with 3rd-party icons, openstreetmap/iD#10254) and is superseded.
 - Expect a UI rework after integration.
+- **Review (2026-09-30):**
+  - The field only edits the sign value (plus a link to the external tool). It did not suggest the tags a sign implies.
+  - Fixed: side keys (`cycleway:right:traffic_sign`) showed the raw key as label.
+  - Fixed: presets that list `traffic_sign` (our road/path presets, feature 15) showed the field twice.
+- **Tag suggestions (2026-09-30).** Below each traffic sign field, the same tag-plan UI as the TILDA section (`modules/ui/tag_plan.ts`, `css/95_tag_plan.css`) lists what the changed sign implies, with one "Apply these tags" button (one undo step). The TILDA section then shows the category for the new tags, so the flow is: change the sign → apply the suggested tags → TILDA recomputes.
+  - Source of the rules: the traffic sign converter's `signsToTags` (each sign's `tagRecommendationsByGeometry`, geometry `way`). It comes from a lazy bundle `dist/traffic-sign-converter/recommender.js` (~160 KB), built from the vendored converter files by `npm run dist:traffic-sign-recommender` (`scripts/traffic_sign_recommender_entry.js`). `opening_hours` is replaced by a shim, since it is only used to prettify conditional time ranges and is ~750 KB. The slim `id-field-browser.js` has no `signsToTags`; the source repo's build setup has uncommitted WIP, so the bundle is built here.
+  - Logic in `modules/traffic_sign/sign_tag_plan.ts` (tests in `test/spec/traffic_sign/`):
+    - Add or change the implied tags.
+    - `highway` changes only on separate paths (e.g. 237 → 240 turns `highway=cycleway` into `path`).
+    - Roads ignore signs whose `highway` list does not include them (e.g. 245 on a primary).
+    - Normalize the value (`DE:241` → `DE:241-30`).
+    - Remove tags the previous sign implied, or restore their downloaded value.
+    - The previous sign is the value before the change while the way stays selected, else the downloaded one. Unchanged signs show nothing, so existing data is not nagged.
+  - Road sides (`cycleway:<side>:traffic_sign`, `sidewalk:<side>:traffic_sign`) get only `bicycle`, `foot` and `segregated`, as side keys.
+  - Open: directional keys (`traffic_sign:forward/backward`) get no suggestions yet. Conditional values are not prettified (shim). The same plan could later feed a validation for existing inconsistent data (feature 9).
 
 ### 3. Favorites and shortcuts — ✅
 
@@ -655,6 +670,7 @@ For "Geh- und Radweg" mapped as two side tags:
 
 ## Progress log
 
+- 2026-09-30: Traffic sign review; tag suggestions below the traffic sign field, in the same UI as the TILDA tag plan (feature 2).
 - 2026-09-30: Bundled lens "Radnetz QA" (feature 5): ways colored by how complete their TILDA checklist is.
 - 2026-09-29: Way table docked at the bottom, flies to the selected way.
 - 2026-09-29: Data index infraVelo ⇐ TILDA ⇐ OSM (feature 16). TILDA checklist per category with keys, values and TILDA's reading (feature 8 v2). Preset customization v1: Radnetz fields, bicycle road and cycleway link presets, shorter field lists (feature 15).
