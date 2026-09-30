@@ -758,6 +758,17 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - Magnifier: crosshair with a gap and a dot on the measured point, the tape drawn in the lens; placed away from the tape, beside it or diagonal (farther out near map edges), always inside the map (`modules/measure/loupe_position.ts`, tested). Handles use a crosshair cursor.
 - Open: touch input untested.
 
+### 22. Access field: all tagged access keys, add a mode of transport — ✅ (merged)
+
+- Source: branch `show-tagged-access-tags` on origin (tordans/iD), the branch of PR openstreetmap/iD#12011. Merged as a merge commit, so later updates of the branch can be merged again.
+- The "Allowed Access" field shows the default rows (All, Foot, Horses, Bicycles, Motor Vehicles) plus every tagged access key, in OSM wiki order (`modules/ui/fields/access_keys.ts`, land-based keys only; waterways use `access_simple`).
+- A "+" in the field label adds a row with a key combobox ("Add a new mode of transport"); choosing a key opens the value combobox (`uiCombobox.open`).
+- Remove/revert use the shown keys: the field sets `field.effectiveKeys`, and `uiField.allKeys` prefers them.
+- Temporary English labels for the extra keys (`data/access_field_types.en.json`) are merged into the tagging locale until id-tagging-schema ships them (`modules/presets/access_field_type_strings.js`, hooked into the localizer).
+- Merge fixes (only in this branch, not on the PR branch): the localizer hook moved to `localizer.ts` (upstream migrated it), `uiField.allKeys(tags)` keeps our argument, and the new access specs use `d3_select` instead of the removed `d3` global. **The PR branch itself needs the same spec fix when it is rebased on current develop.**
+- Same "+ in the field label" pattern as the Mapillary images field (feature 19).
+- Tested: a road with `bicycle=designated`, `motorcar=destination`, `hgv=no` shows Cars and Heavy goods vehicle as extra rows.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -773,6 +784,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 11. Live touched (T10 test with two accounts)
 12. Read-only feature categories
 13. Hide toolbar button labels
+14. Access field (PR #12011 branch, merged as is)
 
 ## Coding conventions (this branch)
 
@@ -808,6 +820,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 
 ## Progress log
 
+- 2026-09-30: Mapillary features 18–20 and the measuring tape (21) built with Sonnet agents and reviewed; Mapillary field redesigned as a directional-combo table; magnifier fixed (crosshair, placement). Netlify now gets the project setup (`dist/index.html`). Merged the access field branch (feature 22).
 - 2026-09-30: Extract a road side into a separate way (feature 17). TILDA target select also for ways TILDA does not process (feature 8).
 - 2026-09-30: Traffic sign review; tag suggestions below the traffic sign field, in the same UI as the TILDA tag plan (feature 2).
 - 2026-09-30: Bundled lens "Radnetz QA" (feature 5): ways colored by how complete their TILDA checklist is.
