@@ -694,7 +694,8 @@ Code: `modules/mapillary/tag_keys.ts` (parse keys and values, labels, preferred 
 - The customization replaces the `mapillary` field with `universal: true` instead of adding it to each preset's `moreFields`: every preset offers it, and it shows once any image key is tagged. `presets/field.ts`: `allKeys` includes all image keys of the tags (present/modified/revert), and the field's own label wins over the schema's translated "Mapillary Image ID".
 - Pasting a Mapillary URL (`pKey=`) stores the id. Removing the last image of a key removes the tag.
 - Auto-show: `context.on('enter')` hook (`initMapillaryAutoShow` in `ui/init.js`), pref `mapillary-auto-show-selected`, checkbox shown while the Mapillary layer is on.
-- Not supported: multi-selection. The "+" of a key is disabled while it has an empty input.
+- Layout (after review): one table row per image like the directional combo — label cell = key label + small age and image type (360° / flat, no username), value cell = id (cut off) + link + eye + trash. The "+" sits in the field label before the trash and adds a row with a key chooser.
+- Not supported: multi-selection.
 
 ### 20. "Set photo from viewer" for all image keys — ✅ (v1)
 
