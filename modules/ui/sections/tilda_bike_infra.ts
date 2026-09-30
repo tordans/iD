@@ -143,7 +143,17 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     }
 
 
+    /** Keys whose value differs from the downloaded data: a width tagged now needs its source */
+    function editedKeys() {
+        if (_entityIDs.length !== 1) return new Set<string>();
+        const base = context.history().base().hasEntity(_entityIDs[0] as Parameters<iD.Graph['hasEntity']>[0]);
+        const baseTags: Tags = base?.tags ?? {};
+        return new Set(Object.keys(_tags).filter(key => _tags[key] !== baseTags[key]));
+    }
+
+
     function cards(): SideCard[] {
+        const edited = editedKeys();
         const results = processBikelanes(_tags);
         // no result for the way itself (e.g. a sidewalk without bike access): still offer
         // a card with the target select, to see what would make it bike infrastructure
@@ -167,8 +177,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 gaps: gaps.find(gap => gap._side === side)?.missing ?? [],
                 target,
                 plan,
-                attributes: requiredAttributes(result, _tags, target !== result.category ? target : undefined),
-                roadAttributes: side === 'self' && !selfIsInfrastructure ? roadAttributes(_tags) : [],
+                attributes: requiredAttributes(result, _tags, target !== result.category ? target : undefined, edited),
+                roadAttributes: side === 'self' && !selfIsInfrastructure ? roadAttributes(_tags, edited) : [],
                 collapsible,
                 collapsed: collapsible && !(_selfExpanded ?? !!target)
             };

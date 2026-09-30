@@ -18,6 +18,17 @@ export type MeasureTapeState = {
 
 
 /**
+ * Where a length measured on the map comes from, like the Radinfra mappers write it: `Luftbild 2026`
+ * (the year of the aerial imagery in the background, if its id or name has one).
+ */
+export function measuredSource(context: iD.Context) {
+    const source = context.background().baseLayerSource() as { id?: string; name?: () => string } | undefined;
+    const year = `${source?.id ?? ''} ${source?.name?.() ?? ''}`.match(/\b(19|20)\d{2}\b/)?.[0];
+    return year ? `Luftbild ${year}` : 'Luftbild';
+}
+
+
+/**
  * Holds the tape that the map draws.
  *
  * Events:
@@ -54,8 +65,8 @@ function createMeasureTape() {
         value: () => _state ? formatTapeValue(tapeLength(_state.ends)) : undefined,
 
         /**
-         * Writes the measured length to the tag: one undo step.
-         * Nothing happens when the tag already has this value.
+         * Writes the measured length to the tag, and where it comes from to `source:<key>`
+         * (`source:cycleway:right:width`): one undo step. Nothing happens when the tag already has this value.
          */
         commit(context: iD.Context) {
             if (!_state) return measureTape;
@@ -63,7 +74,7 @@ function createMeasureTape() {
             const value = measureTape.value();
             if (!entity || !value || entity.tags[_state.key] === value) return measureTape;
 
-            const tags = { ...entity.tags, [_state.key]: value };
+            const tags = { ...entity.tags, [_state.key]: value, [`source:${_state.key}`]: measuredSource(context) };
             context.perform(actionChangeTags(entity.id, tags), t('inspector.measure_tape.annotation'));
             return measureTape;
         },

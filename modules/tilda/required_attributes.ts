@@ -62,6 +62,8 @@ type RuleContext = {
     category: string;
     /** `category` is a target the mapper chose, not what TILDA reads now */
     isTarget: boolean;
+    /** keys changed in this editing session (tagged now, compared to the downloaded data) */
+    edited: ReadonlySet<string>;
     /** tagged value for an own-way key on this side */
     value: (key: string) => string | undefined;
 };
@@ -81,6 +83,11 @@ type Rule = {
     guesses?: readonly string[];
     /** the value assumed when the tag is missing, if that default is reliable (state `assumed`) */
     assumed?: (ctx: RuleContext) => string | undefined;
+    /**
+     * The rule is the source of another key: `source:<key for this side>`, e.g. `source:cycleway:right:width`
+     * (Radinfra FAQ decision: `source:` in front, not `cycleway:right:source:width`)
+     */
+    sourceFor?: string;
     /** the tag TILDA derives the value from when the key is missing (state `inherited`, with that tag) */
     derivedFrom?: (ctx: RuleContext) => { tag: string; tilda: string } | undefined;
     when?: (ctx: RuleContext) => boolean;
@@ -94,6 +101,8 @@ const SURFACE_OPTIONS = [
     'compacted', 'fine_gravel', 'gravel', 'pebblestone', 'ground', 'grass', 'sand', 'unpaved', 'paved',
     'wood', 'metal', 'grass_paver'
 ];
+/** mosaic, small, large (Kopfsteinpflaster) as in the Radinfra FAQ */
+const SETT_LENGTH_OPTIONS = ['0.05', '0.1', '0.15'];
 const SURFACE_COLOUR_OPTIONS = ['no', 'red', 'green', 'red;green'];
 const SEPARATION_OPTIONS = [
     'no', 'bollard', 'flex_post', 'vertical_panel', 'studs', 'bump', 'kerb', 'planter', 'fence',
@@ -103,8 +112,15 @@ const MARKING_OPTIONS = ['no', 'solid_line', 'dashed_line', 'double_solid_line',
 const TRAFFIC_MODE_OPTIONS = ['no', 'motor_vehicle', 'parking', 'psv', 'bicycle', 'foot'];
 const BUFFER_OPTIONS = ['no', '0.25', '0.5', '0.75', '1'];
 
-/** Traffic signs that set the infraVelo type (`fuehr`) or mandatory use (`pflicht`) */
+/** Signs about damaged paths; mapped as `traffic_sign` too (Radinfra FAQ), wherever they are on the way */
+const DAMAGE_SIGNS = ['Radwegschäden', 'Gehwegschäden', 'Geh- und Radwegschäden'];
+
+/** Traffic signs that set the infraVelo type (`fuehr`) or mandatory use (`pflicht`), then the damage signs */
 function trafficSignOptions(ctx: RuleContext): string[] {
+    return [...categoryTrafficSigns(ctx), ...DAMAGE_SIGNS];
+}
+
+function categoryTrafficSigns(ctx: RuleContext): string[] {
     const category = ctx.category;
     if (category.startsWith('bicycleRoad')) return ['DE:244.1', 'DE:244.1,1020-30'];
     if (category.startsWith('footAndCyclewayShared')) return ['DE:240', 'none'];
@@ -179,13 +195,24 @@ function assumedOneway(ctx: RuleContext) {
 }
 
 
+/** The width was tagged in this session: then say where the value comes from (not for existing widths) */
+function widthEdited(ctx: RuleContext) {
+    return lookupKeys('width', ctx.side, ctx.prefix).some(key => ctx.tags[key] !== undefined && ctx.edited.has(key));
+}
+
+const SOURCE_WIDTH: Rule = {
+    id: 'source_width', key: 'source:width', sourceFor: 'width', feeds: ['breite'],
+    options: ['Luftbild 2026', 'Luftbild 2025', 'Messung aus Punktwolke (Infra3DViewer)', 'survey'], when: widthEdited
+};
+
 const COMMON: Rule[] = [
     { id: 'traffic_sign', key: 'traffic_sign', feeds: ['pflicht', 'fuehr', 'nutz_beschr'], options: trafficSignOptions, tilda: field('traffic_sign') },
-    { id: 'width', key: 'width', feeds: ['breite'], options: [], tilda: field('width') },
-    { id: 'source_width', key: 'source:width', feeds: ['breite'], options: ['survey', 'measured', 'estimate', 'aerial imagery'], optional: true,
-        when: ctx => ctx.value('width') !== undefined },
+    { id: 'width', key: 'width', feeds: ['breite'], options: [], tilda: field('width'),
+        // shared bus lanes: the lane width is only a side benefit (Radinfra FAQ)
+        optional: ctx => ctx.category.startsWith('sharedBusLane') },
+    SOURCE_WIDTH,
     { id: 'surface', key: 'surface', feeds: ['ofm'], options: SURFACE_OPTIONS, tilda: field('surface') },
-    { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: ['0.05', '0.1', '0.16'],
+    { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: SETT_LENGTH_OPTIONS,
         when: ctx => ctx.value('surface') === 'sett' },
     { id: 'surface_colour', key: 'surface:colour', feeds: ['farbe'], options: SURFACE_COLOUR_OPTIONS, strict: true, tilda: field('surface_color'), optional: true,
         assumed: () => 'no' },
@@ -209,32 +236,41 @@ const LANE: Rule[] = [
         when: ctx => ctx.category.startsWith('cyclewayOnHighway_') }
 ];
 
-/** Parking next to the lane: needs a buffer (`trennstreifen`); TILDA infers parking from `parking:<side>` */
+/**
+ * Parking next to the lane: the buffer to it (`trennstreifen`); TILDA infers parking from `parking:<side>`.
+ * The lines are set by law, so no marking; no buffer is left untagged (Radinfra FAQ), so a missing one is `no`.
+ */
 const NEXT_TO_PARKING: Rule[] = [
     // without parking TILDA has "entfällt"; so only needed where parking is not tagged on the road
     { id: 'traffic_mode_right', key: 'traffic_mode:right', feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field('traffic_mode_right'), optional: true,
         // TILDA reads the road's parking on the lane's side
         derivedFrom: trafficModeFromParking(ctx => ctx.side), assumed: () => 'no' },
-    { id: 'buffer_right', key: 'buffer:right', feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field('buffer_right'), when: parkingOn('right') },
-    { id: 'marking_right', key: 'marking:right', feeds: ['trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field('marking_right'), when: parkingOn('right') }
+    { id: 'buffer_right', key: 'buffer:right', feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field('buffer_right'), when: parkingOn('right'),
+        assumed: () => 'no' }
 ];
 
 const PROTECTION: Rule[] = (['left', 'right'] as const).flatMap(side => [
     { id: `separation_${side}`, key: `separation:${side}`, feeds: ['protek'], options: SEPARATION_OPTIONS, strict: true, tilda: field(`separation_${side}`) },
     { id: `marking_${side}`, key: `marking:${side}`, feeds: ['protek', 'trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field(`marking_${side}`) },
     { id: `buffer_${side}`, key: `buffer:${side}`, feeds: ['protek', 'trennstreifen'], options: BUFFER_OPTIONS, tilda: field(`buffer_${side}`) },
-    { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['protek', 'trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`) }
+    // only parking or foot next to it matter (Radinfra FAQ); TILDA reads parking on the outer side from `parking:*`
+    { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['protek', 'trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`),
+        derivedFrom: side === 'right' ? trafficModeFromParking(ctx => ctx.side) : undefined, assumed: () => 'no' }
 ] as Rule[]);
 
-/** Bicycle roads need a buffer to parking on both sides */
+/** Bicycle roads: the white marking on both sides; with a line, the buffer to it (Radinfra FAQ) */
+function lineMarking(side: 'left' | 'right') {
+    return (ctx: RuleContext) => ['solid_line', 'dashed_line', 'double_solid_line'].includes(ctx.value(`marking:${side}`) ?? '');
+}
+
 const BICYCLE_ROAD: Rule[] = [
     { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
         when: ctx => ctx.value('oneway') === 'yes' },
     ...(['left', 'right'] as const).flatMap(side => [
         { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`), optional: true,
             derivedFrom: trafficModeFromParking(() => side), assumed: () => 'no' },
-        { id: `buffer_${side}`, key: `buffer:${side}`, feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field(`buffer_${side}`), when: parkingOn(side) },
-        { id: `marking_${side}`, key: `marking:${side}`, feeds: ['trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field(`marking_${side}`), when: parkingOn(side) }
+        { id: `marking_${side}`, key: `marking:${side}`, feeds: ['trennstreifen'], options: MARKING_OPTIONS, strict: true, tilda: field(`marking_${side}`) },
+        { id: `buffer_${side}`, key: `buffer:${side}`, feeds: ['trennstreifen'], options: BUFFER_OPTIONS, tilda: field(`buffer_${side}`), when: lineMarking(side) }
     ] as Rule[])
 ];
 
@@ -280,11 +316,15 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
     return rules
         .filter(rule => !rule.when || rule.when(ctx))
         .map(rule => {
-            const value = rule.alsoKeys ? summary(ctx, [rule.key, ...rule.alsoKeys]) : ctx.value(rule.key);
             const ownKeys = [rule.key, ...(rule.alsoKeys ?? [])];
-            const lookup = [...new Set(ownKeys.flatMap(key => lookupKeys(key, ctx.side, ctx.prefix)))];
+            const keysFor = (key: string) => rule.sourceFor
+                ? lookupKeys(rule.sourceFor, ctx.side, ctx.prefix).map(k => `source:${k}`)
+                : lookupKeys(key, ctx.side, ctx.prefix);
+            const value = rule.alsoKeys ? summary(ctx, [rule.key, ...rule.alsoKeys])
+                : keysFor(rule.key).map(k => ctx.tags[k]).find(v => v !== undefined);
+            const lookup = [...new Set(ownKeys.flatMap(keysFor))];
             const tagged = ownKeys
-                .map(key => lookupKeys(key, ctx.side, ctx.prefix).find(k => ctx.tags[k] !== undefined))
+                .map(key => keysFor(key).find(k => ctx.tags[k] !== undefined))
                 .filter((key, i, keys): key is string => !!key && keys.indexOf(key) === i)
                 .map(key => ({ key, value: ctx.tags[key] }));
             const derived = value === undefined ? rule.derivedFrom?.(ctx) : undefined;
@@ -310,7 +350,7 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
 
             return {
                 id: rule.id,
-                key: writeKeyForSide(rule.key, ctx.side, ctx.prefix),
+                key: rule.sourceFor ? `source:${writeKeyForSide(rule.sourceFor, ctx.side, ctx.prefix)}` : writeKeyForSide(rule.key, ctx.side, ctx.prefix),
                 value,
                 tagged,
                 lookup,
@@ -326,9 +366,9 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
 
 
 function contextFor(tags: Tags, result: BikelaneResult | undefined, side: Side, prefix: string | null, category: string,
-    isTarget = false): RuleContext {
+    isTarget: boolean, edited: ReadonlySet<string>): RuleContext {
     return {
-        tags, result, side, prefix, category, isTarget,
+        tags, result, side, prefix, category, isTarget, edited,
         value: key => lookupKeys(key, side, prefix).map(k => tags[k]).find(v => v !== undefined)
     };
 }
@@ -338,12 +378,13 @@ function contextFor(tags: Tags, result: BikelaneResult | undefined, side: Side, 
  * Required attributes for one TILDA result (one side of the way).
  * With a `targetCategory`, the list is for that category (the mapper is changing the way to it).
  */
-export function requiredAttributes(result: BikelaneResult, tags: Tags, targetCategory?: string): RequiredAttribute[] {
+export function requiredAttributes(result: BikelaneResult, tags: Tags, targetCategory?: string,
+    edited: ReadonlySet<string> = new Set()): RequiredAttribute[] {
     const category = targetCategory ?? result.category;
     if (!targetCategory && !result._infrastructureExists) return [];
     if (category === 'cyclewayLink' || category === 'data_no' || category === 'separate_geometry' || category === 'not_expected') return [];
 
-    const ctx = contextFor(tags, result, result._side, result._prefix, category, category !== result.category);
+    const ctx = contextFor(tags, result, result._side, result._prefix, category, category !== result.category, edited);
     return evaluate(rulesForCategory(category), ctx);
 }
 
@@ -359,14 +400,15 @@ const ROAD: Rule[] = [
     // a road without `oneway` is two-way (infraVelo drops `oneway=no` anyway)
     { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], assumed: () => 'no' },
     { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
-        when: ctx => ctx.value('oneway') === 'yes',
-        optional: ctx => ctx.value('dual_carriageway') === 'yes' },
+        // explicit on every one-way road (Radinfra FAQ)
+        when: ctx => ctx.value('oneway') === 'yes' },
     { id: 'dual_carriageway', key: 'dual_carriageway', feeds: ['verkehrsri'], options: ['yes', 'no'], strict: true, optional: true,
         assumed: () => 'no',
         when: ctx => ctx.value('oneway') === 'yes' },
     { id: 'width', key: 'width', feeds: ['breite'], options: [] },
+    SOURCE_WIDTH,
     { id: 'surface', key: 'surface', feeds: ['ofm'], options: SURFACE_OPTIONS },
-    { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: ['0.05', '0.1', '0.16'],
+    { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: SETT_LENGTH_OPTIONS,
         when: ctx => ctx.value('surface') === 'sett' },
     { id: 'cycleway', key: 'cycleway:both', feeds: ['fuehr'], options: ['no', 'separate', 'lane', 'track'],
         // any of `cycleway`, `cycleway:both`, `cycleway:left`, `cycleway:right` says what is on the sides
@@ -377,7 +419,7 @@ const ROAD: Rule[] = [
  * Attributes for the road itself (TILDA `roads` export → infraVelo "Mischverkehr").
  * Only for roads; bicycle roads get their checklist from their bike infrastructure card.
  */
-export function roadAttributes(tags: Tags): RequiredAttribute[] {
+export function roadAttributes(tags: Tags, edited: ReadonlySet<string> = new Set()): RequiredAttribute[] {
     if (!isRoad(tags)) return [];
-    return evaluate(ROAD, contextFor(tags, undefined, 'self', null, 'road'));
+    return evaluate(ROAD, contextFor(tags, undefined, 'self', null, 'road', false, edited));
 }

@@ -97,8 +97,8 @@ const FIELDS: Record<string, Field> = {
         type: 'radio',
         label: 'Sett Stone Size',
         geometry: ['line', 'area'],
-        options: ['0.05', '0.1', '0.16'],
-        strings: { options: { '0.05': 'Mosaic sett, 5 cm', '0.1': 'Small sett, 10 cm', '0.16': 'Large sett, 16 cm' } },
+        options: ['0.05', '0.1', '0.15'],
+        strings: { options: { '0.05': 'Mosaic sett, 5 cm', '0.1': 'Small sett, 10 cm', '0.15': 'Large sett (cobblestone), 15 cm' } },
         prerequisiteTag: { key: 'surface', value: 'sett' }
     } as Field,
     'width/effective': {
@@ -113,7 +113,8 @@ const FIELDS: Record<string, Field> = {
         type: 'combo',
         label: 'Width Source',
         geometry: ['line'],
-        options: ['survey', 'measured', 'estimate', 'aerial imagery'],
+        // the values the Radinfra mappers use (FAQ); the measuring tape writes `Luftbild <year>` itself
+        options: ['Luftbild 2026', 'Luftbild 2025', 'Messung aus Punktwolke (Infra3DViewer)', 'survey'],
         prerequisiteTag: { key: 'width' }
     } as Field,
     separation: sideField('separation', 'Separation', SEPARATION_OPTIONS),

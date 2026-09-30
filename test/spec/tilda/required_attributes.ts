@@ -100,6 +100,36 @@ describe('roadAttributes', () => {
         expect(derived.traffic_mode_right.source).toBe('parking:both=no');
     });
 
+    it('Radinfra FAQ: lanes need no marking, a missing buffer is no buffer', () => {
+        const tags = { highway: 'secondary', 'parking:right': 'lane', 'cycleway:right': 'lane', 'cycleway:right:lane': 'advisory' };
+        const attributes = byId(requiredAttributes(resultFor(tags, 'right'), tags));
+        expect(attributes.marking_right).toBeUndefined();
+        expect(attributes.buffer_right.state).toBe('assumed');
+    });
+
+    it('Radinfra FAQ: the width source is asked only for a width tagged now, as source:cycleway:<side>:width', () => {
+        const tags = { highway: 'secondary', 'cycleway:right': 'lane', 'cycleway:right:lane': 'advisory', 'cycleway:right:width': '1.5' };
+        expect(byId(requiredAttributes(resultFor(tags, 'right'), tags)).source_width).toBeUndefined();
+
+        const attributes = byId(requiredAttributes(resultFor(tags, 'right'), tags, undefined, new Set(['cycleway:right:width'])));
+        expect(attributes.source_width.key).toBe('source:cycleway:right:width');
+        expect(attributes.source_width.state).toBe('missing');
+        expect(attributes.source_width.optional).toBe(false);
+
+        const withSource = { ...tags, 'source:cycleway:right:width': 'Luftbild 2026' };
+        expect(byId(requiredAttributes(resultFor(withSource, 'right'), withSource, undefined, new Set(['cycleway:right:width']))).source_width.state).toBe('ok');
+    });
+
+    it('Radinfra FAQ: bicycle roads always need the marking, the buffer only with a line', () => {
+        const tags = { highway: 'residential', bicycle_road: 'yes', traffic_sign: 'DE:244.1' };
+        const attributes = byId(requiredAttributes(resultFor(tags, 'self'), tags));
+        expect(attributes.marking_left.state).toBe('missing');
+        expect(attributes.buffer_left).toBeUndefined();
+
+        const dashed = { ...tags, 'marking:both': 'dashed_line' };
+        expect(byId(requiredAttributes(resultFor(dashed, 'self'), dashed)).buffer_left.state).toBe('missing');
+    });
+
     it('road without oneway: two-way is assumed, not asked for', () => {
         const attributes = byId(roadAttributes({ highway: 'residential' }));
         expect(attributes.oneway.state).toBe('assumed');
