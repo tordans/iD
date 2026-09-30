@@ -826,7 +826,7 @@ function g(e) {
 function _(e) {
 	typeof e != "function" && (e = g(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = Array(o), c, l, u = 0; u < o; ++u) (c = a[u]) && (l = e.call(c, c.__data__, u, a)) && ("__data__" in c && (l.__data__ = c.__data__), s[u] = l);
-	return new U(r, this._parents);
+	return new H(r, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/array.js
@@ -853,7 +853,7 @@ function x(e) {
 function S(e) {
 	e = typeof e == "function" ? x(e) : b(e);
 	for (var t = this._groups, n = t.length, r = [], i = [], a = 0; a < n; ++a) for (var o = t[a], s = o.length, c, l = 0; l < s; ++l) (c = o[l]) && (r.push(e.call(c, c.__data__, l, o)), i.push(c));
-	return new U(r, i);
+	return new H(r, i);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/matcher.js
@@ -900,7 +900,7 @@ function ee(e) {
 function te(e) {
 	typeof e != "function" && (e = C(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = [], c, l = 0; l < o; ++l) (c = a[l]) && e.call(c, c.__data__, l, a) && s.push(c);
-	return new U(r, this._parents);
+	return new H(r, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/sparse.js
@@ -910,7 +910,7 @@ function M(e) {
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/enter.js
 function ne() {
-	return new U(this._enter || this._groups.map(M), this._parents);
+	return new H(this._enter || this._groups.map(M), this._parents);
 }
 function N(e, t) {
 	this.ownerDocument = e.ownerDocument, this.namespaceURI = e.namespaceURI, this._next = null, this._parent = e, this.__data__ = t;
@@ -964,7 +964,7 @@ function se(e, t) {
 			y._next = b || null;
 		}
 	}
-	return o = new U(o, r), o._enter = s, o._exit = c, o;
+	return o = new H(o, r), o._enter = s, o._exit = c, o;
 }
 function ce(e) {
 	return typeof e == "object" && "length" in e ? e : Array.from(e);
@@ -972,7 +972,7 @@ function ce(e) {
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/exit.js
 function le() {
-	return new U(this._exit || this._groups.map(M), this._parents);
+	return new H(this._exit || this._groups.map(M), this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/join.js
@@ -985,7 +985,7 @@ function ue(e, t, n) {
 function de(e) {
 	for (var t = e.selection ? e.selection() : e, n = this._groups, r = t._groups, i = n.length, a = r.length, o = Math.min(i, a), s = Array(i), c = 0; c < o; ++c) for (var l = n[c], u = r[c], d = l.length, f = s[c] = Array(d), p, m = 0; m < d; ++m) (p = l[m] || u[m]) && (f[m] = p);
 	for (; c < i; ++c) s[c] = n[c];
-	return new U(s, this._parents);
+	return new H(s, this._parents);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/order.js
@@ -1004,7 +1004,7 @@ function pe(e) {
 		for (var o = n[a], s = o.length, c = i[a] = Array(s), l, u = 0; u < s; ++u) (l = o[u]) && (c[u] = l);
 		c.sort(t);
 	}
-	return new U(i, this._parents).order();
+	return new H(i, this._parents).order();
 }
 function me(e, t) {
 	return e < t ? -1 : e > t ? 1 : e >= t ? 0 : NaN;
@@ -1201,53 +1201,53 @@ function He(e) {
 		this.textContent = e;
 	};
 }
-function B(e) {
+function Ue(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.textContent = t ?? "";
 	};
 }
-function Ue(e) {
-	return arguments.length ? this.each(e == null ? Ve : (typeof e == "function" ? B : He)(e)) : this.node().textContent;
+function We(e) {
+	return arguments.length ? this.each(e == null ? Ve : (typeof e == "function" ? Ue : He)(e)) : this.node().textContent;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/html.js
-function We() {
+function Ge() {
 	this.innerHTML = "";
 }
-function Ge(e) {
+function Ke(e) {
 	return function() {
 		this.innerHTML = e;
 	};
 }
-function Ke(e) {
+function qe(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.innerHTML = t ?? "";
 	};
 }
-function qe(e) {
-	return arguments.length ? this.each(e == null ? We : (typeof e == "function" ? Ke : Ge)(e)) : this.node().innerHTML;
+function Je(e) {
+	return arguments.length ? this.each(e == null ? Ge : (typeof e == "function" ? qe : Ke)(e)) : this.node().innerHTML;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/raise.js
-function Je() {
+function Ye() {
 	this.nextSibling && this.parentNode.appendChild(this);
 }
-function Ye() {
-	return this.each(Je);
+function Xe() {
+	return this.each(Ye);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/lower.js
-function Xe() {
+function Ze() {
 	this.previousSibling && this.parentNode.insertBefore(this, this.parentNode.firstChild);
 }
-function Ze() {
-	return this.each(Xe);
+function Qe() {
+	return this.each(Ze);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/append.js
-function Qe(e) {
+function $e(e) {
 	var t = typeof e == "function" ? e : m(e);
 	return this.select(function() {
 		return this.appendChild(t.apply(this, arguments));
@@ -1255,50 +1255,50 @@ function Qe(e) {
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/insert.js
-function $e() {
+function et() {
 	return null;
 }
-function et(e, t) {
-	var n = typeof e == "function" ? e : m(e), r = t == null ? $e : typeof t == "function" ? t : g(t);
+function tt(e, t) {
+	var n = typeof e == "function" ? e : m(e), r = t == null ? et : typeof t == "function" ? t : g(t);
 	return this.select(function() {
 		return this.insertBefore(n.apply(this, arguments), r.apply(this, arguments) || null);
 	});
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/remove.js
-function tt() {
+function nt() {
 	var e = this.parentNode;
 	e && e.removeChild(this);
 }
-function nt() {
-	return this.each(tt);
+function rt() {
+	return this.each(nt);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/clone.js
-function rt() {
+function it() {
 	var e = this.cloneNode(!1), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function it() {
+function at() {
 	var e = this.cloneNode(!0), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function at(e) {
-	return this.select(e ? it : rt);
+function ot(e) {
+	return this.select(e ? at : it);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/datum.js
-function ot(e) {
+function st(e) {
 	return arguments.length ? this.property("__data__", e) : this.node().__data__;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/on.js
-function st(e) {
+function ct(e) {
 	return function(t) {
 		e.call(this, t, this.__data__);
 	};
 }
-function ct(e) {
+function lt(e) {
 	return e.trim().split(/^|\s+/).map(function(e) {
 		var t = "", n = e.indexOf(".");
 		return n >= 0 && (t = e.slice(n + 1), e = e.slice(0, n)), {
@@ -1307,7 +1307,7 @@ function ct(e) {
 		};
 	});
 }
-function lt(e) {
+function ut(e) {
 	return function() {
 		var t = this.__on;
 		if (t) {
@@ -1316,9 +1316,9 @@ function lt(e) {
 		}
 	};
 }
-function ut(e, t, n) {
+function dt(e, t, n) {
 	return function() {
-		var r = this.__on, i, a = st(t);
+		var r = this.__on, i, a = ct(t);
 		if (r) {
 			for (var o = 0, s = r.length; o < s; ++o) if ((i = r[o]).type === e.type && i.name === e.name) {
 				this.removeEventListener(i.type, i.listener, i.options), this.addEventListener(i.type, i.listener = a, i.options = n), i.value = t;
@@ -1334,8 +1334,8 @@ function ut(e, t, n) {
 		}, r ? r.push(i) : this.__on = [i];
 	};
 }
-function dt(e, t, n) {
-	var r = ct(e + ""), i, a = r.length, o;
+function ft(e, t, n) {
+	var r = lt(e + ""), i, a = r.length, o;
 	if (arguments.length < 2) {
 		var s = this.node().__on;
 		if (s) {
@@ -1343,47 +1343,47 @@ function dt(e, t, n) {
 		}
 		return;
 	}
-	for (s = t ? ut : lt, i = 0; i < a; ++i) this.each(s(r[i], t, n));
+	for (s = t ? dt : ut, i = 0; i < a; ++i) this.each(s(r[i], t, n));
 	return this;
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/dispatch.js
-function V(e, t, n) {
+function B(e, t, n) {
 	var r = P(e), i = r.CustomEvent;
 	typeof i == "function" ? i = new i(t, n) : (i = r.document.createEvent("Event"), n ? (i.initEvent(t, n.bubbles, n.cancelable), i.detail = n.detail) : i.initEvent(t, !1, !1)), e.dispatchEvent(i);
 }
-function ft(e, t) {
-	return function() {
-		return V(this, e, t);
-	};
-}
 function pt(e, t) {
 	return function() {
-		return V(this, e, t.apply(this, arguments));
+		return B(this, e, t);
 	};
 }
 function mt(e, t) {
-	return this.each((typeof t == "function" ? pt : ft)(e, t));
+	return function() {
+		return B(this, e, t.apply(this, arguments));
+	};
+}
+function ht(e, t) {
+	return this.each((typeof t == "function" ? mt : pt)(e, t));
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/iterator.js
-function* ht() {
+function* gt() {
 	for (var e = this._groups, t = 0, n = e.length; t < n; ++t) for (var r = e[t], i = 0, a = r.length, o; i < a; ++i) (o = r[i]) && (yield o);
 }
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/index.js
-var H = [null];
-function U(e, t) {
+var V = [null];
+function H(e, t) {
 	this._groups = e, this._parents = t;
 }
-function gt() {
-	return new U([[document.documentElement]], H);
-}
 function _t() {
+	return new H([[document.documentElement]], V);
+}
+function vt() {
 	return this;
 }
-U.prototype = gt.prototype = {
-	constructor: U,
+H.prototype = _t.prototype = {
+	constructor: H,
 	select: _,
 	selectAll: S,
 	selectChild: O,
@@ -1394,7 +1394,7 @@ U.prototype = gt.prototype = {
 	exit: le,
 	join: ue,
 	merge: de,
-	selection: _t,
+	selection: vt,
 	order: fe,
 	sort: pe,
 	call: he,
@@ -1407,50 +1407,50 @@ U.prototype = gt.prototype = {
 	style: je,
 	property: Ie,
 	classed: Be,
-	text: Ue,
-	html: qe,
-	raise: Ye,
-	lower: Ze,
-	append: Qe,
-	insert: et,
-	remove: nt,
-	clone: at,
-	datum: ot,
-	on: dt,
-	dispatch: mt,
-	[Symbol.iterator]: ht
+	text: We,
+	html: Je,
+	raise: Xe,
+	lower: Qe,
+	append: $e,
+	insert: tt,
+	remove: rt,
+	clone: ot,
+	datum: st,
+	on: ft,
+	dispatch: ht,
+	[Symbol.iterator]: gt
 };
 //#endregion
 //#region ../../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/select.js
-function W(e) {
-	return typeof e == "string" ? new U([[document.querySelector(e)]], [document.documentElement]) : new U([[e]], H);
+function U(e) {
+	return typeof e == "string" ? new H([[document.querySelector(e)]], [document.documentElement]) : new H([[e]], V);
 }
 //#endregion
 //#region src/logic.ts
-var G = {
+var W = {
 	surfaceKey: "surface",
 	smoothnessKey: "smoothness"
 };
-function K(e = {}) {
+function G(e = {}) {
 	return {
-		surfaceKey: e.surfaceKey ?? G.surfaceKey,
-		smoothnessKey: e.smoothnessKey ?? G.smoothnessKey
+		surfaceKey: e.surfaceKey ?? W.surfaceKey,
+		smoothnessKey: e.smoothnessKey ?? W.smoothnessKey
 	};
 }
-function q(e) {
+function K(e) {
 	return e ? r(e).map((e) => e.smoothness) : [];
 }
-function J(e, t) {
-	return t ? q(e).includes(t) : !0;
+function q(e, t) {
+	return t ? K(e).includes(t) : !0;
 }
-function Y(e, t, n = G) {
+function J(e, t, n = W) {
 	let r = { [n.surfaceKey]: t || void 0 };
-	return J(t, e) || (r[n.smoothnessKey] = void 0), r;
+	return q(t, e) || (r[n.smoothnessKey] = void 0), r;
 }
-function X(e, t = G) {
+function Y(e, t = W) {
 	return { [t.smoothnessKey]: e || void 0 };
 }
-var Z = [
+var X = [
 	"asphalt",
 	"paving_stones",
 	"concrete",
@@ -1460,11 +1460,11 @@ var Z = [
 	"fine_gravel",
 	"grass_paver"
 ];
-function Q() {
+function Z() {
 	let t = Object.keys(e.surfaces);
-	return [...Z.filter((e) => t.includes(e)), ...t.filter((e) => !Z.includes(e))];
+	return [...X.filter((e) => t.includes(e)), ...t.filter((e) => !X.includes(e))];
 }
-function vt(t) {
+function Q(t) {
 	let n = t ? r(t) : [];
 	return n.length ? n.map((e) => ({
 		smoothness: e.smoothness,
@@ -1484,22 +1484,26 @@ function $(t) {
 //#endregion
 //#region src/createSurfaceSmoothnessField.impl.ts
 function yt(t = {}, r = {}, i = {}) {
-	let o = a("change"), s = K(t), c = i.t ?? ((e, t) => t), l = r.assetUrl ?? ((e) => e), u = {}, d = W(null), f = "images", p = !1, m = !1, h = !1, g = (e) => {
+	let o = a("change"), s = G(t), c = i.t ?? ((e, t) => t), l = r.assetUrl ?? ((e) => e), u = {}, d = U(null), f = "images", p, m = !1, h = (e) => {
 		let t = u[e];
 		return typeof t == "string" && t ? t : void 0;
-	}, _ = (e) => Array.isArray(u[e]), v = (e) => i.optionLabel?.("surface", e) ?? n(e)?.title ?? e, y = (t) => i.optionLabel?.("smoothness", t) ?? e.smoothnessLevels[t]?.title ?? t;
-	function b(e) {
+	}, g = (e) => Array.isArray(u[e]), _ = (e) => i.optionLabel?.("surface", e) ?? n(e)?.title ?? e, v = (t) => i.optionLabel?.("smoothness", t) ?? e.smoothnessLevels[t]?.title ?? t;
+	function y(e) {
 		u = {
 			...u,
 			...e
 		}, w(), o.call("change", j, e);
 	}
+	function b(e) {
+		if (m = !1, p = e ? "smoothness" : void 0, e === h(s.surfaceKey)) return w();
+		y(J(h(s.smoothnessKey), e, s));
+	}
 	function x(e) {
-		if (p = !1, h = !1, e === g(s.surfaceKey)) return w();
-		m = !1, b(Y(g(s.smoothnessKey), e, s));
+		p = void 0, y(Y(e, s));
 	}
 	function S(e) {
-		m = !1, b(X(e, s));
+		let t = e === "smoothness" && !h(s.surfaceKey) ? "surface" : e;
+		p = p === t ? void 0 : t, m = !1, w();
 	}
 	function C(e, t, n) {
 		let r = `.${n.split(" ").join(".")}`, i = e.selectAll(`:scope > ${r}`).data([0]);
@@ -1516,48 +1520,41 @@ function yt(t = {}, r = {}, i = {}) {
 		f === "images" ? T(t) : k(r);
 	}
 	function T(t) {
-		let r = g(s.surfaceKey), i = g(s.smoothnessKey), a = C(t, "div", "ssf-step ssf-step-surface");
-		!r && !_(s.surfaceKey) || p ? (a.selectAll(":scope > .ssf-summary").remove(), D(a, r)) : (a.selectAll(":scope > .ssf-tiles").remove(), E(a, {
+		let r = h(s.surfaceKey), i = h(s.smoothnessKey), a = Q(r).find((e) => e.smoothness === i), o = c("multiple_values", "Multiple values"), l = C(t, "div", "ssf-pair");
+		E(l, {
+			id: "surface",
 			photo: r ? n(r)?.icon ?? void 0 : void 0,
 			emoji: void 0,
-			title: r ? v(r) : c("multiple_values", "Multiple values"),
-			tag: r ? `${s.surfaceKey}=${r}` : "",
-			onClick: () => {
-				p = !0, w();
-			}
-		}));
-		let o = t.selectAll(":scope > .ssf-step-smoothness").data(r ? [0] : []);
-		o.exit().remove();
-		let l = o.enter().append("div").attr("class", "ssf-step ssf-step-smoothness").merge(o);
-		if (!r) return;
-		C(l, "div", "ssf-step-label").text(c("smoothness", "Smoothness"));
-		let u = vt(r);
-		!i && !_(s.smoothnessKey) || m ? (l.selectAll(":scope > .ssf-summary").remove(), O(l, r, u, i)) : (l.selectAll(":scope > .ssf-cards, :scope > .ssf-levels").remove(), E(l, {
-			photo: u.find((e) => e.smoothness === i)?.cell?.photo,
+			title: g(s.surfaceKey) ? o : r ? _(r) : void 0,
+			placeholder: c("surface", "Surface"),
+			tag: r ? `${s.surfaceKey}=${r}` : void 0
+		}), E(l, {
+			id: "smoothness",
+			photo: a?.cell?.photo,
 			emoji: i ? e.smoothnessLevels[i]?.emoji ?? void 0 : void 0,
-			title: i ? y(i) : c("multiple_values", "Multiple values"),
-			tag: i ? `${s.smoothnessKey}=${i}` : "",
-			onClick: () => {
-				m = !0, w();
-			}
-		}));
+			title: g(s.smoothnessKey) ? o : i ? v(i) : void 0,
+			placeholder: c("smoothness", "Smoothness"),
+			tag: i ? `${s.smoothnessKey}=${i}` : void 0
+		});
+		let u = t.selectAll(":scope > .ssf-picker").data(p ? [p] : [], (e) => e);
+		u.exit().remove();
+		let d = u.enter().append("div").attr("class", (e) => `ssf-picker ssf-picker-${e}`).merge(u);
+		p === "surface" && D(d, r), p === "smoothness" && r && O(d, r, Q(r), i);
 	}
 	function E(e, t) {
-		let n = C(e, "button", "ssf-summary").attr("type", "button").attr("title", $(t.photo) ? `${c("photo", "Photo")}: ${$(t.photo)}` : null).on("click", (e) => {
-			e.preventDefault(), t.onClick();
+		let n = C(e, "button", `ssf-value ssf-value-${t.id}`).attr("type", "button").classed("empty", !t.title).classed("open", p === t.id).attr("aria-expanded", String(p === t.id)).attr("title", [t.tag, $(t.photo) ? `${c("photo", "Photo")}: ${$(t.photo)}` : ""].filter(Boolean).join("\n") || null).on("click", (e) => {
+			e.preventDefault(), S(t.id);
 		});
 		n.html("");
-		let r = n.append("span").attr("class", "ssf-summary-visual");
-		t.photo ? r.append("img").attr("src", l(t.photo)).attr("alt", "") : r.append("span").attr("class", "ssf-summary-emoji").text(t.emoji ?? "");
-		let i = n.append("span").attr("class", "ssf-summary-text");
-		i.append("span").attr("class", "ssf-summary-title").text(t.photo && t.emoji ? `${t.emoji} ${t.title}` : t.title), i.append("span").attr("class", "ssf-summary-tag").text(t.tag), n.append("span").attr("class", "ssf-summary-change").text(c("change", "Change"));
+		let r = n.append("span").attr("class", "ssf-value-visual");
+		t.photo ? r.append("img").attr("src", l(t.photo)).attr("alt", "") : t.emoji && r.append("span").attr("class", "ssf-value-emoji").text(t.emoji), n.append("span").attr("class", "ssf-value-title").text(t.title ? `${t.photo && t.emoji ? `${t.emoji} ` : ""}${t.title}` : t.placeholder);
 	}
 	function D(e, t) {
-		let r = Q(), i = h ? r : r.filter((e) => Z.includes(e) || e === t), a = [...i.map((e) => ({ surface: e })), { more: !0 }], o = C(e, "div", "ssf-tiles").selectAll("button.ssf-tile").data(a, (e) => "more" in e ? "_more" : e.surface);
+		let r = Z(), i = m ? r : r.filter((e) => X.includes(e) || e === t), a = [...i.map((e) => ({ surface: e })), { more: !0 }], o = C(e, "div", "ssf-tiles").selectAll("button.ssf-tile").data(a, (e) => "more" in e ? "_more" : e.surface);
 		o.exit().remove();
 		let u = o.enter().append("button").attr("type", "button").attr("class", (e) => "more" in e ? "ssf-tile ssf-tile-more" : "ssf-tile");
 		u.each(function(e) {
-			let t = W(this), r = t.append("span").attr("class", "ssf-tile-visual");
+			let t = U(this), r = t.append("span").attr("class", "ssf-tile-visual");
 			if (t.append("span").attr("class", "ssf-tile-title"), "more" in e) return;
 			let i = n(e.surface)?.icon;
 			i && r.append("img").attr("loading", "lazy").attr("src", l(i)).attr("alt", "");
@@ -1567,9 +1564,9 @@ function yt(t = {}, r = {}, i = {}) {
 			let t = $(n(e.surface)?.icon);
 			return `${s.surfaceKey}=${e.surface}${t ? `\n${c("photo", "Photo")}: ${t}` : ""}`;
 		}).on("click", (e, t) => {
-			e.preventDefault(), "more" in t ? (h = !h, w()) : x(t.surface);
+			e.preventDefault(), "more" in t ? (m = !m, w()) : b(t.surface);
 		});
-		d.select(".ssf-tile-title").text((e) => "more" in e ? h ? c("fewer", "Fewer") : c("more", "More") : v(e.surface)), d.filter((e) => "more" in e).select(".ssf-tile-visual").text(h ? "−" : `+${r.length - i.length}`);
+		d.select(".ssf-tile-title").text((e) => "more" in e ? m ? c("fewer", "Fewer") : c("more", "More") : _(e.surface)), d.filter((e) => "more" in e).select(".ssf-tile-visual").text(m ? "−" : `+${r.length - i.length}`);
 	}
 	function O(e, t, n, r) {
 		let i = n.some((e) => e.cell);
@@ -1578,17 +1575,17 @@ function yt(t = {}, r = {}, i = {}) {
 		a.exit().remove();
 		let o = a.enter().append("button").attr("type", "button").attr("class", "ssf-card");
 		o.each(function(e) {
-			let t = W(this);
+			let t = U(this);
 			e.cell && t.append("img").attr("class", "ssf-card-photo").attr("loading", "lazy").attr("src", l(e.cell.photo)).attr("alt", "");
 			let n = t.append("span").attr("class", "ssf-card-head");
-			n.append("span").attr("class", "ssf-card-emoji").text(e.level?.emoji ?? ""), n.append("span").attr("class", "ssf-card-title").text(y(e.smoothness));
+			n.append("span").attr("class", "ssf-card-emoji").text(e.level?.emoji ?? ""), n.append("span").attr("class", "ssf-card-title").text(v(e.smoothness));
 		}), o.merge(a).order().classed("selected", (e) => e.smoothness === r).attr("aria-pressed", (e) => String(e.smoothness === r)).attr("title", (e) => {
 			let t = [`${s.smoothnessKey}=${e.smoothness}`];
 			e.cell?.description && t.push(e.cell.description);
 			let n = $(e.cell?.photo);
 			return n && t.push(`${c("photo", "Photo")}: ${n}`), t.join("\n");
 		}).on("click", (e, t) => {
-			e.preventDefault(), S(t.smoothness === r ? void 0 : t.smoothness);
+			e.preventDefault(), x(t.smoothness === r ? void 0 : t.smoothness);
 		});
 	}
 	function k(t) {
@@ -1596,14 +1593,14 @@ function yt(t = {}, r = {}, i = {}) {
 			name: "surface",
 			key: s.surfaceKey,
 			label: c("surface", "Surface"),
-			values: Q(),
-			title: v
+			values: Z(),
+			title: _
 		}, {
 			name: "smoothness",
 			key: s.smoothnessKey,
 			label: c("smoothness", "Smoothness"),
 			values: Object.keys(e.smoothnessLevels),
-			title: y
+			title: v
 		}], i = n.selectAll(":scope > li").data(r, (e) => e.key), a = i.enter().append("li").attr("class", "labeled-input");
 		a.append("div").attr("class", "label");
 		let o = a.append("div").attr("class", "ssf-text-cell");
@@ -1614,13 +1611,13 @@ function yt(t = {}, r = {}, i = {}) {
 			if (!r) return;
 			let i = u[e.key];
 			document.activeElement !== r && (r.value = typeof i == "string" ? e.title(i) : ""), r.placeholder = Array.isArray(i) ? c("multiple_values", "Multiple values") : c(`${e.name}_placeholder`, `${e.title(e.values[0] ?? "")}…`);
-			let a = W(r.parentNode).select(".ssf-combo-list"), o = (t) => {
-				t !== (typeof u[e.key] == "string" ? u[e.key] : void 0) && (e.key === s.surfaceKey ? x(t) : S(t));
+			let a = U(r.parentNode).select(".ssf-combo-list"), o = (t) => {
+				t !== (typeof u[e.key] == "string" ? u[e.key] : void 0) && (e.key === s.surfaceKey ? b(t) : x(t));
 			}, l = () => {
 				let t = r.value.trim(), n = e.values.find((n) => n === t || e.title(n).toLowerCase() === t.toLowerCase());
 				o(t ? n ?? t : void 0);
 			};
-			W(r).on("focus input", () => A(a, e, r.value)).on("keydown", (e) => {
+			U(r).on("focus input", () => A(a, e, r.value)).on("keydown", (e) => {
 				e.key === "Enter" ? (e.preventDefault(), r.blur()) : e.key === "Escape" && a.style("display", "none");
 			}).on("blur", () => {
 				a.style("display", "none"), l();
@@ -1644,7 +1641,7 @@ function yt(t = {}, r = {}, i = {}) {
 		let t = e.selectAll(".surface-smoothness-field").data([0]);
 		d = t.enter().append("div").attr("class", "surface-smoothness-field").merge(t), w();
 	});
-	return j.tags = (e) => (u = e ?? {}, w(), j), j.entityIDs = () => (p = !1, m = !1, h = !1, j), j.focus = () => (d.select("button, input").node()?.focus(), j), j.mode = ((e) => e === void 0 ? f : (f = e, w(), j)), j.on = (e, t) => (o.on(e, t), j), j;
+	return j.tags = (e) => (u = e ?? {}, w(), j), j.entityIDs = () => (p = void 0, m = !1, j), j.focus = () => (d.select("button, input").node()?.focus(), j), j.mode = ((e) => e === void 0 ? f : (f = e, w(), j)), j.on = (e, t) => (o.on(e, t), j), j;
 }
 //#endregion
-export { yt as createSurfaceSmoothnessField, J as isSmoothnessValidForSurface, K as resolveKeys, X as smoothnessChangePatch, q as smoothnessValuesForSurface, Y as surfaceChangePatch };
+export { yt as createSurfaceSmoothnessField, q as isSmoothnessValidForSurface, G as resolveKeys, Y as smoothnessChangePatch, K as smoothnessValuesForSurface, J as surfaceChangePatch };
