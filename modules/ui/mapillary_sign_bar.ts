@@ -7,7 +7,7 @@ import { svgIcon } from '../svg/icon';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
-import { changesNothing, defaultSignTargetKey, sideOfLine, signTagChanges, signTargetKeys } from '../mapillary/sign_tagging';
+import { changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys, type SignDirection } from '../mapillary/sign_tagging';
 import type { ImageDay } from '../mapillary/sign_view';
 import type { coreContext } from '../core';
 
@@ -62,15 +62,16 @@ function selectedWay(context: coreContext): iD.OsmWay | undefined {
 }
 
 
-function actionsFor(sign: SelectedSign, tags: Record<string, string>, key: string): Action[] {
+function actionsFor(sign: SelectedSign, tags: Record<string, string>, key: string, direction?: SignDirection): Action[] {
     const meaning = signMeaning(sign.value);
     if (!meaning) return [];
-    const actions: Action[] = (meaning.tags ?? []).map((changes, i) => ({
-        id: `tags-${i}`,
-        label: Object.entries(changes).map(([k, v]) => `${k}=${v}`).join(' + '),
-        title: t('mapillary_sign_bar.write_tags'),
-        changes
-    }));
+    // speed signs: the direction the sign applies to first (`maxspeed:forward`), then both directions
+    const tagSets = (meaning.tags ?? []).flatMap(changes => direction ? [directionalTags(changes, direction), changes] : [changes]);
+    // the label is the main tag; the tooltip lists all of them (with the source)
+    const actions: Action[] = tagSets.map((changes, i) => {
+        const list = Object.entries(changes).map(([k, v]) => `${k}=${v}`);
+        return { id: `tags-${i}`, label: list[0], title: `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`, changes };
+    });
     for (const value of meaning.signs) {
         actions.push({
             id: `sign-${value}`,
@@ -100,6 +101,7 @@ export function renderSignBar(context: coreContext) {
     const head = enter.append('div').attr('class', 'mapillary-sign-bar-head');
     head.append('span').attr('class', 'mapillary-sign-bar-icons');
     head.append('span').attr('class', 'mapillary-sign-bar-name');
+    head.append('span').attr('class', 'mapillary-sign-bar-direction hide');
     head.append('button')
         .attr('type', 'button')
         .attr('class', 'mapillary-sign-bar-close')
@@ -201,12 +203,20 @@ function renderActions(context: coreContext, bar: d3.Selection<HTMLDivElement>, 
     const tags = (way?.tags ?? {}) as Record<string, string>;
     const keys = way ? signTargetKeys(tags) : [];
     const coords = way ? context.graph().childNodes(way).map(node => node.loc as [number, number]) : [];
+    const direction = way ? signDirectionOnWay(coords, sign.loc, sign.facing) : undefined;
     const key = way ? defaultSignTargetKey(tags, {
         lastUsed: _lastKey,
         bikeSign: signGroupsOf(sign.value).includes('bike'),
-        side: sideOfLine(coords, sign.loc)
+        side: sideOfLine(coords, sign.loc),
+        direction
     }) : 'traffic_sign';
-    const actions = way ? actionsFor(sign, tags, key) : [];
+    const actions = way ? actionsFor(sign, tags, key, direction) : [];
+
+    // which way along the selected way the sign applies to
+    bar.select('.mapillary-sign-bar-direction')
+        .classed('hide', !direction)
+        .text(direction ? t(`mapillary_sign_bar.direction.${direction}`) : '')
+        .attr('title', direction ? t('mapillary_sign_bar.direction.tooltip') : null);
     const tagActions = actions.filter(action => !action.id.startsWith('sign-'));
     const signActions = actions.filter(action => action.id.startsWith('sign-'));
 

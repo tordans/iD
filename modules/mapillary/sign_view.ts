@@ -8,7 +8,10 @@ export type LngLat = [number, number];
 
 export type SignImage = {
     id: string;
+    /** Mapillary's computed position (used for the view math; signs are located from it) */
     loc: LngLat;
+    /** the camera's GPS position, where iD draws the image marker */
+    originalLoc?: LngLat;
     /** capture time in ms */
     capturedAt: number;
     isPano: boolean;

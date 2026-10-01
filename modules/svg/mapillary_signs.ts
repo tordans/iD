@@ -139,21 +139,30 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
         const sign = selectedSign();
         const selectedID = sign?.id;
 
-        // a dotted line from the selected sign to the image shown for it (WORKDOC feature 26)
+        // a dotted line from the shown image's marker (its GPS position) via Mapillary's computed
+        // position (a small dot) to the selected sign (WORKDOC feature 26)
         const shownImage = sign?.imageId ? sign.days.flatMap(day => day.images).find(image => image.id === sign.imageId) : undefined;
-        const link = layer.selectAll<SVGLineElement, number>('.mapillary-sign-link')
-            .data(sign && shownImage ? [0] : []);
+        const points = sign && shownImage ? [shownImage.originalLoc ?? shownImage.loc, shownImage.loc, sign.loc].map(loc => projection(loc)) : [];
+
+        const link = layer.selectAll<SVGPathElement, number>('.mapillary-sign-link')
+            .data(points.length ? [0] : []);
         link.exit().remove();
-        const linkEnter = link.enter()
-            .insert('line', ':first-child')
-            .attr('class', 'mapillary-sign-link');
-        if (sign && shownImage) {
-            const [x1, y1] = projection(sign.loc);
-            const [x2, y2] = projection(shownImage.loc);
-            linkEnter.merge(link)
-                .attr('x1', x1).attr('y1', y1)
-                .attr('x2', x2).attr('y2', y2);
-        }
+        link.enter()
+            .insert('path', ':first-child')
+            .attr('class', 'mapillary-sign-link')
+            .merge(link)
+            .attr('d', `M${points.map(point => point.join(',')).join('L')}`);
+
+        const computed = layer.selectAll<SVGCircleElement, number>('.mapillary-sign-computed')
+            .data(points.length ? [0] : []);
+        computed.exit().remove();
+        computed.enter()
+            .insert('circle', '.icon-sign')
+            .attr('class', 'mapillary-sign-computed')
+            .attr('r', 4)
+            .merge(computed)
+            .attr('cx', points[1]?.[0] ?? 0)
+            .attr('cy', points[1]?.[1] ?? 0);
 
         signs
             .merge(enter)

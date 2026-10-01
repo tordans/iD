@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { changesNothing, defaultSignTargetKey, sideOfLine, signTagChanges, signTargetKeys } from '../../../modules/mapillary/sign_tagging';
+import { bearingAlongLine, changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys } from '../../../modules/mapillary/sign_tagging';
 
 describe('signTargetKeys', () => {
     it('offers the way\'s keys, tagged sign keys and the sides with bike infrastructure', () => {
@@ -27,6 +27,13 @@ describe('signTargetKeys', () => {
         expect(defaultSignTargetKey(tags, { bikeSign: true, side: 'left' })).toBe('cycleway:left:traffic_sign');
         expect(defaultSignTargetKey({}, { bikeSign: true, side: 'left' })).toBe('traffic_sign');
     });
+
+    it('uses the direction the sign applies to, unless the way is one-way that way', () => {
+        expect(defaultSignTargetKey({}, { direction: 'backward' })).toBe('traffic_sign:backward');
+        expect(defaultSignTargetKey({ oneway: 'yes' }, { direction: 'forward' })).toBe('traffic_sign');
+        expect(defaultSignTargetKey({ oneway: 'yes' }, { direction: 'backward' })).toBe('traffic_sign:backward');
+        expect(defaultSignTargetKey({ 'cycleway:right': 'lane' }, { bikeSign: true, side: 'right', direction: 'forward' })).toBe('cycleway:right:traffic_sign');
+    });
 });
 
 describe('sideOfLine', () => {
@@ -35,6 +42,28 @@ describe('sideOfLine', () => {
         expect(sideOfLine(line, [13.0015, 52.0001])).toBe('left');
         expect(sideOfLine(line, [13.0015, 51.9999])).toBe('right');
         expect(sideOfLine([[13, 52]], [13, 52.1])).toBeUndefined();
+    });
+});
+
+describe('sign direction', () => {
+    // a way going north, like Karl-Marx-Straße at the 237 sign
+    const north: [number, number][] = [[13.4412, 52.4720], [13.4413, 52.4730]];
+
+    it('reads the way bearing near the sign', () => {
+        expect(bearingAlongLine(north, [13.4413, 52.4725])).toBeCloseTo(3.9, 0);
+    });
+
+    it('turns the face direction into the travel direction along the way', () => {
+        // the sign faces south (177°), so northbound traffic reads it
+        expect(signDirectionOnWay(north, [13.4413, 52.4725], 176.9)).toBe('forward');
+        expect(signDirectionOnWay(north, [13.4413, 52.4725], 10)).toBe('backward');
+        expect(signDirectionOnWay(north, [13.4413, 52.4725], 90)).toBeUndefined();
+        expect(signDirectionOnWay(north, [13.4413, 52.4725], undefined)).toBeUndefined();
+    });
+
+    it('makes speed tags directional', () => {
+        expect(directionalTags({ maxspeed: '30', 'source:maxspeed': 'sign' }, 'forward'))
+            .toEqual({ 'maxspeed:forward': '30', 'source:maxspeed:forward': 'sign' });
     });
 });
 

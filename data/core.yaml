@@ -1214,6 +1214,10 @@ en:
     write_sign: "Write to {key}, with the image as source"
     write_tags: Set these tags
     annotation: Set a traffic sign from Mapillary.
+    direction:
+      forward: "↑ forward"
+      backward: "↓ backward"
+      tooltip: The direction along the selected way the sign applies to, from the way the sign faces
   photo_overlays:
     title: Photo Overlays
     traffic_signs:

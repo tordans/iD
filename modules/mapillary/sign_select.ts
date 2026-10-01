@@ -21,6 +21,8 @@ export type SelectedSign = {
     loc: LngLat;
     firstSeen?: string;
     lastSeen?: string;
+    /** where the sign's face points (degrees), Mapillary's `aligned_direction` */
+    facing?: number;
     days: ImageDay[];
     /** the image shown for this sign */
     imageId?: string;
@@ -61,6 +63,7 @@ type FeatureResponse = {
     geometry?: { coordinates: LngLat };
     first_seen_at?: string;
     last_seen_at?: string;
+    aligned_direction?: number;
     images?: { data: { id: string; geometry: { coordinates: LngLat } }[] };
 };
 
@@ -102,6 +105,7 @@ async function loadSignImages(feature: FeatureResponse): Promise<{ images: SignI
     const images = infos.map(info => ({
         id: info.id,
         loc: (info.computed_geometry ?? info.geometry)!.coordinates,
+        originalLoc: info.geometry?.coordinates,
         capturedAt: info.captured_at,
         isPano: info.is_pano,
         creator: info.creator?.username,
@@ -122,7 +126,7 @@ export async function selectMapillarySign(context: coreContext, sign: { id: stri
 
     try {
         const feature = await getJSON<FeatureResponse>(sign.id, {
-            fields: 'id,object_value,geometry,first_seen_at,last_seen_at,images'
+            fields: 'id,object_value,geometry,first_seen_at,last_seen_at,aligned_direction,images'
         });
         const { images, detections } = await loadSignImages(feature);
         if (requestId !== _requestId) return;
@@ -133,6 +137,7 @@ export async function selectMapillarySign(context: coreContext, sign: { id: stri
             loc,
             firstSeen: feature.first_seen_at,
             lastSeen: feature.last_seen_at,
+            facing: feature.aligned_direction,
             days: imagesByDay(images, loc),
             detections,
             loading: false
@@ -210,8 +215,8 @@ function xDistance(a: number, b: number, isPano: boolean) {
 
 /**
  * Turns the viewer to the sign. Best is the sign's outline in this image (the box the viewer draws):
- * the one Mapillary linked to this sign, else the image's detection of the same sign value nearest
- * to where the sign should be. Without an outline the position is computed from the locations.
+ * the one Mapillary linked to this sign, else the image's detection of the same sign value (the
+ * one nearest to where the sign should be, if there are several). Without an outline the position is computed from the locations.
  */
 async function turnToSign(viewer: NonNullable<ReturnType<typeof services.mapillary.getViewer>>, image: SignImage, sign: SelectedSign) {
     const signLoc = sign.loc;
@@ -249,8 +254,9 @@ async function turnToSign(viewer: NonNullable<ReturnType<typeof services.mapilla
         const nearest = candidates.sort((a, b) => estimate
             ? xDistance(centerX(a), estimate.center[0], image.isPano) - xDistance(centerX(b), estimate.center[0], image.isPano)
             : 0)[0];
-        // a detection far from where the sign should be is likely another sign of the same kind
-        if (nearest && (!estimate || xDistance(centerX(nearest), estimate.center[0], image.isPano) < (image.isPano ? 0.08 : 0.3))) {
+        // Mapillary lists this image as showing the sign, so a detection of the same sign is it; with
+        // several, the one nearest to the estimate (the estimate alone can be far off in 360° images)
+        if (nearest) {
             outline = nearest.outline;
             detectionId = nearest.id;
         }
