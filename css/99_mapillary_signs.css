@@ -172,6 +172,25 @@
     font-size: 12px;
     border-radius: 4px;
 }
-.mapillary-sign-bar-actions.hide {
+.mapillary-sign-bar-actions.hide,
+.mapillary-sign-bar-write.hide {
     display: none;
+}
+/* the write buttons as their own group below the images */
+.mapillary-sign-bar-write {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 2px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+/* already tagged: green with a check; another value tagged: the arrow label */
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.present:disabled {
+    opacity: 1;
+    background: rgba(76, 175, 80, 0.45);
+    color: #fff;
+}
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.replaces {
+    background: rgba(255, 152, 0, 0.35);
 }

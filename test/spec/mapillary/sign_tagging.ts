@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bearingAlongLine, changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys } from '../../../modules/mapillary/sign_tagging';
+import { bearingAlongLine, changeLabel, changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys } from '../../../modules/mapillary/sign_tagging';
 
 describe('signTargetKeys', () => {
     it('offers the way\'s keys, tagged sign keys and the sides with bike infrastructure', () => {
@@ -83,5 +83,21 @@ describe('signTagChanges', () => {
     it('knows when nothing changes', () => {
         const tags = { traffic_sign: 'DE:237', 'source:traffic_sign:mapillary': '123' };
         expect(changesNothing(tags, signTagChanges(tags, 'traffic_sign', 'DE:237', '123'))).toBe(true);
+    });
+});
+
+describe('changeLabel', () => {
+    const changes = { maxspeed: '30', 'source:maxspeed': 'sign' };
+
+    it('shows new, present and replaced values', () => {
+        expect(changeLabel({}, changes)).toEqual({ label: 'maxspeed=30', present: false });
+        expect(changeLabel({ maxspeed: '30', 'source:maxspeed': 'sign' }, changes)).toEqual({ label: '✓ maxspeed=30', present: true });
+        expect(changeLabel({ maxspeed: '50' }, changes)).toEqual({ label: 'maxspeed=50→30', present: false, replaces: '50' });
+        // the value is there, only the source is missing
+        expect(changeLabel({ maxspeed: '30' }, changes)).toEqual({ label: 'maxspeed=30', present: false });
+    });
+
+    it('leaves out the key for sign buttons', () => {
+        expect(changeLabel({ traffic_sign: 'DE:240' }, { traffic_sign: 'DE:237' }, false).label).toBe('DE:240→DE:237');
     });
 });

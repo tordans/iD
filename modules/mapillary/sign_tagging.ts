@@ -138,3 +138,26 @@ export function signTagChanges(tags: TagsLike, key: string, sign: string, imageI
 export function changesNothing(tags: TagsLike, changes: Record<string, string>): boolean {
     return Object.entries(changes).every(([key, value]) => tags[key] === value);
 }
+
+
+export type ChangeLabel = {
+    label: string;
+    /** every tag of the change is already there */
+    present: boolean;
+    /** the main tag's value now, when the change would replace it */
+    replaces?: string;
+};
+
+/**
+ * Button label of a change, by its main (first) tag: `maxspeed=30`, `✓ maxspeed=30` when it is
+ * tagged already, `maxspeed=50→30` when another value is tagged. Without the key (`withKey: false`)
+ * only the values: `DE:240→DE:237`.
+ */
+export function changeLabel(tags: TagsLike, changes: Record<string, string>, withKey = true): ChangeLabel {
+    const [key, value] = Object.entries(changes)[0] ?? ['', ''];
+    const current = typeof tags[key] === 'string' && tags[key] !== '' ? tags[key] as string : undefined;
+    const prefix = withKey ? `${key}=` : '';
+    if (changesNothing(tags, changes)) return { label: `✓ ${prefix}${value}`, present: true };
+    if (current && current !== value) return { label: `${prefix}${current}→${value}`, present: false, replaces: current };
+    return { label: `${prefix}${value}`, present: false };
+}

@@ -6,7 +6,7 @@ import { services } from '../services';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
-import { changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys, type SignDirection } from '../mapillary/sign_tagging';
+import { changeLabel, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys, type SignDirection } from '../mapillary/sign_tagging';
 import type { ImageDay } from '../mapillary/sign_view';
 import type { coreContext } from '../core';
 
@@ -15,7 +15,7 @@ import type { coreContext } from '../core';
  * sign is, its images by capture day, and buttons that write it to the selected way.
  */
 
-type Action = { id: string; label: string; title: string; changes: Record<string, string> };
+type Action = { id: string; label: string; title: string; present: boolean; replaces?: string; changes: Record<string, string> };
 
 let _lastKey: string | undefined;
 
@@ -71,23 +71,26 @@ function selectedWay(context: coreContext): iD.OsmWay | undefined {
 }
 
 
+function labelled(tags: Record<string, string>, changes: Record<string, string>, withKey: boolean, title: string) {
+    const { label, present, replaces } = changeLabel(tags, changes, withKey);
+    const note = present ? t('mapillary_sign_bar.present') : replaces ? t('mapillary_sign_bar.replaces', { value: replaces }) : '';
+    return { label, present, replaces, changes, title: note ? `${title} (${note})` : title };
+}
+
+
 function actionsFor(sign: SelectedSign, tags: Record<string, string>, key: string, direction?: SignDirection): Action[] {
     const meaning = signMeaning(sign.value);
     if (!meaning) return [];
     // speed signs: the direction the sign applies to first (`maxspeed:forward`), then both directions
     const tagSets = (meaning.tags ?? []).flatMap(changes => direction ? [directionalTags(changes, direction), changes] : [changes]);
-    // the label is the main tag; the tooltip lists all of them (with the source)
+    // the label is the main tag (with what is tagged now); the tooltip lists all of them (with the source)
     const actions: Action[] = tagSets.map((changes, i) => {
         const list = Object.entries(changes).map(([k, v]) => `${k}=${v}`);
-        return { id: `tags-${i}`, label: list[0], title: `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`, changes };
+        return { id: `tags-${i}`, ...labelled(tags, changes, true, `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`) };
     });
     for (const value of meaning.signs) {
-        actions.push({
-            id: `sign-${value}`,
-            label: value,
-            title: t('mapillary_sign_bar.write_sign', { key }),
-            changes: signTagChanges(tags, key, value, sign.imageId)
-        });
+        const changes = signTagChanges(tags, key, value, sign.imageId);
+        actions.push({ id: `sign-${value}`, ...labelled(tags, changes, false, t('mapillary_sign_bar.write_sign', { key })) });
     }
     return actions;
 }
@@ -112,8 +115,10 @@ export function renderSignBar(context: coreContext) {
     head.append('span').attr('class', 'mapillary-sign-bar-name');
     head.append('span').attr('class', 'mapillary-sign-bar-direction hide');
     enter.append('div').attr('class', 'mapillary-sign-bar-days');
-    enter.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-tags');
-    enter.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-signs');
+    // what can be written to the selected way, separated from the images above
+    const write = enter.append('div').attr('class', 'mapillary-sign-bar-write');
+    write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-tags');
+    write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-signs');
 
     bar = enter.merge(bar);
     if (!sign) return;
@@ -234,6 +239,7 @@ function renderActions(context: coreContext, bar: d3.Selection<HTMLDivElement>, 
     renderButtons(context, tagRow, tagActions, tags, key);
 
     const signRow = bar.select<HTMLDivElement>('.mapillary-sign-bar-signs').classed('hide', !signActions.length);
+    bar.select('.mapillary-sign-bar-write').classed('hide', !actions.length);
     let select = signRow.selectAll<HTMLSelectElement, number>('.mapillary-sign-bar-key')
         .data(signActions.length ? [0] : []);
     select.exit().remove();
@@ -268,7 +274,9 @@ function renderButtons(context: coreContext, row: d3.Selection<HTMLDivElement>, 
         .merge(buttons)
         .text(d => d.label)
         .attr('title', d => d.title)
-        .property('disabled', d => changesNothing(tags, d.changes))
+        .classed('present', d => d.present)
+        .classed('replaces', d => !!d.replaces)
+        .property('disabled', d => d.present)
         .on('click', (_event, d) => {
             const entity = selectedWay(context);
             if (!entity) return;
