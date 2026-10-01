@@ -26,7 +26,8 @@ const BUFFER_KEY = /^buffer:/;
 
 /** Width keys (including side keys and `buffer:*`) that get a "measure" button */
 export function isMeasurableKey(key: string): boolean {
-    if (!key || key.endsWith(':source')) return false;
+    // `source:width`, `note:width`: about the width, not a width
+    if (!key || key.endsWith(':source') || /^(source|note|description|check_date|fixme):/.test(key)) return false;
     if (key === 'maxwidth' || key.startsWith('maxwidth:')) return false;
     return WIDTH_KEY.test(key) || BUFFER_KEY.test(key);
 }

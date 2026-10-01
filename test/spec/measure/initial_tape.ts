@@ -19,7 +19,7 @@ describe('measure/initial_tape', () => {
             'cycleway:left:width', 'sidewalk:both:width', 'buffer:left', 'buffer:left:width']) {
             expect(isMeasurableKey(key), key).toBe(true);
         }
-        for (const key of ['', 'maxwidth', 'width:source', 'name', 'buffer', 'widthy']) {
+        for (const key of ['', 'maxwidth', 'width:source', 'source:width', 'source:cycleway:left:width', 'note:width', 'name', 'buffer', 'widthy']) {
             expect(isMeasurableKey(key), key).toBe(false);
         }
     });
