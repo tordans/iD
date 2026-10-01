@@ -1039,7 +1039,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 1. ~~Lengths that don't match.~~ **Decided (2026-10-01):** allowed within reason, otherwise the mapper splits first (see "The operation").
 2. ~~Which way is "older"?~~ **Decided (2026-10-01):** by changeset age; no second menu entry.
-3. **A value on one part only** (e.g. only the cycleway has `surface`): prefixed key as planned, or the plain key?
+3. ~~A value on one part only?~~ **Decided (2026-10-01):** the prefixed key (`cycleway:surface`), no plain key. Equal values on both parts merge into the plain key (`surface`), which then stands for both.
 4. **Signs 237 + 239 on the two parts:** keep the bike sign only, or write both as `cycleway:traffic_sign` / `footway:traffic_sign`?
 5. Should variant C of feature 17 (track + sidewalk from the centerline in one step) stay as it is?
 
