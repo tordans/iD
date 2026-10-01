@@ -188,3 +188,20 @@ export function panoX(bearing: number, compassAngle: number): number {
     const x = 0.5 + (bearing - compassAngle) / 360;
     return ((x % 1) + 1) % 1;
 }
+
+
+/**
+ * The two lines of a capture day button: month and year ("Aug. 2026") and the age in short
+ * ("vor 2 Monaten"): days below 45 days, months below 2 years, then years
+ */
+export function dayLabels(day: string, now: Date, locale: string): { month: string; age: string } {
+    const date = new Date(`${day}T12:00:00Z`);
+    const month = date.toLocaleDateString(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    const days = Math.max(0, Math.round((now.getTime() - date.getTime()) / 86400000));
+    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'narrow' });
+    let age: string;
+    if (days < 45) age = rtf.format(-days, 'day');
+    else if (days < 730) age = rtf.format(-Math.round(days / 30.44), 'month');
+    else age = rtf.format(-Math.round(days / 365.25), 'year');
+    return { month, age };
+}

@@ -76,6 +76,7 @@ function buildData() {
     'fas-arrow-pointer',   // custom data layers: selectable toggle
     'fas-eye-slash',       // map data: layer mode toggle (with fas-arrow-pointer, fas-lock)
     'fas-book-open',       // related tags: add a source (feature 25)
+    'far-image',           // Mapillary sign bar: images of a capture day (feature 26)
     'fas-comment'          // related tags: add a note
   ]);
   // add icons for QA integrations

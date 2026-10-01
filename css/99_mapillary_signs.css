@@ -157,9 +157,33 @@
     background: #ffee00;
     color: #000;
 }
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-day {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: auto;
+    padding: 3px 8px;
+    text-align: left;
+}
+.mapillary-sign-bar-day-dates {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+.mapillary-sign-bar-day-age {
+    font-size: 11px;
+    opacity: 0.75;
+}
 .mapillary-sign-bar-day-count {
-    margin-left: 4px;
-    opacity: 0.7;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    opacity: 0.8;
+}
+.mapillary-sign-bar-day-count .icon.mapillary-sign-bar-day-icon {
+    width: 11px;
+    height: 11px;
 }
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action {
     max-width: 100%;

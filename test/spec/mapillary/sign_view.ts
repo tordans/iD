@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bearingDegrees, bestImage, cameraPitch, imagesByDay, panoX, viewFromFlatCamera, viewFromLocation, viewFromOutline, type SignImage } from '../../../modules/mapillary/sign_view';
+import { bearingDegrees, bestImage, cameraPitch, dayLabels, imagesByDay, panoX, viewFromFlatCamera, viewFromLocation, viewFromOutline, type SignImage } from '../../../modules/mapillary/sign_view';
 
 const sign: [number, number] = [13.445274, 52.474224];
 const day = (date: string) => new Date(`${date}T10:00:00Z`).getTime();
@@ -67,5 +67,17 @@ describe('view on the sign', () => {
         expect(view?.zoom).toBeLessThanOrEqual(2);
         // behind the camera
         expect(viewFromFlatCamera({ ...camera, compassAngle: 180 }, [13.441292452663, 52.47237869733], [13.441302, 52.47246])).toBeUndefined();
+    });
+});
+
+describe('dayLabels', () => {
+    const now = new Date('2026-10-01T12:00:00Z');
+
+    it('shows month and year and the age in short', () => {
+        expect(dayLabels('2026-08-02', now, 'en')).toEqual({ month: 'Aug 2026', age: '2mo ago' });
+        expect(dayLabels('2026-09-30', now, 'en').age).toBe('yesterday');
+        expect(dayLabels('2025-04-15', now, 'en').age).toBe('18mo ago');
+        expect(dayLabels('2023-08-01', now, 'en').age).toBe('3y ago');
+        expect(dayLabels('2026-08-02', now, 'de')).toEqual({ month: 'Aug. 2026', age: 'vor 2 Monaten' });
     });
 });

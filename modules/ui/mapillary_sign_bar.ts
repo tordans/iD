@@ -3,11 +3,12 @@ import { select as d3_select } from 'd3-selection';
 import { actionChangeTags } from '../actions';
 import { t, localizer } from '../core/localizer';
 import { services } from '../services';
+import { svgIcon } from '../svg/icon';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
 import { changeLabel, directionalTags, sideOfLine, signButtonKeys, signDirectionOnWay, signSourceChanges, signTagChanges, type SignDirection } from '../mapillary/sign_tagging';
-import type { ImageDay } from '../mapillary/sign_view';
+import { dayLabels, type ImageDay } from '../mapillary/sign_view';
 import type { coreContext } from '../core';
 
 /**
@@ -54,11 +55,6 @@ export function initMapillarySignBar(context: coreContext) {
 function mapillaryLabel(value: string): string {
     const name = signName(value).replace(/-/g, ' ');
     return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-
-function formatDay(day: string): string {
-    return new Date(`${day}T12:00:00Z`).toLocaleDateString(localizer.languageCode(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 
@@ -213,8 +209,13 @@ function renderDays(context: coreContext, selection: d3.Selection<HTMLDivElement
             const next = index >= 0 ? day.images[(index + 1) % day.images.length] : day.best;
             showSignImage(context, next.id);
         });
-    enter.append('span').attr('class', 'mapillary-sign-bar-day-date');
-    enter.append('span').attr('class', 'mapillary-sign-bar-day-count');
+    // left: month and year over the age; right: an image icon with "2/4"
+    const dates = enter.append('span').attr('class', 'mapillary-sign-bar-day-dates');
+    dates.append('span').attr('class', 'mapillary-sign-bar-day-month');
+    dates.append('span').attr('class', 'mapillary-sign-bar-day-age');
+    const count = enter.append('span').attr('class', 'mapillary-sign-bar-day-count');
+    count.call(svgIcon('#far-image', 'mapillary-sign-bar-day-icon'));
+    count.append('span').attr('class', 'mapillary-sign-bar-day-position');
 
     const all = enter.merge(buttons)
         .classed('active', isShown)
@@ -223,9 +224,14 @@ function renderDays(context: coreContext, selection: d3.Selection<HTMLDivElement
             const pano = day.images.every(image => image.isPano) ? ' · 360°' : '';
             const index = day.images.findIndex(image => image.id === shownId);
             const position = index >= 0 && day.images.length > 1 ? ` · ${t('mapillary_sign_bar.image_of', { n: index + 1, count: day.images.length })}` : '';
-            return `${creators}${pano}${position}`;
+            const date = new Date(`${day.day}T12:00:00Z`).toLocaleDateString(localizer.languageCode(), { dateStyle: 'long', timeZone: 'UTC' });
+            return `${date} · ${creators}${pano}${position}`;
         });
-    all.select('.mapillary-sign-bar-day-date').text(day => formatDay(day.day));
+    const now = new Date();
+    const locale = localizer.languageCode();
+    all.select('.mapillary-sign-bar-day-month').text(day => dayLabels(day.day, now, locale).month);
+    all.select('.mapillary-sign-bar-day-age').text(day => dayLabels(day.day, now, locale).age);
+    all.attr('aria-label', day => new Date(`${day.day}T12:00:00Z`).toLocaleDateString(locale, { dateStyle: 'long', timeZone: 'UTC' }));
     // keep the shown day in view when the row scrolls
     const active = all.filter(isShown).node();
     if (active && active.parentElement) {
@@ -234,7 +240,10 @@ function renderDays(context: coreContext, selection: d3.Selection<HTMLDivElement
             row.scrollLeft = active.offsetLeft - 4;
         }
     }
-    all.select('.mapillary-sign-bar-day-count').text(day => day.images.length > 1 ? String(day.images.length) : '');
+    all.select('.mapillary-sign-bar-day-position').text(day => {
+        const index = day.images.findIndex(image => image.id === shownId);
+        return index >= 0 ? `${index + 1}/${day.images.length}` : String(day.images.length);
+    });
 }
 
 
