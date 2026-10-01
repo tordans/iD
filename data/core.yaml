@@ -93,6 +93,21 @@ en:
       closed: This can't be extracted because it is a closed way.
       too_short: This can't be extracted because the way is too short.
       not_eligible: This can't be extracted.
+    merge_sidepaths:
+      title: Merge into a foot and cycle path
+      annotation: Merged a cycleway and a footway into one foot and cycle path.
+      description:
+        foot: "Make one highway=path of these ways. The footway keeps its line (the older way stays); it gets the tags of both, with cycleway:… and footway:… keys where they differ. The cycleway (dashed red) is deleted."
+        bike: "Make one highway=path of these ways. The cycleway keeps its line (the older way stays); it gets the tags of both, with cycleway:… and footway:… keys where they differ. The footway (dashed red) is deleted."
+      flash: Merged into one foot and cycle path.
+      flash_dropped: "Merged into one foot and cycle path. Not taken over from the deleted way: {dropped}"
+      loading: Loading the traffic sign rules, try again in a moment.
+      too_large: These can't be merged because not enough of them is currently visible.
+      mixed: These can't be merged because several cycleways and several footways are selected. Select one cycleway with its footways, or one footway with its cycleways.
+      lengths: These can't be merged because their lengths differ too much. Split the ways first.
+      apart: These can't be merged because they don't run side by side (more than 25 m apart somewhere). Split the ways first.
+      different_values: "These can't be merged because the ways that would be deleted have different values of {key}. Split the way that stays first."
+      not_eligible: These can't be merged into a foot and cycle path.
     _unavailable:
       Cannot perform “{operation}” on currently selected features.
     add:

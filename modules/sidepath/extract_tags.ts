@@ -1,6 +1,9 @@
 import { BIKELANE_TRANSFORMATIONS, getTransformedObjects } from '@tilda-geo/bicycle-infrastructure';
 
 import { roadWidthFromTags } from '../width/width_tags';
+import { combinedPathTags, type JoinSigns, type SignRecommend } from './merge_tags';
+
+export type { SignRecommend };
 
 /**
  * Tag logic for "extract a road side into a separate way" (WORKDOC feature 17).
@@ -12,9 +15,6 @@ export type Side = 'left' | 'right';
 export type SidepathPrefix = 'cycleway' | 'sidewalk';
 /** `cycleway`: cycle track or protected lane; `sidewalk`; `path`: both as one foot and cycle path */
 export type ExtractVariant = 'cycleway' | 'sidewalk' | 'path';
-
-/** Tags a traffic sign implies (from the traffic sign converter), see `modules/traffic_sign/sign_tag_plan.ts` */
-export type SignRecommend = (trafficSignValue: string) => Record<string, string | string[]>;
 
 /** Road classes whose sides can be extracted */
 const ROAD_HIGHWAYS = new Set([
@@ -300,7 +300,7 @@ function copySideTags(target: Tags, side: Tags) {
 
 
 /** Everything the extraction changes, for one variant and side */
-export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, recommend: SignRecommend | undefined): ExtractionPlan {
+export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, recommend: SignRecommend | undefined, joinSigns?: JoinSigns): ExtractionPlan {
     const cycleway = sideTags(road, 'cycleway', side);
     const sidewalk = sideTags(road, 'sidewalk', side);
     let wayTags: Tags;
@@ -333,43 +333,14 @@ export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, 
         }
         copySideTags(wayTags, sidewalk);
     } else {
-        const sign = signTags(cycleway.traffic_sign ?? sidewalk.traffic_sign, recommend);
-        signDesignated = sign.bicycle === 'designated';
+        // the same path as merging a separate cycleway and footway (WORKDOC feature 28)
         const direction = cyclewayDirection(road, side, cycleway.oneway);
         reversed = direction.reversed;
-        wayTags = {
-            highway: 'path', bicycle: 'designated', foot: 'designated', is_sidepath: 'yes',
-            // two strips are segregated unless the sign says shared (240)
-            segregated: sign.segregated ?? 'yes'
-        };
-        if (sign.traffic_sign) wayTags.traffic_sign = sign.traffic_sign;
-        for (const key of ['surface', 'smoothness', 'surface:colour', 'sett:length']) {
-            const c = cycleway[key];
-            const f = sidewalk[key];
-            if (c !== undefined && c === f) {
-                wayTags[key] = c;
-            } else {
-                if (c !== undefined) wayTags[`cycleway:${key}`] = c;
-                if (f !== undefined) wayTags[`footway:${key}`] = f;
-            }
-        }
-        const cyclewayWidth = parseMeters(cycleway.width);
-        const footwayWidth = parseMeters(sidewalk.width);
-        if (cycleway.width) wayTags['cycleway:width'] = cycleway.width;
-        if (sidewalk.width) wayTags['footway:width'] = sidewalk.width;
-        if (cycleway['source:width']) wayTags['source:cycleway:width'] = cycleway['source:width'];
-        if (cyclewayWidth !== undefined && footwayWidth !== undefined) {
-            wayTags.width = String(Math.round((cyclewayWidth + footwayWidth) * 10) / 10);
-        }
-        for (const key of Object.keys(cycleway)) {
-            if (/^(separation|buffer|marking|traffic_mode)(:|$)/.test(key)) wayTags[key] = cycleway[key];
-        }
-        const lit = cycleway.lit ?? sidewalk.lit;
-        if (lit) wayTags.lit = lit;
-        const note = cycleway.note ?? sidewalk.note;
-        if (note) wayTags.note = note;
-        wayTags.oneway = 'no';
-        if (direction.oneway) wayTags['oneway:bicycle'] = direction.oneway;
+        const bike: Tags = { ...cycleway, is_sidepath: 'yes' };
+        delete bike.oneway;
+        if (direction.oneway) bike.oneway = direction.oneway;
+        wayTags = combinedPathTags(bike, sidewalk, { recommend, joinSigns }).tags;
+        signDesignated = [cycleway.traffic_sign, sidewalk.traffic_sign].some(value => signTags(value, recommend).bicycle === 'designated');
     }
 
     if (wayTags.lit === undefined && road.lit) wayTags.lit = road.lit;

@@ -153,6 +153,18 @@ describe('planExtraction', () => {
         // no sign: designated as a foot and cycle path, but no obligation to use it
         expect(plan.roadTags).toEqual({ highway: 'secondary', 'cycleway:right': 'separate', 'sidewalk:right': 'separate' });
     });
+
+    it('C: joins the signs of both sides and keeps the sidewalk\'s other keys', () => {
+        const road = {
+            highway: 'secondary', 'cycleway:right': 'track', 'sidewalk:right': 'yes',
+            'cycleway:right:traffic_sign': 'DE:237', 'sidewalk:right:traffic_sign': 'DE:239', 'sidewalk:right:kerb': 'raised',
+            'cycleway:right:traffic_mode:right': 'foot'
+        };
+        const plan = planExtraction(road, 'path', 'right', recommend);
+        expect(plan.wayTags).toMatchObject({ highway: 'path', traffic_sign: 'DE:237;239', segregated: 'yes', kerb: 'raised' });
+        expect(plan.wayTags['traffic_mode:right']).toBeUndefined();
+        expect(plan.roadTags['bicycle:forward']).toBe('use_sidepath');
+    });
 });
 
 describe('sidepathOffsetMeters', () => {

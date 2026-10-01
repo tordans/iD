@@ -980,7 +980,19 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - A side row is shown next to its direction rows (`cycleway:right:traffic_sign` empty + `…:forward` tagged).
 - Labels English only; the plain field keeps the schema's translated label ("Verkehrsschild").
 
-### 28. Merge a cycleway and a footway into one path — ⬜ (plan, questions open)
+### 28. Merge a cycleway and a footway into one path — ✅ (v1)
+
+**Done (2026-10-01):** built as specified below.
+- Code: `modules/sidepath/merge_tags.ts` (pure: `partKind`, `combinedPathTags`, `mergeSelection`, `reverseTags`, `commonTags`), `modules/actions/merge_sidepaths.ts`, `modules/operations/merge_sidepaths.ts` (hooked into `modules/modes/select.js` after the extract entries), `distanceToLineMeters` in `modules/sidepath/offset_line.ts`, `loadedSignJoiner()` in `modules/traffic_sign/recommender.ts`, CSS in `css/96_extract_sidepath.css`, strings `operations.merge_sidepaths.*`. Tests: `test/spec/sidepath/merge_tags.ts`, `test/spec/actions/merge_sidepaths.ts`.
+- Feature 17's variant C now calls `combinedPathTags` too. Changes for C: the signs of both sides are joined (`DE:237;239`), the sidewalk's other keys (e.g. `kerb`) are kept, `traffic_mode:<side>=foot` is dropped, and the road gets `use_sidepath` when either side's sign designates bikes.
+- Different from the plan:
+  - Several cycleways **and** several footways: the entry is shown disabled with the reason, not hidden.
+  - **Side by side check (new):** every node of each way must be within 25 m of a way of the other kind, else disabled ("… don't run side by side"). Found in the browser test: a sidewalk that turns the corner had a matching length.
+  - Equally old ways (both new, or the same changeset): the footway stays.
+  - With one way plus several pieces there is nothing to pair; when the single way stays, differing other keys of the pieces take the first piece's value.
+  - A deleted way that runs against the surviving one has its tags turned first (`:forward`/`:backward`, `:left`/`:right`, `oneway`), so a cycleway with `oneway=yes` against the footway gives `oneway:bicycle=-1`.
+- Tested in the browser on Torstraße (test edits undone, nothing uploaded): extracted cycle track (DE:237) + a sidewalk piece (DE:239) → `highway=path`, `traffic_sign=DE:237;239`, `cycleway:surface` / `footway:surface`, one undo step; the real sidewalks there were refused for length (116 m against 81 m) until split, and the corner sidewalk for "side by side".
+- Open: the preview colors (kept way magenta, deleted way dashed red) were changed after the last screenshot and not looked at again; under the selection halo the preview was hard to see. Strings English only. Tooltip does not list the resulting tags.
 
 **Goal.** Still the goal of feature 17: make it as easy as possible to turn infrastructure mapped on the centerline into its own geometry. Often the cycle track should not end up as its own `highway=cycleway` but together with the sidewalk as one `highway=path` ("Geh- und Radweg"). Feature 17's variant C does that only when both the track and the sidewalk are still tags on the road. In Berlin the sidewalk is usually a separate way already, so this needs a second step.
 
@@ -1101,7 +1113,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 ## Progress log
 
-- 2026-10-01: Plan for merging a cycleway and a footway into one path (feature 28), the second step after extracting a side (feature 17).
+- 2026-10-01: "Merge into a foot and cycle path" for a selected cycleway and footway(s) (feature 28), the second step after extracting a side; the one-step extract (feature 17 C) shares its tag rules.
 - 2026-10-01: The viewer bar writes the shown image to the feature's image keys (`key=1586…` buttons); the Mapillary eyedropper and its key menu are removed (feature 20 v2). Capture day buttons with month, age and image position (feature 26).
 - 2026-10-01: Traffic sign fields for the way (with directions), the bike lanes and the sidewalks, a row per side (feature 27). Sign bar: three `key=value` buttons instead of the key dropdown, a source button (feature 26).
 - 2026-10-01: Mapillary traffic signs (feature 26): sign group filter (bike / speed / access / other), click a sign → newest best image turned to the sign's outline, only sign outlines in the viewer, selected sign + dotted line on the map, sign bar with capture days and buttons that write the sign (or maxspeed) to the selected way, with the direction from the sign's facing. Research on Rapid and vizsim/mapillary_trafficsigns.
@@ -1155,7 +1167,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
 - Feature 17 v2: extract along the chain; snap the ends.
-- Feature 28: answer the open questions, then build the merge operation.
+- Feature 28: check the hover preview; tune the length (15 m / 20 %) and distance (25 m) limits on real data.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions

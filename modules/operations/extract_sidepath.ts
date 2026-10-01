@@ -3,7 +3,7 @@ import { t } from '../core/localizer';
 import { modeSelect } from '../modes/select';
 import { extractOptions, planExtraction, type ExtractOption } from '../sidepath/extract_tags';
 import { svgPath } from '../svg/helpers';
-import { loadSignRecommender, loadedSignRecommender } from '../traffic_sign/recommender';
+import { loadSignRecommender, loadedSignJoiner, loadedSignRecommender } from '../traffic_sign/recommender';
 import type { Operation } from '../core/history';
 import type { WayId } from '../osm';
 
@@ -33,11 +33,11 @@ function extractSidepathOperation(context: iD.Context, wayID: WayId, option: Ext
     }
 
     function action() {
-        return actionExtractSidepath(wayID, variant, side, recommend());
+        return actionExtractSidepath(wayID, variant, side, recommend(), loadedSignJoiner());
     }
 
     function plan() {
-        return planExtraction(context.entity(wayID).tags, variant, side, recommend());
+        return planExtraction(context.entity(wayID).tags, variant, side, recommend(), loadedSignJoiner());
     }
 
     const operation: Operation = function() {

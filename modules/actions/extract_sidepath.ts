@@ -2,6 +2,7 @@ import { osmNode } from '../osm/node';
 import { osmWay } from '../osm/way';
 import { lineLengthMeters, offsetLine } from '../sidepath/offset_line';
 import { planExtraction, type ExtractVariant, type Side, type SignRecommend } from '../sidepath/extract_tags';
+import type { JoinSigns } from '../sidepath/merge_tags';
 import type { Action } from '../core/history';
 import type { coreGraph } from '../core';
 import type { WayId } from '../osm';
@@ -26,14 +27,15 @@ export function actionExtractSidepath(
     wayID: WayId,
     variant: ExtractVariant,
     side: Side,
-    recommend: SignRecommend | undefined
+    recommend: SignRecommend | undefined,
+    joinSigns?: JoinSigns
 ): ActionExtractSidepath {
     let _wayId: WayId;
     let _keptBicycle: string | undefined;
 
     const action: ActionExtractSidepath = function(graph: coreGraph) {
         const road = graph.entity(wayID);
-        const plan = planExtraction(road.tags, variant, side, recommend);
+        const plan = planExtraction(road.tags, variant, side, recommend, joinSigns);
         _keptBicycle = plan.keptBicycle;
 
         const locs = graph.childNodes(road).map(node => node.loc as [number, number]);

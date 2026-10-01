@@ -58,3 +58,21 @@ export function lineLengthMeters(locs: Loc[]) {
     }
     return length;
 }
+
+
+/** Meters from a point to the nearest point of a line (local plane) */
+export function distanceToLineMeters(point: Loc, line: Loc[]) {
+    const degLon = geoMetersToLon(1, point[1]);
+    const degLat = geoMetersToLat(1);
+    const xy = line.map(loc => [(loc[0] - point[0]) / degLon, (loc[1] - point[1]) / degLat]);
+    let nearest = Math.min(...xy.map(([x, y]) => Math.hypot(x, y)));
+    for (let i = 1; i < xy.length; i++) {
+        const [ax, ay] = xy[i - 1];
+        const [dx, dy] = [xy[i][0] - ax, xy[i][1] - ay];
+        const lengthSquared = dx * dx + dy * dy;
+        if (!lengthSquared) continue;
+        const along = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lengthSquared));
+        nearest = Math.min(nearest, Math.hypot(ax + along * dx, ay + along * dy));
+    }
+    return nearest;
+}
