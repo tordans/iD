@@ -1015,10 +1015,6 @@ en:
       disable:
         already_set: "This photo is already tagged on the selected map feature"
         too_far: "This photo is too far away from the selected map feature"
-      mapillary_add_to: "Add this image to {key}"
-      mapillary_add_to_key: "Add to {key}"
-      mapillary_choose_target: "Choose the tag for this image"
-      mapillary_already_in_key: "This image is already in {key}"
   preset_shortcut:
     title: Set Keyboard Shortcut
     button_tooltip: Set keyboard shortcut
@@ -1227,6 +1223,8 @@ en:
     image_of: "image {n} of {count}, click for the next"
     write_sign: "Write the sign to {key}"
     write_source: "Add this image as source of the sign"
+    write_image: "Add this image to {key}"
+    suggested_image: the image row chosen in the Mapillary images field
     suggested: fits the direction the sign faces
     write_tags: Set these tags
     present: already tagged

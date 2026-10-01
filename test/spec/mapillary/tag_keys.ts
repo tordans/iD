@@ -57,4 +57,9 @@ describe('mapillary/tag_keys', () => {
             'cycleway:right:mapillary', 'sidewalk:left:mapillary', 'source:cycleway:right:traffic_sign:mapillary'
         ]);
     });
+
+    it('skips sides mapped as separate ways', () => {
+        const keys = suggestedMapillaryKeys({ highway: 'secondary', 'cycleway:both': 'separate', 'sidewalk:both': 'separate' });
+        expect(keys).toEqual(['mapillary:forward', 'mapillary', 'mapillary:backward']);
+    });
 });

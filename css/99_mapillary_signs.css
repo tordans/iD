@@ -194,7 +194,9 @@
 }
 .mapillary-sign-bar-actions.hide,
 .mapillary-sign-bar-signs.hide,
-.mapillary-sign-bar-write.hide {
+.mapillary-sign-bar-write.hide,
+.mapillary-sign-bar-head.hide,
+.mapillary-sign-bar-days.hide {
     display: none;
 }
 /* the write buttons as their own group below the images */
@@ -205,6 +207,20 @@
     margin-top: 2px;
     padding-top: 6px;
     border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+/* without a sign the bar only has the image keys: no line above them */
+.mapillary-sign-bar:not(.with-sign) .mapillary-sign-bar-write {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+/* with a sign, the image keys are their own group below the sign's buttons */
+.mapillary-sign-bar.with-sign .mapillary-sign-bar-images {
+    padding-top: 4px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+.mapillary-sign-bar-images {
+    flex-wrap: wrap;
 }
 /* already tagged: green with a check; another value tagged: the arrow label */
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.present:disabled {

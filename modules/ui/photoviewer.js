@@ -12,7 +12,6 @@ import { services } from '../services';
 import { uiTooltip } from './tooltip';
 import { actionChangeTags } from '../actions';
 import { geoSphericalDistance } from '../geo';
-import { uiMapillarySetPhoto } from './mapillary_set_photo';
 
 export function uiPhotoviewer(context) {
 
@@ -20,8 +19,8 @@ export function uiPhotoviewer(context) {
 
     var _pointerPrefix = 'PointerEvent' in window ? 'pointer' : 'mouse';
 
-    const addPhotoIdButton = new Set(['mapillary', 'panoramax']);
-    const mapillarySetPhoto = uiMapillarySetPhoto(context);
+    // Mapillary: the image is written with the buttons of the viewer bar (WORKDOC features 20, 26)
+    const addPhotoIdButton = new Set(['panoramax']);
 
     function photoviewer(selection) {
         selection
@@ -106,13 +105,6 @@ export function uiPhotoviewer(context) {
             }
 
             function renderAddPhotoIdButton(service, shouldDisplay) {
-                // Mapillary has its own button with a target key (feature 20)
-                mapillarySetPhoto.render(selection, service === 'mapillary' && shouldDisplay, setPhotoTagButton);
-                if (service === 'mapillary' && shouldDisplay) {
-                    selection.selectAll(':scope > .set-photo-from-viewer').remove();
-                    return;
-                }
-
                 const button = selection.selectAll('.set-photo-from-viewer')
                     .data(shouldDisplay ? [0] : []);
 

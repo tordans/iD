@@ -1,15 +1,13 @@
 import { joinImageIds, splitImageIds, suggestedMapillaryKeys } from './tag_keys';
 
 /**
- * Pure logic of "set photo from viewer" for Mapillary (WORKDOC feature 20): which key the id is
- * written to, the appended value and why the button is disabled.
+ * Pure logic of writing the shown Mapillary image to a feature (WORKDOC feature 20, now buttons in
+ * the viewer bar of feature 26): the keys offered, the suggested one and the appended value.
  */
 
 type TagsLike = Record<string, string | string[] | undefined>;
 
 export const DEFAULT_TARGET_KEY = 'mapillary';
-
-export type DisabledReason = 'already_set' | 'too_far';
 
 
 /** The key the main button writes to */
@@ -38,9 +36,12 @@ export function targetKeys(tags: TagsLike): string[] {
 }
 
 
-/** "Already set" is per target key: every selected entity has the id in that key's list */
-export function disabledReason(entitiesTags: TagsLike[], key: string, id: string | undefined, tooFar: boolean): DisabledReason | false {
-    if (id && entitiesTags.length && entitiesTags.every(tags => hasImageId(tags, key, id))) return 'already_set';
-    if (tooFar) return 'too_far';
-    return false;
+/**
+ * The image key buttons: every existing and likely image key (`targetKeys`) except `exclude` (the
+ * sign's source key, which has its own button), and the suggested one: the row last chosen in the
+ * Mapillary images field, else `mapillary`
+ */
+export function imageButtonKeys(tags: TagsLike, activeTarget: string | undefined, exclude?: string): { keys: string[]; suggested: string } {
+    const keys = targetKeys(tags).filter(key => key !== exclude);
+    return { keys, suggested: resolveTargetKey(activeTarget) };
 }

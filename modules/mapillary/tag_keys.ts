@@ -137,7 +137,8 @@ export function mapillaryKeyLabel(key: string): string {
  */
 export function suggestedMapillaryKeys(tags: Record<string, string | string[] | undefined>): string[] {
     const keys = ['mapillary', 'mapillary:forward', 'mapillary:backward'];
-    const has = (key: string) => typeof tags[key] === 'string' && tags[key] !== '' && tags[key] !== 'no' && tags[key] !== 'none';
+    // `separate`: the bike lane / sidewalk is its own way, with its own images
+    const has = (key: string) => typeof tags[key] === 'string' && !['', 'no', 'none', 'separate'].includes(tags[key] as string);
 
     if (Object.keys(tags).some(key => /^traffic_sign(:|$)/.test(key))) keys.push('source:traffic_sign:mapillary');
     for (const prefix of ['cycleway', 'sidewalk'] as const) {

@@ -719,7 +719,7 @@ Code: `modules/mapillary/tag_keys.ts` (parse keys and values, labels, preferred 
 - Layout (after review): one table row per image like the directional combo — label cell = key label + small age and image type (360° / flat, no username), value cell = id (cut off) + link + eye + trash. The "+" sits in the field label before the trash and adds a row with a key chooser.
 - Not supported: multi-selection.
 
-### 20. "Set photo from viewer" for all image keys — ✅ (v1)
+### 20. "Set photo from viewer" for all image keys — ✅ (v2: buttons in the viewer bar)
 
 iD's eye-dropper button in the photo viewer always writes `mapillary=<id>`. With the keys of feature 19 that is too limited.
 - Target:
@@ -736,6 +736,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - The button also re-renders when the viewer's image changes (iD's did not, so its disabled state could be stale).
 - Open: eyeball check of the caret menu styling in a visible window.
 
+**v2 (2026-10-01, decided): the eyedropper and its key menu are gone for Mapillary.** The bar above the viewer (feature 26) shows, while one feature is selected and an image is shown, a `key=1586…` button per image key of the feature (`suggestedMapillaryKeys`: existing keys, `mapillary[:forward|:backward]`, the sides with a bike lane / sidewalk, the sign source keys). Each shows its state like the sign buttons: `✓` when the image is in the key, `+1586…` when it is added to a list. The row last chosen in the Mapillary images field is outlined as suggested (else `mapillary`). Disabled with iD's "too far" text when the image is more than 100 m away. With a selected sign, these buttons follow the sign's buttons (without the sign's own source key). Sides mapped as `separate` get no image key. Only one selected feature (the menu also handled several). Code: `imageButtonKeys` in `modules/mapillary/set_photo.ts`, `imageActionsFor` in `modules/ui/mapillary_sign_bar.ts`; `photoviewer.js` keeps iD's code and only drops `mapillary` from the eyedropper's providers; `modules/ui/mapillary_set_photo.ts` and its CSS are removed.
 
 ### 21. Measuring tape ("Maßband") for width fields — ✅ (v1)
 
@@ -1031,6 +1032,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 
 ## Progress log
 
+- 2026-10-01: The viewer bar writes the shown image to the feature's image keys (`key=1586…` buttons); the Mapillary eyedropper and its key menu are removed (feature 20 v2). Capture day buttons with month, age and image position (feature 26).
 - 2026-10-01: Traffic sign fields for the way (with directions), the bike lanes and the sidewalks, a row per side (feature 27). Sign bar: three `key=value` buttons instead of the key dropdown, a source button (feature 26).
 - 2026-10-01: Mapillary traffic signs (feature 26): sign group filter (bike / speed / access / other), click a sign → newest best image turned to the sign's outline, only sign outlines in the viewer, selected sign + dotted line on the map, sign bar with capture days and buttons that write the sign (or maxspeed) to the selected way, with the direction from the sign's facing. Research on Rapid and vizsim/mapillary_trafficsigns.
 - 2026-10-01: Field title buttons only on hover/focus, as small squares with the input's background; link buttons in fields no longer blue. A lock tooltip change was tried and reverted (feature 23).
