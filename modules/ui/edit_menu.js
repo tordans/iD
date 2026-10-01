@@ -118,7 +118,7 @@ export function uiEditMenu(context) {
                 .scrollContainer(context.container().select('.over-map'))
                 .heading(() => d.title)
                 .title(d.tooltip)
-                .keys([d.keys[0]]);
+                .keys(d.keys.length ? [d.keys[0]] : null);
 
             _tooltips.push(tooltip);
 

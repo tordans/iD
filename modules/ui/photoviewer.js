@@ -19,7 +19,8 @@ export function uiPhotoviewer(context) {
 
     var _pointerPrefix = 'PointerEvent' in window ? 'pointer' : 'mouse';
 
-    const addPhotoIdButton = new Set(['mapillary', 'panoramax']);
+    // Mapillary: the image is written with the buttons of the viewer bar (WORKDOC features 20, 26)
+    const addPhotoIdButton = new Set(['panoramax']);
 
     function photoviewer(selection) {
         selection

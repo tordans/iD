@@ -1,0 +1,14 @@
+/* Read-only feature categories: visible for orientation, muted, not interactive */
+
+.ideditor .layer-osm .readonly-feature {
+    filter: grayscale(1) brightness(0.8);
+    opacity: 0.5;
+}
+
+/* no hover, click, lasso start or snapping on read-only features and their targets */
+.ideditor .layer-osm .readonly-feature,
+.ideditor .layer-osm .readonly-feature *,
+.ideditor .layer-touch .readonly-feature {
+    pointer-events: none !important;
+}
+

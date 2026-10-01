@@ -7,6 +7,8 @@ import { prefs } from '../core/preferences';
 import { t, localizer } from '../core/localizer';
 import { presetManager } from '../presets';
 import { behaviorHash } from '../behavior';
+import { behaviorPresetFavorites } from '../behavior/preset_favorites';
+import { behaviorLensShortcuts } from '../behavior/lens_shortcuts';
 import { modeBrowse } from '../modes/browse';
 import { svgDefs, svgIcon } from '../svg';
 import { utilDetect } from '../util/detect';
@@ -21,6 +23,12 @@ import { uiFlash } from './flash';
 import { uiFullScreen } from './full_screen';
 import { uiGeolocate } from './geolocate';
 import { uiInfo } from './info';
+import { uiWayTablePanel } from './way_table_panel';
+import { installWidthIndicatorListeners } from '../width/width_indicator';
+import { installMeasureTapeListeners } from '../measure/measure_tape_listeners';
+import { setupLiveTouched } from '../live_touched/live_touched';
+import { applyInterfacePrefs } from './sections/interface';
+import { setupReadOnlyFeatures } from '../renderer/readonly_features';
 import { uiIntro } from './intro';
 import { uiIssuesInfo } from './issues_info';
 import { uiLoading } from './loading';
@@ -42,10 +50,14 @@ import { uiZoom } from './zoom';
 import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
 
+import { initMapillaryAutoShow } from '../mapillary/auto_show';
+import { initMapillarySignBar } from './mapillary_sign_bar';
 import { uiPaneBackground } from './panes/background';
 import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
 import { uiPaneMapData } from './panes/map_data';
+import { uiPaneMapDisplay } from './panes/map_display';
+import { uiPanePhotos } from './panes/photos';
 import { uiPanePreferences } from './panes/preferences';
 
 export function uiInit(context) {
@@ -57,6 +69,8 @@ export function uiInit(context) {
     var overMap;
 
     function render(container) {
+
+        applyInterfacePrefs(context);
 
         container
             .on('click.ui', function(d3_event) {
@@ -219,9 +233,14 @@ export function uiInit(context) {
             .append('div')
             .attr('class', 'map-panes');
 
+        // before the panes, so the Map Data section can subscribe to it
+        ui.liveTouched = setupLiveTouched(context);
+
         var uiPanes = [
             uiPaneBackground(context),
             uiPaneMapData(context),
+            uiPaneMapDisplay(context),
+            uiPanePhotos(context),
             uiPaneIssues(context),
             uiPanePreferences(context),
             uiPaneHelp(context)
@@ -241,6 +260,14 @@ export function uiInit(context) {
 
         overMap
             .call(ui.info);
+
+        ui.wayTable = uiWayTablePanel(context);
+        overMap
+            .call(ui.wayTable);
+
+        installWidthIndicatorListeners(context);
+        installMeasureTapeListeners(context);
+        setupReadOnlyFeatures(context);
 
         overMap
             .append('div')
@@ -359,6 +386,14 @@ export function uiInit(context) {
             map.centerZoom([0, 0], 2);
         }
 
+        // Setup preset favorites behavior
+        ui.presetFavorites = behaviorPresetFavorites(context);
+        d3_select(document).call(ui.presetFavorites);
+
+        // Setup lens shortcuts behavior (⌥+letter activates an imported lens)
+        ui.lensShortcuts = behaviorLensShortcuts(context);
+        d3_select(document).call(ui.lensShortcuts);
+
         // Bind events
         window.onbeforeunload = function() {
             return context.save();
@@ -435,6 +470,9 @@ export function uiInit(context) {
                 container
                     .classed('mode-' + exited.id, false);
             });
+
+        initMapillaryAutoShow(context);
+        initMapillarySignBar(context);
 
         context.enter(modeBrowse(context));
 

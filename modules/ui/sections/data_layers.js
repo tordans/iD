@@ -36,8 +36,7 @@ export function uiSectionDataLayers(context) {
             .call(drawOsmItems)
             .call(drawQAItems)
             .call(drawCustomDataItems)
-            .call(drawVectorItems)      // Beta - Detroit mapping challenge
-            .call(drawPanelItems);
+            .call(drawVectorItems);     // Beta - Detroit mapping challenge
     }
 
     function showsLayer(which) {
@@ -298,7 +297,9 @@ export function uiSectionDataLayers(context) {
 
         var ul = selection
             .selectAll('.layer-list-data')
-            .data(dataLayer ? [0] : []);
+            // the "Custom data layers" section replaced this single slot; it only
+            // shows while it holds data, e.g. a file dropped onto the map
+            .data(hasData ? [0] : []);
 
         // Exit
         ul.exit()
@@ -387,59 +388,6 @@ export function uiSectionDataLayers(context) {
         } else if (d && d.fileList) {
             dataLayer.fileList(d.fileList);
         }
-    }
-
-    function drawPanelItems(selection) {
-
-        var panelsListEnter = selection.selectAll('.md-extras-list')
-            .data([0])
-            .enter()
-            .append('ul')
-            .attr('class', 'layer-list md-extras-list');
-
-        var historyPanelLabelEnter = panelsListEnter
-            .append('li')
-            .attr('class', 'history-panel-toggle-item')
-            .append('label')
-            .call(uiTooltip()
-                .title(() => t.append('map_data.history_panel.tooltip'))
-                .keys([uiCmd('⌘⇧' + t('info_panels.history.key'))])
-                .placement('top')
-            );
-
-        historyPanelLabelEnter
-            .append('input')
-            .attr('type', 'checkbox')
-            .on('change', function(d3_event) {
-                d3_event.preventDefault();
-                context.ui().info.toggle('history');
-            });
-
-        historyPanelLabelEnter
-            .append('span')
-            .call(t.append('map_data.history_panel.title'));
-
-        var measurementPanelLabelEnter = panelsListEnter
-            .append('li')
-            .attr('class', 'measurement-panel-toggle-item')
-            .append('label')
-            .call(uiTooltip()
-                .title(() => t.append('map_data.measurement_panel.tooltip'))
-                .keys([uiCmd('⌘⇧' + t('info_panels.measurement.key'))])
-                .placement('top')
-            );
-
-        measurementPanelLabelEnter
-            .append('input')
-            .attr('type', 'checkbox')
-            .on('change', function(d3_event) {
-                d3_event.preventDefault();
-                context.ui().info.toggle('measurement');
-            });
-
-        measurementPanelLabelEnter
-            .append('span')
-            .call(t.append('map_data.measurement_panel.title'));
     }
 
     context.layers().on('change.uiSectionDataLayers', section.reRender);

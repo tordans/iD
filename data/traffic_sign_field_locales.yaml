@@ -1,0 +1,78 @@
+# Fork-local translations until strings are on Transifex (core resource).
+# Merged deeply over the built locale files, so single strings can be overridden.
+de:
+  traffic_sign_field:
+    order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
+    open_tool: Im Verkehrszeichen-Tool öffnen
+    drag: Zum Umsortieren ziehen oder Pfeiltasten nutzen
+    empty: Noch keine Schilder. Unten nach Name oder Zeichen-ID suchen, um eines hinzuzufügen.
+    add_sign: Schild hinzufügen…
+    unknown_sign: Unbekanntes Schild
+    no_sign: Unbeschildert
+    no_sign_description: Hier steht explizit kein Verkehrsschild (traffic_sign=none)
+  map_display:
+    title: Kartendarstellung
+    description: Kartendarstellung
+  photos_pane:
+    title: Fotos
+    description: Fotos
+  pane_tooltips:
+    background: Luftbilder, Überlagerungen, Helligkeit und Bildversatz.
+    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen und Live-Bearbeitungen.
+    map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
+    photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
+    issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
+    preferences: Werkzeugleisten-Beschriftung, Info-Felder, Datenschutz und Favoriten.
+    help: Dokumentation, Einführung und Tastaturkürzel.
+  preferences:
+    panels:
+      title: Info-Felder
+  inspector:
+    hidden_preset:
+      manual: "{features} sind versteckt. Schalte sie im Bereich Kartendarstellung ein."
+  help:
+    streetlevel:
+      using: "Um Straßenfotos beim Bearbeiten zu benutzen, öffne den Bereich {photos_icon} **{photos}** am Rand der Karte und schalte dort die verfügbaren Bildquellen ein oder aus."
+  shortcuts:
+    browsing:
+      display_options:
+        map_display: "Kartendarstellung ein-/ausblenden"
+        photos: "Fotos ein-/ausblenden"
+de-CH:
+  traffic_sign_field:
+    order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
+    open_tool: Im Verkehrszeichen-Tool öffnen
+    drag: Zum Umsortieren ziehen oder Pfeiltasten nutzen
+    empty: Noch keine Schilder. Unten nach Name oder Zeichen-ID suchen, um eines hinzuzufügen.
+    add_sign: Schild hinzufügen…
+    unknown_sign: Unbekanntes Schild
+    no_sign: Unbeschildert
+    no_sign_description: Hier steht explizit kein Verkehrsschild (traffic_sign=none)
+  map_display:
+    title: Kartendarstellung
+    description: Kartendarstellung
+  photos_pane:
+    title: Fotos
+    description: Fotos
+  pane_tooltips:
+    background: Luftbilder, Überlagerungen, Helligkeit und Bildversatz.
+    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen und Live-Bearbeitungen.
+    map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
+    photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
+    issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
+    preferences: Werkzeugleisten-Beschriftung, Info-Felder, Datenschutz und Favoriten.
+    help: Dokumentation, Einführung und Tastaturkürzel.
+  preferences:
+    panels:
+      title: Info-Felder
+  inspector:
+    hidden_preset:
+      manual: "{features} sind versteckt. Schalte sie im Bereich Kartendarstellung ein."
+  help:
+    streetlevel:
+      using: "Um Straßenfotos beim Bearbeiten zu benutzen, öffne den Bereich {photos_icon} **{photos}** am Rand der Karte und schalte dort die verfügbaren Bildquellen ein oder aus."
+  shortcuts:
+    browsing:
+      display_options:
+        map_display: "Kartendarstellung ein-/ausblenden"
+        photos: "Fotos ein-/ausblenden"

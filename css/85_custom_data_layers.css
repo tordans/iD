@@ -1,0 +1,75 @@
+/* Multiple custom data layers: Map Data pane section and settings modal */
+
+.layer-list-custom-data label > span.custom-data-swatch {
+    display: block;
+    flex: 0 0 12px;
+    width: 12px;
+    height: 12px;
+    margin-inline: 4px 8px;
+    border-radius: 2px;
+    vertical-align: middle;
+}
+
+.layer-list-custom-data label > span.custom-data-name {
+    flex: 1 1 auto;
+    width: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+/* "(key=value)" after the name */
+.layer-list-custom-data .custom-data-filter {
+    margin-inline-start: 4px;
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.custom-data-layers-empty {
+    margin: 0 0 10px 0;
+    font-size: 12px;
+}
+
+.settings-custom-data-layer label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+.settings-custom-data-layer input.field-name,
+.settings-custom-data-layer textarea.field-url {
+    display: block;
+    width: 100%;
+    margin: 0 0 5px 0;
+}
+.settings-custom-data-layer input.field-name {
+    margin-bottom: 20px;
+}
+.settings-custom-data-layer .instructions-formats,
+.settings-custom-data-layer .instructions-filter {
+    font-size: 12px;
+    margin: 0 0 20px 0;
+}
+.settings-custom-data-layer .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+.settings-custom-data-layer .filter-row input {
+    flex: 1 1 0;
+    min-width: 0;
+}
+.settings-custom-data-layer input.field-color {
+    width: 60px;
+    height: 30px;
+    padding: 2px;
+}
+
+/* a layer that is not selectable ignores the pointer, so clicks reach the OSM data below */
+.layer-custom-data.not-selectable,
+.layer-custom-data.not-selectable path,
+.layer-custom-data.not-selectable text {
+    pointer-events: none;
+}
+.custom-data-filter-tooltip {
+    margin-top: 6px;
+}

@@ -1,0 +1,8 @@
+/* Preferences ▸ Interface: hide the captions under the top toolbar buttons.
+   Keep 10px under the buttons, matching the padding above them. */
+.ideditor.hide-toolbar-labels .top-toolbar .toolbar-item .item-label {
+    display: none;
+}
+.ideditor.hide-toolbar-labels .top-toolbar .toolbar-item {
+    padding-bottom: 10px;
+}
