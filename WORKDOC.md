@@ -1060,6 +1060,97 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 5. ~~Keep the one-step extract (feature 17, variant C)?~~ **Decided (2026-10-01):** yes. It is already built: a road with `sidewalk=right` + `sidewalk:surface=sett` and `cycleway:right=track` + `cycleway:right:surface=asphalt` offers "Extract right cycle track and sidewalk as one path" and gives `highway=path` with `cycleway:surface=asphalt` and `footway:surface=sett`.
    - To do with this feature: variant C uses the same shared tag function as the merge, so both give the same result. The one change for C: the signs of both sides are joined into one `traffic_sign` (today C takes the cycle track's sign, else the sidewalk's).
 
+### 29. Internal notes from TILDA in iD — ⬜ (analysis; needs an API in TILDA first)
+
+**Goal.** Mappers of the project share comments and feedback internally, on the map, without public OSM notes. TILDA already has internal notes with folders. iD shows the notes of one TILDA folder like OSM notes: read, write a new one, comment, resolve. The TILDA region and the folder are fixed in this project's config.
+
+#### Status quo in TILDA (read 2026-10-01, `~/Development/FMC/tilda-geo`, branch `develop`)
+
+- **Data** (`app/prisma/schema.prisma`): `Note` (subject, body, latitude, longitude, `resolvedAt`, author, one `folderId`), `NoteComment` (body, author), `NoteFolder` (name; many-to-many with `Region`, so one folder can show in several regions).
+- **Logic** (`app/src/server/notes/`): everything we need exists as functions: `getNotesAndCommentsForRegion` (GeoJSON of one folder), `getNoteAndComments`, `createNote`, `createNoteComment`, `updateNoteResolvedAt`, `updateNote`, `deleteNote`, folder functions.
+- **Who may:** only region members and admins (`canAccessMemberModeForRegion`, `authorizeRegionMemberByRegionSlug`), also on public regions; the folder must belong to the region (`assertFolderInRegion`). Edit / delete only by the author.
+- **How it is reached:** only as TanStack Start server functions (`notes.functions.ts`), TILDA's internal RPC for its own frontend. There is **no HTTP API** for notes (`/api/notes/$regionSlug` only has the `download` child). The CORS helper (`server/api/util/cors.ts`) allows `GET` from `*` only.
+- **Auth:** Better Auth with OSM OAuth2 as the only login (`server/auth/auth.server.ts`). A TILDA user **is** an OSM user: `User.osmId` (unique), found or created at login from OSM's `/user/details.json`. The session is a cookie on the TILDA domain. The only token auth is `AdminApiToken` (hashed bearer tokens, admins only, for the admin API).
+
+#### Do iD and TILDA share the auth?
+
+- **The same identity, not the same credential.** Both log in with OSM OAuth2, so both know the same OSM user id. But each has its own OAuth client: iD holds an OSM access token of iD's client (scopes `read_prefs write_prefs write_api read_gpx write_notes`); TILDA has its own client and gives the browser a session cookie for the TILDA domain.
+- iD (on Netlify / localhost) cannot use TILDA's cookie: another origin, browsers block third-party cookies, and TILDA sends no CORS headers for it.
+- **Bridge that works:** iD's OSM token proves who the user is. A new TILDA endpoint takes it as `Authorization: Bearer`, asks OSM `/api/0.6/user/details.json` with it (the same call TILDA makes at login), gets the `osmId`, finds the `User`, and then runs the normal member check. No new login for the mapper.
+- **Conditions:** the mapper has logged into TILDA at least once (so the `User` exists) and is a member of the region; else a clear 403 ("log into TILDA once" / "ask for access"). iD and that TILDA must use the same OSM server (production OSM; check what staging uses).
+
+**Feasible: yes,** but TILDA has to get a small external API first. Nothing can be built on the iD side against today's TILDA.
+
+#### Options for the TILDA side
+
+| | How | Verdict |
+|---|---|---|
+| A | Every request carries iD's OSM token; TILDA checks it with OSM (cached a few minutes by token hash) | simplest; the OSM token (with `write_api`) travels on every call |
+| **B** | Token exchange: iD sends the OSM token once to `POST /api/external/session`, TILDA checks it and returns its own short-lived bearer token (hashed in the DB, like `AdminApiToken`) for the notes endpoints | **recommended**: the OSM token is sent once, TILDA's token can only do notes, can be revoked |
+| C | TILDA as its own OAuth provider with a login popup in iD | cleanest separation, most work, a second login |
+| D | TILDA's cookie cross-site (`SameSite=None` + CORS with credentials) | fragile: third-party cookies are blocked more and more |
+
+In all cases TILDA never stores the OSM token, and the endpoints get a CORS allow-list of our iD origins with `Authorization` and `POST`.
+
+#### What iD needs from the API
+
+- `GET` notes of the folder as GeoJSON (optional `bbox`, `status`), with subject, status, author name, comment count.
+- `GET` one note with body and comments (author names, dates).
+- `POST` a note (subject, body, lon/lat), `POST` a comment, `PATCH` resolved / reopened. Edit and delete can stay in TILDA.
+- Answers that tell "not logged in", "not a TILDA user yet", "not a member" apart.
+
+#### iD side (after the API exists)
+
+- Config in `index.html`: `tildaNotes: { origin, regionSlug, folderId }`.
+- A layer and an editor like iD's OSM notes (`modules/svg/notes.js`, `modules/ui/note_editor.js`, the notes part of `modules/services/osm.js`) as new TS files: `modules/services/tilda_notes.ts`, `modules/svg/tilda_notes.ts`, `modules/ui/tilda_note_editor.ts`, an entry in the Map Data pane, own pin color so they are not taken for OSM notes.
+- The OSM token comes from iD's logged-in connection; without a login the layer asks to log in.
+- A link "Open in TILDA" on each note.
+
+#### Prompt for the TILDA session
+
+```
+We want mappers to read and write TILDA's internal notes from our iD editor fork
+(worktree /Users/tordans/Development/OSM/iD--radnetz-berlin, branch radnetz-berlin,
+plan in its WORKDOC.md, feature 29 "Internal notes from TILDA in iD"). Read that section first.
+
+Work in a new worktree of tilda-geo (suggested: ../tilda-geo--external-notes-api, branch
+external-notes-api from develop). Do not change the iD worktree.
+
+Task: an external HTTP API for internal notes, used cross-origin by iD.
+
+1. Auth by OSM identity (option B of the WORKDOC):
+   - POST /api/external/session with "Authorization: Bearer <OSM OAuth2 access token>".
+     Verify the token by calling OSM /api/0.6/user/details.json (reuse getOsmApiUrl and the
+     parsing in server/auth/auth.server.ts), map osmId to our User. Never store or log the OSM token.
+   - Return a short-lived TILDA bearer token (random, only its hash in the DB, expiry, scope
+     "notes"), modelled on AdminApiToken / server/admin/adminApiTokens.server.ts.
+   - Distinct errors: invalid OSM token (401), OSM user has no TILDA account yet (403
+     "no_tilda_user"), later per region: not a member (403 "not_member").
+2. Notes endpoints under /api/external/notes/$regionSlug/$folderId, authorised with that token,
+   reusing the existing functions in app/src/server/notes (they take Headers and build the
+   session from the cookie; refactor so the session can also come from the token, without
+   weakening the member checks or the audit context):
+   - GET list as GeoJSON (optional bbox, status)
+   - GET /$noteId with body and comments
+   - POST note, POST /$noteId/comments, PATCH /$noteId (resolved true/false)
+3. CORS for these routes only: an allow-list of origins from env (our Netlify preview and
+   http://127.0.0.1:8080 for dev), methods GET/POST/PATCH/OPTIONS, header Authorization;
+   answer the preflight.
+4. Tests like the existing notes tests (member vs non-member, folder not in region, expired
+   token, wrong origin), and a short doc of the API (request/response examples) that the iD
+   side can build against.
+
+Before coding: check my assumptions in the WORKDOC against the code, tell me which OSM server
+staging and production use (iD uses production OSM), and say if Better Auth already offers a
+bearer/API-key plugin that fits better than a new token table. Then propose the plan.
+```
+
+**Open questions**
+1. Option B (token exchange) or the simpler A for a first version?
+2. Which TILDA region slug and which folder (id) for Radnetz Berlin? Develop against staging or production?
+3. Are all project mappers members of that region in TILDA already?
+4. Should iD also resolve notes, or only write and comment?
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1113,6 +1204,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 ## Progress log
 
+- 2026-10-01: Analysis for TILDA's internal notes in iD (feature 29): feasible via the shared OSM identity, needs a small external API in TILDA; prompt for the TILDA session written.
 - 2026-10-01: The selected Mapillary sign is in the URL (`photo_sign=<id>`) and selected again after a reload, so the viewer is not blank (feature 26; `restoreSelectedSign` in `modules/mapillary/sign_select.ts`).
 - 2026-10-01: Extracted ways are always drawn in the road's direction; a left cycle track gets `oneway=-1` instead of a reversed line (feature 17).
 - 2026-10-01: "Merge into a foot and cycle path" for a selected cycleway and footway(s) (feature 28), the second step after extracting a side; the one-step extract (feature 17 C) shares its tag rules.
@@ -1169,6 +1261,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
 - Feature 17 v2: extract along the chain; snap the ends.
+- Feature 29: run the TILDA prompt; build the iD layer once the API exists.
 - Feature 28: check the hover preview; tune the length (15 m / 20 %) and distance (25 m) limits on real data.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
