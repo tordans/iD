@@ -129,12 +129,17 @@ function renderHead(context: coreContext, bar: d3.Selection<HTMLDivElement>, sig
     const described = meaning ? describe(context, [meaning.signs[0]]) : undefined;
 
     // the Mapillary icon, then the German sign(s) when we know them
-    const icons = [{ id: `mapillary-${sign.value}`, href: `#${sign.value}`, svg: undefined as string | undefined }]
-        .concat((described ?? []).filter(d => d.svgName).map(d => ({
-            id: d.value,
-            href: '',
-            svg: context.asset(`traffic-sign-converter/data-svgs/DE/svgs/${d.svgName}.svg`)
-        })));
+    const icons = [{
+        id: `mapillary-${sign.value}`,
+        href: `#${sign.value}`,
+        svg: undefined as string | undefined,
+        title: t('mapillary_sign_bar.icon.mapillary', { value: sign.value })
+    }].concat((described ?? []).filter(d => d.svgName).map(d => ({
+        id: d.value,
+        href: '',
+        svg: context.asset(`traffic-sign-converter/data-svgs/DE/svgs/${d.svgName}.svg`),
+        title: t('mapillary_sign_bar.icon.sign', { sign: d.value.startsWith('DE:') ? d.value : `DE:${d.value}`, name: d.name })
+    })));
     const icon = bar.select('.mapillary-sign-bar-icons').selectAll<HTMLElement, typeof icons[0]>('.mapillary-sign-bar-icon')
         .data(icons, d => d.id);
     icon.exit().remove();
@@ -148,7 +153,9 @@ function renderHead(context: coreContext, bar: d3.Selection<HTMLDivElement>, sig
                 d3_select(this).append('svg').append('use').attr('href', d.href);
             }
         });
-    iconEnter.merge(icon).order();
+    iconEnter.merge(icon)
+        .attr('title', d => d.title)
+        .order();
 
     const name = described?.[0]?.known
         ? `${meaning!.signs[0]} ${described[0].name}`

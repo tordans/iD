@@ -1213,6 +1213,9 @@ en:
     write_sign: "Write to {key}, with the image as source"
     write_tags: Set these tags
     annotation: Set a traffic sign from Mapillary.
+    icon:
+      mapillary: "Detected by Mapillary: {value}"
+      sign: "German traffic sign this detection means (from the traffic sign tool): {sign} {name}"
     direction:
       forward: "↑ forward"
       backward: "↓ backward"
