@@ -1045,7 +1045,8 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 2. ~~Which way is "older"?~~ **Decided (2026-10-01):** by changeset age; no second menu entry.
 3. ~~A value on one part only?~~ **Decided (2026-10-01):** the prefixed key (`cycleway:surface`), no plain key. Equal values on both parts merge into the plain key (`surface`), which then stands for both.
 4. ~~Signs 237 + 239 on the two parts?~~ **Decided (2026-10-01):** one `traffic_sign` joined by the tool's rules, `DE:237;239`.
-5. Should variant C of feature 17 (track + sidewalk from the centerline in one step) stay as it is?
+5. ~~Keep the one-step extract (feature 17, variant C)?~~ **Decided (2026-10-01):** yes. It is already built: a road with `sidewalk=right` + `sidewalk:surface=sett` and `cycleway:right=track` + `cycleway:right:surface=asphalt` offers "Extract right cycle track and sidewalk as one path" and gives `highway=path` with `cycleway:surface=asphalt` and `footway:surface=sett`.
+   - To do with this feature: variant C uses the same shared tag function as the merge, so both give the same result. The one change for C: the signs of both sides are joined into one `traffic_sign` (today C takes the cycle track's sign, else the sidewalk's).
 
 ## Integration order (proposal)
 
