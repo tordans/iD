@@ -288,3 +288,49 @@
 .entity-editor .form-field ul.rows li.side-prerequisite-unmet .combobox-caret {
     display: none;
 }
+
+/* link buttons in fields (Mapillary / Wikidata / website "open" links) look like the other field buttons, not blue */
+.entity-editor a.form-field-button {
+    color: var(--text-color);
+}
+
+/* Field title buttons (delete, undo, info, …): only while the field is hovered or focused
+   (touch: focus the input), faded in fast; hidden buttons can't be clicked by accident.
+   Shape: 22px squares with the input's background, a stronger background on hover. */
+.entity-editor .wrap-form-field .field-label > button {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .12s ease-out, visibility 0s linear .12s;
+}
+.entity-editor .wrap-form-field:hover > .form-field > .field-label > button,
+.entity-editor .wrap-form-field:focus-within > .form-field > .field-label > button,
+.entity-editor .field-related-editor:hover > .form-field > .field-label > button,
+.entity-editor .field-related-editor:focus-within > .form-field > .field-label > button {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .12s ease-out, visibility 0s;
+}
+.entity-editor .field-label {
+    gap: 3px;
+}
+/* (`.form-field >` to win over iD's `:not(:hover)` rule and the width above) */
+.ideditor[dir] .entity-editor .form-field > .field-label > button {
+    width: 22px;
+    height: 22px;
+    margin: 0 0 4px;   /* space to the input below */
+    border: 0;
+    border-radius: 4px;
+    background: var(--bg-color);
+}
+.ideditor[dir] .entity-editor .form-field > .field-label > button:hover,
+.ideditor[dir] .entity-editor .form-field > .field-label > button:focus-visible,
+.ideditor[dir] .entity-editor .form-field > .field-label > button.active {
+    background: color-mix(in srgb, var(--text-color) 22%, var(--bg-color-2));
+}
+.ideditor[dir] .entity-editor .form-field > .field-label > button .icon {
+    width: 16px;
+    height: 16px;
+}
+.entity-editor .field-label > button:hover .icon {
+    opacity: 1;
+}
