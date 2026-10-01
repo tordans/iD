@@ -1223,8 +1223,9 @@ en:
   mapillary_sign_bar:
     loading: loading images …
     image_of: "image {n} of {count}, click for the next"
-    key: Key the traffic sign is written to
-    write_sign: "Write to {key}, with the image as source"
+    write_sign: "Write the sign to {key}"
+    write_source: "Add this image as source of the sign"
+    suggested: fits the direction the sign faces
     write_tags: Set these tags
     present: already tagged
     replaces: "replaces {value}"

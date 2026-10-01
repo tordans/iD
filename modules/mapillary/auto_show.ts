@@ -1,5 +1,6 @@
 import { prefs } from '../core/preferences';
 import { preferredImageId } from './tag_keys';
+import { selectedSign } from './sign_select';
 import { showMapillaryImage } from './viewer';
 import { services } from '../services';
 import type { coreContext } from '../core';
@@ -32,6 +33,8 @@ export function initMapillaryAutoShow(context: coreContext) {
     context.on('enter.mapillaryAutoShow', function() {
         const mode = context.mode() as unknown as { id: string; selectedIDs?: () => EntityId[] } | null;
         if (!mode || mode.id !== 'select' || !autoShowEnabled()) return;
+        // a selected traffic sign keeps its image (feature 26)
+        if (selectedSign()) return;
         const ids = mode.selectedIDs?.() ?? [];
         if (ids.length !== 1) return;
 

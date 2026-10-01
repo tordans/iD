@@ -1,38 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { bearingAlongLine, changeLabel, changesNothing, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys } from '../../../modules/mapillary/sign_tagging';
+import { bearingAlongLine, changeLabel, changesNothing, directionalTags, sideOfLine, signButtonKeys, signDirectionOnWay, signSourceChanges, signTagChanges } from '../../../modules/mapillary/sign_tagging';
 
-describe('signTargetKeys', () => {
-    it('offers the way\'s keys, tagged sign keys and the sides with bike infrastructure', () => {
-        const tags = {
-            highway: 'residential',
-            'cycleway:right': 'track',
-            'cycleway:left': 'no',
-            'sidewalk:left:bicycle': 'yes',
-            'cycleway:right:traffic_sign:forward': 'DE:237'
-        };
-        expect(signTargetKeys(tags)).toEqual([
-            'traffic_sign', 'traffic_sign:forward', 'traffic_sign:backward',
-            'cycleway:right:traffic_sign:forward',
-            'sidewalk:left:traffic_sign',
-            'cycleway:right:traffic_sign'
-        ]);
+describe('signButtonKeys', () => {
+    it('offers the way\'s key with its directions, suggesting the sign\'s direction', () => {
+        expect(signButtonKeys({})).toEqual({ keys: ['traffic_sign', 'traffic_sign:forward', 'traffic_sign:backward'], suggested: 'traffic_sign' });
+        expect(signButtonKeys({}, { direction: 'backward' }).suggested).toBe('traffic_sign:backward');
+        expect(signButtonKeys({ oneway: 'yes' }, { direction: 'forward' }).suggested).toBe('traffic_sign');
+        expect(signButtonKeys({ oneway: 'yes' }, { direction: 'backward' }).suggested).toBe('traffic_sign:backward');
     });
 
-    it('starts with the last used key, for bike signs the side the sign stands on', () => {
-        const tags = { 'cycleway:right': 'track', 'cycleway:left:traffic_sign': 'none' };
-        expect(defaultSignTargetKey(tags)).toBe('traffic_sign');
-        expect(defaultSignTargetKey(tags, { lastUsed: 'traffic_sign:backward' })).toBe('traffic_sign:backward');
-        expect(defaultSignTargetKey(tags, { lastUsed: 'sidewalk:left:traffic_sign' })).toBe('traffic_sign');
-        expect(defaultSignTargetKey(tags, { bikeSign: true, side: 'right' })).toBe('cycleway:right:traffic_sign');
-        expect(defaultSignTargetKey(tags, { bikeSign: true, side: 'left' })).toBe('cycleway:left:traffic_sign');
-        expect(defaultSignTargetKey({}, { bikeSign: true, side: 'left' })).toBe('traffic_sign');
-    });
-
-    it('uses the direction the sign applies to, unless the way is one-way that way', () => {
-        expect(defaultSignTargetKey({}, { direction: 'backward' })).toBe('traffic_sign:backward');
-        expect(defaultSignTargetKey({ oneway: 'yes' }, { direction: 'forward' })).toBe('traffic_sign');
-        expect(defaultSignTargetKey({ oneway: 'yes' }, { direction: 'backward' })).toBe('traffic_sign:backward');
-        expect(defaultSignTargetKey({ 'cycleway:right': 'lane' }, { bikeSign: true, side: 'right', direction: 'forward' })).toBe('cycleway:right:traffic_sign');
+    it('uses the side the bike sign stands on, if it has a bike lane or sidewalk', () => {
+        const tags = { 'cycleway:right': 'track', 'cycleway:left': 'no', sidewalk: 'both' };
+        expect(signButtonKeys(tags, { bikeSign: true, side: 'right', direction: 'forward' })).toEqual({
+            keys: ['cycleway:right:traffic_sign', 'cycleway:right:traffic_sign:forward', 'cycleway:right:traffic_sign:backward'],
+            suggested: 'cycleway:right:traffic_sign'
+        });
+        expect(signButtonKeys(tags, { bikeSign: true, side: 'left' }).keys[0]).toBe('sidewalk:left:traffic_sign');
+        expect(signButtonKeys({}, { bikeSign: true, side: 'left' }).keys[0]).toBe('traffic_sign');
+        expect(signButtonKeys(tags, { side: 'right' }).keys[0]).toBe('traffic_sign');
     });
 });
 
@@ -67,22 +52,23 @@ describe('sign direction', () => {
     });
 });
 
-describe('signTagChanges', () => {
-    it('writes the sign and the image as source', () => {
-        expect(signTagChanges({}, 'traffic_sign', 'DE:237', '123')).toEqual({
-            traffic_sign: 'DE:237',
-            'source:traffic_sign:mapillary': '123'
-        });
-        expect(signTagChanges({ 'cycleway:right:traffic_sign': 'DE:239', 'source:cycleway:right:traffic_sign:mapillary': '1' },
-            'cycleway:right:traffic_sign', 'DE:1022-10', '2')).toEqual({
-            'cycleway:right:traffic_sign': 'DE:239,1022-10',
-            'source:cycleway:right:traffic_sign:mapillary': '1;2'
-        });
+describe('signTagChanges / signSourceChanges', () => {
+    it('writes the sign, appending supplementary signs', () => {
+        expect(signTagChanges({}, 'traffic_sign', 'DE:237')).toEqual({ traffic_sign: 'DE:237' });
+        expect(signTagChanges({ 'cycleway:right:traffic_sign': 'DE:239' }, 'cycleway:right:traffic_sign', 'DE:1022-10'))
+            .toEqual({ 'cycleway:right:traffic_sign': 'DE:239,1022-10' });
+    });
+
+    it('adds the image as source of the sign key', () => {
+        expect(signSourceChanges({}, 'traffic_sign', '123')).toEqual({ 'source:traffic_sign:mapillary': '123' });
+        expect(signSourceChanges({ 'source:cycleway:right:traffic_sign:mapillary': '1' }, 'cycleway:right:traffic_sign', '2'))
+            .toEqual({ 'source:cycleway:right:traffic_sign:mapillary': '1;2' });
     });
 
     it('knows when nothing changes', () => {
         const tags = { traffic_sign: 'DE:237', 'source:traffic_sign:mapillary': '123' };
-        expect(changesNothing(tags, signTagChanges(tags, 'traffic_sign', 'DE:237', '123'))).toBe(true);
+        expect(changesNothing(tags, signTagChanges(tags, 'traffic_sign', 'DE:237'))).toBe(true);
+        expect(changesNothing(tags, signSourceChanges(tags, 'traffic_sign', '123'))).toBe(true);
     });
 });
 
@@ -95,6 +81,12 @@ describe('changeLabel', () => {
         expect(changeLabel({ maxspeed: '50' }, changes)).toEqual({ label: 'maxspeed=50→30', present: false, replaces: '50' });
         // the value is there, only the source is missing
         expect(changeLabel({ maxspeed: '30' }, changes)).toEqual({ label: 'maxspeed=30', present: false });
+    });
+
+    it('shortens image ids and shows added list entries', () => {
+        expect(changeLabel({}, { 'source:traffic_sign:mapillary': '1586805862897512' }).label).toBe('source:traffic_sign:mapillary=1586…');
+        expect(changeLabel({ 'source:traffic_sign:mapillary': '111111111' }, { 'source:traffic_sign:mapillary': '111111111;1586805862897512' }).label)
+            .toBe('source:traffic_sign:mapillary=+1586…');
     });
 
     it('leaves out the key for sign buttons', () => {

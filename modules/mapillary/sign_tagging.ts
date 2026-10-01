@@ -1,6 +1,7 @@
 import { newRelatedKey } from '../presets/related_tags';
 import { appendImageId } from './set_photo';
 import { addSignToValue } from './sign_groups';
+import { sidesWith } from '../traffic_sign/sign_field_rows';
 
 /**
  * Writing a Mapillary traffic sign to the selected way (WORKDOC feature 26): the keys it can go to
@@ -9,44 +10,27 @@ import { addSignToValue } from './sign_groups';
 
 type TagsLike = Record<string, string | string[] | undefined>;
 
-const SIGN_KEY = /^((cycleway|sidewalk):(left|right|both):)?traffic_sign(:(forward|backward))?$/;
-
-
-/**
- * Keys a sign can be written to: the way's own (`traffic_sign`, `:forward`, `:backward`), every
- * tagged sign key, and the sign key of each road side with a bike lane or a sidewalk open to bikes
- */
-export function signTargetKeys(tags: TagsLike): string[] {
-    const keys = ['traffic_sign', 'traffic_sign:forward', 'traffic_sign:backward'];
-    for (const key of Object.keys(tags)) {
-        if (SIGN_KEY.test(key)) keys.push(key);
-    }
-    for (const side of ['left', 'right', 'both'] as const) {
-        const lane = tags[`cycleway:${side}`];
-        if (typeof lane === 'string' && lane !== 'no' && lane !== 'separate') keys.push(`cycleway:${side}:traffic_sign`);
-        if (tags[`sidewalk:${side}:bicycle`] !== undefined) keys.push(`sidewalk:${side}:traffic_sign`);
-    }
-    return [...new Set(keys)];
-}
-
-
 export type SignDirection = 'forward' | 'backward';
 
+
 /**
- * The key to offer first: the one used last if it fits; for bike signs the sign key of the road side
- * the sign stands on (`side`), if the way has one; else the way's own key, with the direction the
- * sign applies to (`traffic_sign:forward`) unless the way is one-way in that direction
+ * The three keys a sign can be written to, as buttons (WORKDOC feature 26): plain, `:forward` and
+ * `:backward` of one base key. For bike signs the base is the sign key of the road side the sign
+ * stands on, if that side has a bike lane (else a sidewalk); otherwise the way's own `traffic_sign`.
+ * `suggested` is the key that fits the sign's direction: on the way's own key the direction (plain
+ * when the way is one-way that way); on the sides plain, as directions are rare there.
  */
-export function defaultSignTargetKey(tags: TagsLike, options: { lastUsed?: string; side?: 'left' | 'right'; bikeSign?: boolean; direction?: SignDirection } = {}): string {
-    const keys = signTargetKeys(tags);
-    if (options.lastUsed && keys.includes(options.lastUsed)) return options.lastUsed;
+export function signButtonKeys(tags: TagsLike, options: { side?: 'left' | 'right'; bikeSign?: boolean; direction?: SignDirection } = {}): { keys: string[]; suggested: string } {
+    let base = 'traffic_sign';
     if (options.bikeSign && options.side) {
-        const sideKey = keys.find(key => key.startsWith(`cycleway:${options.side}:`) || key.startsWith('cycleway:both:'))
-            ?? keys.find(key => key.startsWith(`sidewalk:${options.side}:`));
-        if (sideKey) return sideKey;
+        const onSide = (group: 'cycleway' | 'sidewalk') => sidesWith(tags, group).some(side => side === options.side || side === 'both');
+        if (onSide('cycleway')) base = `cycleway:${options.side}:traffic_sign`;
+        else if (onSide('sidewalk')) base = `sidewalk:${options.side}:traffic_sign`;
     }
-    if (options.direction && !isOneWayIn(tags, options.direction)) return `traffic_sign:${options.direction}`;
-    return 'traffic_sign';
+    const keys = [base, `${base}:forward`, `${base}:backward`];
+    const suggested = base === 'traffic_sign' && options.direction && !isOneWayIn(tags, options.direction)
+        ? `${base}:${options.direction}` : base;
+    return { keys, suggested };
 }
 
 
@@ -122,15 +106,17 @@ export function sideOfLine(coords: readonly [number, number][], point: [number, 
 }
 
 
-/** Tags after writing `sign` to `key`, with the image as its source (`source:traffic_sign:mapillary`) */
-export function signTagChanges(tags: TagsLike, key: string, sign: string, imageId?: string): Record<string, string> {
+/** Tags after writing `sign` to `key` (supplementary signs are appended) */
+export function signTagChanges(tags: TagsLike, key: string, sign: string): Record<string, string> {
     const current = typeof tags[key] === 'string' ? tags[key] as string : undefined;
-    const changes: Record<string, string> = { [key]: addSignToValue(current, sign) };
-    if (imageId) {
-        const sourceKey = newRelatedKey('mapillary', key);
-        changes[sourceKey] = appendImageId(tags, sourceKey, imageId);
-    }
-    return changes;
+    return { [key]: addSignToValue(current, sign) };
+}
+
+
+/** Tags after adding the image as source of the sign key: `source:traffic_sign:mapillary` */
+export function signSourceChanges(tags: TagsLike, key: string, imageId: string): Record<string, string> {
+    const sourceKey = newRelatedKey('mapillary', key);
+    return { [sourceKey]: appendImageId(tags, sourceKey, imageId) };
 }
 
 
@@ -148,16 +134,24 @@ export type ChangeLabel = {
     replaces?: string;
 };
 
+/** Image ids are long: `1586805862897512` → `1586…`; lists show their last id */
+function shortValue(value: string): string {
+    const last = value.split(';').pop() ?? value;
+    return /^\d{8,}$/.test(last) ? `${last.slice(0, 4)}…` : value;
+}
+
+
 /**
  * Button label of a change, by its main (first) tag: `maxspeed=30`, `✓ maxspeed=30` when it is
- * tagged already, `maxspeed=50→30` when another value is tagged. Without the key (`withKey: false`)
- * only the values: `DE:240→DE:237`.
+ * tagged already, `maxspeed=50→30` when another value is tagged, `key=+1586…` when an image id is
+ * added to a list. Without the key (`withKey: false`) only the values.
  */
 export function changeLabel(tags: TagsLike, changes: Record<string, string>, withKey = true): ChangeLabel {
     const [key, value] = Object.entries(changes)[0] ?? ['', ''];
     const current = typeof tags[key] === 'string' && tags[key] !== '' ? tags[key] as string : undefined;
     const prefix = withKey ? `${key}=` : '';
-    if (changesNothing(tags, changes)) return { label: `✓ ${prefix}${value}`, present: true };
-    if (current && current !== value) return { label: `${prefix}${current}→${value}`, present: false, replaces: current };
-    return { label: `${prefix}${value}`, present: false };
+    if (changesNothing(tags, changes)) return { label: `✓ ${prefix}${shortValue(value)}`, present: true };
+    if (current && value.startsWith(`${current};`)) return { label: `${prefix}+${shortValue(value)}`, present: false };
+    if (current && current !== value) return { label: `${prefix}${shortValue(current)}→${shortValue(value)}`, present: false, replaces: current };
+    return { label: `${prefix}${shortValue(value)}`, present: false };
 }

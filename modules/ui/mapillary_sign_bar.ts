@@ -6,7 +6,7 @@ import { services } from '../services';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
-import { changeLabel, defaultSignTargetKey, directionalTags, sideOfLine, signDirectionOnWay, signTagChanges, signTargetKeys, type SignDirection } from '../mapillary/sign_tagging';
+import { changeLabel, directionalTags, sideOfLine, signButtonKeys, signDirectionOnWay, signSourceChanges, signTagChanges, type SignDirection } from '../mapillary/sign_tagging';
 import type { ImageDay } from '../mapillary/sign_view';
 import type { coreContext } from '../core';
 
@@ -15,9 +15,20 @@ import type { coreContext } from '../core';
  * sign is, its images by capture day, and buttons that write it to the selected way.
  */
 
-type Action = { id: string; label: string; title: string; present: boolean; replaces?: string; changes: Record<string, string> };
+type Action = {
+    id: string;
+    label: string;
+    title: string;
+    present: boolean;
+    replaces?: string;
+    /** sign buttons: the sign value, and whether the key fits the sign's direction */
+    sign?: string;
+    suggested?: boolean;
+    /** the image as source of the sign */
+    source?: boolean;
+    changes: Record<string, string>;
+};
 
-let _lastKey: string | undefined;
 
 
 export function initMapillarySignBar(context: coreContext) {
@@ -71,14 +82,14 @@ function selectedWay(context: coreContext): iD.OsmWay | undefined {
 }
 
 
-function labelled(tags: Record<string, string>, changes: Record<string, string>, withKey: boolean, title: string) {
-    const { label, present, replaces } = changeLabel(tags, changes, withKey);
+function labelled(tags: Record<string, string>, changes: Record<string, string>, title: string) {
+    const { label, present, replaces } = changeLabel(tags, changes);
     const note = present ? t('mapillary_sign_bar.present') : replaces ? t('mapillary_sign_bar.replaces', { value: replaces }) : '';
     return { label, present, replaces, changes, title: note ? `${title} (${note})` : title };
 }
 
 
-function actionsFor(sign: SelectedSign, tags: Record<string, string>, key: string, direction?: SignDirection): Action[] {
+function actionsFor(sign: SelectedSign, tags: Record<string, string>, keys: string[], suggested: string, direction?: SignDirection): Action[] {
     const meaning = signMeaning(sign.value);
     if (!meaning) return [];
     // speed signs: the direction the sign applies to first (`maxspeed:forward`), then both directions
@@ -86,11 +97,24 @@ function actionsFor(sign: SelectedSign, tags: Record<string, string>, key: strin
     // the label is the main tag (with what is tagged now); the tooltip lists all of them (with the source)
     const actions: Action[] = tagSets.map((changes, i) => {
         const list = Object.entries(changes).map(([k, v]) => `${k}=${v}`);
-        return { id: `tags-${i}`, ...labelled(tags, changes, true, `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`) };
+        return { id: `tags-${i}`, ...labelled(tags, changes, `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`) };
     });
+    // each possible sign as `key=value` for the plain key and its directions
     for (const value of meaning.signs) {
-        const changes = signTagChanges(tags, key, value, sign.imageId);
-        actions.push({ id: `sign-${value}`, ...labelled(tags, changes, false, t('mapillary_sign_bar.write_sign', { key })) });
+        for (const key of keys) {
+            const changes = signTagChanges(tags, key, value);
+            actions.push({
+                id: `sign-${value}-${key}`,
+                sign: value,
+                suggested: key === suggested,
+                ...labelled(tags, changes, t('mapillary_sign_bar.write_sign', { key }))
+            });
+        }
+    }
+    // the image as source of the suggested key: `source:traffic_sign:mapillary=1586…`
+    if (sign.imageId) {
+        const changes = signSourceChanges(tags, suggested, sign.imageId);
+        actions.push({ id: 'source', source: true, ...labelled(tags, changes, t('mapillary_sign_bar.write_source')) });
     }
     return actions;
 }
@@ -118,7 +142,8 @@ export function renderSignBar(context: coreContext) {
     // what can be written to the selected way, separated from the images above
     const write = enter.append('div').attr('class', 'mapillary-sign-bar-write');
     write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-tags');
-    write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-signs');
+    write.append('div').attr('class', 'mapillary-sign-bar-signs');
+    write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-source');
 
     bar = enter.merge(bar);
     if (!sign) return;
@@ -216,54 +241,47 @@ function renderDays(context: coreContext, selection: d3.Selection<HTMLDivElement
 function renderActions(context: coreContext, bar: d3.Selection<HTMLDivElement>, sign: SelectedSign) {
     const way = selectedWay(context);
     const tags = (way?.tags ?? {}) as Record<string, string>;
-    const keys = way ? signTargetKeys(tags) : [];
     const coords = way ? context.graph().childNodes(way).map(node => node.loc as [number, number]) : [];
     const direction = way ? signDirectionOnWay(coords, sign.loc, sign.facing) : undefined;
-    const key = way ? defaultSignTargetKey(tags, {
-        lastUsed: _lastKey,
+    const { keys, suggested } = signButtonKeys(tags, {
         bikeSign: signGroupsOf(sign.value).includes('bike'),
         side: sideOfLine(coords, sign.loc),
         direction
-    }) : 'traffic_sign';
-    const actions = way ? actionsFor(sign, tags, key, direction) : [];
+    });
+    const actions = way ? actionsFor(sign, tags, keys, suggested, direction) : [];
 
     // which way along the selected way the sign applies to
     bar.select('.mapillary-sign-bar-direction')
         .classed('hide', !direction)
         .text(direction ? t(`mapillary_sign_bar.direction.${direction}`) : '')
         .attr('title', direction ? t('mapillary_sign_bar.direction.tooltip') : null);
-    const tagActions = actions.filter(action => !action.id.startsWith('sign-'));
-    const signActions = actions.filter(action => action.id.startsWith('sign-'));
 
-    const tagRow = bar.select<HTMLDivElement>('.mapillary-sign-bar-tags').classed('hide', !tagActions.length);
-    renderButtons(context, tagRow, tagActions, tags, key);
-
-    const signRow = bar.select<HTMLDivElement>('.mapillary-sign-bar-signs').classed('hide', !signActions.length);
+    const tagActions = actions.filter(action => !action.sign && !action.source);
+    const signActions = actions.filter(action => action.sign);
+    const sourceActions = actions.filter(action => action.source);
     bar.select('.mapillary-sign-bar-write').classed('hide', !actions.length);
-    let select = signRow.selectAll<HTMLSelectElement, number>('.mapillary-sign-bar-key')
-        .data(signActions.length ? [0] : []);
-    select.exit().remove();
-    select = select.enter()
-        .insert('select', ':first-child')
-        .attr('class', 'mapillary-sign-bar-key')
-        .attr('title', t('mapillary_sign_bar.key'))
-        .on('change', function() {
-            _lastKey = this.value;
-            renderSignBar(context);
-        })
-        .merge(select);
-    const options = select.selectAll<HTMLOptionElement, string>('option').data(keys, d => d);
-    options.exit().remove();
-    options.enter().append('option').merge(options)
-        .attr('value', d => d)
-        .text(d => d)
-        .order();
-    select.property('value', key);
-    renderButtons(context, signRow, signActions, tags, key);
+    renderButtons(context, bar.select<HTMLDivElement>('.mapillary-sign-bar-tags').classed('hide', !tagActions.length), tagActions);
+    renderButtons(context, bar.select<HTMLDivElement>('.mapillary-sign-bar-source').classed('hide', !sourceActions.length), sourceActions);
+
+    // one row of `key=value` buttons per possible sign
+    const signValues = [...new Set(signActions.map(action => action.sign!))];
+    const rows = bar.select('.mapillary-sign-bar-signs')
+        .classed('hide', !signActions.length)
+        .selectAll<HTMLDivElement, string>('.mapillary-sign-bar-actions')
+        .data(signValues, d => d);
+    rows.exit().remove();
+    rows.enter()
+        .append('div')
+        .attr('class', 'mapillary-sign-bar-actions')
+        .merge(rows)
+        .order()
+        .each(function(value) {
+            renderButtons(context, d3_select<HTMLDivElement, string>(this), signActions.filter(action => action.sign === value));
+        });
 }
 
 
-function renderButtons(context: coreContext, row: d3.Selection<HTMLDivElement>, actions: Action[], tags: Record<string, string>, key: string) {
+function renderButtons(context: coreContext, row: d3.Selection<HTMLDivElement>, actions: Action[]) {
     const buttons = row.selectAll<HTMLButtonElement, Action>('.mapillary-sign-bar-action')
         .data(actions, d => d.id);
     buttons.exit().remove();
@@ -272,15 +290,16 @@ function renderButtons(context: coreContext, row: d3.Selection<HTMLDivElement>, 
         .attr('type', 'button')
         .attr('class', 'mapillary-sign-bar-action')
         .merge(buttons)
+        .order()
         .text(d => d.label)
-        .attr('title', d => d.title)
+        .attr('title', d => d.suggested ? `${d.title} – ${t('mapillary_sign_bar.suggested')}` : d.title)
         .classed('present', d => d.present)
         .classed('replaces', d => !!d.replaces)
+        .classed('suggested', d => !!d.suggested && !d.present)
         .property('disabled', d => d.present)
         .on('click', (_event, d) => {
             const entity = selectedWay(context);
             if (!entity) return;
-            if (d.id.startsWith('sign-')) _lastKey = key;
             context.perform(
                 actionChangeTags(entity.id, { ...entity.tags, ...d.changes }),
                 t('mapillary_sign_bar.annotation')

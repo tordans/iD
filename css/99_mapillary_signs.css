@@ -162,17 +162,14 @@
     opacity: 0.7;
 }
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     font-family: monospace;
     white-space: nowrap;
 }
-.mapillary-sign-bar-key {
-    height: 22px;
-    max-width: 14em;
-    padding: 0 4px;
-    font-size: 12px;
-    border-radius: 4px;
-}
 .mapillary-sign-bar-actions.hide,
+.mapillary-sign-bar-signs.hide,
 .mapillary-sign-bar-write.hide {
     display: none;
 }
@@ -190,6 +187,14 @@
     opacity: 1;
     background: rgba(76, 175, 80, 0.45);
     color: #fff;
+}
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.suggested {
+    box-shadow: inset 0 0 0 1.5px #ffee00;
+}
+.mapillary-sign-bar-signs {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.replaces {
     background: rgba(255, 152, 0, 0.35);
