@@ -221,10 +221,12 @@
 .tilda-attribute.severity-optional .tilda-attribute-missing {
     color: var(--tilda-optional-color);
 }
-.entity-editor .wrap-form-field.field-status-required .field-label .label-text {
+.entity-editor .wrap-form-field.field-status-required .field-label .label-text,
+.entity-editor .field-related-editor.field-status-required .field-label .label-text {
     color: var(--tilda-required-color);
 }
-.entity-editor .wrap-form-field.field-status-optional .field-label .label-text {
+.entity-editor .wrap-form-field.field-status-optional .field-label .label-text,
+.entity-editor .field-related-editor.field-status-optional .field-label .label-text {
     color: var(--tilda-optional-color);
 }
 .tilda-attribute-missing a.tilda-reveal {

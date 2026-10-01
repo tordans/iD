@@ -737,6 +737,24 @@ en:
     locating: "Locating, please wait..."
     location_unavailable: Your location is unavailable.
   inspector:
+    related:
+      source: Source
+      note: Note
+      check_date: Checked
+      mapillary: Mapillary
+      traffic_sign: traffic sign
+      side:
+        left: left
+        right: right
+        both: both sides
+        forward: forward
+        backward: backward
+      empty: not set yet
+      edit: "Edit {key}"
+      close: "Close the field for {key}"
+      add_category: "Add: {category} ({key})"
+      close_category: "Close: {category}"
+      editor_label: "{category} – {field}"
     mapillary_images:
       label: "Mapillary images"
       image_id: "Image ID"

@@ -142,6 +142,8 @@ export function uiFieldSurfaceSmoothness(field: { keys?: string[]; safeid: strin
                     _impl = create(module).entityIDs(_entityIDs).tags(_tags);
                 }
                 selection.call(_impl);
+                // the field is loaded later than the related tags lines (feature 25): keep them below
+                selection.select('.field-related').raise();
             })
             .catch(error => console.error('surface/smoothness field failed to load:', error));  // eslint-disable-line no-console
     }

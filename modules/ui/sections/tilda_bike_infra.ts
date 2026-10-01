@@ -22,6 +22,7 @@ import { uiPaneTooltip } from '../pane_tooltip';
 import { uiSection } from '../section';
 import { drawTagPlan, tagPlanChanges, type TagPlanRow } from '../tag_plan';
 import { sideWidthKeys } from './side_width_fields';
+import { addableRelatedKeys } from '../../presets/related_tags';
 
 /** One card per TILDA result (self / left / right side of the way) */
 type SideCard = {
@@ -390,13 +391,15 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     }
 
 
-    /** Keys that have an inspector field on this way: the preset's fields and the side width fields */
+    /** Keys that have an inspector field on this way: the preset's fields, the side width fields and their related tags */
     function fieldKeys() {
         if (_entityIDs.length !== 1) return new Set<string>();
         const keys = presetFieldsOf(context, _entityIDs[0])
             .flatMap(field => [field.key, ...(field.keys ?? [])])
             .filter((key): key is string => !!key);
-        return new Set([...keys, ...sideWidthKeys(_tags), ...trafficSignTagKeysFromTags(_tags)]);
+        const all = [...keys, ...sideWidthKeys(_tags), ...trafficSignTagKeysFromTags(_tags)];
+        // `source:width` and `note:*` open below their field (feature 25)
+        return new Set([...all, ...addableRelatedKeys(all)]);
     }
 
 

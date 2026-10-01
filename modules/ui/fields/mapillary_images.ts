@@ -68,7 +68,10 @@ export function uiFieldMapillaryImages(field: unknown, context: iD.Context) {
 
 
     function entries(): ImageEntry[] {
-        const list: ImageEntry[] = buildImageRows(singleTags()).flatMap(row =>
+        // images of another field's key (`source:traffic_sign:mapillary`) show below that field (feature 25, `preset_fields.js`)
+        const hidden: ReadonlySet<string> = (field as { hiddenKeys?: Set<string> }).hiddenKeys ?? new Set();
+        const tags = Object.fromEntries(Object.entries(singleTags()).filter(([key]) => !hidden.has(key)));
+        const list: ImageEntry[] = buildImageRows(tags).flatMap(row =>
             row.ids.map((id, index) => ({
                 key: row.key,
                 index,

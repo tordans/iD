@@ -773,7 +773,8 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 
 **Status (v1, built by a Sonnet agent, reviewed):**
 - Code as planned, plus `modules/measure/measure_tape_listeners.ts` (a MutationObserver on the sidebar adds the button to width fields; raw tag rows only get the live value while dragging). CSS is `css/99_measure_tape.css`; icon `fas-pen-ruler` (already in the sprite).
-- Measurable keys: `width`, `est_width`, `width:effective`, `*:width`, `buffer:*`; not `maxwidth`, not `*:source`. Needs exactly one selected way.
+- Measurable keys: `width`, `est_width`, `width:effective`, `*:width`, `buffer:*`; not `maxwidth`, not `*:source`, not `source:*` / `note:*` / `check_date:*` (e.g. `source:width`). Needs exactly one selected way.
+- Measuring again overwrites the width and its `source:<key>`, also a more precise source like `ARCore` (decided 2026-09-30: the mapper sees the value and its source below the field and only measures when it is needed).
 - Hooks in upstream files: `svg/layers.ts` (layer `measure-tape`), `svg/width_indicator.ts` (hidden while measuring), `ui/init.js` (listeners).
 - Dragging the whole tape writes nothing (length unchanged); Esc is caught before it deselects the way.
 - Magnifier: crosshair with a gap and a dot on the measured point, the tape drawn in the lens; placed away from the tape, beside it or diagonal (farther out near map edges), always inside the map (`modules/measure/loupe_position.ts`, tested). Handles use a crosshair cursor.
@@ -790,7 +791,7 @@ Code: `modules/ui/photoviewer.js` (small hook), new `modules/ui/mapillary_set_ph
 - Same "+ in the field label" pattern as the Mapillary images field (feature 19).
 - Tested: a road with `bicycle=designated`, `motorcar=destination`, `hgv=no` shows Cars and Heavy goods vehicle as extra rows.
 
-### 23. Compact sidebar — 🟨 (round 1 done)
+### 23. Compact sidebar — 🟨 (rounds 1–4 done)
 
 Goal: more room for the data in the entity editor, keeping iD's look and feel.
 
@@ -819,6 +820,13 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Structure's sub fields (bridge type, layer) are flat rows like the rest, without the inner box.
   - Dropdown and up/down arrows use the same light grey as the label icons.
   - Field titles are no longer clickable (before, some focused their input and some did nothing): `field.js` prevents the label's click unless it is on a button, and the cursor stays the default one.
+- **Round 4 (2026-10-01): field title buttons** (delete, undo, info, the related tags buttons of feature 25):
+  - Only visible while the field is hovered or focused (touch: focus the input), faded in within 0.12 s; hidden buttons can't be clicked.
+  - 22px squares with the input's background and 4px radius, 3px apart, 4px above the input; a stronger background (text colour mixed in) on hover and when active.
+  - Icons: iD's at 16px; Font Awesome icons smaller (11px), since they fill their box.
+  - Link buttons in fields (e.g. the Mapillary "open" link) use the text colour like the other field buttons, not the blue link colour.
+  - Known side effect: the undo button was the only sign that a field was changed; it now also shows only on hover.
+  - The lock tooltip of a locked field (Wikidata) stays as in iD, on the whole field, so it also shows over the title buttons. Attaching it to the title text and input instead did not work (the input clips it, a disabled input gets no hover events) and was reverted.
 - **Open ideas (to discuss):**
   - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
@@ -851,6 +859,62 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
   - Side keys (`cycleway:right:surface`) are not covered yet; the package already takes custom keys.
   - `sett:length` could become a third step for sett.
   - Crossings still use the plain `smoothness` field in "more fields".
+
+### 25. Related tags below their field (source, note, check date, Mapillary) — ✅ (v1)
+
+Goal: tags about a field's key that have no field of their own (`source:width`, `note:width`, `check_date:surface`, `source:traffic_sign:mapillary`, `cycleway:right:mapillary`) show and can be edited at that field, instead of only in the raw tag editor. Fields we only had for such tags (`source/width`) can go.
+
+**Background: our earlier upstream draft (openstreetmap/iD#12005, branch `related-keys`, March 2026).** Read-only notes; nothing is written there.
+- The draft put category icons (calendar, comment, link, …) in the field's label bar; clicking one opened a box with the sub fields below the field. Categories: check_date, note/description, source, conditional, numbered (`:1`, `:2`), other (`cycleway:*`, `footway:*`, …).
+- Feedback in the thread:
+  - Icons in the label bar mix with delete/info (we clicked delete by accident ourselves); our own follow-up proposed a small line below the field instead.
+  - Numbered keys were "really, really confusing"; OpenHistoricalMap adds "Source 1", "Source 2" via the Add Field menu instead. **Ignored here, as decided.**
+  - OHM (1ec5) activates sub fields with fixed buttons: predictable, but does not scale past a few kinds; sided and lane fields get complicated.
+  - RudyTheDev: good direction, but the key knowledge should live in the tagging schema, not hard-coded in iD; show which input to use for a sub key (`bicycle:surface` needs the `surface` field); make it compact; show that there are more sub keys.
+  - Also asked: `cycleway:surface` / `footway:surface` (the "other" category). **Not covered.**
+- How this relates: the same core idea (nesting by key, editors below the field), existing values as a line below the field as the thread preferred, and a schema field as the editor where one exists, which answers part of the "which input" point. Title buttons only where the tag is common (curated list), and they only show on hover (feature 23), so they don't crowd the title. Still iD-side rules for four categories, not schema-driven; fine for this fork.
+
+**UX:**
+- **Lines below the field** for the related tags that are tagged: `Source: Luftbild 2026 ✎`, `Note: … ✎`, `Checked: 2025-04-01 ✎`, `Mapillary (source): … 👁 ✎` (👁 shows the image in the viewer). The tag `key=value` is the tooltip; long values are cut. Tags the mapper added by hand always show here.
+- **Title buttons** before the trash: source (open book, `fas-book-open`), note (speech bubble, `fas-comment`), check date (calendar, `fas-calendar-days`). Only from the curated list below, and only when the field has a value. A button opens the editor(s) of its category, clicked again it closes them; an open one stays visible.
+- **Editors** open in one light rounded box below the lines (`--bg-color-2`, border, 6px radius): full fields (the schema's field where one exists: `source/width` for any `source:*:width`, `source`, `note`, `check_date`), each with ✕ (close) and trash (remove the tag). Check dates get iD's "today" button (`input.js`, also for `check_date:*`). The ✎ of a line opens or closes its editor; the line shows the new value while typing.
+- An editor closes when its tag is removed; an empty editor stays open until closed (leaving it also reports "removed").
+- Selecting a feature again (also the same one) closes all editors: only the lines show.
+- Labels name the side (`Source (left)`), or in fields for several keys the key by its schema title (line `Note (Oberfläche)`, editor `Note – Oberfläche`); the field's own key comes first.
+- **Surface & smoothness:** the lines sit below the two tiles; an open picker pushes them down.
+- **TILDA:** the checklist's "add below" also opens these editors (e.g. `source:cycleway:right:width` below the side width field), focused and with the checklist's colour on the editor title.
+- **Mapillary:** images of another field's key show below that field and are left out of the Mapillary images field, which only shows when the feature has images of its own (`mapillary`, `mapillary:forward`, …).
+- Which tag belongs to which field: `source:<key>` / `<key>:source`, `note:` / `description:` (both orders), `check_date:` (both orders), and Mapillary keys of the key or its sub keys. With several candidates the most specific field wins (`cycleway:right:traffic_sign` before `cycleway:right`). Numbered keys are ignored.
+
+**Curated button list** (`modules/presets/radnetz_related_tags.ts`): the keys of the fields on our road, bike, footway and crossing presets (50 fields, ~60 keys) matched against taginfo key lists for `source:`, `:source`, `note:`, `:note`, `description:`, `:description`, `check_date:`, `:check_date` (taginfo world and Geofabrik Berlin, 2026-09-30; anonymous reads). Count world / Berlin:
+
+| Button | Keys (world / Berlin) |
+|---|---|
+| source | `source:maxspeed` 2.8M / 31k, `source:width` 131k / 25k, `source:cycleway:right:width` 5.9k / 5.8k, `…:both:width` 2.1k / 2.1k, `source:cycleway:width` 9.6k / 1.1k, `…:left:width` 0.7k / 0.7k, `source:ref` 403k / 226, `source:name` 1.6M / 102, `source:surface` 65k / 56, `source:width:effective` 55 / 52, `source:access` 13k / 25, `source:sett:length` 26 / 24, `source:bicycle` 19k / 23, `source:sidewalk:*:width` ~40 / ~40, `source:buffer:*` 0 / 26, `source:lanes` 38k, `source:oneway` 22k, `source:lit` 22k |
+| note | `note:maxspeed` 5.4k / 22, `note:name` 17k / 152, `surface:note` 10k / 84, `note:lanes` 10k, `note:access` 7.3k, `parking:*:note` ~30 / ~20, `note:traffic_sign` 0.5k, `note:bicycle_road` 37 / 13 |
+| check date | `check_date:cycleway` 34k / 4k, `check_date:tactile_paving` 34k / 2.4k, `check_date:surface` 297k / 2.2k, `check_date:smoothness` 42k / 1.5k, `check_date:crossing` 31k / 153, `check_date:lit` 21k / 86 |
+
+- Rule of thumb: Berlin ≥ ~20 or world ≥ ~10k, plus the Radnetz tags (`buffer`, `sett:length`, side widths). The key form is the more common one (`surface:note` over `note:surface`).
+- Left out on purpose: `wheelchair:description` (74k, its own meaning), `check_date:ref` (823 in Berlin, odd), `cycleway:*:description` (26 in Berlin; a description, not a note), `source:bridge` / `source:tunnel`, `note:width` (83).
+- Later this list could move into the tagging schema (a field property), as the upstream discussion suggested.
+
+**Not done:** "+ Source / + Note" links below the field on hover (tried first: the field jumped); chips in one wrapped row instead of lines; editing inline in the line instead of a full field.
+
+**Code:**
+- `modules/presets/related_tags.ts`: pure rules (which tag belongs to which field, button keys, editor templates); tests `test/spec/presets/related_tags.ts`.
+- `modules/presets/radnetz_related_tags.ts`: the curated button list.
+- `modules/ui/sections/related_tags.ts`: title buttons, lines, editor box.
+- Hooks: `preset_fields.js` (assign before the fields render, draw after, `revealField` fallback, status colours also on editors), `ui/field.js` (`hiddenKeys` don't make a field present), `fields/mapillary_images.ts` (leaves out `hiddenKeys`), `tilda_bike_infra.ts` (`fieldKeys` includes the related keys), `fields/input.js` ("today" for `check_date:*`), `fields/surface_smoothness.ts` (keeps the lines below after loading).
+- CSS `css/99_related_tags.css`; the general title button style is in `css/99_sidebar_compact.css` (feature 23). Strings `inspector.related.*`. Icons `fas-book-open`, `fas-comment` in `scripts/build_data.js`.
+- `source/width` is removed from the field lists and kept as the editor template.
+- Pitfall: the editors must not have iD's `wrap-form-field` class. The field list's data join selects every `.wrap-form-field` below it and removed them on each redraw (typing lost the focus after one letter).
+
+**Open:**
+- Multi-selection: lines only for tags with the same value on all features.
+- Strings are English only ("Source – Breite (Meter)" in the German UI).
+- "Other" related tags (`cycleway:surface`, `footway:surface`, `*:conditional`) and numbered keys are not covered.
+- `fixme:*` could be a fifth category.
+- The source icon (open book) is a proposal; a rosette (`fas-award`) was the other idea.
 
 ## Integration order (proposal)
 
@@ -893,6 +957,8 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
 
 ## Dev notes
 
+- New FontAwesome icon (added to the list in `scripts/build_data.js`): run `npm run build:data` (writes `svg/fontawesome/*.svg`, commit it) **and** `npm run dist:svg:fa` (rebuilds `dist/img/fa-sprite.svg`), then reload. Without the second step the icon is missing locally; the deploy runs `npm run dist` and has it.
+
 - Dev server: `npm start` (port 8080, or `PORT=… npm start`). The CSS watcher only knows files that existed at startup; run `npm run build:css` after adding a CSS file.
 - A fresh worktree needs the SVG sprites: `npx run-p "dist:svg:*"`, and the traffic sign assets: `npx run-p dist:traffic-sign-field dist:traffic-sign-converter`.
 - The traffic sign packages are vendored in `vendor/` (built files from `~/Development/OSM/osm-traffic-sign-tools-id-field`, which is WIP and not fully on npm). Refresh with `npm run vendor:traffic-signs`, see `vendor/README.md`.
@@ -903,6 +969,9 @@ Goal: one field for `surface` and `smoothness` where mappers choose by photo fir
 
 ## Progress log
 
+- 2026-10-01: Field title buttons only on hover/focus, as small squares with the input's background; link buttons in fields no longer blue. A lock tooltip change was tried and reverted (feature 23).
+- 2026-09-30/10-01: Related tags at their field (feature 25): `source:*`, `note:*`, `check_date:*` and Mapillary images of a key as lines below the field; source / note / check date buttons in the title from a curated taginfo-based list; editors in a light box. `source/width` is no longer a separate field.
+- 2026-09-30: Measuring tape: no button on `source:width` / `note:width`; re-measuring overwrites width and source (decided, feature 21).
 - 2026-09-30: TILDA checklist audited against the Radinfra mappers' FAQ: source key, sett 0.15, lane buffer/marking, protected lane traffic mode, bicycle road marking, bus lane width, `oneway:bicycle`, width source only for new widths (measuring tape writes it), damage signs (feature 8).
 - 2026-09-30: TILDA checklist: `surface:colour` and `dual_carriageway` as assumed notices; `traffic_mode` read from the road's `parking:*` like TILDA, a notice only without parking tags (feature 8).
 - 2026-09-30: TILDA checklist: missing `oneway` is a notice ("TILDA assumes …, check it") on roads and where TILDA's oneway default is reliable (high/medium confidence), not a request to tag it (feature 8).

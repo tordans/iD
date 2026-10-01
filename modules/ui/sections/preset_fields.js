@@ -12,6 +12,7 @@ import { uiSection } from '../section';
 import { trafficSignTagKeysFromTags } from '../../presets/traffic_sign_fields';
 import { appendTrafficSignInspectorFields } from './traffic_sign_inspector_fields';
 import { uiSideWidthFields } from './side_width_fields';
+import { uiRelatedTags } from './related_tags';
 
 export function uiSectionPresetFields(context) {
 
@@ -29,6 +30,8 @@ export function uiSectionPresetFields(context) {
     var _trafficSignFieldsArr = [];
     var _trafficSignFieldsSignature = '';
     var _sideWidthFields = uiSideWidthFields(context, dispatch);
+    // Radnetz Berlin: `source:*`, `note:*`, … as small lines below their field (feature 25)
+    var _relatedTags = uiRelatedTags(context, dispatch);
     // Radnetz Berlin: another section (TILDA) can color field titles and bring a field into view
     var _fieldStatus = null;
     var _allFields = [];
@@ -151,12 +154,18 @@ export function uiSectionPresetFields(context) {
             _sideWidthFields.fields(_tags, _entityIDs, widthField, shownKeys)
         );
 
+        var isImagesField = function(field) { return field.type === 'mapillaryImages'; };
         fieldsToShow.forEach(function(field) {
-            field
-                .state(_state)
-                .tags(_tags);
+            if (!isImagesField(field)) field.state(_state).tags(_tags);
         });
 
+        // Radnetz Berlin: images of another field's key show below that field, not in the images field
+        var shownFields = fieldsToShow.filter(function(field) { return field.isAllowed() && field.isShown(); });
+        var relatedKeys = _relatedTags.assign(shownFields, _tags, _entityIDs, _state);
+        fieldsToShow.filter(isImagesField).forEach(function(field) {
+            field.hiddenKeys = relatedKeys;
+            field.state(_state).tags(_tags);
+        });
 
         selection
             .call(formFields
@@ -165,8 +174,10 @@ export function uiSectionPresetFields(context) {
                 .klass('grouped-items-area')
             );
 
+        _relatedTags.render(selection);
+
         _allFields = fieldsToShow;
-        selection.selectAll('.wrap-form-field')
+        selection.selectAll('.wrap-form-field, .field-related-editor')   // also the editors of related tags
             .each(function(d) {
                 var status = _fieldStatus ? _fieldStatus(fieldKeys(d)) : undefined;
                 d3_select(this)
@@ -191,6 +202,10 @@ export function uiSectionPresetFields(context) {
         var field = _allFields.find(function(f) {
             return fieldKeys(f).some(function(key) { return keys.indexOf(key) !== -1; });
         });
+        // a related tag (`source:width`): opens its editor below the field
+        if (!field) {
+            field = _relatedTags.reveal(keys, _allFields.filter(function(f) { return f.isShown(); }));
+        }
         if (!field) return false;
         if (field.show && !field.isShown()) field.show();
         section.reRender();
@@ -234,6 +249,7 @@ export function uiSectionPresetFields(context) {
             _trafficSignFieldsArr = [];
             _trafficSignFieldsSignature = '';
             _sideWidthFields.reset();
+            _relatedTags.reset();
         }
         return section;
     };

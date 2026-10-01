@@ -95,6 +95,8 @@ export function uiField(context, presetField, entityIDs, options) {
 
     function tagsContainFieldKey() {
         return allKeys(_tags).some(function(key) {
+            // Radnetz Berlin: keys shown below another field (related tags) don't count
+            if (field.hiddenKeys && field.hiddenKeys.has(key)) return false;
             if (field.type === 'multiCombo') {
                 for (var tagKey in _tags) {
                     if (tagKey.indexOf(key) === 0) {

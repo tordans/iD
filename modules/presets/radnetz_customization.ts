@@ -113,7 +113,8 @@ const FIELDS: Record<string, Field> = {
         type: 'combo',
         label: 'Width Source',
         geometry: ['line'],
-        // the values the Radinfra mappers use (FAQ); the measuring tape writes `Luftbild <year>` itself
+        // the values the Radinfra mappers use (FAQ); the measuring tape writes `Luftbild <year>` itself.
+        // Not in a field list: the editor below the width field (related tags) takes its options, also for side widths
         options: ['Luftbild 2026', 'Luftbild 2025', 'Messung aus Punktwolke (Infra3DViewer)', 'survey'],
         prerequisiteTag: { key: 'width' }
     } as Field,
@@ -171,7 +172,8 @@ const FIELDS: Record<string, Field> = {
 /** Fields that feed the Radnetz dataset, in the order mappers check them */
 const WAY_DETAILS = ['surface_smoothness', 'width', 'traffic_sign'];
 const WAY_DETAILS_MORE = [
-    'surface/colour', 'sett/length', 'width/effective', 'source/width',
+    // `source:width` is no field here: it shows below the width field (related tags, feature 25)
+    'surface/colour', 'sett/length', 'width/effective',
     'traffic_sign/forward', 'traffic_sign/backward', 'lit', 'bridge/name', 'tunnel/name', 'not/name'
 ];
 
