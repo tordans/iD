@@ -1,4 +1,5 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
+import type { Image as MlyViewerImage, Viewer } from 'mapillary-js';
 
 import { services } from '../services';
 import { accessToken, decodeDetectionOutline } from '../services/mapillary';
@@ -175,18 +176,17 @@ export async function showSignImage(context: coreContext, imageId: string) {
 
     const viewer = service.getViewer();
     if (!viewer) return;
-    // Mapillary JS rejects a move to the image it already shows (auto-show may have opened it)
-    const shown = await viewer.getImage().catch(() => undefined);
-    if (shown?.id !== imageId) {
-        try {
-            await viewer.moveTo(imageId);
-        } catch {
-            return;   // another image was requested meanwhile
-        }
+    // Mapillary JS rejects a move to the image it already shows (auto-show may have opened it);
+    // `viewer.getImage()` never settles while the viewer has no image yet, so ask the service
+    let current: MlyViewerImage;
+    try {
+        current = service.getActiveImage()?.id === imageId ? await viewer.getImage() : await viewer.moveTo(imageId);
+    } catch {
+        return;   // another image was requested meanwhile
     }
     if (_selected !== sign || sign.imageId !== imageId) return;
-    service.setActiveImage(await viewer.getImage());
-    await turnToSign(viewer, image, sign);
+    service.setActiveImage(current);
+    await turnToSign(viewer, current, image, sign);
 }
 
 
@@ -218,9 +218,8 @@ function xDistance(a: number, b: number, isPano: boolean) {
  * the one Mapillary linked to this sign, else the image's detection of the same sign value (the
  * one nearest to where the sign should be, if there are several). Without an outline the position is computed from the locations.
  */
-async function turnToSign(viewer: NonNullable<ReturnType<typeof services.mapillary.getViewer>>, image: SignImage, sign: SelectedSign) {
+async function turnToSign(viewer: Viewer, current: MlyViewerImage, image: SignImage, sign: SelectedSign) {
     const signLoc = sign.loc;
-    const current = await viewer.getImage();
     const compass = current.computedCompassAngle ?? current.originalCompassAngle;
     let estimate: ViewTarget | undefined;
 
