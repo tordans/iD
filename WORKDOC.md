@@ -979,6 +979,66 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - A side row is shown next to its direction rows (`cycleway:right:traffic_sign` empty + `…:forward` tagged).
 - Labels English only; the plain field keeps the schema's translated label ("Verkehrsschild").
 
+### 28. Merge a cycleway and a footway into one path — ⬜ (plan, questions open)
+
+**Goal.** Still the goal of feature 17: make it as easy as possible to turn infrastructure mapped on the centerline into its own geometry. Often the cycle track should not end up as its own `highway=cycleway` but together with the sidewalk as one `highway=path` ("Geh- und Radweg"). Feature 17's variant C does that only when both the track and the sidewalk are still tags on the road. In Berlin the sidewalk is usually a separate way already, so this needs a second step.
+
+**Decided (2026-10-01): two steps, not one.**
+1. Extract the cycle track from the centerline (feature 17, variant A).
+2. Select the cycleway and the footway(s) and run a new operation that merges them into one path.
+
+Rejected: finding the sidewalk automatically at the right-click on the centerline (looking at 90° from a long road segment). Several sidewalk pieces can run along one road way, and their lengths don't match the road's pieces, so there is no reliable pairing. The mapper picks the ways.
+
+#### The operation
+
+- "Merge into a foot and cycle path", in the edit menu next to the extract entries.
+- Offered when the selection is two or more ways, with at least one **bike part** (`highway=cycleway`, or `highway=path` with `bicycle=designated` and no `foot=designated`) and at least one **foot part** (`highway=footway`, or `highway=path` with `foot=designated` and no `bicycle=designated`), and nothing else.
+- Any number of pieces of each kind can be selected (e.g. one new cycleway and three sidewalk pieces).
+- Hovering the entry previews which ways stay (highlight) and which go (dashed), like the extract preview. One undo step. The surviving ways stay selected.
+
+#### Which geometry stays
+
+- The **older** kind wins: all bike pieces or all foot pieces stay, the other kind is deleted.
+  - A way that is already saved beats a way created in this session (negative ID).
+  - Among saved ways the lower way ID is the older one (the version and timestamp only tell the last edit).
+  - With several pieces per kind, the kind that has the oldest piece wins.
+- Each surviving piece gets the merged tags, using the piece of the other kind that runs alongside it (the nearest one at the piece's middle).
+- No splitting or joining in v1: the surviving pieces keep their nodes and their junctions. Nodes of a deleted way that other ways use stay; its other nodes are deleted.
+- Relations of a deleted way (e.g. a bicycle route): the membership moves to the surviving piece(s) alongside, same role, if they are not members yet.
+
+#### Tags of the merged path
+
+The same rules as variant C of feature 17; the shared part of `planExtraction` moves into one function that both use.
+
+- `highway=path`, `bicycle=designated`, `foot=designated`.
+- `segregated`: `no` with sign 240, `yes` with sign 241, otherwise `yes` (two parts were mapped).
+- `is_sidepath=yes` when a part has it or the foot part is `footway=sidewalk`. `footway=sidewalk` itself is dropped.
+- **Part keys** (`surface`, `smoothness`, `width`, `surface:colour`, `sett:length`, and their `source:` / `note:` / `check_date:` keys):
+  - both parts have the same value → the plain key (`surface=asphalt`);
+  - the values differ → no plain key, but `cycleway:surface` and `footway:surface`;
+  - only one part has a value → only that part's prefixed key (a plain key would also claim it for the other part).
+  - `width`: `cycleway:width` and `footway:width`; the plain `width` is the sum when both are known.
+- **Other keys** (`lit`, `name`, `incline`, …): the same value or only on one part → kept; different values → the surviving way's value, and the flash message lists the dropped ones.
+- `oneway`: the path gets `oneway=no`; the bike part's `oneway` becomes `oneway:bicycle`.
+- `traffic_sign`: a 240 / 241 from either part; otherwise the bike part's sign. A foot part's own sign that is dropped is listed in the flash message.
+- Mapillary keys (feature 19): the IDs of both parts, joined with `;`.
+- The road is not changed (it already has `…=separate` and `use_sidepath` from the first step).
+- Check after the merge: TILDA must read the same bike attributes from the path as from the cycleway before (it reads `cycleway:*` on a path), as tested for variant C.
+
+#### Code plan
+
+- `modules/sidepath/merge_tags.ts` (pure): `partKind(tags)`, `mergeOptions(ways)`, `survivingKind(ways)`, `mergedPathTags(bike, foot)`; tests for every rule above. The split-key logic is shared with `extract_tags.ts`.
+- `modules/actions/merge_sidepaths.ts`: pairs the pieces, changes the tags, moves relation memberships, deletes the other ways.
+- `modules/operations/merge_sidepaths.ts`: the menu entry with preview and tooltip, hooked in next to the extract operations in `modules/modes/select.js`. Strings `operations.merge_sidepaths.*`.
+
+#### Open questions
+
+1. **Lengths that don't match.** With "no splitting", a surviving sidewalk piece that is longer than the cycleway gets the bike tags on its whole length (and a shorter one leaves a gap). Options: (a) accept it and warn in the tooltip when the lengths differ by more than about 10 m; (b) split the surviving way at the ends of the other one; (c) refuse and ask the mapper to split first.
+2. **"Older"** as defined above (saved beats new, then lower way ID): right, or should the mapper be able to choose (two menu entries "keep the footway's line" / "keep the cycleway's line")?
+3. **A value on one part only** (e.g. only the cycleway has `surface`): prefixed key as planned, or the plain key?
+4. **Signs 237 + 239 on the two parts:** keep the bike sign only, or write both as `cycleway:traffic_sign` / `footway:traffic_sign`?
+5. Should variant C of feature 17 (track + sidewalk from the centerline in one step) stay as it is?
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1032,6 +1092,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 
 ## Progress log
 
+- 2026-10-01: Plan for merging a cycleway and a footway into one path (feature 28), the second step after extracting a side (feature 17).
 - 2026-10-01: The viewer bar writes the shown image to the feature's image keys (`key=1586…` buttons); the Mapillary eyedropper and its key menu are removed (feature 20 v2). Capture day buttons with month, age and image position (feature 26).
 - 2026-10-01: Traffic sign fields for the way (with directions), the bike lanes and the sidewalks, a row per side (feature 27). Sign bar: three `key=value` buttons instead of the key dropdown, a source button (feature 26).
 - 2026-10-01: Mapillary traffic signs (feature 26): sign group filter (bike / speed / access / other), click a sign → newest best image turned to the sign's outline, only sign outlines in the viewer, selected sign + dotted line on the map, sign bar with capture days and buttons that write the sign (or maxspeed) to the selected way, with the direction from the sign's facing. Research on Rapid and vizsim/mapillary_trafficsigns.
@@ -1085,6 +1146,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - Feature 15: side-variant fields (`cycleway:<side>:separation…`), preset category, `footwayBicycleYes` preset.
 - Feature 9 validations, using the data index (feature 16) as the rule list.
 - Feature 17 v2: extract along the chain; snap the ends.
+- Feature 28: answer the open questions, then build the merge operation.
 - Decide whether iD's single "Custom Map Data" row should stay next to the new "Custom Data Layers" section.
 
 ## Open questions
