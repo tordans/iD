@@ -60,6 +60,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
     - Remove tags the previous sign implied, or restore their downloaded value.
     - The previous sign is the value before the change while the way stays selected, else the downloaded one. Unchanged signs show nothing, so existing data is not nagged.
   - Road sides (`cycleway:<side>:traffic_sign`, `sidewalk:<side>:traffic_sign`) get only `bicycle`, `foot` and `segregated`, as side keys.
+  - **Package update (2026-10-01):** vendored the current `feature/id-field` build (`npm run vendor:traffic-signs`). It shows `traffic_sign=none` as "No sign" / "Unbeschildert" (TILDA's label) with the tooltip "explicitly no sign" instead of "Unknown sign" (commit `eb562b88` in the tool, local, not pushed). The package now has its own tag suggestions; this editor turns them off (`suggestTags: false`) and keeps its own, whose box class is now `traffic-sign-plan` (the package removed every `.traffic-sign-suggestions`). The converter now bundles all countries; the recommender build (`scripts/build_traffic_sign_recommender.js`) swaps in a German-only `countryDefinitions`, so it stays ~160 KB instead of ~980 KB.
   - Open: directional keys (`traffic_sign:forward/backward`) get no suggestions yet. Conditional values are not prettified (shim). The same plan could later feed a validation for existing inconsistent data (feature 9).
 
 ### 3. Favorites and shortcuts — ✅

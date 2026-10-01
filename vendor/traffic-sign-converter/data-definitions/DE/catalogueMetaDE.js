@@ -1,5 +1,10 @@
+import { fullQaCapabilities } from '../../referenceLinks/types.js';
 export const catalogueMetaDE = {
     countryPrefix: 'DE',
+    iconicSignOsmValuePart: '239',
+    catalogueName: 'German traffic signs',
+    maturity: 'stable',
+    osmTrafficSignPrefix: 'DE',
     catalogueLocale: 'de',
     defaultCommentLang: 'de',
     osmWikiOverviewUrl: 'https://wiki.openstreetmap.org/wiki/DE:Verkehrszeichen_in_Deutschland',
@@ -15,5 +20,6 @@ export const catalogueMetaDE = {
             modifier: 'Zusatzzeichen',
         },
     },
+    qaCapabilities: fullQaCapabilities,
 };
 //# sourceMappingURL=catalogueMetaDE.js.map

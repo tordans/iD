@@ -1,3 +1,4 @@
+import { markingColorQuestion } from '../../questionCatalog.js';
 export const _surface = [
     {
         osmValuePart: '298',
@@ -19,7 +20,7 @@ export const _surface = [
         comments: [
             {
                 lang: 'de',
-                comment: 'Optional: [Tag:colour=white]',
+                comment: 'Die Markierung ist in der Regel weiß. Bei Sonderfällen kann optional `colour=*` gesetzt werden. Siehe [DE:Key:road_marking](https://wiki.openstreetmap.org/wiki/DE:Key:road_marking#Weitere_zus%C3%A4tzliche_Attribute_zur_physischen_Beschreibung_von_Markierungen).',
             },
         ],
         compatibility: { canReceiveModifiers: false },
@@ -49,12 +50,8 @@ export const _surface = [
                 ],
             },
         ],
-        comments: [
-            {
-                lang: 'de',
-                comment: 'Optional: [Tag:colour=white]',
-            },
-        ],
+        questions: [markingColorQuestion()],
+        comments: [],
         compatibility: { canReceiveModifiers: false },
         catalogue: {
             signCategory: 'surface_sign',

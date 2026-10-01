@@ -1,3 +1,4 @@
+import { focusAreas } from './TrafficSignDataTypes.js';
 export const focusLevel = (sign, view) => {
     const f = sign.catalogue.focus;
     if (f === undefined)
@@ -28,4 +29,5 @@ export const matchesFocusFilter = (sign, focuses) => {
     return thematicFocuses(focuses).some((t) => isInCatalogueView(sign, t));
 };
 export const filterSignsByFocus = (signs, focuses) => signs.filter((sign) => matchesFocusFilter(sign, focuses));
+export const countSignsByFocus = (signs) => Object.fromEntries(focusAreas.map((focus) => [focus, filterSignsByFocus(signs, [focus]).length]));
 //# sourceMappingURL=catalogueFocus.js.map

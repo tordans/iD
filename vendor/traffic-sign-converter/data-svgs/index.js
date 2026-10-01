@@ -1,3 +1,9 @@
-export * as SvgsDE from './DE/index.js';
 export { SvgLoadersDE } from './DE/loaders.js';
+export { SvgLoadersBE } from './BE/loaders.js';
+export { SvgLoadersAT } from './AT/loaders.js';
+export { SvgLoadersCA } from './CA/loaders.js';
+export { SvgLoadersPL } from './PL/loaders.js';
+export { SvgLoadersFR } from './FR/loaders.js';
+export { SvgLoadersAU } from './AU/loaders.js';
+export { SvgLoadersBR } from './BR/loaders.js';
 //# sourceMappingURL=index.js.map

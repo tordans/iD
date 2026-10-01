@@ -7,6 +7,8 @@ de:
     empty: Noch keine Schilder. Unten nach Name oder Zeichen-ID suchen, um eines hinzuzufügen.
     add_sign: Schild hinzufügen…
     unknown_sign: Unbekanntes Schild
+    no_sign: Unbeschildert
+    no_sign_description: Hier steht explizit kein Verkehrsschild (traffic_sign=none)
 de-CH:
   traffic_sign_field:
     order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
@@ -15,3 +17,5 @@ de-CH:
     empty: Noch keine Schilder. Unten nach Name oder Zeichen-ID suchen, um eines hinzuzufügen.
     add_sign: Schild hinzufügen…
     unknown_sign: Unbekanntes Schild
+    no_sign: Unbeschildert
+    no_sign_description: Hier steht explizit kein Verkehrsschild (traffic_sign=none)

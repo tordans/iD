@@ -1042,6 +1042,8 @@ en:
     empty: No signs yet. Search below by name or sign ID to add one.
     add_sign: Add sign…
     unknown_sign: Unknown sign
+    no_sign: No sign
+    no_sign_description: There is explicitly no traffic sign here (traffic_sign=none)
   background:
     title: Background
     description: Background Settings

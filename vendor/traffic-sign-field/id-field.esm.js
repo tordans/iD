@@ -72,7 +72,7 @@ var c = {
 	xmlns: "http://www.w3.org/2000/xmlns/"
 };
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/namespace.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/namespace.js
 function l(e) {
 	var t = e += "", n = t.indexOf(":");
 	return n >= 0 && (t = e.slice(0, n)) !== "xmlns" && (e = e.slice(n + 1)), c.hasOwnProperty(t) ? {
@@ -81,7 +81,7 @@ function l(e) {
 	} : e;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/creator.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/creator.js
 function u(e) {
 	return function() {
 		var t = this.ownerDocument, n = this.namespaceURI;
@@ -98,7 +98,7 @@ function f(e) {
 	return (t.local ? d : u)(t);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selector.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selector.js
 function p() {}
 function m(e) {
 	return e == null ? p : function() {
@@ -106,19 +106,19 @@ function m(e) {
 	};
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/select.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/select.js
 function h(e) {
 	typeof e != "function" && (e = m(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = Array(o), c, l, u = 0; u < o; ++u) (c = a[u]) && (l = e.call(c, c.__data__, u, a)) && ("__data__" in c && (l.__data__ = c.__data__), s[u] = l);
-	return new W(r, this._parents);
+	return new G(r, this._parents);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/array.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/array.js
 function g(e) {
 	return e == null ? [] : Array.isArray(e) ? e : Array.from(e);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selectorAll.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selectorAll.js
 function _() {
 	return [];
 }
@@ -128,7 +128,7 @@ function v(e) {
 	};
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/selectAll.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/selectAll.js
 function y(e) {
 	return function() {
 		return g(e.apply(this, arguments));
@@ -137,10 +137,10 @@ function y(e) {
 function b(e) {
 	e = typeof e == "function" ? y(e) : v(e);
 	for (var t = this._groups, n = t.length, r = [], i = [], a = 0; a < n; ++a) for (var o = t[a], s = o.length, c, l = 0; l < s; ++l) (c = o[l]) && (r.push(e.call(c, c.__data__, l, o)), i.push(c));
-	return new W(r, i);
+	return new G(r, i);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/matcher.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/matcher.js
 function x(e) {
 	return function() {
 		return this.matches(e);
@@ -152,7 +152,7 @@ function S(e) {
 	};
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/selectChild.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/selectChild.js
 var C = Array.prototype.find;
 function w(e) {
 	return function() {
@@ -162,45 +162,45 @@ function w(e) {
 function T() {
 	return this.firstElementChild;
 }
-function E(e) {
+function ee(e) {
 	return this.select(e == null ? T : w(typeof e == "function" ? e : S(e)));
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/selectChildren.js
-var D = Array.prototype.filter;
-function O() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/selectChildren.js
+var E = Array.prototype.filter;
+function D() {
 	return Array.from(this.children);
 }
-function k(e) {
+function O(e) {
 	return function() {
-		return D.call(this.children, e);
+		return E.call(this.children, e);
 	};
 }
-function ee(e) {
-	return this.selectAll(e == null ? O : k(typeof e == "function" ? e : S(e)));
+function k(e) {
+	return this.selectAll(e == null ? D : O(typeof e == "function" ? e : S(e)));
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/filter.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/filter.js
 function A(e) {
 	typeof e != "function" && (e = x(e));
 	for (var t = this._groups, n = t.length, r = Array(n), i = 0; i < n; ++i) for (var a = t[i], o = a.length, s = r[i] = [], c, l = 0; l < o; ++l) (c = a[l]) && e.call(c, c.__data__, l, a) && s.push(c);
-	return new W(r, this._parents);
+	return new G(r, this._parents);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/sparse.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/sparse.js
 function j(e) {
 	return Array(e.length);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/enter.js
-function M() {
-	return new W(this._enter || this._groups.map(j), this._parents);
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/enter.js
+function te() {
+	return new G(this._enter || this._groups.map(j), this._parents);
 }
-function N(e, t) {
+function M(e, t) {
 	this.ownerDocument = e.ownerDocument, this.namespaceURI = e.namespaceURI, this._next = null, this._parent = e, this.__data__ = t;
 }
-N.prototype = {
-	constructor: N,
+M.prototype = {
+	constructor: M,
 	appendChild: function(e) {
 		return this._parent.insertBefore(e, this._next);
 	},
@@ -215,72 +215,72 @@ N.prototype = {
 	}
 };
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/constant.js
-function P(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/constant.js
+function N(e) {
 	return function() {
 		return e;
 	};
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/data.js
-function F(e, t, n, r, i, a) {
-	for (var o = 0, s, c = t.length, l = a.length; o < l; ++o) (s = t[o]) ? (s.__data__ = a[o], r[o] = s) : n[o] = new N(e, a[o]);
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/data.js
+function ne(e, t, n, r, i, a) {
+	for (var o = 0, s, c = t.length, l = a.length; o < l; ++o) (s = t[o]) ? (s.__data__ = a[o], r[o] = s) : n[o] = new M(e, a[o]);
 	for (; o < c; ++o) (s = t[o]) && (i[o] = s);
 }
-function te(e, t, n, r, i, a, o) {
+function P(e, t, n, r, i, a, o) {
 	var s, c, l = /* @__PURE__ */ new Map(), u = t.length, d = a.length, f = Array(u), p;
 	for (s = 0; s < u; ++s) (c = t[s]) && (f[s] = p = o.call(c, c.__data__, s, t) + "", l.has(p) ? i[s] = c : l.set(p, c));
-	for (s = 0; s < d; ++s) p = o.call(e, a[s], s, a) + "", (c = l.get(p)) ? (r[s] = c, c.__data__ = a[s], l.delete(p)) : n[s] = new N(e, a[s]);
+	for (s = 0; s < d; ++s) p = o.call(e, a[s], s, a) + "", (c = l.get(p)) ? (r[s] = c, c.__data__ = a[s], l.delete(p)) : n[s] = new M(e, a[s]);
 	for (s = 0; s < u; ++s) (c = t[s]) && l.get(f[s]) === c && (i[s] = c);
 }
-function I(e) {
+function F(e) {
 	return e.__data__;
 }
-function ne(e, t) {
-	if (!arguments.length) return Array.from(this, I);
-	var n = t ? te : F, r = this._parents, i = this._groups;
-	typeof e != "function" && (e = P(e));
+function re(e, t) {
+	if (!arguments.length) return Array.from(this, F);
+	var n = t ? P : ne, r = this._parents, i = this._groups;
+	typeof e != "function" && (e = N(e));
 	for (var a = i.length, o = Array(a), s = Array(a), c = Array(a), l = 0; l < a; ++l) {
-		var u = r[l], d = i[l], f = d.length, p = L(e.call(u, u && u.__data__, l, r)), m = p.length, h = s[l] = Array(m), g = o[l] = Array(m);
+		var u = r[l], d = i[l], f = d.length, p = ie(e.call(u, u && u.__data__, l, r)), m = p.length, h = s[l] = Array(m), g = o[l] = Array(m);
 		n(u, d, h, g, c[l] = Array(f), p, t);
 		for (var _ = 0, v = 0, y, b; _ < m; ++_) if (y = h[_]) {
 			for (_ >= v && (v = _ + 1); !(b = g[v]) && ++v < m;);
 			y._next = b || null;
 		}
 	}
-	return o = new W(o, r), o._enter = s, o._exit = c, o;
+	return o = new G(o, r), o._enter = s, o._exit = c, o;
 }
-function L(e) {
+function ie(e) {
 	return typeof e == "object" && "length" in e ? e : Array.from(e);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/exit.js
-function R() {
-	return new W(this._exit || this._groups.map(j), this._parents);
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/exit.js
+function ae() {
+	return new G(this._exit || this._groups.map(j), this._parents);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/join.js
-function re(e, t, n) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/join.js
+function oe(e, t, n) {
 	var r = this.enter(), i = this, a = this.exit();
 	return typeof e == "function" ? (r = e(r), r &&= r.selection()) : r = r.append(e + ""), t != null && (i = t(i), i &&= i.selection()), n == null ? a.remove() : n(a), r && i ? r.merge(i).order() : i;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/merge.js
-function ie(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/merge.js
+function I(e) {
 	for (var t = e.selection ? e.selection() : e, n = this._groups, r = t._groups, i = n.length, a = r.length, o = Math.min(i, a), s = Array(i), c = 0; c < o; ++c) for (var l = n[c], u = r[c], d = l.length, f = s[c] = Array(d), p, m = 0; m < d; ++m) (p = l[m] || u[m]) && (f[m] = p);
 	for (; c < i; ++c) s[c] = n[c];
-	return new W(s, this._parents);
+	return new G(s, this._parents);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/order.js
-function ae() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/order.js
+function L() {
 	for (var e = this._groups, t = -1, n = e.length; ++t < n;) for (var r = e[t], i = r.length - 1, a = r[i], o; --i >= 0;) (o = r[i]) && (a && o.compareDocumentPosition(a) ^ 4 && a.parentNode.insertBefore(o, a), a = o);
 	return this;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/sort.js
-function z(e) {
-	e ||= oe;
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/sort.js
+function se(e) {
+	e ||= ce;
 	function t(t, n) {
 		return t && n ? e(t.__data__, n.__data__) : !t - !n;
 	}
@@ -288,25 +288,25 @@ function z(e) {
 		for (var o = n[a], s = o.length, c = i[a] = Array(s), l, u = 0; u < s; ++u) (l = o[u]) && (c[u] = l);
 		c.sort(t);
 	}
-	return new W(i, this._parents).order();
+	return new G(i, this._parents).order();
 }
-function oe(e, t) {
+function ce(e, t) {
 	return e < t ? -1 : e > t ? 1 : e >= t ? 0 : NaN;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/call.js
-function se() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/call.js
+function le() {
 	var e = arguments[0];
 	return arguments[0] = this, e.apply(null, arguments), this;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/nodes.js
-function ce() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/nodes.js
+function ue() {
 	return Array.from(this);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/node.js
-function B() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/node.js
+function R() {
 	for (var e = this._groups, t = 0, n = e.length; t < n; ++t) for (var r = e[t], i = 0, a = r.length; i < a; ++i) {
 		var o = r[i];
 		if (o) return o;
@@ -314,72 +314,72 @@ function B() {
 	return null;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/size.js
-function le() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/size.js
+function z() {
 	let e = 0;
 	for (let t of this) ++e;
 	return e;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/empty.js
-function V() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/empty.js
+function de() {
 	return !this.node();
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/each.js
-function ue(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/each.js
+function fe(e) {
 	for (var t = this._groups, n = 0, r = t.length; n < r; ++n) for (var i = t[n], a = 0, o = i.length, s; a < o; ++a) (s = i[a]) && e.call(s, s.__data__, a, i);
 	return this;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/attr.js
-function de(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/attr.js
+function pe(e) {
 	return function() {
 		this.removeAttribute(e);
 	};
 }
-function H(e) {
+function B(e) {
 	return function() {
 		this.removeAttributeNS(e.space, e.local);
 	};
 }
-function fe(e, t) {
+function me(e, t) {
 	return function() {
 		this.setAttribute(e, t);
 	};
 }
-function pe(e, t) {
+function he(e, t) {
 	return function() {
 		this.setAttributeNS(e.space, e.local, t);
 	};
 }
-function me(e, t) {
+function ge(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? this.removeAttribute(e) : this.setAttribute(e, n);
 	};
 }
-function he(e, t) {
+function V(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? this.removeAttributeNS(e.space, e.local) : this.setAttributeNS(e.space, e.local, n);
 	};
 }
-function ge(e, t) {
+function _e(e, t) {
 	var n = l(e);
 	if (arguments.length < 2) {
 		var r = this.node();
 		return n.local ? r.getAttributeNS(n.space, n.local) : r.getAttribute(n);
 	}
-	return this.each((t == null ? n.local ? H : de : typeof t == "function" ? n.local ? he : me : n.local ? pe : fe)(n, t));
+	return this.each((t == null ? n.local ? B : pe : typeof t == "function" ? n.local ? V : ge : n.local ? he : me)(n, t));
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/window.js
-function _e(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/window.js
+function H(e) {
 	return e.ownerDocument && e.ownerDocument.defaultView || e.document && e || e.defaultView;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/style.js
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/style.js
 function ve(e) {
 	return function() {
 		this.style.removeProperty(e);
@@ -390,51 +390,51 @@ function ye(e, t, n) {
 		this.style.setProperty(e, t, n);
 	};
 }
-function be(e, t, n) {
+function U(e, t, n) {
 	return function() {
 		var r = t.apply(this, arguments);
 		r == null ? this.style.removeProperty(e) : this.style.setProperty(e, r, n);
 	};
 }
-function xe(e, t, n) {
-	return arguments.length > 1 ? this.each((t == null ? ve : typeof t == "function" ? be : ye)(e, t, n ?? "")) : Se(this.node(), e);
+function be(e, t, n) {
+	return arguments.length > 1 ? this.each((t == null ? ve : typeof t == "function" ? U : ye)(e, t, n ?? "")) : xe(this.node(), e);
 }
-function Se(e, t) {
-	return e.style.getPropertyValue(t) || _e(e).getComputedStyle(e, null).getPropertyValue(t);
+function xe(e, t) {
+	return e.style.getPropertyValue(t) || H(e).getComputedStyle(e, null).getPropertyValue(t);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/property.js
-function Ce(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/property.js
+function Se(e) {
 	return function() {
 		delete this[e];
 	};
 }
-function we(e, t) {
+function Ce(e, t) {
 	return function() {
 		this[e] = t;
 	};
 }
-function Te(e, t) {
+function we(e, t) {
 	return function() {
 		var n = t.apply(this, arguments);
 		n == null ? delete this[e] : this[e] = n;
 	};
 }
-function Ee(e, t) {
-	return arguments.length > 1 ? this.each((t == null ? Ce : typeof t == "function" ? Te : we)(e, t)) : this.node()[e];
+function Te(e, t) {
+	return arguments.length > 1 ? this.each((t == null ? Se : typeof t == "function" ? we : Ce)(e, t)) : this.node()[e];
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/classed.js
-function De(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/classed.js
+function Ee(e) {
 	return e.trim().split(/^|\s+/);
 }
-function U(e) {
-	return e.classList || new Oe(e);
+function W(e) {
+	return e.classList || new De(e);
 }
-function Oe(e) {
-	this._node = e, this._names = De(e.getAttribute("class") || "");
+function De(e) {
+	this._node = e, this._names = Ee(e.getAttribute("class") || "");
 }
-Oe.prototype = {
+De.prototype = {
 	add: function(e) {
 		this._names.indexOf(e) < 0 && (this._names.push(e), this._node.setAttribute("class", this._names.join(" ")));
 	},
@@ -446,143 +446,143 @@ Oe.prototype = {
 		return this._names.indexOf(e) >= 0;
 	}
 };
-function ke(e, t) {
-	for (var n = U(e), r = -1, i = t.length; ++r < i;) n.add(t[r]);
+function Oe(e, t) {
+	for (var n = W(e), r = -1, i = t.length; ++r < i;) n.add(t[r]);
 }
-function Ae(e, t) {
-	for (var n = U(e), r = -1, i = t.length; ++r < i;) n.remove(t[r]);
+function ke(e, t) {
+	for (var n = W(e), r = -1, i = t.length; ++r < i;) n.remove(t[r]);
+}
+function Ae(e) {
+	return function() {
+		Oe(this, e);
+	};
 }
 function je(e) {
 	return function() {
 		ke(this, e);
 	};
 }
-function Me(e) {
+function Me(e, t) {
 	return function() {
-		Ae(this, e);
+		(t.apply(this, arguments) ? Oe : ke)(this, e);
 	};
 }
 function Ne(e, t) {
-	return function() {
-		(t.apply(this, arguments) ? ke : Ae)(this, e);
-	};
-}
-function Pe(e, t) {
-	var n = De(e + "");
+	var n = Ee(e + "");
 	if (arguments.length < 2) {
-		for (var r = U(this.node()), i = -1, a = n.length; ++i < a;) if (!r.contains(n[i])) return !1;
+		for (var r = W(this.node()), i = -1, a = n.length; ++i < a;) if (!r.contains(n[i])) return !1;
 		return !0;
 	}
-	return this.each((typeof t == "function" ? Ne : t ? je : Me)(n, t));
+	return this.each((typeof t == "function" ? Me : t ? Ae : je)(n, t));
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/text.js
-function Fe() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/text.js
+function Pe() {
 	this.textContent = "";
 }
-function Ie(e) {
+function Fe(e) {
 	return function() {
 		this.textContent = e;
 	};
 }
-function Le(e) {
+function Ie(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.textContent = t ?? "";
 	};
 }
-function Re(e) {
-	return arguments.length ? this.each(e == null ? Fe : (typeof e == "function" ? Le : Ie)(e)) : this.node().textContent;
+function Le(e) {
+	return arguments.length ? this.each(e == null ? Pe : (typeof e == "function" ? Ie : Fe)(e)) : this.node().textContent;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/html.js
-function ze() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/html.js
+function Re() {
 	this.innerHTML = "";
 }
-function Be(e) {
+function ze(e) {
 	return function() {
 		this.innerHTML = e;
 	};
 }
-function Ve(e) {
+function Be(e) {
 	return function() {
 		var t = e.apply(this, arguments);
 		this.innerHTML = t ?? "";
 	};
 }
-function He(e) {
-	return arguments.length ? this.each(e == null ? ze : (typeof e == "function" ? Ve : Be)(e)) : this.node().innerHTML;
+function Ve(e) {
+	return arguments.length ? this.each(e == null ? Re : (typeof e == "function" ? Be : ze)(e)) : this.node().innerHTML;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/raise.js
-function Ue() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/raise.js
+function He() {
 	this.nextSibling && this.parentNode.appendChild(this);
 }
-function We() {
-	return this.each(Ue);
+function Ue() {
+	return this.each(He);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/lower.js
-function Ge() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/lower.js
+function We() {
 	this.previousSibling && this.parentNode.insertBefore(this, this.parentNode.firstChild);
 }
-function Ke() {
-	return this.each(Ge);
+function Ge() {
+	return this.each(We);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/append.js
-function qe(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/append.js
+function Ke(e) {
 	var t = typeof e == "function" ? e : f(e);
 	return this.select(function() {
 		return this.appendChild(t.apply(this, arguments));
 	});
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/insert.js
-function Je() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/insert.js
+function qe() {
 	return null;
 }
-function Ye(e, t) {
-	var n = typeof e == "function" ? e : f(e), r = t == null ? Je : typeof t == "function" ? t : m(t);
+function Je(e, t) {
+	var n = typeof e == "function" ? e : f(e), r = t == null ? qe : typeof t == "function" ? t : m(t);
 	return this.select(function() {
 		return this.insertBefore(n.apply(this, arguments), r.apply(this, arguments) || null);
 	});
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/remove.js
-function Xe() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/remove.js
+function Ye() {
 	var e = this.parentNode;
 	e && e.removeChild(this);
 }
-function Ze() {
-	return this.each(Xe);
+function Xe() {
+	return this.each(Ye);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/clone.js
-function Qe() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/clone.js
+function Ze() {
 	var e = this.cloneNode(!1), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function $e() {
+function Qe() {
 	var e = this.cloneNode(!0), t = this.parentNode;
 	return t ? t.insertBefore(e, this.nextSibling) : e;
 }
-function et(e) {
-	return this.select(e ? $e : Qe);
+function $e(e) {
+	return this.select(e ? Qe : Ze);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/datum.js
-function tt(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/datum.js
+function et(e) {
 	return arguments.length ? this.property("__data__", e) : this.node().__data__;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/on.js
-function nt(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/on.js
+function tt(e) {
 	return function(t) {
 		e.call(this, t, this.__data__);
 	};
 }
-function rt(e) {
+function nt(e) {
 	return e.trim().split(/^|\s+/).map(function(e) {
 		var t = "", n = e.indexOf(".");
 		return n >= 0 && (t = e.slice(n + 1), e = e.slice(0, n)), {
@@ -591,7 +591,7 @@ function rt(e) {
 		};
 	});
 }
-function it(e) {
+function rt(e) {
 	return function() {
 		var t = this.__on;
 		if (t) {
@@ -600,9 +600,9 @@ function it(e) {
 		}
 	};
 }
-function at(e, t, n) {
+function it(e, t, n) {
 	return function() {
-		var r = this.__on, i, a = nt(t);
+		var r = this.__on, i, a = tt(t);
 		if (r) {
 			for (var o = 0, s = r.length; o < s; ++o) if ((i = r[o]).type === e.type && i.name === e.name) {
 				this.removeEventListener(i.type, i.listener, i.options), this.addEventListener(i.type, i.listener = a, i.options = n), i.value = t;
@@ -618,8 +618,8 @@ function at(e, t, n) {
 		}, r ? r.push(i) : this.__on = [i];
 	};
 }
-function ot(e, t, n) {
-	var r = rt(e + ""), i, a = r.length, o;
+function at(e, t, n) {
+	var r = nt(e + ""), i, a = r.length, o;
 	if (arguments.length < 2) {
 		var s = this.node().__on;
 		if (s) {
@@ -627,99 +627,99 @@ function ot(e, t, n) {
 		}
 		return;
 	}
-	for (s = t ? at : it, i = 0; i < a; ++i) this.each(s(r[i], t, n));
+	for (s = t ? it : rt, i = 0; i < a; ++i) this.each(s(r[i], t, n));
 	return this;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/dispatch.js
-function st(e, t, n) {
-	var r = _e(e), i = r.CustomEvent;
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/dispatch.js
+function ot(e, t, n) {
+	var r = H(e), i = r.CustomEvent;
 	typeof i == "function" ? i = new i(t, n) : (i = r.document.createEvent("Event"), n ? (i.initEvent(t, n.bubbles, n.cancelable), i.detail = n.detail) : i.initEvent(t, !1, !1)), e.dispatchEvent(i);
+}
+function st(e, t) {
+	return function() {
+		return ot(this, e, t);
+	};
 }
 function ct(e, t) {
 	return function() {
-		return st(this, e, t);
+		return ot(this, e, t.apply(this, arguments));
 	};
 }
 function lt(e, t) {
-	return function() {
-		return st(this, e, t.apply(this, arguments));
-	};
-}
-function ut(e, t) {
-	return this.each((typeof t == "function" ? lt : ct)(e, t));
+	return this.each((typeof t == "function" ? ct : st)(e, t));
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/iterator.js
-function* dt() {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/iterator.js
+function* ut() {
 	for (var e = this._groups, t = 0, n = e.length; t < n; ++t) for (var r = e[t], i = 0, a = r.length, o; i < a; ++i) (o = r[i]) && (yield o);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/selection/index.js
-var ft = [null];
-function W(e, t) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/selection/index.js
+var dt = [null];
+function G(e, t) {
 	this._groups = e, this._parents = t;
 }
-function pt() {
-	return new W([[document.documentElement]], ft);
+function ft() {
+	return new G([[document.documentElement]], dt);
 }
-function mt() {
+function pt() {
 	return this;
 }
-W.prototype = pt.prototype = {
-	constructor: W,
+G.prototype = ft.prototype = {
+	constructor: G,
 	select: h,
 	selectAll: b,
-	selectChild: E,
-	selectChildren: ee,
+	selectChild: ee,
+	selectChildren: k,
 	filter: A,
-	data: ne,
-	enter: M,
-	exit: R,
-	join: re,
-	merge: ie,
-	selection: mt,
-	order: ae,
-	sort: z,
-	call: se,
-	nodes: ce,
-	node: B,
-	size: le,
-	empty: V,
-	each: ue,
-	attr: ge,
-	style: xe,
-	property: Ee,
-	classed: Pe,
-	text: Re,
-	html: He,
-	raise: We,
-	lower: Ke,
-	append: qe,
-	insert: Ye,
-	remove: Ze,
-	clone: et,
-	datum: tt,
-	on: ot,
-	dispatch: ut,
-	[Symbol.iterator]: dt
+	data: re,
+	enter: te,
+	exit: ae,
+	join: oe,
+	merge: I,
+	selection: pt,
+	order: L,
+	sort: se,
+	call: le,
+	nodes: ue,
+	node: R,
+	size: z,
+	empty: de,
+	each: fe,
+	attr: _e,
+	style: be,
+	property: Te,
+	classed: Ne,
+	text: Le,
+	html: Ve,
+	raise: Ue,
+	lower: Ge,
+	append: Ke,
+	insert: Je,
+	remove: Xe,
+	clone: $e,
+	datum: et,
+	on: at,
+	dispatch: lt,
+	[Symbol.iterator]: ut
 };
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/select.js
-function G(e) {
-	return typeof e == "string" ? new W([[document.querySelector(e)]], [document.documentElement]) : new W([[e]], ft);
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/select.js
+function K(e) {
+	return typeof e == "string" ? new G([[document.querySelector(e)]], [document.documentElement]) : new G([[e]], dt);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/sourceEvent.js
-function ht(e) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/sourceEvent.js
+function mt(e) {
 	let t;
 	for (; t = e.sourceEvent;) e = t;
 	return e;
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-selection@3.0.0/node_modules/d3-selection/src/pointer.js
-function gt(e, t) {
-	if (e = ht(e), t === void 0 && (t = e.currentTarget), t) {
+//#region ../../../../../.bun/install/cache/links/d3-selection@3.0.0-6dd51b03b6c1d561/node_modules/d3-selection/src/pointer.js
+function ht(e, t) {
+	if (e = mt(e), t === void 0 && (t = e.currentTarget), t) {
 		var n = t.ownerSVGElement || t;
 		if (n.createSVGPoint) {
 			var r = n.createSVGPoint();
@@ -733,35 +733,35 @@ function gt(e, t) {
 	return [e.pageX, e.pageY];
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-drag@3.0.0/node_modules/d3-drag/src/noevent.js
-var _t = { passive: !1 }, K = {
+//#region ../../../../../.bun/install/cache/links/d3-drag@3.0.0-920540fd83b10f23/node_modules/d3-drag/src/noevent.js
+var gt = { passive: !1 }, q = {
 	capture: !0,
 	passive: !1
 };
-function q(e) {
+function J(e) {
 	e.stopImmediatePropagation();
 }
-function J(e) {
+function Y(e) {
 	e.preventDefault(), e.stopImmediatePropagation();
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-drag@3.0.0/node_modules/d3-drag/src/nodrag.js
-function vt(e) {
-	var t = e.document.documentElement, n = G(e).on("dragstart.drag", J, K);
-	"onselectstart" in t ? n.on("selectstart.drag", J, K) : (t.__noselect = t.style.MozUserSelect, t.style.MozUserSelect = "none");
+//#region ../../../../../.bun/install/cache/links/d3-drag@3.0.0-920540fd83b10f23/node_modules/d3-drag/src/nodrag.js
+function _t(e) {
+	var t = e.document.documentElement, n = K(e).on("dragstart.drag", Y, q);
+	"onselectstart" in t ? n.on("selectstart.drag", Y, q) : (t.__noselect = t.style.MozUserSelect, t.style.MozUserSelect = "none");
 }
-function yt(e, t) {
-	var n = e.document.documentElement, r = G(e).on("dragstart.drag", null);
-	t && (r.on("click.drag", J, K), setTimeout(function() {
+function vt(e, t) {
+	var n = e.document.documentElement, r = K(e).on("dragstart.drag", null);
+	t && (r.on("click.drag", Y, q), setTimeout(function() {
 		r.on("click.drag", null);
 	}, 0)), "onselectstart" in n ? r.on("selectstart.drag", null) : (n.style.MozUserSelect = n.__noselect, delete n.__noselect);
 }
 //#endregion
-//#region ../../node_modules/.bun/d3-drag@3.0.0/node_modules/d3-drag/src/constant.js
-var Y = (e) => () => e;
+//#region ../../../../../.bun/install/cache/links/d3-drag@3.0.0-920540fd83b10f23/node_modules/d3-drag/src/constant.js
+var X = (e) => () => e;
 //#endregion
-//#region ../../node_modules/.bun/d3-drag@3.0.0/node_modules/d3-drag/src/event.js
-function X(e, { sourceEvent: t, subject: n, target: r, identifier: i, active: a, x: o, y: s, dx: c, dy: l, dispatch: u }) {
+//#region ../../../../../.bun/install/cache/links/d3-drag@3.0.0-920540fd83b10f23/node_modules/d3-drag/src/event.js
+function Z(e, { sourceEvent: t, subject: n, target: r, identifier: i, active: a, x: o, y: s, dx: c, dy: l, dispatch: u }) {
 	Object.defineProperties(this, {
 		type: {
 			value: e,
@@ -816,67 +816,63 @@ function X(e, { sourceEvent: t, subject: n, target: r, identifier: i, active: a,
 		_: { value: u }
 	});
 }
-X.prototype.on = function() {
+Z.prototype.on = function() {
 	var e = this._.on.apply(this._, arguments);
 	return e === this._ ? this : e;
 };
 //#endregion
-//#region ../../node_modules/.bun/d3-drag@3.0.0/node_modules/d3-drag/src/drag.js
-function bt(e) {
+//#region ../../../../../.bun/install/cache/links/d3-drag@3.0.0-920540fd83b10f23/node_modules/d3-drag/src/drag.js
+function yt(e) {
 	return !e.ctrlKey && !e.button;
 }
-function xt() {
+function bt() {
 	return this.parentNode;
 }
-function St(e, t) {
+function xt(e, t) {
 	return t ?? {
 		x: e.x,
 		y: e.y
 	};
 }
-function Ct() {
+function St() {
 	return navigator.maxTouchPoints || "ontouchstart" in this;
 }
-function wt() {
-	var e = bt, t = xt, n = St, i = Ct, a = {}, o = r("start", "drag", "end"), s = 0, c, l, u, d, f = 0;
+function Ct() {
+	var e = yt, t = bt, n = xt, i = St, a = {}, o = r("start", "drag", "end"), s = 0, c, l, u, d, f = 0;
 	function p(e) {
-		e.on("mousedown.drag", m).filter(i).on("touchstart.drag", _).on("touchmove.drag", v, _t).on("touchend.drag touchcancel.drag", y).style("touch-action", "none").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
+		e.on("mousedown.drag", m).filter(i).on("touchstart.drag", _).on("touchmove.drag", v, gt).on("touchend.drag touchcancel.drag", y).style("touch-action", "none").style("-webkit-tap-highlight-color", "rgba(0,0,0,0)");
 	}
 	function m(n, r) {
-		if (!(d || !e.call(this, n, r))) {
+		if (!d && e.call(this, n, r)) {
 			var i = b(this, t.call(this, n, r), n, r, "mouse");
-			i && (G(n.view).on("mousemove.drag", h, K).on("mouseup.drag", g, K), vt(n.view), q(n), u = !1, c = n.clientX, l = n.clientY, i("start", n));
+			i && (K(n.view).on("mousemove.drag", h, q).on("mouseup.drag", g, q), _t(n.view), J(n), u = !1, c = n.clientX, l = n.clientY, i("start", n));
 		}
 	}
 	function h(e) {
-		if (J(e), !u) {
+		if (Y(e), !u) {
 			var t = e.clientX - c, n = e.clientY - l;
 			u = t * t + n * n > f;
 		}
 		a.mouse("drag", e);
 	}
 	function g(e) {
-		G(e.view).on("mousemove.drag mouseup.drag", null), yt(e.view, u), J(e), a.mouse("end", e);
+		K(e.view).on("mousemove.drag mouseup.drag", null), vt(e.view, u), Y(e), a.mouse("end", e);
 	}
 	function _(n, r) {
-		if (e.call(this, n, r)) {
-			var i = n.changedTouches, a = t.call(this, n, r), o = i.length, s, c;
-			for (s = 0; s < o; ++s) (c = b(this, a, n, r, i[s].identifier, i[s])) && (q(n), c("start", n, i[s]));
-		}
+		if (e.call(this, n, r)) for (var i = n.changedTouches, a = t.call(this, n, r), o = i.length, s = 0, c; s < o; ++s) (c = b(this, a, n, r, i[s].identifier, i[s])) && (J(n), c("start", n, i[s]));
 	}
 	function v(e) {
-		var t = e.changedTouches, n = t.length, r, i;
-		for (r = 0; r < n; ++r) (i = a[t[r].identifier]) && (J(e), i("drag", e, t[r]));
+		for (var t = e.changedTouches, n = t.length, r = 0, i; r < n; ++r) (i = a[t[r].identifier]) && (Y(e), i("drag", e, t[r]));
 	}
 	function y(e) {
 		var t = e.changedTouches, n = t.length, r, i;
 		for (d && clearTimeout(d), d = setTimeout(function() {
 			d = null;
-		}, 500), r = 0; r < n; ++r) (i = a[t[r].identifier]) && (q(e), i("end", e, t[r]));
+		}, 500), r = 0; r < n; ++r) (i = a[t[r].identifier]) && (J(e), i("end", e, t[r]));
 	}
 	function b(e, t, r, i, c, l) {
-		var u = o.copy(), d = gt(l || r, t), f, m, h;
-		if ((h = n.call(e, new X("beforestart", {
+		var u = o.copy(), d = ht(l || r, t), f, m, h;
+		if ((h = n.call(e, new Z("beforestart", {
 			sourceEvent: r,
 			target: p,
 			identifier: c,
@@ -893,11 +889,9 @@ function wt() {
 					a[c] = n, _ = s++;
 					break;
 				case "end": delete a[c], --s;
-				case "drag":
-					d = gt(l || o, t), _ = s;
-					break;
+				case "drag": d = ht(l || o, t), _ = s;
 			}
-			u.call(r, e, new X(r, {
+			u.call(r, e, new Z(r, {
 				sourceEvent: o,
 				subject: h,
 				target: p,
@@ -912,13 +906,13 @@ function wt() {
 		};
 	}
 	return p.filter = function(t) {
-		return arguments.length ? (e = typeof t == "function" ? t : Y(!!t), p) : e;
+		return arguments.length ? (e = typeof t == "function" ? t : X(!!t), p) : e;
 	}, p.container = function(e) {
-		return arguments.length ? (t = typeof e == "function" ? e : Y(e), p) : t;
+		return arguments.length ? (t = typeof e == "function" ? e : X(e), p) : t;
 	}, p.subject = function(e) {
-		return arguments.length ? (n = typeof e == "function" ? e : Y(e), p) : n;
+		return arguments.length ? (n = typeof e == "function" ? e : X(e), p) : n;
 	}, p.touchable = function(e) {
-		return arguments.length ? (i = typeof e == "function" ? e : Y(!!e), p) : i;
+		return arguments.length ? (i = typeof e == "function" ? e : X(!!e), p) : i;
 	}, p.on = function() {
 		var e = o.on.apply(o, arguments);
 		return e === o ? p : e;
@@ -928,39 +922,39 @@ function wt() {
 }
 //#endregion
 //#region src/resolveCountryPrefix.ts
-var Tt = /^([A-Z]{2}):/, Et = (e) => {
-	if (!(!e || Array.isArray(e))) return e.match(Tt)?.[1];
-}, Dt = async ({ tagValue: e, entityIDs: t, context: n, adapters: r, converter: i }) => {
-	let a = Et(e);
+var wt = /^([A-Z]{2}):/, Tt = (e) => {
+	if (e && !Array.isArray(e)) return e.match(wt)?.[1];
+}, Et = async ({ tagValue: e, entityIDs: t, context: n, adapters: r, converter: i }) => {
+	let a = Tt(e);
 	if (a && i.countries.includes(a)) return a;
 	if (t.length > 0) {
 		let e = r.utilTotalExtent(t, n.graph()), a = (e && r.countryCoder.iso1A2Code(e.center()))?.toUpperCase();
 		if (a && i.countries.includes(a)) return a;
 	}
 	return i.countries[0];
-}, Ot = (e) => {
+}, Dt = (e) => {
 	let t = e.catalogue?.focus;
 	return t ? Object.values(t).includes("highlight") : !1;
-}, kt = (e, t) => {
+}, Ot = (e, t) => {
 	let n = (e.signId ?? "").toLowerCase(), r = e.osmValuePart.toLowerCase();
 	if (n === t || r === t) return 0;
 	if (n.startsWith(t) || r.startsWith(t)) return 1;
-	let i = [e.name, e.descriptiveName].filter(Boolean).map((e) => e.toLowerCase());
+	let i = [e.name, e.descriptiveName].filter((e) => !!e).map((e) => e.toLowerCase());
 	return i.some((e) => e.startsWith(t)) ? 2 : i.some((e) => e.split(/\s+/).some((e) => e.startsWith(t))) ? 3 : i.some((e) => e.includes(t)) ? 4 : n.includes(t) || r.includes(t) ? 5 : e.description?.toLowerCase().includes(t) ? 6 : null;
-}, Z = (e, t, n) => {
+}, kt = (e, t, n) => {
 	let r = n?.exclude, i = r ? e.filter((e) => !r(e)) : e, a = t.trim().toLowerCase();
 	if (!a) return i.map((e, t) => ({
 		sign: e,
 		index: t,
-		promoted: Ot(e)
+		promoted: Dt(e)
 	})).sort((e, t) => Number(t.promoted) - Number(e.promoted) || e.index - t.index).map((e) => e.sign);
 	let o = [];
 	for (let e of i) {
-		let t = kt(e, a);
+		let t = Ot(e, a);
 		t !== null && o.push({
 			sign: e,
 			score: t,
-			promoted: Ot(e)
+			promoted: Dt(e)
 		});
 	}
 	return o.sort((e, t) => e.score - t.score || Number(t.promoted) - Number(e.promoted)).map((e) => e.sign);
@@ -973,12 +967,105 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 		for (let e of t ?? []) r.add(e);
 	}
 	return e.signId && r.has(e.signId) ? !0 : (e.compatibility?.incompatibleModifiers ?? []).some((e) => n.has(e));
-}, Q = (e, t, n) => !t || Array.isArray(t) || !n ? [] : e.trafficSignTagToSigns(t, n), jt = (e, t, n) => {
-	if (!(!n || t.length === 0)) return e.signsToTrafficSignTagValue(t, n) || void 0;
-}, Mt = 300, $ = (e) => e.recodgnizedSign && "valuePrompt" in e && !!e.valuePrompt, Nt = (e, n, i) => {
-	let a = r("change"), { uiCombobox: o, utilGetSetValue: s, utilNoAuto: c, utilRebind: l, svgIcon: u, t: d, loadConverter: f, loadCountryCatalogue: p, getSvgAssetUrl: m } = i, h = G(null), g = G(null), _ = G(null), v = G(null), y = G(null), b = [], x = {}, S = [], C, w = null, T = null, E = null, D = /* @__PURE__ */ new Map(), O = o(n, "traffic-sign-" + (e.safeid || e.key)), k = () => (E ??= f().then(async (e) => {
+}, jt = /* @__PURE__ */ new Set([
+	"cycleway",
+	"footway",
+	"path",
+	"pedestrian",
+	"track",
+	"bridleway",
+	"steps"
+]), Mt = /* @__PURE__ */ new Set([
+	"bicycle",
+	"foot",
+	"segregated"
+]), Nt = (e) => {
+	if (e === "traffic_sign") return { kind: "self" };
+	let t = e.match(/^(cycleway|sidewalk)(?::(left|right|both))?:traffic_sign$/);
+	if (t) return {
+		kind: "side",
+		prefix: t[1],
+		side: t[2]
+	};
+}, Pt = (e, t) => (n) => {
+	let r = e.trafficSignTagToSigns(n, t);
+	return Object.fromEntries(e.signsToTags(r, t, "way"));
+}, Ft = (e, t) => {
+	try {
+		return e(t);
+	} catch {
+		return {};
+	}
+}, It = (e, t, n) => {
+	let r = {};
+	if (t.kind === "side") {
+		let n = t.side ? `${t.prefix}:${t.side}` : t.prefix;
+		for (let [t, i] of Object.entries(e)) Mt.has(t) && typeof i == "string" && (r[`${n}:${t}`] = i);
+		return r;
+	}
+	let i = e.highway, a = n.highway;
+	if (Array.isArray(i) && i.length && a && !i.includes(a)) {
+		if (!jt.has(a)) return {};
+		r.highway = i[0];
+	}
+	for (let [t, n] of Object.entries(e)) t !== "highway" && t !== "traffic_sign" && typeof n == "string" && (r[t] = n);
+	return r;
+}, Lt = ({ key: e, tags: t, previousSign: n, originalTags: r, recommend: i }) => {
+	let a = Nt(e), o = t[e];
+	if (!a || n === o) return;
+	let s = [], c = o ? Ft(i, o) : {}, l = o ? It(c, a, t) : {};
+	o && typeof c.traffic_sign == "string" && c.traffic_sign !== o && s.push({
+		kind: "change",
+		key: e,
+		value: c.traffic_sign,
+		from: o,
+		cause: "normalize"
+	});
+	for (let [e, n] of Object.entries(l)) {
+		let r = t[e];
+		r === void 0 ? s.push({
+			kind: "add",
+			key: e,
+			value: n,
+			cause: "sign"
+		}) : r !== n && s.push({
+			kind: "change",
+			key: e,
+			value: n,
+			from: r,
+			cause: "sign"
+		});
+	}
+	if (n) {
+		let e = It(Ft(i, n), a, t);
+		for (let [n, i] of Object.entries(e)) {
+			if (n === "highway" || n in l || t[n] !== i) continue;
+			let e = r?.[n];
+			e !== void 0 && e !== i ? s.push({
+				kind: "change",
+				key: n,
+				value: e,
+				from: i,
+				cause: "restore"
+			}) : s.push({
+				kind: "remove",
+				key: n,
+				value: i,
+				cause: "previous_sign"
+			});
+		}
+	}
+	return s;
+}, Rt = (e) => {
+	let t = {};
+	for (let n of e) t[n.key] = n.kind === "remove" ? void 0 : n.value;
+	return t;
+}, Q = (e, t, n) => !t || Array.isArray(t) || !n ? [] : e.trafficSignTagToSigns(t, n), zt = (e, t, n) => {
+	if (n && t.length !== 0) return e.signsToTrafficSignTagValue(t, n) || void 0;
+}, Bt = 300, $ = (e) => e.recodgnizedSign && "valuePrompt" in e && !!e.valuePrompt, Vt = (e, n, i) => {
+	let a = r("change"), { uiCombobox: o, utilGetSetValue: s, utilNoAuto: c, utilRebind: l, svgIcon: u, t: d, loadConverter: f, loadCountryCatalogue: p, getSvgAssetUrl: m } = i, h = K(null), g = K(null), _ = K(null), v = K(null), y = K(null), b = [], x = {}, S = [], C, w = null, T = null, ee = null, E = /* @__PURE__ */ new Map(), D = !1, O, k = null, A = o(n, "traffic-sign-" + (e.safeid || e.key)), j = () => (ee ??= f().then(async (e) => {
 		T = e;
-	}), E), ee = async (e) => {
+	}), ee), te = async (e) => {
 		if (!e) {
 			w = null;
 			return;
@@ -988,28 +1075,83 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 		} catch {
 			w = null;
 		}
-	}, A = () => {
+	}, M = () => {
 		let t = x[e.key];
 		return Array.isArray(t) ? void 0 : t;
-	}, j = (e, t) => d(e, { default: t }), M = (t) => {
+	}, N = (e, t, n = {}) => d(e, {
+		default: t,
+		...n
+	}).replace(/\{(\w+)\}/g, (e, t) => n[t] ?? e), ne = (e) => {
+		D ? e !== O && (k = O, O = e) : (D = !0, O = e);
+	}, P = (t) => {
 		if (!T) return;
-		S = t, B(), z();
-		let n = jt(T, t, C), r = { [e.key]: n };
-		a.call("change", H, r);
-	}, N = async () => {
-		if (await k(), !T) return;
-		let e = A();
-		C = await Dt({
+		S = t, V(), B();
+		let n = zt(T, t, C), r = { [e.key]: n };
+		a.call("change", U, r);
+	}, F = async () => {
+		if (await j(), !T) return;
+		let e = M();
+		C = await Et({
 			tagValue: e,
 			entityIDs: b,
 			context: n,
 			adapters: i,
 			converter: T
-		}), await ee(C), S = Q(T, e, C), B(), z(), oe();
-	}, P = (e) => "descriptiveName" in e && e.descriptiveName ? e.descriptiveName : "name" in e && e.name ? e.name : e.osmValuePart, F = (e) => e.recodgnizedSign ? P(e) : j("traffic_sign_field.unknown_sign", "Unknown sign"), te = (e) => e.recodgnizedSign ? "description" in e && e.description ? e.description : "name" in e && e.name ? e.name : P(e) : j("traffic_sign_field.unknown_sign", "Unknown sign"), I = (e) => !T || !C ? null : e.svgName ? e.svgName : T.createSvgImportname(C, e.osmValuePart), ne = (e) => "signValue" in e && e.signValue !== void 0 && e.signValue !== "" ? e.signValue : e.valuePrompt.defaultValue ?? "", L = (e) => {
-		let t = D.get(e);
-		t && (clearTimeout(t), D.delete(e));
-	}, R = (e, t) => {
+		}), await te(C), S = Q(T, e, C), V(), B(), me(), oe();
+	}, re = (e, t, n) => {
+		switch (e.cause) {
+			case "normalize": return N("traffic_sign_field.suggestions.cause.normalize", "The usual way to write this sign");
+			case "restore": return N("traffic_sign_field.suggestions.cause.restore", "Was implied by the previous sign {sign}; back to the downloaded value", { sign: n });
+			case "previous_sign": return N("traffic_sign_field.suggestions.cause.previous_sign", "Was implied by the previous sign {sign}", { sign: n });
+			default: return N("traffic_sign_field.suggestions.cause.sign", "{sign} implies this", { sign: t });
+		}
+	}, ie = () => {
+		if (b.length !== 1) return;
+		let e = {};
+		for (let [t, n] of Object.entries(x)) {
+			if (Array.isArray(n)) return;
+			n !== void 0 && (e[t] = n);
+		}
+		return e;
+	}, ae = () => {
+		if (i.suggestTags === !1 || !T || !C) return [];
+		let t = ie();
+		if (!t) return [];
+		let r = n.history?.().base().hasEntity(b[0])?.tags, a = k === null ? r?.[e.key] : k;
+		return (Lt({
+			key: e.key,
+			tags: t,
+			previousSign: a,
+			originalTags: r,
+			recommend: Pt(T, C)
+		}) ?? []).map((n) => ({
+			row: n,
+			reason: re(n, t[e.key] ?? "", a ?? "")
+		}));
+	}, oe = () => {
+		if (h.empty()) return;
+		let e = ae(), t = h.selectAll(".traffic-sign-suggestions").data(e.length ? [0] : []);
+		t.exit().remove();
+		let n = t.enter().insert("div", () => g.node()?.nextSibling ?? null).attr("class", "traffic-sign-suggestions");
+		n.append("div").attr("class", "traffic-sign-suggestions__header").text(N("traffic_sign_field.suggestions.header", "The traffic sign suggests these tags:")), n.append("ul").attr("class", "traffic-sign-suggestions__list"), n.append("button").attr("type", "button").attr("class", "button action traffic-sign-suggestions__apply").text(N("traffic_sign_field.suggestions.apply", "Apply these tags"));
+		let r = n.merge(t);
+		if (!e.length) return;
+		let i = r.select(".traffic-sign-suggestions__list").selectAll("li").data(e);
+		i.exit().remove(), i.enter().append("li").merge(i).attr("class", (e) => {
+			let { row: t } = e;
+			return `traffic-sign-suggestions__item traffic-sign-suggestions__item--${t.kind}`;
+		}).each(function(e) {
+			let { row: t, reason: n } = e, r = K(this).text(""), i = t.kind === "change" ? `${t.key}: ${t.from} → ${t.value}` : `${t.key}=${t.value}`;
+			r.append("code").text(i), r.append("span").attr("class", "traffic-sign-suggestions__reason").text(n);
+		}), r.select(".traffic-sign-suggestions__apply").on("click", (t) => {
+			t.preventDefault();
+			let n = Rt(e.map(({ row: e }) => e));
+			a.call("change", U, n);
+		});
+	}, I = (e) => "descriptiveName" in e && e.descriptiveName ? e.descriptiveName : "name" in e && e.name ? e.name : e.osmValuePart, L = (e) => e.osmValuePart === "none", se = (e) => L(e) ? N("traffic_sign_field.no_sign", "No sign") : e.recodgnizedSign ? I(e) : N("traffic_sign_field.unknown_sign", "Unknown sign"), ce = (e) => L(e) ? N("traffic_sign_field.no_sign_description", "There is explicitly no traffic sign here (traffic_sign=none)") : e.recodgnizedSign ? "description" in e && e.description ? e.description : "name" in e && e.name ? e.name : I(e) : N("traffic_sign_field.unknown_sign", "Unknown sign"), le = (e) => !T || !C ? null : e.svgName ? e.svgName : T.createSvgImportname(C, e.osmValuePart), ue = (e) => "signValue" in e && e.signValue !== void 0 && e.signValue !== "" ? e.signValue : e.valuePrompt.defaultValue ?? "", R = (e) => {
+		let t = E.get(e);
+		t && (clearTimeout(t), E.delete(e));
+	}, z = (e, t) => {
 		if (!T) return;
 		let n = S[e];
 		if (!n || !$(n)) return;
@@ -1018,23 +1160,23 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 			signValue: t,
 			osmValuePart: T.combineSignIdSignValue(r, a)
 		};
-		S = S.map((t, n) => n === e ? o : t), M(S);
-	}, re = (e, t) => {
-		L(e), D.set(e, setTimeout(() => {
-			D.delete(e), R(e, t);
-		}, Mt));
-	}, ie = (e) => {
-		L(e), S = S.filter((t, n) => n !== e), M(S);
-	}, ae = (e, t) => {
+		S = S.map((t, n) => n === e ? o : t), P(S);
+	}, de = (e, t) => {
+		R(e), E.set(e, setTimeout(() => {
+			E.delete(e), z(e, t);
+		}, Bt));
+	}, fe = (e) => {
+		R(e), S = S.filter((t, n) => n !== e), P(S);
+	}, pe = (e, t) => {
 		let n = e + t;
 		if (n < 0 || n >= S.length) return;
 		let r = [...S], [i] = r.splice(e, 1);
-		i && (r.splice(n, 0, i), S = r, M(S), _.selectAll(".traffic-sign-row__drag").nodes()[n]?.focus());
-	}, z = () => {
+		i && (r.splice(n, 0, i), S = r, P(S), _.selectAll(".traffic-sign-row__drag").nodes()[n]?.focus());
+	}, B = () => {
 		if (h.empty()) return;
-		let e = h.select(".field-label").selectAll(".traffic-sign-tool-link").data([0]), n = e.enter().insert("button", ".remove-icon").attr("type", "button").attr("class", "traffic-sign-tool-link").attr("title", j("traffic_sign_field.open_tool", "Open in Traffic Sign Tool")).call(u("#iD-icon-out-link")).on("click", (e) => {
+		let e = h.select(".field-label").selectAll(".traffic-sign-tool-link").data([0]), n = e.enter().insert("button", ".remove-icon").attr("type", "button").attr("class", "traffic-sign-tool-link").attr("title", N("traffic_sign_field.open_tool", "Open in Traffic Sign Tool")).call(u("#iD-icon-out-link")).on("click", (e) => {
 			if (e.preventDefault(), e.stopPropagation(), !C) return;
-			let n = A() || "";
+			let n = M() || "";
 			window.open(t({
 				countryPrefix: C,
 				tagValue: n
@@ -1045,70 +1187,70 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 			return;
 		}
 		n.style("display", null);
-	}, oe = () => {
+	}, me = () => {
 		if (h.empty()) return;
 		let e = h.select(".tag-reference-body");
 		if (e.empty()) return;
 		let t = e.selectAll(".traffic-sign-order-hint").data([0]);
-		t.enter().append("p").attr("class", "tag-reference-description traffic-sign-order-hint").merge(t).text(j("traffic_sign_field.order_hint", "Signs are read top to bottom. The top sign is the main sign."));
-	}, se = (t, n) => {
+		t.enter().append("p").attr("class", "tag-reference-description traffic-sign-order-hint").merge(t).text(N("traffic_sign_field.order_hint", "Signs are read top to bottom. The top sign is the main sign."));
+	}, he = (t, n) => {
 		let r = $(n.sign) ? [n] : [], i = t.selectAll(".traffic-sign-row__value-prompt").data(r);
 		i.exit().remove();
 		let a = i.enter().append("label").attr("class", "traffic-sign-row__value-prompt");
 		a.append("span").attr("class", "traffic-sign-row__value-label"), a.append("input").attr("type", "text").attr("class", "traffic-sign-row__value-input").call(c).on("input", function(e, t) {
 			let n = t, r = e.target;
-			re(n.index, r.value);
+			de(n.index, r.value);
 		}).on("blur", function(e, t) {
 			let n = t, r = e.target;
-			L(n.index), R(n.index, r.value);
+			R(n.index), z(n.index, r.value);
 		});
 		let o = a.merge(i);
 		o.select(".traffic-sign-row__value-label").text((e) => $(e.sign) ? `${e.sign.valuePrompt.prompt}:` : "").attr("title", (e) => $(e.sign) ? e.sign.valuePrompt.prompt : null), o.select(".traffic-sign-row__value-input").each(function(t) {
 			if (!$(t.sign) || !T) return;
-			let n = G(this), r = n.node(), { type: i, step: a } = T.getValuePromptInputAttributes(t.sign.valuePrompt.format), o = ne(t.sign);
+			let n = K(this), r = n.node(), { type: i, step: a } = T.getValuePromptInputAttributes(t.sign.valuePrompt.format), o = ue(t.sign);
 			n.attr("type", i).attr("step", a ?? null).attr("id", `${e.domId || e.key}-value-${t.index}`), document.activeElement !== r && n.property("value", o);
 		});
-	}, ce = (e) => ("signId" in e.sign && e.sign.signId || e.sign.osmValuePart) + ":" + e.index, B = () => {
+	}, ge = (e) => ("signId" in e.sign && e.sign.signId || e.sign.osmValuePart) + ":" + e.index, V = () => {
 		if (_.empty()) return;
 		let e = _.selectAll(".traffic-sign-empty").data(S.length === 0 ? [0] : []);
-		e.exit().remove(), e.enter().append("li").attr("class", "traffic-sign-empty").text(j("traffic_sign_field.empty", "No signs yet. Search below by name or sign ID to add one."));
+		e.exit().remove(), e.enter().append("li").attr("class", "traffic-sign-empty").text(N("traffic_sign_field.empty", "No signs yet. Search below by name or sign ID to add one."));
 		let t = _.selectAll(".traffic-sign-row").data(S.map((e, t) => ({
 			index: t,
 			sign: e
-		})), ce);
+		})), ge);
 		t.exit().remove();
 		let n = t.enter().append("li").attr("class", "traffic-sign-row chip").each(function(e) {
-			let t = G(this);
-			t.append("button").attr("type", "button").attr("class", "traffic-sign-row__drag").attr("title", j("traffic_sign_field.drag", "Drag or use arrow keys to reorder")).attr("aria-label", j("traffic_sign_field.drag", "Drag or use arrow keys to reorder")).text("⋮⋮").on("keydown", (e, t) => {
+			let t = K(this);
+			t.append("button").attr("type", "button").attr("class", "traffic-sign-row__drag").attr("title", N("traffic_sign_field.drag", "Drag or use arrow keys to reorder")).attr("aria-label", N("traffic_sign_field.drag", "Drag or use arrow keys to reorder")).text("⋮⋮").on("keydown", (e, t) => {
 				let n = e;
-				n.key !== "ArrowUp" && n.key !== "ArrowDown" || (n.preventDefault(), n.stopPropagation(), ae(t.index, n.key === "ArrowUp" ? -1 : 1));
+				(n.key === "ArrowUp" || n.key === "ArrowDown") && (n.preventDefault(), n.stopPropagation(), pe(t.index, n.key === "ArrowUp" ? -1 : 1));
 			});
 			let n = t.append("figure").attr("class", "traffic-sign-row__icon");
 			if (e.sign.recodgnizedSign && C) {
-				let t = I(e.sign);
-				t && n.append("img").attr("class", "traffic-sign-row__img").attr("src", m(C, t)).attr("alt", P(e.sign));
-			} else n.append("span").attr("class", "traffic-sign-row__unknown").text("?");
+				let t = le(e.sign);
+				t && n.append("img").attr("class", "traffic-sign-row__img").attr("src", m(C, t)).attr("alt", I(e.sign));
+			} else L(e.sign) ? n.append("span").attr("class", "traffic-sign-row__unknown traffic-sign-row__none").text("–") : n.append("span").attr("class", "traffic-sign-row__unknown").text("?");
 			let r = t.append("div").attr("class", "traffic-sign-row__body");
-			r.append("div").attr("class", "traffic-sign-row__title").text(F(e.sign)), r.append("div").attr("class", "traffic-sign-row__meta").append("code").attr("class", "traffic-sign-row__code").text(e.sign.osmValuePart), t.append("button").attr("type", "button").attr("class", "traffic-sign-row__remove remove-icon").attr("title", j("icons.remove", "remove")).call(u("#iD-operation-delete")).on("click", (e, t) => {
-				e.preventDefault(), e.stopPropagation(), ie(t.index);
+			r.append("div").attr("class", "traffic-sign-row__title").text(se(e.sign)), r.append("div").attr("class", "traffic-sign-row__meta").append("code").attr("class", "traffic-sign-row__code").text(e.sign.osmValuePart), t.append("button").attr("type", "button").attr("class", "traffic-sign-row__remove remove-icon").attr("title", N("icons.remove", "remove")).call(u("#iD-operation-delete")).on("click", (e, t) => {
+				e.preventDefault(), e.stopPropagation(), fe(t.index);
 			});
 		}).merge(t);
-		n.select(".traffic-sign-row__drag"), n.select(".traffic-sign-row__remove"), n.attr("title", (e) => te(e.sign)), n.select(".traffic-sign-row__title").text((e) => F(e.sign)), n.select(".traffic-sign-row__code").text((e) => e.sign.osmValuePart), n.select(".traffic-sign-row__img").attr("src", (e) => {
+		n.select(".traffic-sign-row__drag"), n.select(".traffic-sign-row__remove"), n.attr("title", (e) => ce(e.sign)), n.select(".traffic-sign-row__title").text((e) => se(e.sign)), n.select(".traffic-sign-row__code").text((e) => e.sign.osmValuePart), n.select(".traffic-sign-row__img").attr("src", (e) => {
 			if (!e.sign.recodgnizedSign || !C) return null;
-			let t = I(e.sign);
+			let t = le(e.sign);
 			return t ? m(C, t) : null;
 		}), n.each(function(e) {
-			se(G(this).select(".traffic-sign-row__meta"), e);
-		}), le(n);
-	}, le = (e) => {
+			he(K(this).select(".traffic-sign-row__meta"), e);
+		}), _e(n);
+	}, _e = (e) => {
 		let t, n = null;
-		e.call(wt().on("start", function(e) {
+		e.call(Ct().on("start", function(e) {
 			t = {
 				x: e.x,
 				y: e.y
 			}, n = null;
 		}).on("drag", function(r) {
-			let i = G(this), a = i.node(), o = r.x - t.x, s = r.y - t.y;
+			let i = K(this), a = i.node(), o = r.x - t.x, s = r.y - t.y;
 			if (!i.classed("dragging") && Math.sqrt(o * o + s * s) <= 5) return;
 			let c = e.nodes().indexOf(a);
 			i.classed("dragging", !0), n = null, _.selectAll(".traffic-sign-row").style("transform", function(e, t) {
@@ -1116,25 +1258,25 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 				return c === t ? `translate(${o}px, ${s}px)` : t > c && r.y > i.offsetTop ? (n = n === null || t > n ? t : n, "translateY(-100%)") : t < c && r.y < i.offsetTop + i.offsetHeight ? (n = n === null || t < n ? t : n, "translateY(100%)") : null;
 			});
 		}).on("end", function() {
-			if (!G(this).classed("dragging")) return;
+			if (!K(this).classed("dragging")) return;
 			let r = e.nodes().indexOf(this);
-			if (G(this).classed("dragging", !1), _.selectAll(".traffic-sign-row").style("transform", null), typeof n == "number" && r !== n) {
+			if (K(this).classed("dragging", !1), _.selectAll(".traffic-sign-row").style("transform", null), typeof n == "number" && r !== n) {
 				let e = [...S], [t] = e.splice(r, 1);
-				t && (e.splice(n, 0, t), S = e, M(S));
+				t && (e.splice(n, 0, t), S = e, P(S));
 			}
 			t = void 0, n = null;
 		}));
-	}, V = (e) => {
+	}, H = (e) => {
 		let t = n.cleanTagValue(e.trim());
 		if (!t || !T || !C) return;
 		let r = Q(T, t, C);
 		if (r.length > 0 && r.every((e) => !e.recodgnizedSign) && w) {
-			let [e] = Z(w, t, { exclude: (e) => At(e, S) });
+			let [e] = kt(w, t, { exclude: (e) => At(e, S) });
 			if (e) r = Q(T, e.osmValuePart, C);
-			else if (Z(w, t).length > 0) return;
+			else if (kt(w, t).length > 0) return;
 		}
-		r.length !== 0 && (S = [...S, ...r], s(y, ""), M(S));
-	}, ue = (e) => {
+		r.length !== 0 && (S = [...S, ...r], s(y, ""), P(S));
+	}, ve = (e) => {
 		let t = e.descriptiveName || e.name;
 		return {
 			key: e.osmValuePart,
@@ -1152,33 +1294,35 @@ var Tt = /^([A-Z]{2}):/, Et = (e) => {
 				i.append("span").attr("class", "traffic-sign-option__title").text(t), i.append("code").attr("class", "traffic-sign-option__code").text(e.osmValuePart);
 			}
 		};
-	}, de = (e, t) => {
-		O.off && O.off(n), e.call(O.caseSensitive(!0).minItems(1).fetcher((e, t) => {
+	}, ye = (e, t) => {
+		A.off && A.off(n), e.call(A.caseSensitive(!0).minItems(1).fetcher((e, t) => {
 			if (!w) {
 				t([]);
 				return;
 			}
-			t(Z(w, e, { exclude: (e) => At(e, S) }).map(ue));
+			t(kt(w, e, { exclude: (e) => At(e, S) }).map(ve));
 		}), t);
 	};
-	function H(t) {
-		k().then(() => {
-			h = t, g = t.selectAll(".form-field-input-wrap").data([0]), g = g.enter().append("div").attr("class", "form-field-input-wrap form-field-input-traffic-sign").merge(g), _ = g.selectAll(".traffic-sign-list").data([0]), _ = _.enter().append("ul").attr("class", "traffic-sign-list chiplist full-line-chips").merge(_), v = g.selectAll(".traffic-sign-add-row").data([0]), v = v.enter().append("div").attr("class", "traffic-sign-add-row").merge(v), y = v.selectAll("input").data([0]), y = y.enter().append("input").attr("type", "text").attr("dir", "auto").attr("id", e.domId || void 0).attr("placeholder", j("traffic_sign_field.add_sign", "Add sign…")).merge(y).call(c).call(de, g), y.on("change", () => V(s(y))).on("keydown.field", (e) => {
+	function U(t) {
+		j().then(() => {
+			h = t, g = t.selectAll(".form-field-input-wrap").data([0]), g = g.enter().append("div").attr("class", "form-field-input-wrap form-field-input-traffic-sign").merge(g), _ = g.selectAll(".traffic-sign-list").data([0]), _ = _.enter().append("ul").attr("class", "traffic-sign-list chiplist full-line-chips").merge(_), v = g.selectAll(".traffic-sign-add-row").data([0]), v = v.enter().append("div").attr("class", "traffic-sign-add-row").merge(v), y = v.selectAll("input").data([0]), y = y.enter().append("input").attr("type", "text").attr("dir", "auto").attr("id", e.domId || void 0).attr("placeholder", N("traffic_sign_field.add_sign", "Add sign…")).merge(y).call(c).call(ye, g), y.on("change", () => H(s(y))).on("keydown.field", (e) => {
 				e.key === "Enter" && (y.node()?.blur(), e.stopPropagation());
-			}).on("focus", () => g.classed("active", !0)).on("blur", () => g.classed("active", !1)), O.on("accept", (e) => {
-				V(e?.value ?? s(y)), window.setTimeout(() => y.node()?.focus(), 10);
-			}), N();
+			}).on("focus", () => g.classed("active", !0)).on("blur", () => g.classed("active", !1)), A.on("accept", (e) => {
+				H(e?.value ?? s(y)), window.setTimeout(() => y.node()?.focus(), 10);
+			}), F();
 		});
 	}
-	return H.tags = function(e) {
-		return x = e, N(), H;
-	}, H.entityIDs = function(e) {
-		return b = e, H;
-	}, H.focus = function() {
-		return y.node()?.focus(), H;
-	}, l(H, a, "on");
+	return U.tags = function(t) {
+		x = t;
+		let n = t[e.key];
+		return ne(typeof n == "string" ? n : void 0), F(), U;
+	}, U.entityIDs = function(e) {
+		return e.join() !== b.join() && (D = !1, k = null), b = e, U;
+	}, U.focus = function() {
+		return y.node()?.focus(), U;
+	}, l(U, a, "on");
 };
 //#endregion
-export { t as buildToolUrl, Nt as createTrafficSignField, Q as parseTagToSigns, jt as serializeSignsToTag };
+export { t as buildToolUrl, Vt as createTrafficSignField, Q as parseTagToSigns, zt as serializeSignsToTag };
 
 //# sourceMappingURL=id-field.esm.js.map

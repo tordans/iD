@@ -118,14 +118,16 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
             rows = (plan ?? []).map(row => ({ ...row, reason: rowReason(row, plainTags, previousSign) }));
         }
 
-        let box = _selection.selectAll<HTMLDivElement, number>('.traffic-sign-suggestions')
+        // not `traffic-sign-suggestions`: the package's own (switched off) suggestions use that class
+        // and would remove this box
+        let box = _selection.selectAll<HTMLDivElement, number>('.traffic-sign-plan')
             .data(rows.length ? [0] : []);
         box.exit().remove();
         const boxEnter = box.enter()
             .append('div')
-            .attr('class', 'traffic-sign-suggestions');
+            .attr('class', 'traffic-sign-plan');
         boxEnter.append('div')
-            .attr('class', 'traffic-sign-suggestions-header')
+            .attr('class', 'traffic-sign-plan-header')
             .call(t.append('inspector.traffic_sign_plan.header'));
         box = box.merge(boxEnter);
 
@@ -142,6 +144,8 @@ export function uiFieldTrafficSign(field: unknown, context: iD.Context) {
         const { createTrafficSignField } = fieldModule;
 
         return createTrafficSignField(field, context, {
+            // this field shows its own tag suggestions below (`drawSuggestions`)
+            suggestTags: false,
             uiCombobox: uiCombobox,
             utilRebind: utilRebind,
             utilGetSetValue: utilGetSetValue,
