@@ -1004,7 +1004,7 @@ Rejected: finding the sidewalk automatically at the right-click on the centerlin
   - With several pieces per kind, the kind that has the oldest piece wins.
 - Each surviving piece gets the merged tags, using the piece of the other kind that runs alongside it (the nearest one at the piece's middle).
 - No splitting or joining in v1: the surviving pieces keep their nodes and their junctions. Nodes of a deleted way that other ways use stay; its other nodes are deleted.
-- Relations of a deleted way (e.g. a bicycle route): the membership moves to the surviving piece(s) alongside, same role, if they are not members yet.
+- Relations of a deleted way (e.g. a bicycle route): the membership moves to the surviving piece(s) alongside, same role, if they are not members yet. In the usual flow this does not come up: the cycleway was just extracted (unsaved, no relations) and loses. It matters when two old ways are merged.
 
 #### Tags of the merged path
 
@@ -1021,6 +1021,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 - **Other keys** (`lit`, `name`, `incline`, …): the same value or only on one part → kept; different values → the surviving way's value, and the flash message lists the dropped ones.
 - `oneway`: the path gets `oneway=no`; the bike part's `oneway` becomes `oneway:bicycle`.
 - `traffic_sign`: a 240 / 241 from either part; otherwise the bike part's sign. A foot part's own sign that is dropped is listed in the flash message.
+- `traffic_mode:<side>` that names the other part is removed (decided 2026-10-01): `traffic_mode:left|right|both=foot` on the bike part and `=bicycle` on the foot part. On old data it was only there to say that the two ways are in fact one space, which the path now says itself. Other values (`motor_vehicle`, `parking`, …) stay, and so does the neighbour on the far side.
 - Mapillary keys (feature 19): the IDs of both parts, joined with `;`.
 - The road is not changed (it already has `…=separate` and `use_sidepath` from the first step).
 - Check after the merge: TILDA must read the same bike attributes from the path as from the cycleway before (it reads `cycleway:*` on a path), as tested for variant C.
