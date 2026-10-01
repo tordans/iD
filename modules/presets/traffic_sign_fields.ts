@@ -47,10 +47,24 @@ const SORT_RANK_BY_TAG_KEY: Record<string, number> = {
 };
 
 
-/** Switches all `traffic_sign*` fields to the traffic sign field type */
-export function applyTrafficSignFieldTypes(fields: Record<string, { key?: string, type?: string } | undefined>) {
+/** Field type of the traffic sign fields with one row per key (WORKDOC feature 27) */
+export const TRAFFIC_SIGN_GROUP_FIELD_TYPE = 'trafficSignGroup';
+
+/** Keys of the way's traffic sign field: the sign and its directions */
+export const WAY_SIGN_KEYS = ['traffic_sign', 'traffic_sign:forward', 'traffic_sign:backward'];
+
+
+/**
+ * Switches all `traffic_sign*` fields to the traffic sign field type; the `traffic_sign` field
+ * becomes the group with the directions as rows
+ */
+export function applyTrafficSignFieldTypes(fields: Record<string, { key?: string, keys?: string[], type?: string, signGroup?: string } | undefined>) {
     for (const fieldData of Object.values(fields)) {
-        if (fieldData?.key && TRAFFIC_SIGN_KEY_PATTERN.test(fieldData.key)) {
+        if (fieldData?.key === 'traffic_sign') {
+            fieldData.type = TRAFFIC_SIGN_GROUP_FIELD_TYPE;
+            fieldData.keys = WAY_SIGN_KEYS;
+            fieldData.signGroup = 'way';
+        } else if (fieldData?.key && TRAFFIC_SIGN_KEY_PATTERN.test(fieldData.key)) {
             fieldData.type = TRAFFIC_SIGN_FIELD_TYPE;
         }
     }

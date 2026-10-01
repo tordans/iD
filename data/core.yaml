@@ -766,6 +766,20 @@ en:
       choose_key: "Choose the tag for the image…"
       panorama: "360°"
       flat: "flat"
+    traffic_sign_group:
+      label:
+        way: Traffic Sign
+        cycleway: Traffic Sign (Bike Lanes)
+        sidewalk: Traffic Sign (Sidewalks)
+      side:
+        left: Left
+        right: Right
+        both: Both sides
+      direction:
+        forward: "↑ forward"
+        backward: "↓ backward"
+        both: "⇅ both"
+      add_direction_tooltip: A sign that only applies in this direction of the way
     traffic_sign_plan:
       header: "The traffic sign suggests these tags:"
       apply: Apply these tags

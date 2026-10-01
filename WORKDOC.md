@@ -956,6 +956,26 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - The mapping table could move into the traffic sign tool's country data.
 - `regulatory--bicycles-only` may also be the bicycle road sign (244.1) — unchecked.
 
+### 27. Traffic sign fields for the way, the bike lanes and the sidewalks — ✅ (v1)
+
+**Goal.** Edit every traffic sign key of a road in the fields, also the ones that are not tagged yet: the way's sign with its directions, and the signs of the bike lanes and sidewalks per side (like the cycleway field has a combo per side).
+
+**Usage in Germany** (taginfo Geofabrik, 2026-10-01): `traffic_sign` 675k, `:forward` 28k, `:backward` 23k; `cycleway:right:traffic_sign` 13.9k (`:forward` 289, `:backward` 187), `cycleway:left:traffic_sign` 4.6k (58 / 256), `cycleway:both:traffic_sign` 4.5k (0 / 0), `cycleway:traffic_sign` 1.3k; `sidewalk:right:traffic_sign` 3k (156 / 109), `sidewalk:left:traffic_sign` 2.1k (58 / 124), `sidewalk:both:traffic_sign` 1k.
+
+**What it does.** Three fields, each a list of rows; every row is the traffic sign field of its key with its tag suggestions (feature 2):
+1. **Traffic sign** (the preset's `traffic_sign` field, now a group with `keys` `traffic_sign`, `:forward`, `:backward`): the plain row always; a direction row when tagged or added with "+ ↑ forward" / "+ ↓ backward" (ways only).
+2. **Traffic sign (bike lanes)**: shown on ways with a bike lane on a side (`cycleway:<side>`, `cycleway:both`, `cycleway` not `no`/`none`/`separate`): one row per side (`Both sides` when both sides are tagged together and no sign is tagged per side), plus every tagged `cycleway…traffic_sign…` key (also directions and `cycleway:traffic_sign`).
+3. **Traffic sign (sidewalks)**: the same for sidewalks, for every side with a mapped sidewalk (`sidewalk=both|left|right`, `sidewalk:<side>`; decided 2026-10-01: a sidewalk can have `DE:239` without bike tags).
+- Directions on the sides are rare, so they show only when tagged (decided by default; nobody objected).
+- The two side fields follow the `traffic_sign` field in the field list. Other tagged sign keys (e.g. on presets without a sign field) still get a single field each, as before.
+- The Mapillary sign bar (feature 26) uses the same side rules for its base key.
+
+**Code.** `modules/traffic_sign/sign_field_rows.ts` (pure: `parseSignKey`, `sidesWith`, `signRows`; tests `test/spec/traffic_sign/sign_field_rows.ts`), field type `trafficSignGroup` in `modules/ui/fields/traffic_sign_group.ts` (one `uiFieldTrafficSign` per row), `modules/presets/traffic_sign_fields.ts` (`traffic_sign` becomes the group), `modules/ui/sections/traffic_sign_inspector_fields.ts` (side group fields, signature), hook in `ui/sections/preset_fields.js` (placement after `traffic_sign`, group keys count as shown), CSS `css/99_traffic_sign_group.css`, strings `inspector.traffic_sign_group.*`. `traffic_sign/forward|backward` are no longer separate "more fields" of the Radnetz presets.
+
+**Open:**
+- A side row is shown next to its direction rows (`cycleway:right:traffic_sign` empty + `…:forward` tagged).
+- Labels English only; the plain field keeps the schema's translated label ("Verkehrsschild").
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1009,6 +1029,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 
 ## Progress log
 
+- 2026-10-01: Traffic sign fields for the way (with directions), the bike lanes and the sidewalks, a row per side (feature 27).
 - 2026-10-01: Mapillary traffic signs (feature 26): sign group filter (bike / speed / access / other), click a sign → newest best image turned to the sign's outline, only sign outlines in the viewer, selected sign + dotted line on the map, sign bar with capture days and buttons that write the sign (or maxspeed) to the selected way, with the direction from the sign's facing. Research on Rapid and vizsim/mapillary_trafficsigns.
 - 2026-10-01: Field title buttons only on hover/focus, as small squares with the input's background; link buttons in fields no longer blue. A lock tooltip change was tried and reverted (feature 23).
 - 2026-09-30/10-01: Related tags at their field (feature 25): `source:*`, `note:*`, `check_date:*` and Mapillary images of a key as lines below the field; source / note / check date buttons in the title from a curated taginfo-based list; editors in a light box. `source/width` is no longer a separate field.

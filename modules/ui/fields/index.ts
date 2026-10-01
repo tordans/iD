@@ -61,6 +61,7 @@ import { uiFieldWikipedia } from './wikipedia';
 import { uiFieldMapillaryImages } from './mapillary_images';
 import { uiFieldSurfaceSmoothness } from './surface_smoothness';
 import { uiFieldTrafficSign } from './traffic_sign';
+import { uiFieldTrafficSignGroup } from './traffic_sign_group';
 
 export var uiFields = {
     access: uiFieldAccess,
@@ -94,6 +95,7 @@ export var uiFields = {
     mapillaryImages: uiFieldMapillaryImages,
     surfaceSmoothness: uiFieldSurfaceSmoothness,
     trafficSign: uiFieldTrafficSign,
+    trafficSignGroup: uiFieldTrafficSignGroup,
     typeCombo: uiFieldTypeCombo,
     url: uiFieldUrl,
     wikidata: uiFieldWikidata,

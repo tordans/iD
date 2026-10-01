@@ -1,0 +1,42 @@
+/* Traffic sign fields with one row per key (WORKDOC feature 27) */
+.traffic-sign-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+/* label left, the sign field right, like the per-side rows of the cycleway field */
+.traffic-sign-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    min-width: 0;
+}
+.traffic-sign-row-label {
+    flex: 0 0 64px;
+    padding-top: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--muted-text-color, #767676);
+}
+.traffic-sign-row-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.traffic-sign-row-label.hide {
+    display: none;
+}
+.ideditor .form-field button.traffic-sign-add-direction {
+    width: auto;
+    height: 22px;
+    margin: 6px 4px 0 0;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--text-color);
+    background: var(--bg-color);
+}
+.ideditor .form-field button.traffic-sign-add-direction:hover {
+    background: color-mix(in srgb, var(--text-color) 22%, var(--bg-color-2));
+}

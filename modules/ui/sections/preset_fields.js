@@ -9,8 +9,7 @@ import { geoExtent } from '../../geo/extent';
 import { uiField } from '../field';
 import { uiFormFields } from '../form_fields';
 import { uiSection } from '../section';
-import { trafficSignTagKeysFromTags } from '../../presets/traffic_sign_fields';
-import { appendTrafficSignInspectorFields } from './traffic_sign_inspector_fields';
+import { appendTrafficSignInspectorFields, trafficSignFieldsSignature } from './traffic_sign_inspector_fields';
 import { uiSideWidthFields } from './side_width_fields';
 import { uiRelatedTags } from './related_tags';
 
@@ -38,10 +37,6 @@ export function uiSectionPresetFields(context) {
 
     function fieldKeys(field) {
         return [field.key].concat(field.keys || []).filter(Boolean);
-    }
-
-    function trafficSignFieldsSignature(tags) {
-        return trafficSignTagKeysFromTags(tags).join('\0');
     }
 
     function renderDisclosureContent(selection) {
@@ -131,7 +126,7 @@ export function uiSectionPresetFields(context) {
             });
         }
 
-        var signature = trafficSignFieldsSignature(_tags);
+        var signature = trafficSignFieldsSignature(_tags, geometries);
         if (signature !== _trafficSignFieldsSignature) {
             _trafficSignFieldsSignature = signature;
             _trafficSignFieldsArr = [];
@@ -143,11 +138,14 @@ export function uiSectionPresetFields(context) {
                 presetManager,
                 geometries,
                 dispatch,
-                _fieldsArr.map(function(field) { return field.key; })
+                _fieldsArr.flatMap(fieldKeys)
             );
         }
 
-        var fieldsToShow = _fieldsArr.slice().concat(_trafficSignFieldsArr);
+        // the bike lane and sidewalk sign fields follow the way's own sign field (feature 27)
+        var signIndex = _fieldsArr.findIndex(function(field) { return field.key === 'traffic_sign'; });
+        var fieldsToShow = signIndex === -1 ? _fieldsArr.concat(_trafficSignFieldsArr) :
+            _fieldsArr.slice(0, signIndex + 1).concat(_trafficSignFieldsArr, _fieldsArr.slice(signIndex + 1));
         var shownKeys = new Set(fieldsToShow.map(function(field) { return field.key; }));
         var widthField = presetManager.field('width');
         fieldsToShow = fieldsToShow.concat(

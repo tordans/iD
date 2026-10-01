@@ -174,7 +174,8 @@ const WAY_DETAILS = ['surface_smoothness', 'width', 'traffic_sign'];
 const WAY_DETAILS_MORE = [
     // `source:width` is no field here: it shows below the width field (related tags, feature 25)
     'surface/colour', 'sett/length', 'width/effective',
-    'traffic_sign/forward', 'traffic_sign/backward', 'lit', 'bridge/name', 'tunnel/name', 'not/name'
+    // the directions of `traffic_sign` are rows of its field (feature 27)
+    'lit', 'bridge/name', 'tunnel/name', 'not/name'
 ];
 
 const ROAD_FIELDS = [
