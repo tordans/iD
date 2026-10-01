@@ -344,7 +344,7 @@ Notes:
 **How iD's filters work today** (`modules/renderer/features.js`)
 - Rules per category via `defineRule(key, filter)`: `points`, `traffic_roads`, `service_roads`, `paths`, `buildings`, `building_parts`, `indoor`, `landuse`, `boundaries`, `water`, `rail`, `pistes`, `aerialways`, `power`, `past_future`, `others`.
 - State: URL hash `disable_features=buildings,water` and pref `disabled-features`; `features.enable/disable/enabled/disabled`.
-- List: Map Data pane ▸ "Map Features" (`modules/ui/sections/map_features.js`), one checkbox per category.
+- List: Map Display pane ▸ "Map Features" (moved from Map Data, feature 30) (`modules/ui/sections/map_features.js`), one checkbox per category.
 - Hidden entities are skipped by the renderer and by selection/lasso via `features.isHidden*`.
 
 **Wanted behavior**
@@ -830,8 +830,7 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Known side effect: the undo button was the only sign that a field was changed; it now also shows only on hover.
   - The lock tooltip of a locked field (Wikidata) stays as in iD, on the whole field, so it also shows over the title buttons. Attaching it to the title text and input instead did not work (the input clips it, a disabled input gets no hover events) and was reverted.
 - **Open ideas (to discuss):**
-  - Group the fields. Proposal, with the current groups and a split into section buttons (Traffic, Sides, Surface & width, Signs) plus a Photos pane button: `WORKDOC-sidebar-groups.md`.
-  - Earlier sketch, superseded by that note: "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other", as subheadings inside Fields rather than more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
+  - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
   - Sticky section headers, so the current section stays visible while scrolling.
 
@@ -1151,6 +1150,28 @@ bearer/API-key plugin that fits better than a new token table. Then propose the 
 3. Are all project mappers members of that region in TILDA already?
 4. Should iD also resolve notes, or only write and comment?
 
+### 30. Right sidebar buttons: Map Display and Photos panes — ✅
+
+Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, panel toggles). Each button is now one job.
+
+- **Buttons, top to bottom:** Background, Map Data, Map Display (new), Photos (new), Issues, Preferences, Help. Locate stays above them.
+- **Map Data** (`U`): "which data is loaded". Data layers (OSM, notes, Osmose), Custom data layers, Live edits nearby.
+  - iD's old single custom-data slot only shows while it holds data (e.g. a GPX file dropped on the map). Custom data layers replaced it (feature 4).
+- **Map Display** (`⇧J`, palette icon): "how OSM is drawn". Style options, Lens, Map features (still collapsed).
+  - The "hidden features" hint in the footer and in the preset list now opens and names this pane.
+- **Photos** (`J`, camera icon): the former Photo overlays section, unchanged inside (services, Mapillary filters, sign groups, local photos). It now starts expanded.
+- **Preferences ▸ Panels** (new section): minimap, background, location, history, measurement and way table panel. They were at the bottom of the background list and of Data layers. Their shortcuts are unchanged.
+- **Button tooltips:** pane name as heading, one sentence on what is inside, the shortcut. For all seven buttons, English and German.
+- **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
+- **Not a button, on purpose:** sign groups and Mapillary filters (they filter one layer, so they stay in Photos); a "Radnetz" button with layers and lens (layers are data, the lens is display); the 17 map feature categories alone; favorites.
+- **Code:**
+  - `modules/ui/panes/map_display.ts`, `modules/ui/panes/photos.ts`, `modules/ui/sections/panels.ts` (new).
+  - Small changes upstream: `panes/map_data.js`, `panes/preferences.js`, `sections/data_layers.js`, `sections/background_list.js` (toggles removed), `ui/pane.js` (tooltip), `ui/init.js`, `ui/feature_info.js`, `ui/intro/helper.js` (`{photos_icon}`, `{photos}`).
+  - Strings: `map_display.*`, `photos_pane.*`, `pane_tooltips.*`, `preferences.panels.title`. German in `data/traffic_sign_field_locales.yaml`, which `scripts/build_data.js` now merges deeply, so single upstream strings can be overridden.
+  - After adding a Font Awesome icon: `npm run build:data`, then `npm run dist:svg:fa`.
+- **Checked in the browser (German UI):** all panes and sections, both shortcuts, tooltips, minimap checkbox in sync with `/`, help text, shortcut list. Tests: 2614 passing.
+- **Left as is:** the help pages for notes, GPS and QA still point to Map Data, which is still right.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1179,7 +1200,7 @@ bearer/API-key plugin that fits better than a new token table. Then propose the 
 - New CSS goes into its own file (e.g. `css/85_custom_data_layers.css`).
 - Checks: `npx tsc`, `npx eslint modules test/spec`, `npx vitest run`, `npm run build:data`.
 
-## Icon conventions (Map Data pane)
+## Icon conventions (Map Data and Map Display panes)
 
 - One toggle for every list entry that can take part in the map (`modules/ui/layer_mode_toggle.ts`, `css/94_layer_mode_toggle.css`):
   - pointer (`fas-arrow-pointer`) = interactive: shown, can be selected (and edited, for OSM data). The default.
@@ -1204,6 +1225,7 @@ bearer/API-key plugin that fits better than a new token table. Then propose the 
 
 ## Progress log
 
+- 2026-10-01: Right sidebar split: new Map Display and Photos panes, panel toggles moved to Preferences, tooltips and shortcuts for the panes (feature 30).
 - 2026-10-01: Analysis for TILDA's internal notes in iD (feature 29): feasible via the shared OSM identity, needs a small external API in TILDA; prompt for the TILDA session written.
 - 2026-10-01: The selected Mapillary sign is in the URL (`photo_sign=<id>`) and selected again after a reload, so the viewer is not blank (feature 26; `restoreSelectedSign` in `modules/mapillary/sign_select.ts`).
 - 2026-10-01: Extracted ways are always drawn in the road's direction; a left cycle track gets `oneway=-1` instead of a reversed line (feature 17).

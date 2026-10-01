@@ -950,7 +950,7 @@ en:
     multiple_types: Multiple Types
     unshared_value_tooltip: not shared by all features
     hidden_preset:
-      manual: "{features} are hidden. Enable them in the Map Data pane."
+      manual: "{features} are hidden. Enable them in the Map Display pane."
       zoom: "{features} are hidden. Zoom in to enable them."
     back_tooltip: Change feature type
     remove: Remove
@@ -1252,6 +1252,22 @@ en:
       forward: "↑ forward"
       backward: "↓ backward"
       tooltip: The direction along the selected way the sign applies to, from the way the sign faces
+  map_display:
+    title: Map Display
+    description: Map Display
+    key: J
+  photos_pane:
+    title: Photos
+    description: Photos
+    key: J
+  pane_tooltips:
+    background: Aerial imagery, overlays, brightness and imagery offset.
+    map-data: OpenStreetMap data and notes, QA layers, custom data layers and live edits.
+    map-display: Area fill, lens and which feature types are shown.
+    photos: Street-level photos, their filters and the traffic signs.
+    issues: Errors and warnings in your edits and in the map.
+    preferences: Toolbar labels, panels, privacy and favorite presets.
+    help: Documentation, walkthrough and keyboard shortcuts.
   photo_overlays:
     title: Photo Overlays
     traffic_signs:
@@ -1419,6 +1435,8 @@ en:
       labels:
         description: Show button labels
         tooltip: Uncheck this box to hide the captions under the toolbar buttons.
+    panels:
+      title: Panels
     favorite_presets:
       title: Favorite Presets & Shortcuts
       empty_message: Click the star on a preset to add it to the favorites. Each favorite has a number shortcut.
@@ -1854,7 +1872,7 @@ en:
       title: Street Level Photos
       intro: "Street level photos are useful for mapping traffic signs, businesses, and other details that you can't see from satellite and aerial images. The iD editor supports street level photos from a variety of different providers, such as [Panoramax](https://panoramax.fr), [Mapillary](https://www.mapillary.com), or [KartaView](https://kartaview.org)."
       using_h: "Using Street Level Photos"
-      using: "To use street level photos for mapping, open the {data_icon} **{map_data}** panel on the side of the map to enable or disable the available photo overlays."
+      using: "To use street level photos for mapping, open the {photos_icon} **{photos}** panel on the side of the map to enable or disable the available photo overlays."
       photos: "When enabled, the photo overlay displays a line along the sequence of photos. At higher zoom levels, a circle marks at each photo location, and at even higher zoom levels, a cone indicates the direction the camera was facing when the photo was taken."
       viewer: "When you select one of the photo locations, a photo viewer appears in the bottom corner of the map. The photo viewer contains controls to step forward and backward in the image sequence. It also shows the username of the person who captured the image, the date it was captured, and a link to view the image on the original site."
     gps:
@@ -2615,6 +2633,8 @@ en:
         background: "Toggle background imagery pane"
         background_switch: "Switch back to last background"
         map_data: "Toggle map data pane"
+        map_display: "Toggle map display pane"
+        photos: "Toggle photos pane"
         issues: "Toggle validation issues pane"
         preferences: "Toggle user preferences pane"
         fullscreen: "Enter full screen mode"

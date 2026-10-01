@@ -56,6 +56,8 @@ import { uiPaneBackground } from './panes/background';
 import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
 import { uiPaneMapData } from './panes/map_data';
+import { uiPaneMapDisplay } from './panes/map_display';
+import { uiPanePhotos } from './panes/photos';
 import { uiPanePreferences } from './panes/preferences';
 
 export function uiInit(context) {
@@ -237,6 +239,8 @@ export function uiInit(context) {
         var uiPanes = [
             uiPaneBackground(context),
             uiPaneMapData(context),
+            uiPaneMapDisplay(context),
+            uiPanePhotos(context),
             uiPaneIssues(context),
             uiPanePreferences(context),
             uiPaneHelp(context)

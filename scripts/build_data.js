@@ -77,7 +77,9 @@ function buildData() {
     'fas-eye-slash',       // map data: layer mode toggle (with fas-arrow-pointer, fas-lock)
     'fas-book-open',       // related tags: add a source (feature 25)
     'far-image',           // Mapillary sign bar: images of a capture day (feature 26)
-    'fas-comment'          // related tags: add a note
+    'fas-comment',         // related tags: add a note
+    'fas-palette',         // Map Display pane button
+    'fas-camera'           // Photos pane button
   ]);
   // add icons for QA integrations
   readQAIssueIcons(faIcons);
@@ -271,6 +273,17 @@ function writeFaIcons(faIcons) {
 }
 
 
+function mergeDeep(target, source) {
+  for (const [key, value] of Object.entries(source)) {
+    if (value && typeof value === 'object' && target[key] && typeof target[key] === 'object') {
+      mergeDeep(target[key], value);
+    } else {
+      target[key] = value;
+    }
+  }
+}
+
+
 function mergeTrafficSignFieldLocales() {
   const overridesPath = 'data/traffic_sign_field_locales.yaml';
   if (!fs.existsSync(overridesPath)) return Promise.resolve();
@@ -284,9 +297,7 @@ function mergeTrafficSignFieldLocales() {
     const localeData = data[locale];
     if (!localeData) continue;
 
-    for (const [key, value] of Object.entries(overrides[locale])) {
-      localeData[key] = Object.assign({}, localeData[key], value);
-    }
+    mergeDeep(localeData, overrides[locale]);
 
     fs.writeFileSync(localePath, JSON.stringify(data));
   }

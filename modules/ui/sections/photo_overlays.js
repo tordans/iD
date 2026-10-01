@@ -27,8 +27,7 @@ export function uiSectionPhotoOverlays(context) {
 
     var section = uiSection('photo-overlays', context)
         .label(() => t.append('photo_overlays.title'))
-        .disclosureContent(renderDisclosureContent)
-        .expandedByDefault(false);
+        .disclosureContent(renderDisclosureContent);
 
     const photoDates = {};
     const now = +new Date();
