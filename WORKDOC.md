@@ -830,7 +830,8 @@ Goal: more room for the data in the entity editor, keeping iD's look and feel.
   - Known side effect: the undo button was the only sign that a field was changed; it now also shows only on hover.
   - The lock tooltip of a locked field (Wikidata) stays as in iD, on the whole field, so it also shows over the title buttons. Attaching it to the title text and input instead did not work (the input clips it, a disabled input gets no hover events) and was reverted.
 - **Open ideas (to discuss):**
-  - Group the fields (e.g. "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other"), with small subheadings inside the Fields section instead of more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
+  - Group the fields. Proposal, with the current groups and a split into section buttons (Traffic, Sides, Surface & width, Signs) plus a Photos pane button: `WORKDOC-sidebar-groups.md`.
+  - Earlier sketch, superseded by that note: "Geometry & width", "Surface", "Bike infrastructure", "Access & traffic signs", "Other", as subheadings inside Fields rather than more disclosures. Possible in a preset field order, or as a mapping from field ids to groups in our code.
   - Merge the TILDA section into the fields. For example, the TILDA checklist rows could become field groups, or the fields could show TILDA's state per field.
   - Sticky section headers, so the current section stays visible while scrolling.
 
@@ -993,7 +994,9 @@ Rejected: finding the sidewalk automatically at the right-click on the centerlin
 
 - "Merge into a foot and cycle path", in the edit menu next to the extract entries.
 - Offered when the selection is two or more ways, with at least one **bike part** (`highway=cycleway`, or `highway=path` with `bicycle=designated` and no `foot=designated`) and at least one **foot part** (`highway=footway`, or `highway=path` with `foot=designated` and no `bicycle=designated`), and nothing else.
-- Any number of pieces of each kind can be selected (e.g. one new cycleway and three sidewalk pieces).
+- More than two ways (decided 2026-10-01): always **one** way of one kind and several of the other (one cycleway + several footways, or one footway + several cycleways). Several of both kinds is not offered; that pairing is too complex.
+- Lengths (decided 2026-10-01): they only have to match within reason. The single way's length is compared with the summed length of the other kind's pieces; up to 15 m or 20 % difference (whichever is larger) is fine. Beyond that the entry is disabled with "The lengths differ too much. Split the ways first." The numbers are a first guess to tune in the browser.
+- When the single way survives and the pieces of the other kind differ in a part key (e.g. two footways with different `surface`), the entry is disabled with "… have different surface. Split the <way> first.", because one way can only carry one value per part.
 - Hovering the entry previews which ways stay (highlight) and which go (dashed), like the extract preview. One undo step. The surviving ways stay selected.
 
 #### Which geometry stays
@@ -1034,7 +1037,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 #### Open questions
 
-1. **Lengths that don't match.** With "no splitting", a surviving sidewalk piece that is longer than the cycleway gets the bike tags on its whole length (and a shorter one leaves a gap). Options: (a) accept it and warn in the tooltip when the lengths differ by more than about 10 m; (b) split the surviving way at the ends of the other one; (c) refuse and ask the mapper to split first.
+1. ~~Lengths that don't match.~~ **Decided (2026-10-01):** allowed within reason, otherwise the mapper splits first (see "The operation").
 2. **"Older"** as defined above (saved beats new, then lower way ID): right, or should the mapper be able to choose (two menu entries "keep the footway's line" / "keep the cycleway's line")?
 3. **A value on one part only** (e.g. only the cycleway has `surface`): prefixed key as planned, or the plain key?
 4. **Signs 237 + 239 on the two parts:** keep the bike sign only, or write both as `cycleway:traffic_sign` / `footway:traffic_sign`?
