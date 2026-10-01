@@ -1,7 +1,9 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
 import type { Image as MlyViewerImage, Viewer } from 'mapillary-js';
 
+import { patchHash } from '../behavior';
 import { services } from '../services';
+import { utilStringQs } from '../util';
 import { accessToken, decodeDetectionOutline } from '../services/mapillary';
 import { bearingDegrees, bestImage, cameraPitch, imagesByDay, panoX, viewFromFlatCamera, viewFromLocation, viewFromOutline, type ImageDay, type LngLat, type SignImage, type ViewTarget } from './sign_view';
 import type { coreContext } from '../core';
@@ -46,6 +48,7 @@ export function selectedSign(): SelectedSign | null {
 export function clearSelectedSign() {
     _requestId++;
     _selected = null;
+    patchHash({ photo_sign: null });
     signSelectEvents.call('change');
 }
 
@@ -123,6 +126,8 @@ async function loadSignImages(feature: FeatureResponse): Promise<{ images: SignI
 export async function selectMapillarySign(context: coreContext, sign: { id: string; value: string; loc: LngLat }) {
     const requestId = ++_requestId;
     _selected = { id: sign.id, value: sign.value, loc: sign.loc, days: [], detections: new Map(), loading: true };
+    // in the URL, so a reload shows the sign again (`restoreSelectedSign`)
+    patchHash({ photo_sign: sign.id });
     signSelectEvents.call('change');
 
     try {
@@ -135,6 +140,7 @@ export async function selectMapillarySign(context: coreContext, sign: { id: stri
         const loc = feature.geometry?.coordinates ?? sign.loc;
         _selected = {
             ..._selected!,
+            value: feature.object_value ?? sign.value,
             loc,
             firstSeen: feature.first_seen_at,
             lastSeen: feature.last_seen_at,
@@ -155,6 +161,14 @@ export async function selectMapillarySign(context: coreContext, sign: { id: stri
         _selected = { ..._selected!, loading: false };
         signSelectEvents.call('change');
     }
+}
+
+
+/** Selects the sign of the URL (`photo_sign=<id>`) again after a reload; its value and place come from Mapillary */
+export function restoreSelectedSign(context: coreContext) {
+    const id = utilStringQs(window.location.hash).photo_sign;
+    if (!id || !/^\d+$/.test(id) || _selected) return;
+    selectMapillarySign(context, { id, value: '', loc: context.map().center() as LngLat });
 }
 
 

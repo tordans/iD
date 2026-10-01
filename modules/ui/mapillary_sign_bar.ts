@@ -9,7 +9,7 @@ import { services } from '../services';
 import { svgIcon } from '../svg/icon';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
-import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
+import { clearSelectedSign, restoreSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
 import { changeLabel, directionalTags, sideOfLine, signButtonKeys, signDirectionOnWay, signSourceChanges, signTagChanges, type SignDirection } from '../mapillary/sign_tagging';
 import { dayLabels, type ImageDay } from '../mapillary/sign_view';
 import type { coreContext } from '../core';
@@ -65,6 +65,7 @@ export function initMapillarySignBar(context: coreContext) {
             render();
         }
     });
+    restoreSelectedSign(context);
 }
 
 

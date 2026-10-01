@@ -1113,6 +1113,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 ## Progress log
 
+- 2026-10-01: The selected Mapillary sign is in the URL (`photo_sign=<id>`) and selected again after a reload, so the viewer is not blank (feature 26; `restoreSelectedSign` in `modules/mapillary/sign_select.ts`).
 - 2026-10-01: Extracted ways are always drawn in the road's direction; a left cycle track gets `oneway=-1` instead of a reversed line (feature 17).
 - 2026-10-01: "Merge into a foot and cycle path" for a selected cycleway and footway(s) (feature 28), the second step after extracting a side; the one-step extract (feature 17 C) shares its tag rules.
 - 2026-10-01: The viewer bar writes the shown image to the feature's image keys (`key=1586…` buttons); the Mapillary eyedropper and its key menu are removed (feature 20 v2). Capture day buttons with month, age and image position (feature 26).
