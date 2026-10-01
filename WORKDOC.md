@@ -1023,7 +1023,11 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
   - `width`: `cycleway:width` and `footway:width`; the plain `width` is the sum when both are known.
 - **Other keys** (`lit`, `name`, `incline`, …): the same value or only on one part → kept; different values → the surviving way's value, and the flash message lists the dropped ones.
 - `oneway`: the path gets `oneway=no`; the bike part's `oneway` becomes `oneway:bicycle`.
-- `traffic_sign`: a 240 / 241 from either part; otherwise the bike part's sign. A foot part's own sign that is dropped is listed in the flash message.
+- `traffic_sign` (decided 2026-10-01): the signs of both parts in one value, joined by the traffic sign tool (`trafficSignTagToSigns` on each value, then `signsToTrafficSignTagValue` on the bike part's signs followed by the foot part's): the country prefix once, `;` between signs, `,` before supplementary signs.
+  - `DE:237` + `DE:239` → `DE:237;239`; `DE:237` + `DE:239,1022-10` → `DE:237;239,1022-10`.
+  - The same sign on both parts (`DE:240` + `DE:240`) is written once. A sign on one part only is kept as it is.
+  - `traffic_sign=none` on one part and a sign on the other → the sign; `none` on both → `none`.
+  - Direction keys (`traffic_sign:forward` / `:backward`) are merged per key the same way; a deleted way that ran against the surviving one swaps forward and backward.
 - `traffic_mode:<side>` that names the other part is removed (decided 2026-10-01): `traffic_mode:left|right|both=foot` on the bike part and `=bicycle` on the foot part. On old data it was only there to say that the two ways are in fact one space, which the path now says itself. Other values (`motor_vehicle`, `parking`, …) stay, and so does the neighbour on the far side.
 - Mapillary keys (feature 19): the IDs of both parts, joined with `;`.
 - The road is not changed (it already has `…=separate` and `use_sidepath` from the first step).
@@ -1040,7 +1044,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 1. ~~Lengths that don't match.~~ **Decided (2026-10-01):** allowed within reason, otherwise the mapper splits first (see "The operation").
 2. ~~Which way is "older"?~~ **Decided (2026-10-01):** by changeset age; no second menu entry.
 3. ~~A value on one part only?~~ **Decided (2026-10-01):** the prefixed key (`cycleway:surface`), no plain key. Equal values on both parts merge into the plain key (`surface`), which then stands for both.
-4. **Signs 237 + 239 on the two parts:** keep the bike sign only, or write both as `cycleway:traffic_sign` / `footway:traffic_sign`?
+4. ~~Signs 237 + 239 on the two parts?~~ **Decided (2026-10-01):** one `traffic_sign` joined by the tool's rules, `DE:237;239`.
 5. Should variant C of feature 17 (track + sidewalk from the centerline in one step) stay as it is?
 
 ## Integration order (proposal)
