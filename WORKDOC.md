@@ -1003,7 +1003,7 @@ Rejected: finding the sidewalk automatically at the right-click on the centerlin
 
 - The **older** kind wins: all bike pieces or all foot pieces stay, the other kind is deleted.
   - A way that is already saved beats a way created in this session (negative ID).
-  - Among saved ways the lower way ID is the older one (the version and timestamp only tell the last edit).
+  - Among saved ways the one with the older changeset wins (decided 2026-10-01): the lower `changeset` ID of the loaded version, which iD has on every entity. That is the age of the way's last edit, not of its creation; iD does not load the history.
   - With several pieces per kind, the kind that has the oldest piece wins.
 - Each surviving piece gets the merged tags, using the piece of the other kind that runs alongside it (the nearest one at the piece's middle).
 - No splitting or joining in v1: the surviving pieces keep their nodes and their junctions. Nodes of a deleted way that other ways use stay; its other nodes are deleted.
@@ -1038,7 +1038,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 #### Open questions
 
 1. ~~Lengths that don't match.~~ **Decided (2026-10-01):** allowed within reason, otherwise the mapper splits first (see "The operation").
-2. **"Older"** as defined above (saved beats new, then lower way ID): right, or should the mapper be able to choose (two menu entries "keep the footway's line" / "keep the cycleway's line")?
+2. ~~Which way is "older"?~~ **Decided (2026-10-01):** by changeset age; no second menu entry.
 3. **A value on one part only** (e.g. only the cycleway has `surface`): prefixed key as planned, or the plain key?
 4. **Signs 237 + 239 on the two parts:** keep the bike sign only, or write both as `cycleway:traffic_sign` / `footway:traffic_sign`?
 5. Should variant C of feature 17 (track + sidewalk from the centerline in one step) stay as it is?
