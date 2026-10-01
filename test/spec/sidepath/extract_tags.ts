@@ -86,14 +86,14 @@ describe('planExtraction', () => {
         expect(plan.roadTags).toEqual({
             highway: 'secondary', lit: 'yes', 'cycleway:right': 'separate', 'cycleway:left': 'lane', 'bicycle:forward': 'use_sidepath'
         });
-        expect(plan.reversed).toBe(false);
     });
 
     it('A: second side merges to cycleway:both=separate and bicycle=use_sidepath', () => {
         const road = { highway: 'secondary', 'cycleway:left': 'track', 'cycleway:left:traffic_sign': 'DE:237', 'cycleway:right': 'separate', 'bicycle:forward': 'use_sidepath' };
         const plan = planExtraction(road, 'cycleway', 'left', recommend);
         expect(plan.roadTags).toEqual({ highway: 'secondary', 'cycleway:both': 'separate', bicycle: 'use_sidepath' });
-        expect(plan.reversed).toBe(true);
+        // drawn in the road's direction; the left track's bikes ride against it
+        expect(plan.wayTags.oneway).toBe('-1');
     });
 
     it('A: DE:240 / DE:241 → highway=path with designations', () => {

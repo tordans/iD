@@ -124,25 +124,22 @@ function signTags(sign: string | undefined, recommend: SignRecommend | undefined
 
 
 /**
- * Direction of the new way: node order (`reversed` = against the road) and its `oneway` value.
- * Default: cycle tracks run with the traffic on their side, so right = road direction and
- * left = reversed, both `oneway=yes`. No guess for a left side of a one-way road that bikes
- * may ride both ways (`oneway:bicycle=no`).
+ * The `oneway` value of the new way's bike traffic. The new way is always drawn in the road's
+ * direction, so the side's tags (`separation:left`, `traffic_sign:forward`, …) stay valid as
+ * they are, and a later merge with a sidewalk usually finds both in the same direction.
+ * Default: cycle tracks run with the traffic on their side, so right = `yes` and left = `-1`.
+ * No guess for a left side of a one-way road that bikes may ride both ways (`oneway:bicycle=no`).
  */
-function cyclewayDirection(road: Tags, side: Side, sideOneway: string | undefined) {
-    if (sideOneway === 'yes') return { reversed: false, oneway: 'yes' };
-    if (sideOneway === '-1') return { reversed: true, oneway: 'yes' };
-    if (sideOneway === 'no') return { reversed: side === 'left', oneway: 'no' };
-    if (side === 'left' && road.oneway === 'yes' && road['oneway:bicycle'] === 'no') return { reversed: true, oneway: undefined };
-    return { reversed: side === 'left', oneway: 'yes' };
+function cyclewayOneway(road: Tags, side: Side, sideOneway: string | undefined) {
+    if (sideOneway === 'yes' || sideOneway === '-1' || sideOneway === 'no') return sideOneway;
+    if (side === 'left' && road.oneway === 'yes' && road['oneway:bicycle'] === 'no') return undefined;
+    return side === 'left' ? '-1' : 'yes';
 }
 
 
 export type ExtractionPlan = {
     wayTags: Tags;
     roadTags: Tags;
-    /** node order against the road's */
-    reversed: boolean;
     /** meters from the road's centerline */
     offsetMeters: number;
     /** `bicycle` on the road was not changed because it has another value */
@@ -304,15 +301,13 @@ export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, 
     const cycleway = sideTags(road, 'cycleway', side);
     const sidewalk = sideTags(road, 'sidewalk', side);
     let wayTags: Tags;
-    let reversed = false;
     /** the side's sign designates it for bikes (237, 240, 241): the road gets `use_sidepath` */
     let signDesignated: boolean;
 
     if (variant === 'cycleway') {
         const sign = signTags(cycleway.traffic_sign, recommend);
         signDesignated = sign.bicycle === 'designated';
-        const direction = cyclewayDirection(road, side, cycleway.oneway);
-        reversed = direction.reversed;
+        const oneway = cyclewayOneway(road, side, cycleway.oneway);
         wayTags = { highway: sign.highway ?? 'cycleway', is_sidepath: 'yes' };
         for (const key of ['bicycle', 'foot', 'segregated', 'traffic_sign']) {
             if (sign[key]) wayTags[key] = sign[key];
@@ -320,7 +315,7 @@ export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, 
         const rest = { ...cycleway };
         delete rest.oneway;
         copySideTags(wayTags, rest);
-        if (direction.oneway) wayTags.oneway = direction.oneway;
+        if (oneway) wayTags.oneway = oneway;
     } else if (variant === 'sidewalk') {
         const sign = signTags(sidewalk.traffic_sign, recommend);
         signDesignated = sign.bicycle === 'designated';
@@ -334,11 +329,10 @@ export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, 
         copySideTags(wayTags, sidewalk);
     } else {
         // the same path as merging a separate cycleway and footway (WORKDOC feature 28)
-        const direction = cyclewayDirection(road, side, cycleway.oneway);
-        reversed = direction.reversed;
+        const oneway = cyclewayOneway(road, side, cycleway.oneway);
         const bike: Tags = { ...cycleway, is_sidepath: 'yes' };
         delete bike.oneway;
-        if (direction.oneway) bike.oneway = direction.oneway;
+        if (oneway) bike.oneway = oneway;
         wayTags = combinedPathTags(bike, sidewalk, { recommend, joinSigns }).tags;
         signDesignated = [cycleway.traffic_sign, sidewalk.traffic_sign].some(value => signTags(value, recommend).bicycle === 'designated');
     }
@@ -357,5 +351,5 @@ export function planExtraction(road: Tags, variant: ExtractVariant, side: Side, 
         keptBicycle = result.kept;
     }
 
-    return { wayTags, roadTags, reversed, offsetMeters: sidepathOffsetMeters(road, side, variant), keptBicycle };
+    return { wayTags, roadTags, offsetMeters: sidepathOffsetMeters(road, side, variant), keptBicycle };
 }

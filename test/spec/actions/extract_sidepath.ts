@@ -27,12 +27,14 @@ describe('iD.actionExtractSidepath', () => {
         expect(nodes[0].loc[0]).toBeLessThan(nodes[1].loc[0]);
     });
 
-    it('draws a left track against the road direction', () => {
+    it('draws a left track in the road direction, with oneway=-1', () => {
         const before = graph({ highway: 'residential', 'cycleway:left': 'track' });
         const action = actionExtractSidepath('w1', 'cycleway', 'left', undefined);
         const after = action(before);
-        const nodes = after.childNodes(after.entity(action.getWayId()));
-        expect(nodes[0].loc[0]).toBeGreaterThan(nodes[1].loc[0]);
+        const way = after.entity(action.getWayId());
+        const nodes = after.childNodes(way);
+        expect(way.tags.oneway).toBe('-1');
+        expect(nodes[0].loc[0]).toBeLessThan(nodes[1].loc[0]);
         expect(nodes[0].loc[1]).toBeGreaterThan(52.5);
     });
 

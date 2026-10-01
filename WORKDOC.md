@@ -552,7 +552,7 @@ New way:
   - `DE:241-30` / `DE:241-31` → `highway=path`, `bicycle=designated`, `foot=designated`, `segregated=yes`, `is_sidepath=yes`, `traffic_sign=DE:241-30|31`. A bare `DE:241` is written as `DE:241-30`, following the tool's redirect (`signsToTrafficSignTagValue`); the side (`-30` bike left, `-31` bike right) can't be derived from the road tags.
   - No sign → `highway=cycleway` (implies bicycle designated); `traffic_sign=none` is kept if tagged.
   - `S.segregated` from the road is only used when the sign does not decide it.
-- Direction: `S.oneway` if tagged. Otherwise the way is drawn in the road's direction on the right side and against it on the left, with `oneway=yes` (German default: tracks run with the traffic on their side). If the road has `oneway=yes` + `oneway:bicycle=no` and the left side has no oneway tag, we do **not** guess: `oneway` stays unset and the TILDA checklist shows it as missing.
+- Direction (changed 2026-10-01): the new way is **always drawn in the road's direction**, so the side's tags stay valid without turning them (`separation:left`, `traffic_sign:forward`), and a later merge with a sidewalk (feature 28) usually finds both ways in the same direction. The bike direction is in the tags: `S.oneway` if tagged (`yes` / `-1` / `no`), otherwise `oneway=yes` on the right side and `oneway=-1` on the left. Before, the left side was drawn against the road with `oneway=yes`, and its side tags were not turned. If the road has `oneway=yes` + `oneway:bicycle=no` and the left side has no oneway tag, we do **not** guess: `oneway` stays unset and the TILDA checklist shows it as missing.
 
 Road (centerline):
 - `cycleway:<side>=separate`. All `cycleway:<side>:*` keys and their `source:`/`note:`/`check_date:` variants are removed.
@@ -616,7 +616,7 @@ For "Geh- und Radweg" mapped as two side tags:
   - Each vertex is moved along the average of its two segment normals, in meters converted with `geoMetersToLat/Lon`.
   - Very sharp angles are clamped so the line doesn't loop.
 - New nodes only. Nothing is connected to the road network. iD's "disconnected way" / "almost junction" validations then show the ends to connect, which is intended because junctions need a human.
-- Node order: see "Direction" in A.
+- Node order: the road's, always.
 - After the operation: one undo step ("Extracted the right cycle track into a separate way"). The new way is selected, and the map doesn't move. Flash text: what was changed on the road.
 
 #### Edge cases
@@ -1113,6 +1113,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 
 ## Progress log
 
+- 2026-10-01: Extracted ways are always drawn in the road's direction; a left cycle track gets `oneway=-1` instead of a reversed line (feature 17).
 - 2026-10-01: "Merge into a foot and cycle path" for a selected cycleway and footway(s) (feature 28), the second step after extracting a side; the one-step extract (feature 17 C) shares its tag rules.
 - 2026-10-01: The viewer bar writes the shown image to the feature's image keys (`key=1586…` buttons); the Mapillary eyedropper and its key menu are removed (feature 20 v2). Capture day buttons with month, age and image position (feature 26).
 - 2026-10-01: Traffic sign fields for the way (with directions), the bike lanes and the sidewalks, a row per side (feature 27). Sign bar: three `key=value` buttons instead of the key dropdown, a source button (feature 26).
