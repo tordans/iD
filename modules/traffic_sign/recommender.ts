@@ -6,8 +6,12 @@ type RecommenderModule = {
     signsToTags: (signs: unknown[], countryPrefix: string, geometry: string) => Map<string, string | string[]>;
 };
 
+export type SignDescription = { value: string; name: string; svgName: string | null; known: boolean };
+export type DescribeSigns = (trafficSignValue: string) => SignDescription[];
+
 let _promise: Promise<Recommend> | null = null;
 let _loaded: Recommend | undefined;
+let _describe: DescribeSigns | undefined;
 let _failed = false;
 
 
@@ -25,6 +29,9 @@ export function loadSignRecommender(context: iD.Context): Promise<Recommend> {
                 const signs = module.trafficSignTagToSigns(value, 'DE');
                 return Object.fromEntries(module.signsToTags(signs, 'DE', 'way'));
             };
+            _describe = (value: string) => (module.trafficSignTagToSigns(value, 'DE') as {
+                osmValuePart: string; descriptiveName: string; svgName: string | null; recodgnizedSign: boolean;
+            }[]).map(sign => ({ value: sign.osmValuePart, name: sign.descriptiveName, svgName: sign.svgName, known: sign.recodgnizedSign }));
             return _loaded;
         })
         .catch((err: unknown) => {
@@ -44,4 +51,10 @@ export function loadSignRecommender(context: iD.Context): Promise<Recommend> {
 export function loadedSignRecommender(): Recommend | undefined | null {
     if (_loaded) return _loaded;
     return _failed ? null : undefined;
+}
+
+
+/** Names and icons of the signs of a value (WORKDOC feature 26), once the bundle has loaded */
+export function loadedSignDescriber(): DescribeSigns | undefined {
+    return _describe;
 }

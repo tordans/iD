@@ -6,6 +6,8 @@ import { services } from '../services';
 import type { Projection } from '../geo/raw_mercator';
 import type { MlyImage } from '../services/mapillary';
 import type { coreContext } from '../core';
+import { isSignValue, signMatchesGroups } from '../mapillary/sign_groups';
+import { selectedSign, selectMapillarySign, signSelectEvents } from '../mapillary/sign_select';
 
 
 export function svgMapillarySigns(projection: Projection, context: coreContext, dispatch: Dispatch<object>) {
@@ -59,32 +61,20 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
     }
 
 
+    // WORKDOC feature 26: load all images of the sign and show the best one, turned to the sign
     function click(d3_event: MouseEvent, d: MlyImage) {
-        const service = getService();
-        if (!service) return;
+        if (!getService()) return;
+        // ids from the vector tiles are numbers
+        selectMapillarySign(context, { id: String(d.id), value: d.value!, loc: d.loc });
+    }
 
-        context.map().centerEase(d.loc);
 
-        const selectedImage = service.getActiveImage();
-
-        service.getDetections(d.id).then(detections => {
-            if (detections.length) {
-                const { image } = detections[0];
-                if (selectedImage && image.id === selectedImage.id) {
-                    service
-                        .highlightDetection(detections[0])
-                        .selectImage(image);
-                } else {
-                    service.ensureViewerLoaded(context)
-                        .then(function() {
-                            service
-                                .highlightDetection(detections[0])
-                                .selectImage(image)
-                                .showViewer(context);
-                        });
-                }
-            }
-        });
+    /** Outlines in the viewer: signs of the chosen groups and the selected sign; other objects only with their layer */
+    function outlineFilter(value: string, detectionID: string) {
+        if (!isSignValue(value)) return context.layers().layer('mapillary-map-features')?.enabled() ?? false;
+        const sign = selectedSign();
+        if (sign?.imageId && sign.detections.get(sign.imageId) === detectionID) return true;
+        return signMatchesGroups(value, context.photos().signGroups());
     }
 
 
@@ -105,7 +95,8 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
             });
         }
 
-        return detectedFeatures;
+        const groups = context.photos().signGroups();
+        return detectedFeatures.filter(feature => signMatchesGroups(feature.value!, groups));
     }
 
 
@@ -145,8 +136,28 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
             .attr('y', '-12px');
 
         // update
+        const sign = selectedSign();
+        const selectedID = sign?.id;
+
+        // a dotted line from the selected sign to the image shown for it (WORKDOC feature 26)
+        const shownImage = sign?.imageId ? sign.days.flatMap(day => day.images).find(image => image.id === sign.imageId) : undefined;
+        const link = layer.selectAll<SVGLineElement, number>('.mapillary-sign-link')
+            .data(sign && shownImage ? [0] : []);
+        link.exit().remove();
+        const linkEnter = link.enter()
+            .insert('line', ':first-child')
+            .attr('class', 'mapillary-sign-link');
+        if (sign && shownImage) {
+            const [x1, y1] = projection(sign.loc);
+            const [x2, y2] = projection(shownImage.loc);
+            linkEnter.merge(link)
+                .attr('x1', x1).attr('y1', y1)
+                .attr('x2', x2).attr('y2', y2);
+        }
+
         signs
             .merge(enter)
+            .classed('mly-sign-selected', d => String(d.id) === selectedID)
             .attr('transform', transform);
     }
 
@@ -173,11 +184,13 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
                 update();
                 service.loadSigns(projection);
                 service.showSignDetections(true);
+                service.setOutlineFilter(outlineFilter);
             } else {
                 editOff();
             }
         } else if (service) {
             service.showSignDetections(false);
+            service.setOutlineFilter(null);
         }
     }
 
@@ -188,9 +201,11 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
         if (svgMapillarySigns.enabled) {
             showLayer();
             context.photos().on('change.mapillary_signs', update);
+            signSelectEvents.on('change.mapillary_signs', update);
         } else {
             hideLayer();
             context.photos().on('change.mapillary_signs', null);
+            signSelectEvents.on('change.mapillary_signs', null);
         }
         dispatch.call('change');
         return this;

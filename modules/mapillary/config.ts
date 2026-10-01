@@ -3,7 +3,7 @@
  *
  *     iD.mapillaryConfig({ highlightUsers: ['radinfra'], highlightOrgs: ['fixmycity'] });
  *
- * URL parameters (`photo_dates`, `photo_highlight_users`, `photo_highlight_orgs`) win over this.
+ * URL parameters (`photo_dates`, `photo_highlight_users`, `photo_highlight_orgs`, `photo_sign_groups`) win over this.
  */
 
 export type MapillaryConfig = {
@@ -13,12 +13,15 @@ export type MapillaryConfig = {
     highlightUsers: string[];
     /** Organization slugs whose images are highlighted */
     highlightOrgs: string[];
+    /** Traffic sign groups shown by default (`bike`, `speed`, `access`, `other`; WORKDOC feature 26); empty = all */
+    signGroups: string[];
 };
 
 let _config: MapillaryConfig = {
     defaultFromDate: '2024-01-01',
     highlightUsers: [],
-    highlightOrgs: []
+    highlightOrgs: [],
+    signGroups: []
 };
 
 

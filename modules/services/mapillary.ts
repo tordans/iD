@@ -128,6 +128,8 @@ let _mlyCache: {
 };
 let _mlyFallback = false;
 let _mlyHighlightedDetection: unknown | null;
+/** Which outlines the viewer draws (WORKDOC feature 26: only signs of the chosen groups) */
+let _mlyOutlineFilter: ((value: string, detectionID: string) => boolean) | null = null;
 let _mlyShowFeatureDetections = false;
 let _mlyShowSignDetections = false;
 let _mlyViewer: Viewer;
@@ -715,6 +717,19 @@ export default new class {
     }
 
 
+    /** Sets which detection outlines the viewer draws; `null` draws all */
+    setOutlineFilter(filter: ((value: string, detectionID: string) => boolean) | null) {
+        _mlyOutlineFilter = filter;
+        return this;
+    }
+
+
+    /** The Mapillary JS viewer, once it is loaded (WORKDOC feature 26 turns it to a sign) */
+    getViewer(): Viewer | undefined {
+        return _mlyViewer;
+    }
+
+
     // Return the currently displayed image
     getActiveImage() {
         return _mlyActiveImage;
@@ -791,7 +806,7 @@ export default new class {
         // Create a tag for each detection and shows it in the image viewer
         function showDetections(detections: Detection[]) {
             const tagComponent = _mlyViewer.getComponent<TagComponent>('tag');
-            detections.forEach(function(data) {
+            detections.filter(data => !_mlyOutlineFilter || _mlyOutlineFilter(data.value, data.id)).forEach(function(data) {
                 const tag = makeTag(data);
                 if (tag) {
                     tagComponent.add([tag]);
@@ -820,23 +835,9 @@ export default new class {
                 _mlyHighlightedDetection = null;
             }
 
-            var decodedGeometry = window.atob(data.geometry);
-            var uintArray = new Uint8Array(decodedGeometry.length);
-            for (var i = 0; i < decodedGeometry.length; i++) {
-                uintArray[i] = decodedGeometry.charCodeAt(i);
-            }
-            const tile = new VectorTile(new PbfReader(uintArray.buffer));
-            const layer = tile.layers['mpy-or'];
-
-            const geometries = layer.feature(0).loadGeometry();
-
-            const polygon = geometries.map(ring =>
-                ring.map(point =>
-                    [point.x / layer.extent, point.y / layer.extent]));
-
             tag = new mapillary.OutlineTag(
                 data.id,
-                new mapillary.PolygonGeometry(polygon[0]),
+                new mapillary.PolygonGeometry(decodeDetectionOutline(data.geometry)),
                 {
                     text: text,
                     textColor: color,
@@ -857,3 +858,17 @@ export default new class {
         return _mlyCache;
     }
 };
+
+
+/** The outline of a detection (`geometry` of the detections API: a base64 vector tile) in image coordinates */
+export function decodeDetectionOutline(geometry: string): [number, number][] {
+    const decoded = window.atob(geometry);
+    const uintArray = new Uint8Array(decoded.length);
+    for (let i = 0; i < decoded.length; i++) {
+        uintArray[i] = decoded.charCodeAt(i);
+    }
+    const tile = new VectorTile(new PbfReader(uintArray.buffer));
+    const layer = tile.layers['mpy-or'];
+    const rings = layer.feature(0).loadGeometry();
+    return rings[0].map(point => [point.x / layer.extent, point.y / layer.extent] as [number, number]);
+}

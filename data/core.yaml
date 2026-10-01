@@ -1206,10 +1206,33 @@ en:
     highlight_edits:
       description: Highlight Changes
       tooltip: Outline edited features
+  mapillary_sign_bar:
+    close: Close the traffic sign
+    loading: loading images …
+    image_of: "image {n} of {count}, click for the next"
+    key: Key the traffic sign is written to
+    write_sign: "Write to {key}, with the image as source"
+    write_tags: Set these tags
+    annotation: Set a traffic sign from Mapillary.
   photo_overlays:
     title: Photo Overlays
     traffic_signs:
       title: Traffic Signs
+    sign_groups:
+      label: Show signs
+      tooltip: "{count} of the loaded signs in view"
+      bike:
+        title: Bike
+        tooltip: "Bike paths, shared and separated paths, bicycles excepted, no bicycles, bike crossings"
+      speed:
+        title: Speed
+        tooltip: "Speed limits and their ends, 30 zones, living streets, town signs"
+      access:
+        title: Access & oneway
+        tooltip: "No entry, oneway, closed roads, bus and tram only"
+      other:
+        title: Other
+        tooltip: "All other signs, mostly parking, stopping and direction signs"
     photo_type:
       flat:
         title: "Flat Photos"

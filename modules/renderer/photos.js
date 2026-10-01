@@ -5,6 +5,7 @@ import { utilRebind } from '../util/rebind';
 import { utilStringQs } from '../util';
 import { patchHash } from '../behavior';
 import { effectiveList, listOverride, mapillaryConfig } from '../mapillary/config';
+import { parseSignGroups } from '../mapillary/sign_groups';
 
 
 export function rendererPhotos(context) {
@@ -19,6 +20,8 @@ export function rendererPhotos(context) {
     // URL values of the highlight lists (WORKDOC feature 18): `null` = the project config, `''` = cleared
     var _highlightUsers = null;
     var _highlightOrgs = null;
+    // URL value of the traffic sign groups (WORKDOC feature 26): `null` = the project config
+    var _signGroups = null;
 
     function photos() {}
 
@@ -141,6 +144,17 @@ export function rendererPhotos(context) {
     };
 
     /**
+     * Sets the shown Mapillary traffic sign groups (WORKDOC feature 26)
+     * @param {string} val Comma separated group ids (`bike,speed`)
+     * @param {boolean} updateUrl Whether the URL should update or not
+     */
+    photos.setSignGroups = function(val, updateUrl) {
+        _signGroups = listOverride(val, mapillaryConfig().signGroups);
+        dispatch.call('change', this);
+        if (updateUrl) patchHash({ photo_sign_groups: _signGroups });
+    };
+
+    /**
      * Util function to set the slider date filter
      * @param {*} val Either 'panoramic' or 'flat'
      * @param {boolean} updateUrl Whether the URL should update or not
@@ -238,6 +252,11 @@ export function rendererPhotos(context) {
         return effectiveList(_highlightOrgs, mapillaryConfig().highlightOrgs);
     };
 
+    /** @returns The shown traffic sign groups (URL, else project config); empty = all */
+    photos.signGroups = function() {
+        return parseSignGroups(effectiveList(_signGroups, mapillaryConfig().signGroups));
+    };
+
     /** @returns The date from which imagery counts as recent: the "from" filter, else the configured default */
     photos.ageCutoff = function() {
         return _fromDate || mapillaryConfig().defaultFromDate || null;
@@ -263,6 +282,9 @@ export function rendererPhotos(context) {
         }
         if (hash.photo_highlight_orgs !== undefined) {
             this.setHighlightOrgs(hash.photo_highlight_orgs, false);
+        }
+        if (hash.photo_sign_groups !== undefined) {
+            this.setSignGroups(hash.photo_sign_groups, false);
         }
         if (hash.photo_username) {
             this.setUsernameFilter(hash.photo_username, false);

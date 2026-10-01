@@ -916,6 +916,43 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - `fixme:*` could be a fifth category.
 - The source icon (open book) is a proposal; a rosette (`fas-award`) was the other idea.
 
+### 26. Mapillary traffic signs: filter, see the sign, map it — ✅ (v1)
+
+**Goal.** Find, see and map the traffic signs that matter for bike infrastructure and maxspeed, with Mapillary's detected signs ("Traffic signs" layer).
+
+**Research (2026-10-01).**
+- *Rapid* (`../Rapid`, upstream `main` 2026-04, no sign branches): detected objects are drawn with preset icons on a dark round marker, yellow when selected; signs without a sprite get a "?" placeholder (Rapid#1518). A selected sign is a selectable feature with a sidebar panel (type, first/last seen). On select, Rapid loads the map feature with `images`, highlights all of them on the map, picks the *nearest* image, zooms the map to show sign and image, and draws only a yellow outline with the sign name. Taken over here: best image, highlight its images, only the selected outline. Not taken: selection as its own sidebar mode (in iD the way stays selected while we look at signs, which is what we want for mapping).
+- *iD today*: clicking a sign loads `/<map_feature>/detections` and opens the image of the *first* detection. The viewer outlines *every* object Mapillary detected in that image (cars, trees, buildings) in white; the sign is not centered or zoomed.
+- *API* (sign `1014865383456284`, `regulatory--turn-right-ahead--g1` at Richardplatz): `/<id>?fields=images` lists 21 images (2024-08 … 2026-08, all 360°); `/<id>/detections` gives an outline for only 3 of them (the 2024 ones). Image dates, compass angle and pano flag come in one batch request (`/?ids=a,b,…&fields=captured_at,compass_angle,is_pano,creator`). So for most images the sign position must be computed from the image location, its compass angle and the sign location.
+- *vizsim/mapillary_trafficsigns*: per-state GeoParquet of all Mapillary sign detections in Germany, and campaign mappings for 237, 240, 241, 244.2, 1022-10, 1000-33, 274-30, 350. Berlin (2026-09-30): 470k detections, 642 values; most frequent `no-stopping` 90k, `general-directions` 71k, `no-parking` 29k, `maximum-speed-limit-30` 26k, … — the bike and maxspeed signs drown in parking and direction signs without a filter.
+- *Traffic sign tool*: has no Mapillary mapping. The mapping lives in this fork for now (bike, maxspeed, access); it is a plain per-country table that can later move into the tool's country data.
+
+**What it does.**
+1. **Group filter** — chips below "Traffic signs" in the Photo Overlays pane: *Bike*, *Speed*, *Access & oneway*, *Other*; several can be on, each with the number of loaded signs in view. They filter the map markers and the outlines in the viewer. URL `photo_sign_groups=bike,speed`; project default `iD.mapillaryConfig({ signGroups })`, for Radnetz `bike, speed, access` (hides *Other*, 79 % of the Berlin detections). Groups match the sign name (`bicycl|bike|cyclist|cycling|pedestrians-only`, `speed|living-street|built-up-area`, oneway / no entry / closed / bus only …), so all design variants are covered. Berlin: bike 24k, speed 48k, access 27k, other 371k.
+2. **Click a sign** → loads the map feature with all its images, their dates and the outlines, and shows the newest day's best image (from within the age filter if possible). Best = an image where the sign is outlined, then the one nearest to ~10 m (an image right below the sign does not show it).
+3. **Turned to the sign** — the view is centered and zoomed on the sign's outline in that image: the outline Mapillary linked to the sign, else the image's own detection with the same sign value nearest to where the sign should be (this is the box the viewer draws; it exists for almost every image). That outline is drawn yellow with its name. Without an outline the position is computed: 360° images from the viewer's projection of the sign location (x) and the distance (height); flat images with a pinhole model from focal length, compass angle and the camera pitch (from Mapillary's rotation), zoom ≤ 2 because sign locations are a few meters off.
+4. **Only sign outlines** in the viewer while the "Map features" layer is off (an image has ~500 detections: road, cars, trees …), and only those of the chosen groups.
+5. **The selected sign on the map**: yellow frame (class `mly-sign-selected`; iD clears `.selected` on every redraw) and a dotted yellow line to the shown image.
+6. **Sign bar** above the photo viewer (over the map, so the image stays free):
+   - Mapillary icon + the German sign's icon and name from the traffic sign tool (lazy bundle), e.g. "DE:237 Radweg"; unknown signs show Mapillary's name ("Turn right ahead").
+   - One button per capture day, newest first ("09.08.2026 7"); the shown day is yellow, clicking it again steps through that day's images; tooltip: users, 360°, "image 2 of 7".
+   - With one way selected: tag buttons (speed signs: `maxspeed=30 + source:maxspeed=sign`; zones `DE:zone30/20`) and a key picker + sign buttons (`traffic_sign`, `:forward`, `:backward`, tagged sign keys, `cycleway|sidewalk:<side>:traffic_sign` where the side has bike infrastructure). The sign button writes the sign (supplementary signs are appended: `DE:239,1022-10`) and the image to `source:<key>:mapillary`, one undo step. Several possible signs (241-30 / 241-31, zone 30 / 20) are several buttons.
+   - Default key: the last used; for bike signs the side key of the side the sign stands on (from the way geometry); else `traffic_sign`.
+   - ✕ clears the selected sign.
+
+**Mapping table** (`modules/mapillary/sign_groups.ts`, per country later): 237, 240, 241-30/-31 (by symbol order), 244.2 (`end-of-bicycles-only--g2`, vizsim), 239, 254, 1022-10, 1010-52, 1000-33 (`complementary--bike-route`, vizsim), 245(+1022-10), 357-50, 138, 274-<n>, 278-<n>, 274.1(-20), 274.2(-20), 325.1/.2, 310/311, 267, 220-10/-20, 250, 260, 251, 253, 255, 259, 245.
+
+**Code.** Pure: `modules/mapillary/sign_groups.ts` (groups, meanings, appending signs), `sign_view.ts` (images by day, best image, view from outline / location / flat camera, camera pitch), `sign_tagging.ts` (target keys, default key, side of the way, tag changes); tests in `test/spec/mapillary/sign_*.ts`. State: `modules/mapillary/sign_select.ts` (API calls, selection, turning the viewer). UI: `modules/ui/mapillary_sign_bar.ts`, `modules/ui/mapillary_sign_groups.ts`, CSS `css/99_mapillary_signs.css`, strings `photo_overlays.sign_groups.*`, `mapillary_sign_bar.*`. Hooks in upstream files: `svg/mapillary_signs.ts` (filter, click, selected class, link line, outline filter), `services/mapillary.ts` (`getViewer`, `setOutlineFilter`, `decodeDetectionOutline` taken out of `makeTag`), `renderer/photos.js` (`signGroups`), `ui/sections/photo_overlays.js` (chips), `ui/init.js` (bar), `traffic_sign/recommender.ts` (`loadedSignDescriber`).
+
+**Tested** (browser): Richardplatz (turn right sign, 21 images, 6 days; "Radfahrer frei" written to `traffic_sign` + `source:traffic_sign:mapillary`, undone), Karl-Marx-Straße (237 → default `cycleway:right:traffic_sign`; Tempo 30 → maxspeed button; flat and 360° images centered on the sign).
+
+**Open:**
+- Direction: `aligned_direction` of the map feature could pick `traffic_sign:forward/backward` and `maxspeed:forward/backward`.
+- Strings English only. The bar's look on small viewers (3 rows) is open for review.
+- The images of the sign could be highlighted on the map (Rapid does).
+- The mapping table could move into the traffic sign tool's country data.
+- `regulatory--bicycles-only` may also be the bicycle road sign (244.1) — unchecked.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -969,6 +1006,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 
 ## Progress log
 
+- 2026-10-01: Mapillary traffic signs (feature 26): sign group filter (bike / speed / access / other), click a sign → newest best image turned to the sign's outline, only sign outlines in the viewer, selected sign + dotted line on the map, sign bar with capture days and buttons that write the sign (or maxspeed) to the selected way. Research on Rapid and vizsim/mapillary_trafficsigns.
 - 2026-10-01: Field title buttons only on hover/focus, as small squares with the input's background; link buttons in fields no longer blue. A lock tooltip change was tried and reverted (feature 23).
 - 2026-09-30/10-01: Related tags at their field (feature 25): `source:*`, `note:*`, `check_date:*` and Mapillary images of a key as lines below the field; source / note / check date buttons in the title from a curated taginfo-based list; editors in a light box. `source/width` is no longer a separate field.
 - 2026-09-30: Measuring tape: no button on `source:width` / `note:width`; re-measuring overwrites width and source (decided, feature 21).

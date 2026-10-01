@@ -10,6 +10,7 @@ import { svgIcon } from '../../svg';
 import { mapillaryConfig } from '../../mapillary/config';
 import { AGE_BANDS, ageBandClass } from '../../mapillary/age_bands';
 import { autoShowEnabled, setAutoShowEnabled } from '../../mapillary/auto_show';
+import { uiMapillarySignGroups } from '../mapillary_sign_groups';
 
 export function uiSectionPhotoOverlays(context) {
 
@@ -20,6 +21,9 @@ export function uiSectionPhotoOverlays(context) {
         .on('change',  localPhotosChanged);
 
     var layers = context.layers();
+
+    var _signGroups = uiMapillarySignGroups(context);
+
 
     var section = uiSection('photo-overlays', context)
         .label(() => t.append('photo_overlays.title'))
@@ -141,6 +145,11 @@ export function uiSectionPhotoOverlays(context) {
             .selectAll('input')
             .property('disabled', d => !layerRendered(d))
             .property('checked', layerEnabled);
+
+        // sign group filter below the traffic signs (WORKDOC feature 26)
+        li.merge(liEnter)
+            .filter(d => d.id === 'mapillary-signs')
+            .call(_signGroups);
     }
 
     /**

@@ -51,6 +51,7 @@ import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
 
 import { initMapillaryAutoShow } from '../mapillary/auto_show';
+import { initMapillarySignBar } from './mapillary_sign_bar';
 import { uiPaneBackground } from './panes/background';
 import { uiPaneHelp } from './panes/help';
 import { uiPaneIssues } from './panes/issues';
@@ -467,6 +468,7 @@ export function uiInit(context) {
             });
 
         initMapillaryAutoShow(context);
+        initMapillarySignBar(context);
 
         context.enter(modeBrowse(context));
 
