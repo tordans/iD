@@ -7,7 +7,7 @@ import type { Projection } from '../geo/raw_mercator';
 import type { MlyImage } from '../services/mapillary';
 import type { coreContext } from '../core';
 import { isSignValue, signMatchesGroups } from '../mapillary/sign_groups';
-import { selectedSign, selectMapillarySign, signSelectEvents } from '../mapillary/sign_select';
+import { clearSelectedSign, selectedSign, selectMapillarySign, signSelectEvents } from '../mapillary/sign_select';
 
 
 export function svgMapillarySigns(projection: Projection, context: coreContext, dispatch: Dispatch<object>) {
@@ -61,10 +61,15 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
     }
 
 
-    // WORKDOC feature 26: load all images of the sign and show the best one, turned to the sign
+    // WORKDOC feature 26: load all images of the sign and show the best one, turned to the sign;
+    // a click on the selected sign deselects it and keeps the image
     function click(d3_event: MouseEvent, d: MlyImage) {
         if (!getService()) return;
         // ids from the vector tiles are numbers
+        if (selectedSign()?.id === String(d.id)) {
+            clearSelectedSign();
+            return;
+        }
         selectMapillarySign(context, { id: String(d.id), value: d.value!, loc: d.loc });
     }
 
@@ -187,6 +192,10 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
             .style('display', enabled ? 'block' : 'none')
             .merge(layer);
 
+        // redraw the selected sign's frame and line when the selection changes (also when the
+        // layer was turned on from the URL, which does not go through `drawSigns.enabled`)
+        signSelectEvents.on('change.mapillary_signs', enabled ? update : null);
+
         if (enabled) {
             if (service && ~~context.map().zoom() >= minZoom) {
                 editOn();
@@ -210,11 +219,9 @@ export function svgMapillarySigns(projection: Projection, context: coreContext, 
         if (svgMapillarySigns.enabled) {
             showLayer();
             context.photos().on('change.mapillary_signs', update);
-            signSelectEvents.on('change.mapillary_signs', update);
         } else {
             hideLayer();
             context.photos().on('change.mapillary_signs', null);
-            signSelectEvents.on('change.mapillary_signs', null);
         }
         dispatch.call('change');
         return this;

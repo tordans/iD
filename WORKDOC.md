@@ -941,7 +941,7 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
    - Direction: Mapillary's `aligned_direction` is where the sign's face points; the traffic it applies to travels the opposite way. Compared with the way's direction at the nearest segment (±60°) it gives "↑ forward" / "↓ backward" (shown in the bar); signs across the way get none.
    - Default key: the last used; for bike signs the side key of the side the sign stands on (from the way geometry); else `traffic_sign:forward|backward` by the direction (plain `traffic_sign` when the way is one-way that way, or without a direction).
    - Speed signs with a direction offer `maxspeed:forward=30` (+ `source:maxspeed:forward=sign`) first, then `maxspeed=30`. Tag buttons show the main tag; the tooltip lists all.
-   - ✕ clears the selected sign.
+   - One close (decided 2026-10-01): the viewer's ✕ closes the image and deselects the sign (bar, frame and line go away); the bar has no ✕ of its own. Clicking the selected sign on the map again deselects it and keeps the image.
 
 **Mapping table** (`modules/mapillary/sign_groups.ts`, per country later): 237, 240, 241-30/-31 (by symbol order), 244.2 (`end-of-bicycles-only--g2`, vizsim), 239, 254, 1022-10, 1010-52, 1000-33 (`complementary--bike-route`, vizsim), 245(+1022-10), 357-50, 138, 274-<n>, 278-<n>, 274.1(-20), 274.2(-20), 325.1/.2, 310/311, 267, 220-10/-20, 250, 260, 251, 253, 255, 259, 245.
 

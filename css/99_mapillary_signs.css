@@ -137,12 +137,6 @@
 .ideditor .photoviewer .mapillary-sign-bar button:disabled {
     opacity: 0.45;
 }
-.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-close {
-    flex: none;
-    width: 22px;
-    padding: 0;
-    background: none;
-}
 .mapillary-sign-bar-days,
 .mapillary-sign-bar-actions {
     display: flex;

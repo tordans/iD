@@ -3,7 +3,6 @@ import { select as d3_select } from 'd3-selection';
 import { actionChangeTags } from '../actions';
 import { t, localizer } from '../core/localizer';
 import { services } from '../services';
-import { svgIcon } from '../svg/icon';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
 import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
@@ -26,7 +25,17 @@ export function initMapillarySignBar(context: coreContext) {
     signSelectEvents.on('change.signBar', render);
     context.history().on('change.signBar', render);
     context.on('enter.signBar', render);
-    services.mapillary?.event.on('imageChanged.signBar', render);
+    services.mapillary?.event.on('imageChanged.signBar', () => {
+        // closing the viewer ends the sign selection too (one close for both)
+        const sign = selectedSign();
+        // (`hideViewer` sends this before it marks the viewer as closed; its `hide` class is already set)
+        const closed = context.container().select('.photoviewer').classed('hide');
+        if (sign && !sign.loading && closed) {
+            clearSelectedSign();
+        } else {
+            render();
+        }
+    });
 }
 
 
@@ -102,12 +111,6 @@ export function renderSignBar(context: coreContext) {
     head.append('span').attr('class', 'mapillary-sign-bar-icons');
     head.append('span').attr('class', 'mapillary-sign-bar-name');
     head.append('span').attr('class', 'mapillary-sign-bar-direction hide');
-    head.append('button')
-        .attr('type', 'button')
-        .attr('class', 'mapillary-sign-bar-close')
-        .attr('title', t('mapillary_sign_bar.close'))
-        .call(svgIcon('#iD-icon-close', ''))
-        .on('click', () => clearSelectedSign());
     enter.append('div').attr('class', 'mapillary-sign-bar-days');
     enter.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-tags');
     enter.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-signs');

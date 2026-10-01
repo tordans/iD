@@ -173,6 +173,8 @@ export async function showSignImage(context: coreContext, imageId: string) {
     const detectionId = sign.detections.get(imageId);
     if (detectionId) service.highlightDetection({ id: detectionId } as Parameters<typeof service.highlightDetection>[0]);
     service.showViewer(context);
+    // the bar shows only while the Mapillary viewer is open; reopening on the same image sends no image event
+    signSelectEvents.call('change');
 
     const viewer = service.getViewer();
     if (!viewer) return;

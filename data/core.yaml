@@ -1207,7 +1207,6 @@ en:
       description: Highlight Changes
       tooltip: Outline edited features
   mapillary_sign_bar:
-    close: Close the traffic sign
     loading: loading images …
     image_of: "image {n} of {count}, click for the next"
     key: Key the traffic sign is written to
