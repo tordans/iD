@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { tildaNotesConfig, tildaNotesConfigured, tildaNotesPageUrl } from '../../../modules/tilda_notes/config';
 import { tildaNoteMarkdown } from '../../../modules/tilda_notes/markdown';
 import { TildaNote } from '../../../modules/tilda_notes/note';
+import { isTildaNoteHashId, tildaNoteHashId } from '../../../modules/tilda_notes/hash';
+import { services, serviceTildaNotes } from '../../../modules/services';
 
 describe('tilda_notes/config', () => {
     it('is off without a config and on with origin, region and folder', () => {
@@ -60,5 +62,25 @@ describe('tilda_notes/markdown', () => {
         const html = tildaNoteMarkdown('![Foto](https://example.org/a.png)');
         expect(html).not.toContain('<img');
         expect(html).toContain('>Foto</a>');
+    });
+});
+
+describe('tilda_notes/hash', () => {
+    it('tells TILDA note ids from OSM note ids', () => {
+        expect(isTildaNoteHashId('tilda-note/41')).toBe(true);
+        expect(isTildaNoteHashId('note/41')).toBe(false);
+    });
+
+    it('gives the hash id of a selected, saved note only', () => {
+        // the test setup removes all services
+        const before = services.tildaNotes;
+        services.tildaNotes = serviceTildaNotes;
+        expect(tildaNoteHashId()).toBe(null);
+        serviceTildaNotes.selectedID('-1');
+        expect(tildaNoteHashId()).toBe(null);
+        serviceTildaNotes.selectedID('41');
+        expect(tildaNoteHashId()).toBe('tilda-note/41');
+        serviceTildaNotes.selectedID(null);
+        services.tildaNotes = before;
     });
 });

@@ -1165,6 +1165,7 @@ TILDA's API is live on staging (tilda-geo `docs/External-Notes-API.md`, commit 7
   - Saved at once in TILDA, not with the OSM changeset.
 - **Access problems are said in words,** in the layer list and in the editor: not logged in to OSM (with a login link), no TILDA account yet, not a member of the region (with a link to TILDA), TILDA not reachable.
 - **Markdown is rendered safely:** raw HTML is shown as text, only http(s) and mailto links, images become links.
+- **URL:** a selected TILDA note is in the hash as `id=tilda-note/<id>` (OSM notes: `id=note/<id>`). Opening such a link reads the note, turns the layer on and selects it; without `map=` it also moves there. Without access nothing is selected (`modules/tilda_notes/hash.ts`, hooks in `behavior/hash.js`).
 - **Loading:** the whole folder in one request, refreshed at most once a minute while the map moves and right after a write. A note's text and replies are read when it is selected. Pins show from zoom 10.
 
 Config (`index.html`, before `context.init()`): `iD.tildaNotesConfig({ origin, regionSlug, folderId })`. Without it the feature is off.
@@ -1173,9 +1174,9 @@ Code: `modules/tilda_notes/` (config, note class, Markdown), `modules/services/t
 
 **Tested:** unit tests (config, note, Markdown); in the browser against a mocked API in the page (list, read, reply, resolve, new note, hover, layer off, not-logged-in hint); the staging API with curl (preflight for `http://127.0.0.1:8080`, `401 missing_token`).
 
-**Not tested yet:** the real round trip with an OSM login (the test browser has none). First thing to check after logging in at `http://127.0.0.1:8080`.
+**Not tested yet:** the real round trip with an OSM login (the test browser has none); opening a `tilda-note/` link on a fresh page load (the mock only exists after the load; selecting by changing the hash was tested). First thing to check after logging in at `http://127.0.0.1:8080`.
 
-**Left out:** dragging a new note before saving (click again instead), a note id in the URL hash, editing or deleting notes.
+**Left out:** dragging a new note before saving (click again instead), editing or deleting notes.
 
 **Open**
 1. Are all project mappers members of the `infravelo` region in TILDA? Others get the "not a member" hint.
