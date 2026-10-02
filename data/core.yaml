@@ -51,7 +51,7 @@ en:
     add_note:
       title: Note
       label: Add Note
-      description: "Spotted an issue? Let other mappers know."
+      description: "Add a public OpenStreetMap note. Everyone can read it."
       key: N
     add_preset:
       title: "Add {feature}"
@@ -1108,8 +1108,11 @@ en:
         tooltip: Map data from OpenStreetMap
         title: OpenStreetMap Data
       notes:
-        tooltip: Note data from OpenStreetMap
-        title: OpenStreetMap Notes
+        tooltip: Public notes from OpenStreetMap. Everyone can read them.
+        title: OpenStreetMap Notes (public)
+      tilda-notes:
+        tooltip: Internal notes of the project from TILDA. Only members of the region see them.
+        title: TILDA Notes (internal)
       osmose:
         tooltip: Data issues detected by osmose.openstreetmap.fr
         title: Osmose Issues
@@ -1695,6 +1698,42 @@ en:
     login: You must log in to change or comment on this note.
     upload_explanation: "Your comments will be publicly visible to all OpenStreetMap users."
     upload_explanation_with_user: "Your comments as {user} will be publicly visible to all OpenStreetMap users."
+  tilda_notes:
+    title: TILDA note
+    private: "Internal note: only members of this region in TILDA can see it."
+    new: New TILDA note
+    status:
+      open: open
+      closed: resolved
+    replies: "{count} replies"
+    loading: Loading the note…
+    not_loaded: The note could not be loaded.
+    no_body: Only a subject was given.
+    subject: Subject
+    body: Note
+    body_placeholder: "Describe what you noticed (Markdown)."
+    reply: Reply
+    reply_placeholder: "Write a reply (Markdown)."
+    save_explanation: "Saved in TILDA at once, not with your OpenStreetMap changes. Not public."
+    save: Save note
+    save_reply: Save reply
+    resolve: Mark as resolved
+    resolve_reply: Reply and resolve
+    reopen: Reopen
+    reopen_reply: Reply and reopen
+    open_in_tilda: Open in TILDA
+    open_tilda: Open TILDA
+    add:
+      title: TILDA
+      osm_title: OSM
+      description: "Add an internal TILDA note. Only members of the project see it."
+    errors:
+      login: "Log in to OpenStreetMap to see and write TILDA notes."
+      invalid_osm_token: "OpenStreetMap did not accept your login. Log in again."
+      no_tilda_user: "Your OpenStreetMap account has no TILDA account yet. Sign in to TILDA once."
+      not_member: "You are not a member of this region in TILDA. Ask for access."
+      network: "TILDA could not be reached."
+      other: "TILDA: {message}"
   help:
     title: Help
     key: H

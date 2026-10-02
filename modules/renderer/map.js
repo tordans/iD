@@ -420,6 +420,7 @@ export function rendererMap(context) {
             'browse': true,
             'save': true,
             'select-note': true,
+            'select-tilda-note': true,
             'select-data': true,
             'select-error': true
         };

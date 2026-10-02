@@ -11,6 +11,7 @@ import { geoExtent } from '../../geo';
 import { modeBrowse } from '../../modes/browse';
 import { uiCmd } from '../cmd';
 import { uiSection } from '../section';
+import { services } from '../../services';
 import { uiSettingsCustomData } from '../settings/custom_data';
 
 export function uiSectionDataLayers(context) {
@@ -56,7 +57,7 @@ export function uiSectionDataLayers(context) {
         if (layer) {
             layer.enabled(enabled);
 
-            if (!enabled && (which === 'osm' || which === 'notes')) {
+            if (!enabled && (which === 'osm' || which === 'notes' || which === 'tilda-notes')) {
                 context.enter(modeBrowse(context));
             }
         }
@@ -67,8 +68,11 @@ export function uiSectionDataLayers(context) {
     }
 
     function drawOsmItems(selection) {
-        var osmKeys = ['osm', 'notes'];
-        var osmLayers = layers.all().filter(function(obj) { return osmKeys.indexOf(obj.id) !== -1; });
+        var osmKeys = ['osm', 'notes', 'tilda-notes'];
+        var osmLayers = layers.all().filter(function(obj) {
+            if (obj.id === 'tilda-notes' && !obj.layer.supported()) return false;   // not configured
+            return osmKeys.indexOf(obj.id) !== -1;
+        });
 
         var ul = selection
             .selectAll('.layer-list-osm')
@@ -119,13 +123,32 @@ export function uiSectionDataLayers(context) {
                 d3_select(this).call(t.append('map_data.layers.' + d.id + '.title'));
             });
 
+        // internal TILDA notes: why they are not shown (not logged in, no access, …)
+        liEnter
+            .filter(function(d) { return d.id === 'tilda-notes'; })
+            .append('div')
+            .attr('class', 'tilda-notes-access');
+
 
         // Update
-        li
+        li = li
             .merge(liEnter)
-            .classed('active', function (d) { return d.layer.enabled(); })
-            .selectAll('input')
+            .classed('active', function (d) { return d.layer.enabled(); });
+
+        li.selectAll('input')
             .property('checked', function (d) { return d.layer.enabled(); });
+
+        li.selectAll('.tilda-notes-access')
+            .each(function(d) {
+                var access = services.tildaNotes ? services.tildaNotes.access() : 'ok';
+                var known = ['login', 'invalid_osm_token', 'no_tilda_user', 'not_member', 'network'];
+                var show = d.layer.enabled() && access !== 'ok' && access !== 'loading';
+                var text = d3_select(this).classed('hide', !show).text('');
+                if (!show) return;
+                text.call(known.indexOf(access) !== -1
+                    ? t.append('tilda_notes.errors.' + access)
+                    : t.append('tilda_notes.errors.other', { message: access }));
+            });
     }
 
     function drawQAItems(selection) {
@@ -391,6 +414,9 @@ export function uiSectionDataLayers(context) {
     }
 
     context.layers().on('change.uiSectionDataLayers', section.reRender);
+    if (services.tildaNotes) {
+        services.tildaNotes.on('change.uiSectionDataLayers', section.reRender);
+    }
 
     context.map()
         .on('move.uiSectionDataLayers',

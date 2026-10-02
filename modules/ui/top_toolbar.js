@@ -15,8 +15,10 @@ export function uiTopToolbar(context) {
         save = uiToolSave(context);
 
     function notesEnabled() {
-        var noteLayer = context.layers().layer('notes');
-        return noteLayer && noteLayer.enabled();
+        return ['notes', 'tilda-notes'].some(function(id) {
+            var noteLayer = context.layers().layer(id);
+            return noteLayer && noteLayer.enabled();
+        });
     }
 
     function topToolbar(bar) {

@@ -20,6 +20,7 @@ import { svgMapilioImages } from './mapilio_images';
 import { svgPanoramaxImages } from './panoramax_images';
 import { svgOsm } from './osm';
 import { svgNotes } from './notes';
+import { svgTildaNotes } from './tilda_notes';
 import { svgTouch } from './touch';
 import { utilArrayDifference, utilRebind } from '../util';
 import { utilGetDimensions, utilSetDimensions } from '../util/dimensions';
@@ -48,6 +49,7 @@ export function svgLayers(projection: Projection, context: iD.Context) {
     var _layers: SvgLayerItem[] = [
         { id: 'osm', layer: svgOsm(projection, context, dispatch) },
         { id: 'notes', layer: svgNotes(projection, context, dispatch) },
+        { id: 'tilda-notes', layer: svgTildaNotes(projection, context, dispatch) },
         { id: 'data', layer: svgData(projection, context, dispatch) },
         { id: 'custom-data', layer: svgCustomData(projection, context, dispatch) },
         { id: 'osmose', layer: svgOsmose(projection, context, dispatch) },

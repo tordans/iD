@@ -1059,7 +1059,7 @@ The same rules as variant C of feature 17; the shared part of `planExtraction` m
 5. ~~Keep the one-step extract (feature 17, variant C)?~~ **Decided (2026-10-01):** yes. It is already built: a road with `sidewalk=right` + `sidewalk:surface=sett` and `cycleway:right=track` + `cycleway:right:surface=asphalt` offers "Extract right cycle track and sidewalk as one path" and gives `highway=path` with `cycleway:surface=asphalt` and `footway:surface=sett`.
    - To do with this feature: variant C uses the same shared tag function as the merge, so both give the same result. The one change for C: the signs of both sides are joined into one `traffic_sign` (today C takes the cycle track's sign, else the sidewalk's).
 
-### 29. Internal notes from TILDA in iD — ⬜ (analysis; needs an API in TILDA first)
+### 29. Internal notes from TILDA in iD — 🟡 (built; check with a real login open)
 
 **Goal.** Mappers of the project share comments and feedback internally, on the map, without public OSM notes. TILDA already has internal notes with folders. iD shows the notes of one TILDA folder like OSM notes: read, write a new one, comment, resolve. The TILDA region and the folder are fixed in this project's config.
 
@@ -1144,18 +1144,51 @@ staging and production use (iD uses production OSM), and say if Better Auth alre
 bearer/API-key plugin that fits better than a new token table. Then propose the plan.
 ```
 
-**Open questions**
-1. Option B (token exchange) or the simpler A for a first version?
-2. Which TILDA region slug and which folder (id) for Radnetz Berlin? Develop against staging or production?
-3. Are all project mappers members of that region in TILDA already?
-4. Should iD also resolve notes, or only write and comment?
+**Decided (2026-10-02):** option B (token exchange); iD reads, writes, replies, resolves and reopens. Region `infravelo`, folder `12`, on **staging** for now (note folders are not on production yet). The feature is only for this fork, never proposed elsewhere.
+
+#### Implementation (2026-10-02)
+
+TILDA's API is live on staging (tilda-geo `docs/External-Notes-API.md`, commit 732855d63): `POST /api/auth/osm-token` and `/api/notes/{regionSlug}/{folderId}`.
+
+- **Two kinds of notes, side by side.** Both layers are in Map Data ▸ Data layers and can be on at the same time.
+  - "OpenStreetMap Notes (public)": iD's notes, unchanged, off by default.
+  - "TILDA Notes (internal)": on by default; turning it off is remembered (`tilda-notes.enabled` in the browser storage).
+- **Telling them apart.**
+  - Pins: TILDA's teal. Open = teal with a white `?`, resolved = white with a teal check, new = light teal with a plus. OSM notes keep red / green.
+  - Toolbar: one "add note" button per enabled layer, labelled "OSM" and "TILDA" (the label stays on a narrow toolbar). Shortcuts `N` (OSM) and `⇧N` (TILDA).
+  - Editor: title "TILDA note" and a teal banner "Internal note: only members of this region in TILDA can see it."
+- **Editor, aligned with TILDA.**
+  - A note has a subject and a text (Markdown); both are required for a new note, as in TILDA's form.
+  - Below: the replies (author, date, Markdown), a reply box, "Save reply", "Mark as resolved" / "Reopen" (with a reply typed: "Reply and resolve" / "Reply and reopen").
+  - Status words as in TILDA: open / resolved (offen / erledigt).
+  - Footer link "Open in TILDA": the folder's notes page, centered on the note. Edit, delete and folders stay in TILDA.
+  - Saved at once in TILDA, not with the OSM changeset.
+- **Access problems are said in words,** in the layer list and in the editor: not logged in to OSM (with a login link), no TILDA account yet, not a member of the region (with a link to TILDA), TILDA not reachable.
+- **Markdown is rendered safely:** raw HTML is shown as text, only http(s) and mailto links, images become links.
+- **Loading:** the whole folder in one request, refreshed at most once a minute while the map moves and right after a write. A note's text and replies are read when it is selected. Pins show from zoom 10.
+
+Config (`index.html`, before `context.init()`): `iD.tildaNotesConfig({ origin, regionSlug, folderId })`. Without it the feature is off.
+
+Code: `modules/tilda_notes/` (config, note class, Markdown), `modules/services/tilda_notes.ts`, `modules/svg/tilda_notes.ts`, `modules/modes/add_tilda_note.ts`, `modules/modes/select_tilda_note.ts`, `modules/ui/tilda_note_editor.ts`, `css/95_tilda_notes.css`. Small hooks in upstream files: `ui/tools/notes.js` (one button per layer), `ui/top_toolbar.js`, `ui/sections/data_layers.js`, `ui/sidebar.js` (hover), `behavior/select.js`, `behavior/hover.js`, `renderer/map.js`, `svg/layers.ts`.
+
+**Tested:** unit tests (config, note, Markdown); in the browser against a mocked API in the page (list, read, reply, resolve, new note, hover, layer off, not-logged-in hint); the staging API with curl (preflight for `http://127.0.0.1:8080`, `401 missing_token`).
+
+**Not tested yet:** the real round trip with an OSM login (the test browser has none). First thing to check after logging in at `http://127.0.0.1:8080`.
+
+**Left out:** dragging a new note before saving (click again instead), a note id in the URL hash, editing or deleting notes.
+
+**Open**
+1. Are all project mappers members of the `infravelo` region in TILDA? Others get the "not a member" hint.
+2. Switch to production: change `origin` (and the folder id, if it differs) in `index.html` once note folders are on production.
+3. A new iD origin (another deploy preview number, a production URL) must be added to `externalApiOrigins` in tilda-geo.
+4. "Open in TILDA" opens the folder at the note's place, not the note itself (TILDA's URL for a selected note was not looked into).
 
 ### 30. Right sidebar buttons: Map Display and Photos panes — ✅
 
 Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, panel toggles). Each button is now one job.
 
 - **Buttons, top to bottom:** Background, Map Data, Map Display (new), Photos (new), Issues, Preferences, Help. Locate stays above them.
-- **Map Data** (`U`): "which data is loaded". Data layers (OSM, notes, Osmose), Custom data layers, Live edits nearby.
+- **Map Data** (`U`): "which data is loaded". Data layers (OSM, OSM notes, TILDA notes, Osmose), Custom data layers, Live edits nearby.
   - iD's old single custom-data slot only shows while it holds data (e.g. a GPX file dropped on the map). Custom data layers replaced it (feature 4).
 - **Map Display** (`⇧J`, palette icon): "how OSM is drawn". Style options, Lens, Map features (still collapsed).
   - The "hidden features" hint in the footer and in the preset list now opens and names this pane.
@@ -1225,6 +1258,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 
 ## Progress log
 
+- 2026-10-02: TILDA's internal notes in iD (feature 29): own layer (on by default), teal pins, own add button and editor next to the public OSM notes; reads and writes the staging API of region `infravelo`, folder 12.
 - 2026-10-01: Right sidebar split: new Map Display and Photos panes, panel toggles moved to Preferences, tooltips and shortcuts for the panes (feature 30).
 - 2026-10-01: Analysis for TILDA's internal notes in iD (feature 29): feasible via the shared OSM identity, needs a small external API in TILDA; prompt for the TILDA session written.
 - 2026-10-01: The selected Mapillary sign is in the URL (`photo_sign=<id>`) and selected again after a reload, so the viewer is not blank (feature 26; `restoreSelectedSign` in `modules/mapillary/sign_select.ts`).
