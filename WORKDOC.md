@@ -179,6 +179,7 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - German strings for the table added.
   - Checked in the browser: open / close with button and `K`, map height before and after, reload with the dock open, resize by dragging (and its upper limit), previous / next, hint without a selection, info panel next to the button.
 - 2026-10-03: at most 2 ways before and 2 after the selected way (was 3). A way's header cell shows name and way id; the whole cell is the hover area (highlights the way on the map) and the click target. The junction chooser shows the id too.
+- 2026-10-03: the columns follow the **order of the ways on the map**: left to right, or top to bottom when the chain is mostly vertical (`runsAgainstReadingOrder`, `mirrorChain` in `chain.ts`; `orderLikeMap` in the panel compares the screen positions of the chain's two ends). Before, the order followed the direction of the selected way, so the table could read right to left. Only the column order changes: tags and the ⇄ mark stay relative to the direction of the selected way. The previous / next buttons go to the left / right column. Limit: a chain near 45° or with a sharp bend can change its order when the selection moves along it.
 - Reference, not built: the street space editor (`~/Development/OSM/parking-lanes`, `app/src/modes/table/domain/window-table-chain.ts`) shows the opposite carriageway of a dual carriageway as an extra column next to its pair ("dual" badge), found by geometry (`find-dual-carriageway-sibling.ts`: antiparallel, 2–30 m apart, overlapping). Junctions it handles like we do (a chooser).
 - Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values.
 
@@ -1307,6 +1308,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ## Progress log
 
+- 2026-10-03: Way table columns follow the order of the ways on the map (feature 6).
 - 2026-10-03: Photo viewer closes itself when the image cannot be loaded (feature 18).
 - 2026-10-03: Way table is a dock below the map with a fixed, stored height and a toggle button in the map's bottom corner; the checkbox in Map Data is gone (feature 6).
 - 2026-10-03: Bottom bar removed; its contents moved to the map, the toolbar, Preferences, Help and the History panel (feature 31). Optional buttons are user settings now, the `uiConfig` project config is gone.

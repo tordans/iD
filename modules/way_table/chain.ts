@@ -214,3 +214,30 @@ export function buildWayChain(
         junctions
     };
 }
+
+
+/**
+ * Whether a chain from `start` to `end` (screen positions) runs against the reading order:
+ * right to left, or bottom to top if it is mostly vertical.
+ */
+export function runsAgainstReadingOrder(start: [number, number], end: [number, number]) {
+    const dx = end[0] - start[0];
+    const dy = end[1] - start[1];
+    return Math.abs(dx) >= Math.abs(dy) ? dx < 0 : dy < 0;
+}
+
+
+/**
+ * The chain with its ways in the opposite order, so the table columns follow the map.
+ * Only the order changes: tags and `reversed` stay relative to the direction of the center way.
+ */
+export function mirrorChain(chain: WayChain): WayChain {
+    return {
+        segments: [...chain.segments].reverse(),
+        centerIndex: chain.segments.length - 1 - chain.centerIndex,
+        junctions: chain.junctions.map(junction => ({
+            ...junction,
+            direction: junction.direction === 'forward' ? 'backward' : 'forward'
+        }))
+    };
+}

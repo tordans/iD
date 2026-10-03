@@ -11,7 +11,7 @@ import { svgIcon } from '../svg/icon';
 import { utilHighlightEntities } from '../util/util';
 import { utilDisplayLabel } from '../util/utilDisplayLabel';
 import type { NodeId, WayId } from '../osm';
-import { buildWayChain, type ChainSegment, type JunctionChoice, type WayChain } from '../way_table/chain';
+import { buildWayChain, mirrorChain, runsAgainstReadingOrder, type ChainSegment, type JunctionChoice, type WayChain } from '../way_table/chain';
 import { buildTagRows, type TagCell, type TagRow } from '../way_table/tag_rows';
 import { uiTooltip } from './tooltip';
 
@@ -243,7 +243,7 @@ export function uiWayTablePanel(context: iD.Context) {
             if (_chain && !_chain.segments.some(segment => segment.wayID === wayID)) {
                 _junctionChoices = new Map();
             }
-            _chain = buildWayChain(context.graph(), wayID, undefined, _junctionChoices);
+            _chain = orderLikeMap(buildWayChain(context.graph(), wayID, undefined, _junctionChoices));
         } else {
             _chain = undefined;
         }
@@ -259,6 +259,21 @@ export function uiWayTablePanel(context: iD.Context) {
         drawJunctions(body, chain.junctions);
         drawTable(body, chain, rows);
         scrollToCenter(body);
+    }
+
+
+    /** Columns in the order the ways have on the map: left to right, or top to bottom for a vertical chain */
+    function orderLikeMap(chain: WayChain | undefined) {
+        if (!chain) return chain;
+        const graph = context.graph();
+        const first = chain.segments[0];
+        const last = chain.segments[chain.segments.length - 1];
+        const start = graph.hasEntity(first.nodeIDs[0]);
+        const end = graph.hasEntity(last.nodeIDs[last.nodeIDs.length - 1]);
+        if (!start || !end) return chain;
+
+        const against = runsAgainstReadingOrder(context.projection(start.loc), context.projection(end.loc));
+        return against ? mirrorChain(chain) : chain;
     }
 
 
@@ -371,14 +386,13 @@ export function uiWayTablePanel(context: iD.Context) {
                     d.reversed ? 'reversed' : ''
                 ].filter(Boolean).join(' ');
             })
-            .each(function(d, i) {
+            .each(function(d) {
                 const th = d3_select(this).text('');
                 if (!d) {
                     th.call(drawNavigation);
                     return;
                 }
                 // name and way id; the whole cell selects the way and highlights it on the map
-                const isCenter = i - 1 === chain.centerIndex;
                 const title = th
                     .append('div')
                     .attr('class', 'way-table-way-title')

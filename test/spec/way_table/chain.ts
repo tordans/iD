@@ -1,4 +1,4 @@
-import { buildWayChain, swapLeftRightKey } from '../../../modules/way_table/chain';
+import { buildWayChain, mirrorChain, runsAgainstReadingOrder, swapLeftRightKey } from '../../../modules/way_table/chain';
 import { buildTagRows } from '../../../modules/way_table/tag_rows';
 
 //  n1 ---w1--> n2 ---w2--> n3 <--w3--- n4
@@ -64,6 +64,22 @@ describe('way_table/chain', () => {
 
         const chosen = buildWayChain(new iD.coreGraph(entities as unknown as iD.Graph), 'w1', 3, new Map([['n2', 'w3']]))!;
         expect(chosen.segments.map(s => s.wayID)).toEqual(['w1', 'w3']);
+    });
+
+    it('detects a chain that runs against the reading order', () => {
+        expect(runsAgainstReadingOrder([0, 0], [10, 2])).toBe(false);
+        expect(runsAgainstReadingOrder([10, 0], [0, 2])).toBe(true);
+        // mostly vertical: top to bottom is the reading order
+        expect(runsAgainstReadingOrder([0, 0], [-2, 10])).toBe(false);
+        expect(runsAgainstReadingOrder([0, 10], [2, 0])).toBe(true);
+    });
+
+    it('mirrors the order of the ways, not their tags', () => {
+        const chain = buildWayChain(graph(), 'w1')!;
+        const mirrored = mirrorChain(chain);
+        expect(mirrored.segments.map(s => s.wayID)).toEqual([...chain.segments].reverse().map(s => s.wayID));
+        expect(mirrored.segments[mirrored.centerIndex].wayID).toBe('w1');
+        expect(mirrored.segments.find(s => s.wayID === 'w3')).toEqual(chain.segments.find(s => s.wayID === 'w3'));
     });
 
     it('returns undefined for missing ways', () => {
