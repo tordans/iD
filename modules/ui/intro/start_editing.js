@@ -19,6 +19,11 @@ export function uiIntroStartEditing(context, reveal) {
     };
 
     function showHelp() {
+        // the Help button can be left out by the project (`ui/config.ts`)
+        if (context.container().select('.map-control.help-control').empty()) {
+            showSave();
+            return;
+        }
         reveal('.map-control.help-control',
             helpHtml('intro.startediting.help'), {
                 buttonText: localizer.t_html('intro.ok'),

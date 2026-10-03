@@ -22,6 +22,7 @@ import { uiFeatureInfo } from './feature_info';
 import { uiFlash } from './flash';
 import { uiFullScreen } from './full_screen';
 import { uiGeolocate } from './geolocate';
+import { isMapControlHidden } from './config';
 import { uiInfo } from './info';
 import { uiWayTablePanel } from './way_table_panel';
 import { installWidthIndicatorListeners } from '../width/width_indicator';
@@ -211,15 +212,20 @@ export function uiInit(context) {
             .attr('class', 'map-control zoombuttons')
             .call(uiZoom(context));
 
-        controls
-            .append('div')
-            .attr('class', 'map-control zoom-to-selection-control')
-            .call(uiZoomToSelection(context));
+        // a project can leave out buttons it does not need (`ui/config.ts`)
+        if (!isMapControlHidden('zoom-to-selection')) {
+            controls
+                .append('div')
+                .attr('class', 'map-control zoom-to-selection-control')
+                .call(uiZoomToSelection(context));
+        }
 
-        controls
-            .append('div')
-            .attr('class', 'map-control geolocate-control')
-            .call(uiGeolocate(context));
+        if (!isMapControlHidden('geolocate')) {
+            controls
+                .append('div')
+                .attr('class', 'map-control geolocate-control')
+                .call(uiGeolocate(context));
+        }
 
         controlsWrap.on('wheel.mapControls', function(d3_event) {
             if (!d3_event.deltaX) {
@@ -237,14 +243,16 @@ export function uiInit(context) {
         ui.liveTouched = setupLiveTouched(context);
 
         var uiPanes = [
-            uiPaneBackground(context),
-            uiPaneMapData(context),
-            uiPaneMapDisplay(context),
-            uiPanePhotos(context),
-            uiPaneIssues(context),
-            uiPanePreferences(context),
-            uiPaneHelp(context)
-        ];
+            ['background', uiPaneBackground],
+            ['map-data', uiPaneMapData],
+            ['map-display', uiPaneMapDisplay],
+            ['photos', uiPanePhotos],
+            ['issues', uiPaneIssues],
+            ['preferences', uiPanePreferences],
+            ['help', uiPaneHelp]
+        ]
+            .filter(function(d) { return !isMapControlHidden(d[0]); })
+            .map(function(d) { return d[1](context); });
 
         uiPanes.forEach(function(pane) {
             controls

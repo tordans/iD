@@ -26,3 +26,4 @@ export let debug = false;
 export const setDebug = (newValue: boolean) => { debug = newValue; };
 export { mapillaryConfig } from './mapillary/config';
 export { tildaNotesConfig } from './tilda_notes/config';
+export { uiConfig } from './ui/config';

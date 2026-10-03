@@ -1189,7 +1189,7 @@ Code: `modules/tilda_notes/` (config, note class, Markdown), `modules/services/t
 
 Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, panel toggles). Each button is now one job.
 
-- **Buttons, top to bottom:** Background, Map Data, Map Display (new), Photos (new), Issues, Preferences, Help. Locate stays above them.
+- **Buttons, top to bottom:** Background, Map Data, Map Display (new), Photos (new), Issues, Preferences, Help. Locate stays above them. (Help, Locate and Zoom-to-selection are hidden in this project, see below.)
 - **Map Data** (`U`): "which data is loaded". Data layers (OSM, OSM notes, TILDA notes, Osmose), Custom data layers, Live edits nearby.
   - iD's old single custom-data slot only shows while it holds data (e.g. a GPX file dropped on the map). Custom data layers replaced it (feature 4).
 - **Map Display** (`⇧J`, palette icon): "how OSM is drawn". Style options, Lens, Map features (still collapsed).
@@ -1198,6 +1198,10 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 - **Preferences ▸ Panels** (new section): minimap, background, location, history, measurement and way table panel. They were at the bottom of the background list and of Data layers. Their shortcuts are unchanged.
 - **Button tooltips:** pane name as heading, one sentence on what is inside, the shortcut. For all seven buttons, English and German.
 - **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
+- **Hidden buttons (2026-10-03):** a project can leave out sidebar buttons with `iD.uiConfig({ hiddenMapControls: [...] })` in `index.html` (`modules/ui/config.ts`). Radnetz Berlin hides `zoom-to-selection`, `geolocate` and `help`.
+  - "Zoom to this" still works with its shortcut and from the edit menu; only the button is gone.
+  - Without the Help pane its shortcut `H` does nothing; the shortcut list (`?`) still opens. The walkthrough skips its two steps that point at the Help button.
+  - Any pane id works (`background`, `map-data`, `map-display`, `photos`, `issues`, `preferences`, `help`); a hidden pane is not created at all.
 - **Not a button, on purpose:** sign groups and Mapillary filters (they filter one layer, so they stay in Photos); a "Radnetz" button with layers and lens (layers are data, the lens is display); the 17 map feature categories alone; favorites.
 - **Code:**
   - `modules/ui/panes/map_display.ts`, `modules/ui/panes/photos.ts`, `modules/ui/sections/panels.ts` (new).
@@ -1260,6 +1264,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 
 ## Progress log
 
+- 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom-to-selection, locate and help buttons (feature 30).
 - 2026-10-03: Custom data layers are shown in the minimap (feature 4); the Photos pane has no open/close header any more (feature 30).
 - 2026-10-03: "Show button labels" is off by default (feature 13).
 - 2026-10-02: TILDA's internal notes in iD (feature 29): own layer (on by default), teal pins, own add button and editor next to the public OSM notes; reads and writes the staging API of region `infravelo`, folder 12.
