@@ -1195,9 +1195,11 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 - **Map Display** (`⇧J`, palette icon): "how OSM is drawn". Style options, Lens, Map features (still collapsed).
   - The "hidden features" hint in the footer and in the preset list now opens and names this pane.
 - **Photos** (`J`, camera icon): the former Photo overlays section, unchanged inside (services, Mapillary filters, sign groups, local photos). It is the pane's only group, so it has no open/close header (like the Issues pane).
-- **Preferences ▸ Panels** (new section): minimap, background, location, history, measurement and way table panel. They were at the bottom of the background list and of Data layers. Their shortcuts are unchanged.
+- **Preferences ▸ Panels** (new section): minimap, background, location, history and measurement panel (the way table switch moved on to Data layers, see below). They were at the bottom of the background list and of Data layers. Their shortcuts are unchanged.
 - **Button tooltips:** pane name as heading, one sentence on what is inside, the shortcut. For all seven buttons, English and German.
 - **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
+- **Overlays moved to Map Data (2026-10-03):** the "Overlays" section (imagery-index overlays such as the locator overlay) is now in Map Data, after Custom data layers. Checked in `renderer/background.js`: the background's display options (brightness, contrast, saturation, sharpness) and the imagery offset only act on the base layer, never on overlays, so nothing tied the section to the Background pane. The `overlays=` URL parameter and the minimap are unchanged.
+- **Way table switch moved to Data layers (2026-10-03):** "Show Way Table Panel" is in Map Data ▸ Data layers, right below the OSM and notes layers (it is another view of the OSM data), no longer in Preferences ▸ Panels. Shortcut unchanged.
 - **Hidden buttons (2026-10-03):** a project can leave out sidebar buttons with `iD.uiConfig({ hiddenMapControls: [...] })` in `index.html` (`modules/ui/config.ts`). Radnetz Berlin hides `zoom-to-selection`, `geolocate` and `help`.
   - "Zoom to this" still works with its shortcut and from the edit menu; only the button is gone.
   - Without the Help pane its shortcut `H` does nothing; the shortcut list (`?`) still opens. The walkthrough skips its two steps that point at the Help button.
@@ -1264,6 +1266,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 
 ## Progress log
 
+- 2026-10-03: Overlays section moved from Background to Map Data; way table switch moved from Preferences to Map Data ▸ Data layers (feature 30).
 - 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom-to-selection, locate and help buttons (feature 30).
 - 2026-10-03: Custom data layers are shown in the minimap (feature 4); the Photos pane has no open/close header any more (feature 30).
 - 2026-10-03: "Show button labels" is off by default (feature 13).

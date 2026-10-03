@@ -3,7 +3,6 @@ import { uiCmd } from '../cmd';
 import { uiMapInMap } from '../map_in_map';
 import { uiSection } from '../section';
 import { uiTooltip } from '../tooltip';
-import { drawWayTablePanelItem } from './way_table_panel_item';
 
 type InfoPanels = { toggle(which: string): void };
 
@@ -61,9 +60,6 @@ export function uiSectionPanels(context: iD.Context) {
                 .append('span')
                 .call(t.append(item.label));
         }
-
-        listEnter
-            .call(drawWayTablePanelItem as any, context);
     }
 
     return section;

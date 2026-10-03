@@ -1264,8 +1264,8 @@ en:
     description: Photos
     key: J
   pane_tooltips:
-    background: Aerial imagery, overlays, brightness and imagery offset.
-    map-data: OpenStreetMap data and notes, QA layers, custom data layers and live edits.
+    background: Aerial imagery, brightness and imagery offset.
+    map-data: OpenStreetMap data and notes, way table, QA layers, custom data layers, overlays and live edits.
     map-display: Area fill, lens and which feature types are shown.
     photos: Street-level photos, their filters and the traffic signs.
     issues: Errors and warnings in your edits and in the map.

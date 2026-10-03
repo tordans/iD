@@ -17,8 +17,8 @@ de:
     title: Fotos
     description: Fotos
   pane_tooltips:
-    background: Luftbilder, Überlagerungen, Helligkeit und Bildversatz.
-    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen und Live-Bearbeitungen.
+    background: Luftbilder, Helligkeit und Bildversatz.
+    map-data: OpenStreetMap-Daten und -Hinweise, Wege-Tabelle, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
@@ -61,6 +61,9 @@ de:
       network: "TILDA ist nicht erreichbar."
       other: "TILDA: {message}"
   map_data:
+    way_table_panel:
+      title: Wege-Tabelle anzeigen
+      tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg.
     layers:
       notes:
         title: OpenStreetMap-Hinweise (öffentlich)
@@ -102,8 +105,8 @@ de-CH:
     title: Fotos
     description: Fotos
   pane_tooltips:
-    background: Luftbilder, Überlagerungen, Helligkeit und Bildversatz.
-    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen und Live-Bearbeitungen.
+    background: Luftbilder, Helligkeit und Bildversatz.
+    map-data: OpenStreetMap-Daten und -Hinweise, Wege-Tabelle, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
@@ -146,6 +149,9 @@ de-CH:
       network: "TILDA ist nicht erreichbar."
       other: "TILDA: {message}"
   map_data:
+    way_table_panel:
+      title: Wege-Tabelle anzeigen
+      tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg.
     layers:
       notes:
         title: OpenStreetMap-Hinweise (öffentlich)

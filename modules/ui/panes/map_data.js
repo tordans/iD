@@ -4,6 +4,7 @@ import { uiPane } from '../pane';
 import { uiSectionDataLayers } from '../sections/data_layers';
 import { uiSectionCustomDataLayers } from '../sections/custom_data_layers';
 import { uiSectionLiveTouched } from '../sections/live_touched';
+import { uiSectionOverlayList } from '../sections/overlay_list';
 
 export function uiPaneMapData(context) {
 
@@ -15,6 +16,9 @@ export function uiPaneMapData(context) {
         .sections([
             uiSectionDataLayers(context),
             uiSectionCustomDataLayers(context),
+            // overlays are extra data on top of the map, like the custom data layers;
+            // the background's display options and offset do not apply to them
+            uiSectionOverlayList(context),
             uiSectionLiveTouched(context)
         ]);
 
