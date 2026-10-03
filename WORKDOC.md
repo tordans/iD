@@ -1200,7 +1200,9 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 - **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
 - **Overlays moved to Map Data (2026-10-03):** the "Overlays" section (imagery-index overlays such as the locator overlay) is now in Map Data, after Custom data layers. Checked in `renderer/background.js`: the background's display options (brightness, contrast, saturation, sharpness) and the imagery offset only act on the base layer, never on overlays, so nothing tied the section to the Background pane. The `overlays=` URL parameter and the minimap are unchanged.
 - **Way table switch moved to Data layers (2026-10-03):** "Show Way Table Panel" is in Map Data ▸ Data layers, right below the OSM and notes layers (it is another view of the OSM data), no longer in Preferences ▸ Panels. Shortcut unchanged.
-- **Hidden buttons (2026-10-03):** a project can leave out sidebar buttons with `iD.uiConfig({ hiddenMapControls: [...] })` in `index.html` (`modules/ui/config.ts`). Radnetz Berlin hides `zoom-to-selection`, `geolocate` and `help`.
+- **Hidden buttons (2026-10-03):** a project can leave out sidebar buttons with `iD.uiConfig({ hiddenMapControls: [...] })` in `index.html` (`modules/ui/config.ts`). Radnetz Berlin hides `zoom`, `zoom-to-selection`, `geolocate` and `help`.
+  - Zoom in / out: the buttons are hidden, the shortcuts `+` / `-` and the mouse wheel work as before.
+  - The gap between the map buttons and the pane buttons stays when only some map buttons are hidden (it was tied to the locate button).
   - "Zoom to this" still works with its shortcut and from the edit menu; only the button is gone.
   - Without the Help pane its shortcut `H` does nothing; the shortcut list (`?`) still opens. The walkthrough skips its two steps that point at the Help button.
   - Any pane id works (`background`, `map-data`, `map-display`, `photos`, `issues`, `preferences`, `help`); a hidden pane is not created at all.
@@ -1267,7 +1269,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 ## Progress log
 
 - 2026-10-03: Overlays section moved from Background to Map Data; way table switch moved from Preferences to Map Data ▸ Data layers (feature 30).
-- 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom-to-selection, locate and help buttons (feature 30).
+- 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom, zoom-to-selection, locate and help buttons (feature 30).
 - 2026-10-03: Custom data layers are shown in the minimap (feature 4); the Photos pane has no open/close header any more (feature 30).
 - 2026-10-03: "Show button labels" is off by default (feature 13).
 - 2026-10-02: TILDA's internal notes in iD (feature 29): own layer (on by default), teal pins, own add button and editor next to the public OSM notes; reads and writes the staging API of region `infravelo`, folder 12.

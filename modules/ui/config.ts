@@ -1,10 +1,11 @@
 /**
  * Project configuration of the editor's own UI (WORKDOC feature 30), set before `context.init()`:
  *
- *     iD.uiConfig({ hiddenMapControls: ['zoom-to-selection', 'geolocate', 'help'] });
+ *     iD.uiConfig({ hiddenMapControls: ['zoom', 'zoom-to-selection', 'geolocate', 'help'] });
  *
  * `hiddenMapControls`: buttons of the right sidebar that are not created.
- * - `zoom-to-selection` and `geolocate` are the two buttons below zoom in / out.
+ * - `zoom` are the zoom in / out buttons; their shortcuts (`+`, `-`) keep working.
+ * - `zoom-to-selection` and `geolocate` are the two buttons below them.
  *   The shortcut for "zoom to this" keeps working (it belongs to the select modes).
  * - Any other id is a pane (`background`, `map-data`, `map-display`, `photos`, `issues`,
  *   `preferences`, `help`): the pane, its button and its shortcut are left out.

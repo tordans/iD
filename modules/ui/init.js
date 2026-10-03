@@ -210,6 +210,8 @@ export function uiInit(context) {
         controls
             .append('div')
             .attr('class', 'map-control zoombuttons')
+            // hidden, not left out: the buttons also set up the zoom shortcuts (+ / -)
+            .classed('hide', isMapControlHidden('zoom'))
             .call(uiZoom(context));
 
         // a project can leave out buttons it does not need (`ui/config.ts`)

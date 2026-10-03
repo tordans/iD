@@ -6,3 +6,19 @@
 .ideditor.hide-toolbar-labels .top-toolbar .toolbar-item {
     padding-bottom: 10px;
 }
+
+/* Right sidebar with hidden buttons (`ui/config.ts`): the gap between the map buttons (zoom, …)
+   and the pane buttons belongs to the first pane button, so it stays when the locate button,
+   which carried it, is left out. No gap when no map button is shown above. */
+.map-controls .geolocate-control {
+    margin-bottom: 0;
+}
+.map-controls .map-control:not(.map-pane-control):not(.hide) + .map-pane-control {
+    margin-top: 10px;
+}
+.map-controls .zoombuttons:has(+ .map-pane-control) > button.zoom-out {
+    border-radius: 0 0 0 4px;
+}
+.ideditor[dir='rtl'] .map-controls .zoombuttons:has(+ .map-pane-control) > button.zoom-out {
+    border-radius: 0 0 4px 0;
+}
