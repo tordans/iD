@@ -10,19 +10,16 @@ import { behaviorHash } from '../behavior';
 import { behaviorPresetFavorites } from '../behavior/preset_favorites';
 import { behaviorLensShortcuts } from '../behavior/lens_shortcuts';
 import { modeBrowse } from '../modes/browse';
-import { svgDefs, svgIcon } from '../svg';
+import { svgDefs } from '../svg';
 import { utilDetect } from '../util/detect';
 import { utilGetDimensions } from '../util/dimensions';
 
-import { uiAccount } from './account';
 import { uiAttribution } from './attribution';
-import { uiContributors } from './contributors';
 import { uiEditMenu } from './edit_menu';
 import { uiFeatureInfo } from './feature_info';
 import { uiFlash } from './flash';
 import { uiFullScreen } from './full_screen';
 import { uiGeolocate } from './geolocate';
-import { isMapControlHidden } from './config';
 import { uiInfo } from './info';
 import { uiWayTablePanel } from './way_table_panel';
 import { installWidthIndicatorListeners } from '../width/width_indicator';
@@ -40,13 +37,10 @@ import { uiRestore } from './restore';
 import { uiScale } from './scale';
 import { uiShortcuts } from './shortcuts';
 import { uiSidebar } from './sidebar';
-import { uiSourceSwitch } from './source_switch';
 import { uiSpinner } from './spinner';
 import { uiSplash } from './splash';
 import { uiStatus } from './status';
-import { uiTooltip } from './tooltip';
 import { uiTopToolbar } from './top_toolbar';
-import { uiVersion } from './version';
 import { uiZoom } from './zoom';
 import { uiZoomToSelection } from './zoom_to_selection';
 import { uiCmd } from './cmd';
@@ -207,27 +201,22 @@ export function uiInit(context) {
             .append('div')
             .attr('class', 'map-controls');
 
+        // zoom, zoom-to-selection and locate are optional (Preferences ▸ Interface);
+        // `applyInterfacePrefs` hides them, their shortcuts keep working
         controls
             .append('div')
             .attr('class', 'map-control zoombuttons')
-            // hidden, not left out: the buttons also set up the zoom shortcuts (+ / -)
-            .classed('hide', isMapControlHidden('zoom'))
             .call(uiZoom(context));
 
-        // a project can leave out buttons it does not need (`ui/config.ts`)
-        if (!isMapControlHidden('zoom-to-selection')) {
-            controls
-                .append('div')
-                .attr('class', 'map-control zoom-to-selection-control')
-                .call(uiZoomToSelection(context));
-        }
+        controls
+            .append('div')
+            .attr('class', 'map-control zoom-to-selection-control')
+            .call(uiZoomToSelection(context));
 
-        if (!isMapControlHidden('geolocate')) {
-            controls
-                .append('div')
-                .attr('class', 'map-control geolocate-control')
-                .call(uiGeolocate(context));
-        }
+        controls
+            .append('div')
+            .attr('class', 'map-control geolocate-control')
+            .call(uiGeolocate(context));
 
         controlsWrap.on('wheel.mapControls', function(d3_event) {
             if (!d3_event.deltaX) {
@@ -252,9 +241,7 @@ export function uiInit(context) {
             ['issues', uiPaneIssues],
             ['preferences', uiPanePreferences],
             ['help', uiPaneHelp]
-        ]
-            .filter(function(d) { return !isMapControlHidden(d[0]); })
-            .map(function(d) { return d[1](context); });
+        ].map(function(d) { return d[1](context); });
 
         uiPanes.forEach(function(pane) {
             controls
@@ -286,6 +273,32 @@ export function uiInit(context) {
             .classed('hide', true)
             .call(ui.photoviewer);
 
+        // What was in the footer bar now floats above the attribution:
+        // the scale (optional, Preferences ▸ Interface) and the issue / hidden feature chips
+        var mapStatus = overMap
+            .append('div')
+            .attr('class', 'map-status');
+
+        mapStatus
+            .append('div')
+            .attr('class', 'scale-block')
+            .call(uiScale(context));
+
+        mapStatus
+            .append('div')
+            .attr('class', 'issues-info')
+            .call(uiIssuesInfo(context));
+
+        mapStatus
+            .append('div')
+            .attr('class', 'feature-warning')
+            .call(uiFeatureInfo(context));
+
+        // flash messages are a toast at the bottom of the map
+        overMap
+            .append('div')
+            .attr('class', 'flash-wrap footer-hide');
+
         overMap
             .append('div')
             .attr('class', 'attribution-wrap')
@@ -293,97 +306,16 @@ export function uiInit(context) {
             .call(uiAttribution(context));
 
 
-        // Add footer
-        var about = content
+        // The footer only holds the API status message (empty and without height when all is well)
+        content
             .append('div')
-            .attr('class', 'map-footer');
-
-        about
+            .attr('class', 'map-footer')
             .append('div')
             .attr('class', 'api-status')
             .call(uiStatus(context));
 
-
-        var footer = about
-            .append('div')
-            .attr('class', 'map-footer-bar fillD');
-
-        footer
-            .append('div')
-            .attr('class', 'flash-wrap footer-hide');
-
-        var footerWrap = footer
-            .append('div')
-            .attr('class', 'main-footer-wrap footer-show');
-
-        footerWrap
-            .append('div')
-            .attr('class', 'scale-block')
-            .call(uiScale(context));
-
-        var aboutList = footerWrap
-            .append('div')
-            .attr('class', 'info-block')
-            .append('ul')
-            .attr('class', 'map-footer-list');
-
-        aboutList
-            .append('li')
-            .attr('class', 'user-list')
-            .call(uiContributors(context));
-
-        var apiConnections = context.connection().apiConnections();
-        if (apiConnections && apiConnections.length > 1) {
-            aboutList
-                .append('li')
-                .attr('class', 'source-switch')
-                .call(uiSourceSwitch(context)
-                    .keys(apiConnections)
-                );
-        }
-
-        aboutList
-            .append('li')
-            .attr('class', 'issues-info')
-            .call(uiIssuesInfo(context));
-
-        aboutList
-            .append('li')
-            .attr('class', 'feature-warning')
-            .call(uiFeatureInfo(context));
-
-        var issueLinks = aboutList
-            .append('li');
-
-        issueLinks
-            .append('a')
-            .attr('target', '_blank')
-            .attr('href', 'https://github.com/openstreetmap/iD/issues')
-            .attr('aria-label', t('report_a_bug'))
-            .call(svgIcon('#iD-icon-bug', 'light'))
-            .call(uiTooltip()
-                .title(() => t.append('report_a_bug'))
-                .placement('top'));
-
-        issueLinks
-            .append('a')
-            .attr('target', '_blank')
-            .attr('href', 'https://github.com/openstreetmap/iD/blob/develop/CONTRIBUTING.md#translating')
-            .attr('aria-label', t('help_translate'))
-            .call(svgIcon('#iD-icon-translate', 'light'))
-            .call(uiTooltip()
-                .title(() => t.append('help_translate'))
-                .placement('top'));
-
-        aboutList
-            .append('li')
-            .attr('class', 'version')
-            .call(uiVersion(context));
-
-        if (!context.embed()) {
-            aboutList
-                .call(uiAccount(context));
-        }
+        // now that the optional buttons and the scale exist
+        applyInterfacePrefs(context);
 
 
         // Setup map dimensions and move map to initial center/zoom.
@@ -599,7 +531,6 @@ export function uiInit(context) {
 
         // check if header or footer have overflowed
         ui.checkOverflow('.top-toolbar');
-        ui.checkOverflow('.map-footer-bar');
 
         const event = new Event('resizeWindow', {
             bubbles: true,

@@ -1200,12 +1200,10 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 - **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
 - **Overlays moved to Map Data (2026-10-03):** the "Overlays" section (imagery-index overlays such as the locator overlay) is now in Map Data, after Custom data layers. Checked in `renderer/background.js`: the background's display options (brightness, contrast, saturation, sharpness) and the imagery offset only act on the base layer, never on overlays, so nothing tied the section to the Background pane. The `overlays=` URL parameter and the minimap are unchanged.
 - **Way table switch moved to Data layers (2026-10-03):** "Show Way Table Panel" is in Map Data ▸ Data layers, right below the OSM and notes layers (it is another view of the OSM data), no longer in Preferences ▸ Panels. Shortcut unchanged.
-- **Hidden buttons (2026-10-03):** a project can leave out sidebar buttons with `iD.uiConfig({ hiddenMapControls: [...] })` in `index.html` (`modules/ui/config.ts`). Radnetz Berlin hides `zoom`, `zoom-to-selection`, `geolocate` and `help`.
-  - Zoom in / out: the buttons are hidden, the shortcuts `+` / `-` and the mouse wheel work as before.
-  - The gap between the map buttons and the pane buttons stays when only some map buttons are hidden (it was tied to the locate button).
-  - "Zoom to this" still works with its shortcut and from the edit menu; only the button is gone.
-  - Without the Help pane its shortcut `H` does nothing; the shortcut list (`?`) still opens. The walkthrough skips its two steps that point at the Help button.
-  - Any pane id works (`background`, `map-data`, `map-display`, `photos`, `issues`, `preferences`, `help`); a hidden pane is not created at all.
+- **Optional buttons (2026-10-03):** zoom in / out, zoom-to-selection, locate and help are user settings in Preferences ▸ Interface, all off by default (feature 31). This replaced the project config `iD.uiConfig({ hiddenMapControls })`, which is gone.
+  - The buttons are always created and only hidden, so their shortcuts keep working (`+` / `-`, "zoom to this", `H` for help).
+  - The gap between the map buttons and the pane buttons, and the rounded corners, follow the buttons that are shown (`css/91_interface_prefs.css`).
+  - The walkthrough skips its two steps that point at the Help button while it is hidden.
 - **Not a button, on purpose:** sign groups and Mapillary filters (they filter one layer, so they stay in Photos); a "Radnetz" button with layers and lens (layers are data, the lens is display); the 17 map feature categories alone; favorites.
 - **Code:**
   - `modules/ui/panes/map_display.ts`, `modules/ui/panes/photos.ts`, `modules/ui/sections/panels.ts` (new).
@@ -1214,6 +1212,34 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
   - After adding a Font Awesome icon: `npm run build:data`, then `npm run dist:svg:fa`.
 - **Checked in the browser (German UI):** all panes and sections, both shortcuts, tooltips, minimap checkbox in sync with `/`, help text, shortcut list. Tests: 2614 passing.
 - **Left as is:** the help pages for notes, GPS and QA still point to Map Data, which is still right.
+
+### 31. No bottom bar — ✅
+
+Goal: the grey footer bar is gone; the map gets its height. Everything it held has a new place.
+
+| Was in the footer | Now |
+| --- | --- |
+| Scale | Optional, off by default (Preferences ▸ Interface ▸ "Show the scale"). Floats bottom left, above the attribution. |
+| "Edits by a, b and 28 others" | History panel (`⌘⇧H`), while nothing is selected. |
+| "live" / "dev" chip | Preferences ▸ OpenStreetMap server, as radio buttons (only when the build offers more than one server). |
+| Bug and translate links | Help pane, at the end. |
+| Version (and the "what's new" badge) | Help pane, at the end. |
+| User name, picture, "Log out" / "Log in" | Top toolbar, far end: "Log in" button, or the user's picture with a menu (name → profile, Preferences, Log out). |
+| Issue count chip, "N hidden features" chip | Float bottom left, above the attribution (next to the scale). They only show when there is something to say. |
+| Flash messages ("nothing to undo", …) | A toast at the bottom center of the map. |
+| API status (offline, read-only, rate limit) | Unchanged: a red line at the very bottom, only while there is a problem. |
+
+- **Optional controls:** Preferences ▸ Interface has one checkbox each for button labels, scale, zoom buttons, "zoom to this", "show my location" and the help button. All are off by default; prefs `preferences.interface.<id>`.
+- **Help is hidden by default**, so the version and the bug link are too. `H` still opens the Help pane.
+- **Account menu and Preferences:** the menu has a link that opens the Preferences pane. The pane and its button stay where they are (the pane is long, has a shortcut, and holds things that are not about the account).
+- **Code:**
+  - New: `modules/ui/tools/account.ts`, `modules/ui/sections/osm_server.ts`, `modules/ui/panels/history_contributors.ts`, `css/96_bottom_bar.css`.
+  - Changed: `ui/init.js` (footer removed, `.map-status` and the flash toast in `.over-map`), `ui/sections/interface.ts`, `ui/top_toolbar.js`, `ui/panes/help.js`, `ui/panes/preferences.js`, `ui/panels/history.js`, `ui/version.js`, `renderer/map.js` (footer height is 0).
+  - Removed: `modules/ui/config.ts`. No longer used, left in place: `ui/account.js`, `ui/contributors.js`, `ui/source_switch.js`.
+  - Strings: `account.*`, `preferences.interface.*`, `preferences.osm_server.*`; German in `data/traffic_sign_field_locales.yaml`.
+- **Checked in the browser (German UI):** no footer, all six checkboxes, corners and gap of the right sidebar, scale, hidden-features chip, flash toast, History panel list, Help pane footer, account menu with a faked login (name, Preferences, Log out).
+- **Not tested:** the account button with a real OSM login and picture; switching to the dev server.
+- **Open:** the bug link points to `openstreetmap/iD`. Bugs of this fork do not belong there; decide on another target (or drop the link).
 
 ## Integration order (proposal)
 
@@ -1268,6 +1294,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 
 ## Progress log
 
+- 2026-10-03: Bottom bar removed; its contents moved to the map, the toolbar, Preferences, Help and the History panel (feature 31). Optional buttons are user settings now, the `uiConfig` project config is gone.
 - 2026-10-03: Overlays section moved from Background to Map Data; way table switch moved from Preferences to Map Data ▸ Data layers (feature 30).
 - 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom, zoom-to-selection, locate and help buttons (feature 30).
 - 2026-10-03: Custom data layers are shown in the minimap (feature 4); the Photos pane has no open/close header any more (feature 30).

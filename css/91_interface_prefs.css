@@ -7,18 +7,41 @@
     padding-bottom: 10px;
 }
 
-/* Right sidebar with hidden buttons (`ui/config.ts`): the gap between the map buttons (zoom, …)
-   and the pane buttons belongs to the first pane button, so it stays when the locate button,
-   which carried it, is left out. No gap when no map button is shown above. */
+/* Right sidebar: zoom, zoom-to-selection and locate are optional (Preferences ▸ Interface) and
+   get the class `hide`. Upstream gives fixed buttons the rounded corners and the gap, so:
+   - the gap to the pane buttons belongs to the first pane button, and is only there
+     when a map button is shown above;
+   - the first and the last shown map button get the rounded corners. */
 .map-controls .geolocate-control {
     margin-bottom: 0;
 }
-.map-controls .map-control:not(.map-pane-control):not(.hide) + .map-pane-control {
+.map-controls:has(> .map-control:not(.map-pane-control):not(.hide)) > .map-control:not(.map-pane-control) + .map-pane-control {
     margin-top: 10px;
 }
-.map-controls .zoombuttons:has(+ .map-pane-control) > button.zoom-out {
+.map-controls .zoombuttons > button.zoom-in,
+.map-controls .geolocate-control > button {
+    border-radius: 0;
+}
+.map-controls .map-control:not(.map-pane-control):not(.hide):not(.map-control:not(.map-pane-control):not(.hide) ~ *) > button:first-child {
+    border-top-left-radius: 4px;
+}
+.map-controls .map-control:not(.map-pane-control):not(.hide):not(:has(~ .map-control:not(.map-pane-control):not(.hide))) > button:last-child {
+    border-bottom-left-radius: 4px;
+}
+.ideditor[dir='rtl'] .map-controls .map-control:not(.map-pane-control):not(.hide):not(.map-control:not(.map-pane-control):not(.hide) ~ *) > button:first-child {
+    border-radius: 0 4px 0 0;
+}
+.ideditor[dir='rtl'] .map-controls .map-control:not(.map-pane-control):not(.hide):not(:has(~ .map-control:not(.map-pane-control):not(.hide))) > button:last-child {
+    border-radius: 0 0 4px 0;
+}
+
+/* the same for the pane buttons: the help button, upstream's rounded end, is optional */
+.map-controls .help-control > button {
+    border-radius: 0;
+}
+.map-controls .map-pane-control:not(.hide):not(:has(~ .map-pane-control:not(.hide))) > button {
     border-radius: 0 0 0 4px;
 }
-.ideditor[dir='rtl'] .map-controls .zoombuttons:has(+ .map-pane-control) > button.zoom-out {
+.ideditor[dir='rtl'] .map-controls .map-pane-control:not(.hide):not(:has(~ .map-pane-control:not(.hide))) > button {
     border-radius: 0 0 4px 0;
 }

@@ -3,7 +3,7 @@ import {
 } from 'd3-selection';
 
 import { debounce } from 'es-toolkit';
-import { uiToolDrawModes, uiToolNotes, uiToolSave, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
+import { uiToolAccount, uiToolDrawModes, uiToolNotes, uiToolSave, uiToolSidebarToggle, uiToolUndoRedo } from './tools';
 
 
 export function uiTopToolbar(context) {
@@ -12,7 +12,8 @@ export function uiTopToolbar(context) {
         modes = uiToolDrawModes(context),
         notes = uiToolNotes(context),
         undoRedo = uiToolUndoRedo(context),
-        save = uiToolSave(context);
+        save = uiToolSave(context),
+        account = uiToolAccount(context);
 
     function notesEnabled() {
         return ['notes', 'tilda-notes'].some(function(id) {
@@ -52,6 +53,11 @@ export function uiTopToolbar(context) {
             }
 
             tools = tools.concat([undoRedo, save]);
+
+            // the OSM account closes the toolbar (not in embedded mode, where the host page logs in)
+            if (context.connection() && !context.embed()) {
+                tools.push(account);
+            }
 
             var toolbarItems = bar.selectAll('.toolbar-item')
                 .data(tools, function(d) {

@@ -887,7 +887,7 @@ export function rendererMap(context) {
 
     function footerHeight() {
         const footer = context.container().select('.map-footer-bar');
-        return footer.node().offsetHeight;
+        return footer.empty() ? 0 : footer.node().offsetHeight;
     }
 
     map.zoom = function(z2) {

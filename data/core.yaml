@@ -630,6 +630,9 @@ en:
     localized_translation_name: Name
     language_and_code: "{language} ({code})"
   zoom_in_edit: Zoom in to edit
+  account:
+    title: Account
+    tooltip: "Logged in as {user}"
   login: Log In
   logout: Log Out
   loading_auth: "Connecting to OpenStreetMap..."
@@ -1269,8 +1272,8 @@ en:
     map-display: Area fill, lens and which feature types are shown.
     photos: Street-level photos, their filters and the traffic signs.
     issues: Errors and warnings in your edits and in the map.
-    preferences: Toolbar labels, panels, privacy and favorite presets.
-    help: Documentation, walkthrough and keyboard shortcuts.
+    preferences: Toolbar labels, optional buttons, panels, privacy, favorite presets and the OpenStreetMap server.
+    help: Documentation, walkthrough, keyboard shortcuts and the editor's version.
   photo_overlays:
     title: Photo Overlays
     traffic_signs:
@@ -1437,7 +1440,27 @@ en:
       title: Interface
       labels:
         description: Show button labels
-        tooltip: Uncheck this box to hide the captions under the toolbar buttons.
+        tooltip: Show the captions under the toolbar buttons.
+      scale:
+        description: Show the scale
+        tooltip: A scale bar at the bottom of the map. Click it to switch between metric and imperial units.
+      zoom:
+        description: Show the zoom buttons
+        tooltip: "The + and − buttons at the edge of the map. The shortcuts + and − always work."
+      zoom-to-selection:
+        description: Show "Zoom to this"
+        tooltip: The button that zooms to the selected features. Its shortcut always works.
+      geolocate:
+        description: Show "Show My Location"
+        tooltip: The button that centers the map on your location.
+      help:
+        description: Show the help button
+        tooltip: "The button that opens the help, with the editor's version and the links to report a bug. Its shortcut always works."
+    osm_server:
+      title: OpenStreetMap Server
+      live: Live
+      dev: Development server
+      hint: Which OpenStreetMap server the editor reads from and uploads to. Switching discards unsaved changes.
     panels:
       title: Panels
     favorite_presets:

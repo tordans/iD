@@ -19,8 +19,8 @@ export function uiIntroStartEditing(context, reveal) {
     };
 
     function showHelp() {
-        // the Help button can be left out by the project (`ui/config.ts`)
-        if (context.container().select('.map-control.help-control').empty()) {
+        // the Help button can be hidden (Preferences ▸ Interface)
+        if (context.container().select('.map-control.help-control:not(.hide)').empty()) {
             showSave();
             return;
         }

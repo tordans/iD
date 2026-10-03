@@ -22,8 +22,8 @@ de:
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
-    preferences: Werkzeugleisten-Beschriftung, Info-Felder, Datenschutz und Favoriten.
-    help: Dokumentation, Einführung und Tastaturkürzel.
+    preferences: Werkzeugleisten-Beschriftung, optionale Schaltflächen, Info-Felder, Datenschutz, Favoriten und OpenStreetMap-Server.
+    help: Dokumentation, Einführung, Tastaturkürzel und Version des Editors.
   tilda_notes:
     title: TILDA-Hinweis
     private: "Interner Hinweis: Nur Mitglieder dieser Region in TILDA sehen ihn."
@@ -74,7 +74,34 @@ de:
   modes:
     add_note:
       description: "Öffentlichen OpenStreetMap-Hinweis hinzufügen. Jede:r kann ihn lesen."
+  account:
+    title: Konto
+    tooltip: "Angemeldet als {user}"
   preferences:
+    interface:
+      labels:
+        description: Beschriftung der Schaltflächen anzeigen
+        tooltip: Zeigt die Beschriftung unter den Schaltflächen der Werkzeugleiste.
+      scale:
+        description: Maßstab anzeigen
+        tooltip: Ein Maßstabsbalken unten in der Karte. Ein Klick wechselt zwischen metrischen und imperialen Einheiten.
+      zoom:
+        description: Zoom-Schaltflächen anzeigen
+        tooltip: "Die Schaltflächen + und − am Kartenrand. Die Tastenkürzel + und − funktionieren immer."
+      zoom-to-selection:
+        description: "„Auf Auswahl zoomen“ anzeigen"
+        tooltip: Die Schaltfläche, die auf die ausgewählten Objekte zoomt. Ihr Tastenkürzel funktioniert immer.
+      geolocate:
+        description: "„Meinen Standort anzeigen“ anzeigen"
+        tooltip: Die Schaltfläche, die die Karte auf deinen Standort zentriert.
+      help:
+        description: Hilfe-Schaltfläche anzeigen
+        tooltip: "Die Schaltfläche, die die Hilfe öffnet, mit der Version des Editors und den Links zum Melden von Fehlern. Ihr Tastenkürzel funktioniert immer."
+    osm_server:
+      title: OpenStreetMap-Server
+      live: Live
+      dev: Entwicklungsserver
+      hint: Von welchem OpenStreetMap-Server der Editor liest und wohin er hochlädt. Beim Wechsel gehen ungespeicherte Änderungen verloren.
     panels:
       title: Info-Felder
   inspector:
@@ -110,8 +137,8 @@ de-CH:
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
-    preferences: Werkzeugleisten-Beschriftung, Info-Felder, Datenschutz und Favoriten.
-    help: Dokumentation, Einführung und Tastaturkürzel.
+    preferences: Werkzeugleisten-Beschriftung, optionale Schaltflächen, Info-Felder, Datenschutz, Favoriten und OpenStreetMap-Server.
+    help: Dokumentation, Einführung, Tastaturkürzel und Version des Editors.
   tilda_notes:
     title: TILDA-Hinweis
     private: "Interner Hinweis: Nur Mitglieder dieser Region in TILDA sehen ihn."
@@ -162,7 +189,34 @@ de-CH:
   modes:
     add_note:
       description: "Öffentlichen OpenStreetMap-Hinweis hinzufügen. Jede:r kann ihn lesen."
+  account:
+    title: Konto
+    tooltip: "Angemeldet als {user}"
   preferences:
+    interface:
+      labels:
+        description: Beschriftung der Schaltflächen anzeigen
+        tooltip: Zeigt die Beschriftung unter den Schaltflächen der Werkzeugleiste.
+      scale:
+        description: Maßstab anzeigen
+        tooltip: Ein Maßstabsbalken unten in der Karte. Ein Klick wechselt zwischen metrischen und imperialen Einheiten.
+      zoom:
+        description: Zoom-Schaltflächen anzeigen
+        tooltip: "Die Schaltflächen + und − am Kartenrand. Die Tastenkürzel + und − funktionieren immer."
+      zoom-to-selection:
+        description: "„Auf Auswahl zoomen“ anzeigen"
+        tooltip: Die Schaltfläche, die auf die ausgewählten Objekte zoomt. Ihr Tastenkürzel funktioniert immer.
+      geolocate:
+        description: "„Meinen Standort anzeigen“ anzeigen"
+        tooltip: Die Schaltfläche, die die Karte auf deinen Standort zentriert.
+      help:
+        description: Hilfe-Schaltfläche anzeigen
+        tooltip: "Die Schaltfläche, die die Hilfe öffnet, mit der Version des Editors und den Links zum Melden von Fehlern. Ihr Tastenkürzel funktioniert immer."
+    osm_server:
+      title: OpenStreetMap-Server
+      live: Live
+      dev: Entwicklungsserver
+      hint: Von welchem OpenStreetMap-Server der Editor liest und wohin er hochlädt. Beim Wechsel gehen ungespeicherte Änderungen verloren.
     panels:
       title: Info-Felder
   inspector:
