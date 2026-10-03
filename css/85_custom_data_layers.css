@@ -73,3 +73,21 @@
 .custom-data-filter-tooltip {
     margin-top: 6px;
 }
+
+/* minimap: thin outlines and a light fill, no interaction */
+.map-in-map-data .layer-custom-data {
+    pointer-events: none;
+}
+.map-in-map-data .layer-custom-data path.stroke {
+    stroke-width: 1.5;
+    fill: none;
+}
+.map-in-map-data .layer-custom-data path.Point.stroke,
+.map-in-map-data .layer-custom-data path.MultiPoint.stroke {
+    fill: var(--custom-data-color);
+}
+.map-in-map-data .layer-custom-data path.fill {
+    stroke: none;
+    fill: var(--custom-data-color);
+    fill-opacity: 0.25;
+}

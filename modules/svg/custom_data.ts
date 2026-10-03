@@ -73,20 +73,31 @@ function toDataFeatures(gj: FeatureCollection | Feature | undefined): DataFeatur
  * Draws all enabled layers of `customDataLayers`, each in its own group and color.
  * Uses the same classes as the single custom data layer (`svgData`),
  * so hovering, selecting and the data inspector work the same way.
+ *
+ * `minimap`: a second instance for the minimap (`ui/map_in_map.js`), with its own projection.
+ * It draws plain outlines and fills only: no labels, no shadows, and no clip paths
+ * (those live in the main map's `defs` and belong to the main instance).
  */
-export function svgCustomData(projection: Projection, context: iD.Context, dispatch: Dispatch<object>) {
+export function svgCustomData(
+    projection: Projection,
+    context: iD.Context,
+    dispatch: Dispatch<object>,
+    options?: { minimap?: boolean }
+) {
+    const minimap = !!options?.minimap;
+    const namespace = minimap ? 'svgCustomDataMinimap' : 'svgCustomData';
     const throttledRedraw = throttle(() => dispatch.call('change'), 1000);
     const _geojson = new Map<string, GeoJSONCacheEntry>();
     let _vtService: typeof services.vectorTile | undefined;
 
-    customDataLayers.on('change.svgCustomData', () => dispatch.call('change'));
+    customDataLayers.on(`change.${namespace}`, () => dispatch.call('change'));
 
 
     function vectorTileService() {
         if (!_vtService && services.vectorTile) {
             _vtService = services.vectorTile;
             // `event` is added by `init()` and not part of the service type
-            (_vtService as unknown as { event: Dispatch<object> }).event.on('loadedData.svgCustomData', throttledRedraw);
+            (_vtService as unknown as { event: Dispatch<object> }).event.on(`loadedData.${namespace}`, throttledRedraw);
         }
         return _vtService;
     }
@@ -119,6 +130,9 @@ export function svgCustomData(projection: Projection, context: iD.Context, dispa
 
         // the url is part of the id, so an edited url loads a new source
         const sourceID = `custom-data:${layer.id}:${layer.url}`;
+        // The minimap shows the tiles the main map loaded. Loading tiles for its own, wider view
+        // would abort the main map's requests (one source, one set of wanted tiles).
+        if (minimap) return service.data(sourceID, context.projection);
         service.loadTiles(sourceID, layer.url, projection);
         return service.data(sourceID, projection);
     }
@@ -160,12 +174,16 @@ export function svgCustomData(projection: Projection, context: iD.Context, dispa
             allPolygons.push(...polygons);
 
             const group = d3_select<SVGGElement, CustomDataLayer>(this);
+            if (minimap) {
+                drawPaths(group, { fill: polygons, shadow: [], stroke: features }, getPath, getPath);
+                return;
+            }
             drawPaths(group, { fill: polygons, shadow: features, stroke: features }, getPath, getAreaPath);
             drawLabels(group, 'label-halo', features);
             drawLabels(group, 'label', features);
         });
 
-        drawClipPaths(surface, allPolygons, getAreaPath);
+        if (!minimap) drawClipPaths(surface, allPolygons, getAreaPath);
     }
 
 
@@ -217,7 +235,7 @@ export function svgCustomData(projection: Projection, context: iD.Context, dispa
             paths.enter()
                 .append('path')
                 .attr('class', d => `pathdata ${datagroup} ${featureClasses(d)}`)
-                .attr('clip-path', d => datagroup === 'fill' ? `url(#${clipPathID(d)})` : null)
+                .attr('clip-path', d => datagroup === 'fill' && !minimap ? `url(#${clipPathID(d)})` : null)
                 .merge(paths)
                 .attr('d', d => datagroup === 'fill' ? getAreaPath(d) : getPath(d));
         });
