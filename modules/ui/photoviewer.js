@@ -27,13 +27,7 @@ export function uiPhotoviewer(context) {
             .append('button')
             .attr('class', 'thumb-hide')
             .attr('title', t('icons.close'))
-            .on('click', function () {
-                for (const service of Object.values(services)) {
-                    if (typeof service.hideViewer === 'function') {
-                        service.hideViewer(context);
-                    }
-                }
-            })
+            .on('click', photoviewer.hide)
             .append('div')
             .call(svgIcon('#iD-icon-close'));
 
@@ -270,6 +264,20 @@ export function uiPhotoviewer(context) {
             };
         }
     }
+
+    // closes the viewer of every service, e.g. when a photo cannot be loaded
+    photoviewer.hide = function() {
+        for (const service of Object.values(services)) {
+            if (typeof service.hideViewer === 'function') {
+                service.hideViewer(context);
+            }
+        }
+        // local photos have no service
+        context.container().select('.photoviewer')
+            .classed('hide', true)
+            .selectAll('.photo-wrapper')
+            .classed('hide', true);
+    };
 
     photoviewer.onMapResize = function() {
         var photoviewer = context.container().select('.photoviewer');

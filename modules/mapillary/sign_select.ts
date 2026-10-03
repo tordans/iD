@@ -197,8 +197,9 @@ export async function showSignImage(context: coreContext, imageId: string) {
     let current: MlyViewerImage;
     try {
         current = service.getActiveImage()?.id === imageId ? await viewer.getImage() : await viewer.moveTo(imageId);
-    } catch {
-        return;   // another image was requested meanwhile
+    } catch (error) {
+        service.imageFailed(error);   // unless another image was requested meanwhile
+        return;
     }
     if (_selected !== sign || sign.imageId !== imageId) return;
     service.setActiveImage(current);

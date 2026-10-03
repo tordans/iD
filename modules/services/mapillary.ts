@@ -135,6 +135,7 @@ let _mlyShowSignDetections = false;
 let _mlyViewer: Viewer;
 let _mlyViewerFilter: FilterExpression = ['all'];
 let _isViewerOpen = false;
+let _mlyContext: coreContext | undefined;
 
 
 type Which = 'images' | 'signs' | 'points';
@@ -622,6 +623,7 @@ export default new class {
     // Initialize image viewer (Mapillar JS)
     initViewer(context: coreContext) {
         if (!window.mapillary) return;
+        _mlyContext = context;
 
         const opts: ViewerOptions = {
             accessToken: accessToken,
@@ -694,8 +696,9 @@ export default new class {
         if (!image.unsafeId) {
             _mlyViewer.moveTo(image.id)
                 .then(image => this.setActiveImage(image))
-                .catch(function(e) {
+                .catch(e => {
                     console.error('mly3', e); // eslint-disable-line no-console
+                    this.imageFailed(e);
                 });
         } else {
             fetch(`https://graph.mapillary.com/image_ids?sequence_id=${image.sequence_id}`, { headers: { 'Authorization': `OAuth ${accessToken}` } })
@@ -705,14 +708,28 @@ export default new class {
                         id.startsWith(`${image.id}`.substring(0, 10)));
                     if (!correctedId) {
                         console.error('unable to determine corrected photo id for'); // eslint-disable-line no-console
+                        this.imageFailed();
                     } else {
                         image.id = correctedId;
                         image.unsafeId = false;
                         this.selectImage(image);
                     };
-                });
+                })
+                .catch(() => this.imageFailed());
         }
 
+        return this;
+    }
+
+
+    /**
+     * An image could not be loaded: closes the viewer when it has no image to show,
+     * instead of leaving an empty black box on the map.
+     */
+    imageFailed(error?: unknown) {
+        // another image was requested meanwhile
+        if ((error as Error | undefined)?.name === 'CancelMapillaryError') return this;
+        if (_isViewerOpen && !_mlyActiveImage && _mlyContext) this.hideViewer(_mlyContext);
         return this;
     }
 

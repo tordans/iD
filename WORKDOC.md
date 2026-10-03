@@ -690,6 +690,7 @@ Code: `modules/svg/mapillary_images.ts` (classes and filter exceptions), `module
 - Classes `mly-age-new|mid|old|outdated`, `mly-highlighted` (sequence), `mly-highlight-dot`, `mly-selected-feature-image` (magenta ring); CSS `css/97_mapillary_highlight.css`.
 - Tested: at Hauptstraße/Traunsteiner Str. the radinfra images get the dot and their sequence the thicker line; bands new/mid/old show; a way's `mapillary` image older than the cutoff appears when the way is selected.
 - Limits: the cutoff line on the slider stays at the configured date when the filter is widened. The selected way's images are only drawn if their tile is loaded (zoom ≥ 12).
+- The photo viewer closes itself when the requested image cannot be loaded, instead of staying open as an empty black box: Mapillary (`service.imageFailed()`: unknown image id, failed request; not when another image was requested meanwhile, and not while an earlier image is still shown), Panoramax (image data request fails) and flat photos of any service (`<img>` error). `context.ui().photoviewer.hide()` closes the viewer of every service.
 
 ### 19. Mapillary image fields: all our keys, several images, show in the viewer — ✅ (v1, replaces feature 14)
 
@@ -1306,6 +1307,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ## Progress log
 
+- 2026-10-03: Photo viewer closes itself when the image cannot be loaded (feature 18).
 - 2026-10-03: Way table is a dock below the map with a fixed, stored height and a toggle button in the map's bottom corner; the checkbox in Map Data is gone (feature 6).
 - 2026-10-03: Bottom bar removed; its contents moved to the map, the toolbar, Preferences, Help and the History panel (feature 31). Optional buttons are user settings now, the `uiConfig` project config is gone.
 - 2026-10-03: Overlays section moved from Background to Map Data; way table switch moved from Preferences to Map Data ▸ Data layers (feature 30).
