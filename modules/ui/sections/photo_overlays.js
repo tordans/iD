@@ -25,9 +25,9 @@ export function uiSectionPhotoOverlays(context) {
     var _signGroups = uiMapillarySignGroups(context);
 
 
+    // The only section of the Photos pane, so it has no open/close header (like the Issues pane)
     var section = uiSection('photo-overlays', context)
-        .label(() => t.append('photo_overlays.title'))
-        .disclosureContent(renderDisclosureContent);
+        .content(renderDisclosureContent);
 
     const photoDates = {};
     const now = +new Date();
