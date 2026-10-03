@@ -313,7 +313,8 @@ export function uiWayTablePanel(context: iD.Context) {
             .on('pointerenter', (_d3_event: PointerEvent, d: ChainSegment) => highlight(d.wayID, true))
             .on('pointerleave', (_d3_event: PointerEvent, d: ChainSegment) => highlight(d.wayID, false))
             .merge(buttons)
-            .text(segmentLabel);
+            // same-named ways are common at a junction, so the id tells them apart
+            .text(d => `${segmentLabel(d)} ${d.wayID}`);
     }
 
 
@@ -376,16 +377,31 @@ export function uiWayTablePanel(context: iD.Context) {
                     th.call(drawNavigation);
                     return;
                 }
+                // name and way id; the whole cell selects the way and highlights it on the map
                 const isCenter = i - 1 === chain.centerIndex;
-                th.append('button')
-                    .attr('class', 'way-table-way-button')
-                    .property('disabled', isCenter)
-                    .attr('title', d.reversed ? t('way_table.reversed') : null)
-                    .text(`${segmentLabel(d)}${d.reversed ? ' ⇄' : ''}`)
-                    .on('click', () => selectWay(d.wayID))
-                    .on('pointerenter', () => highlight(d.wayID, true))
-                    .on('pointerleave', () => highlight(d.wayID, false));
-            });
+                const title = th
+                    .append('div')
+                    .attr('class', 'way-table-way-title')
+                    .attr('title', d.reversed ? t('way_table.reversed') : null);
+                title
+                    .append('span')
+                    .attr('class', 'way-table-way-name')
+                    .text(`${segmentLabel(d)}${d.reversed ? ' ⇄' : ''}`);
+                title
+                    .append('span')
+                    .attr('class', 'way-table-way-id')
+                    .text(d.wayID);
+            })
+            .attr('role', d => d ? 'button' : null)
+            .attr('tabindex', (d, i) => d && i - 1 !== chain.centerIndex ? 0 : null)
+            .on('click', (_d3_event: MouseEvent, d) => {
+                if (d && d.wayID !== chain.segments[chain.centerIndex]?.wayID) selectWay(d.wayID);
+            })
+            .on('keydown', (d3_event: KeyboardEvent, d) => {
+                if (d && d3_event.key === 'Enter' && d.wayID !== chain.segments[chain.centerIndex]?.wayID) selectWay(d.wayID);
+            })
+            .on('pointerenter', (_d3_event: PointerEvent, d) => highlight(d?.wayID, true))
+            .on('pointerleave', (_d3_event: PointerEvent, d) => highlight(d?.wayID, false));
 
         // rows: one per tag key
         let tagRows = table.select('tbody')

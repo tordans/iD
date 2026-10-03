@@ -178,6 +178,8 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
   - The info panels keep 44 px free at the edge, so they do not cover the map buttons.
   - German strings for the table added.
   - Checked in the browser: open / close with button and `K`, map height before and after, reload with the dock open, resize by dragging (and its upper limit), previous / next, hint without a selection, info panel next to the button.
+- 2026-10-03: at most 2 ways before and 2 after the selected way (was 3). A way's header cell shows name and way id; the whole cell is the hover area (highlights the way on the map) and the click target. The junction chooser shows the id too.
+- Reference, not built: the street space editor (`~/Development/OSM/parking-lanes`, `app/src/modes/table/domain/window-table-chain.ts`) shows the opposite carriageway of a dual carriageway as an extra column next to its pair ("dual" badge), found by geometry (`find-dual-carriageway-sibling.ts`: antiparallel, 2–30 m apart, overlapping). Junctions it handles like we do (a chooser).
 - Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values.
 
 **Existing code to reuse**

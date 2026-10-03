@@ -125,22 +125,41 @@ table.way-table thead th {
 table.way-table thead th.center {
     background: #3c4f6b;
 }
-table.way-table .way-table-way-button {
-    height: auto;
-    padding: 2px 4px;
-    background: none;
+/* a way's header cell: name and id; the whole cell is the hover and click area */
+table.way-table thead th.way-table-way {
     color: #9cf;
-    font-weight: bold;
     cursor: pointer;
 }
-table.way-table .way-table-way-button:hover:not(:disabled) {
-    text-decoration: underline;
-}
-table.way-table .way-table-way-button:disabled {
+table.way-table thead th.way-table-way.center {
     color: #fff;
     cursor: default;
 }
-table.way-table thead th.reversed .way-table-way-button {
+table.way-table thead th.way-table-way:not(.center):hover,
+table.way-table thead th.way-table-way:not(.center):focus-visible {
+    background: #46536b;
+    color: #fff;
+}
+table.way-table thead th.way-table-way:not(.center):hover .way-table-way-name {
+    text-decoration: underline;
+}
+table.way-table .way-table-way-title {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+table.way-table .way-table-way-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: bold;
+}
+table.way-table .way-table-way-id {
+    flex: 0 0 auto;
+    font-family: monospace;
+    font-weight: normal;
+    font-size: 11px;
+    opacity: 0.7;
+}
+table.way-table thead th.reversed .way-table-way-name {
     font-style: italic;
 }
 

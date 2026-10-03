@@ -37,7 +37,8 @@ export type WayChain = {
 type Graph = iD.Graph;
 type Way = iD.OsmWay;
 
-export const DEFAULT_MAX_PER_SIDE = 3;
+/** ways shown before and after the selected way */
+export const DEFAULT_MAX_PER_SIDE = 2;
 
 /** Keys that define what "the same kind of way" means */
 const KIND_KEYS = ['highway', 'cycleway', 'footway', 'path', 'railway', 'waterway'];
