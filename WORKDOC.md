@@ -367,7 +367,7 @@ Notes:
 ### 13. Hide toolbar button labels — ✅
 
 - Source: `iD--v3-reloaded` worktree (commits `1f76e0820`, `439e18668`, `7d74005f8`), ported to the current toolbar.
-- Preferences ▸ Interface ▸ "Show button labels". Unchecked, the captions under the top toolbar buttons ("Add Feature", "Undo / Redo", …) are hidden and the toolbar is 60 px instead of 71 px high. Stored in the pref `preferences.interface.labels` (same key as in v3).
+- Preferences ▸ Interface ▸ "Show button labels". Unchecked, the captions under the top toolbar buttons ("Add Feature", "Undo / Redo", …) are hidden and the toolbar is 60 px instead of 71 px high. Stored in the pref `preferences.interface.labels` (same key as in v3). **Off by default** in this fork (since 2026-10-03); a stored choice is kept.
 - Code: `modules/ui/sections/interface.ts`, `css/91_interface_prefs.css`, applied at startup in `ui/init.js`.
 
 ### 14. Show Mapillary image from the field — ➡️ (now part of feature 19)
@@ -1259,6 +1259,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 
 ## Progress log
 
+- 2026-10-03: "Show button labels" is off by default (feature 13).
 - 2026-10-02: TILDA's internal notes in iD (feature 29): own layer (on by default), teal pins, own add button and editor next to the public OSM notes; reads and writes the staging API of region `infravelo`, folder 12.
 - 2026-10-01: Right sidebar split: new Map Display and Photos panes, panel toggles moved to Preferences, tooltips and shortcuts for the panes (feature 30).
 - 2026-10-01: Analysis for TILDA's internal notes in iD (feature 29): feasible via the shared OSM identity, needs a small external API in TILDA; prompt for the TILDA session written.

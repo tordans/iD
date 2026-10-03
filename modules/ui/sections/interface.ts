@@ -13,8 +13,9 @@ import { uiTooltip } from '../tooltip';
 export const INTERFACE_LABELS_PREF = 'preferences.interface.labels';
 
 
+// Off unless the user turned the labels on
 function showLabels() {
-    return prefs(INTERFACE_LABELS_PREF) !== 'false';
+    return prefs(INTERFACE_LABELS_PREF) === 'true';
 }
 
 
