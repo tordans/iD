@@ -168,7 +168,17 @@ Status: ⬜ not started · 🟨 in progress · ✅ integrated
 - `modules/way_table/tag_rows.ts`: one row per key, cell status `same`/`changed`/`added`/`removed`/`empty`, preset keys first.
 - `modules/ui/way_table_panel.ts`: the panel. Toggle with `K` (`T`/`Y` are the flip operations) or the checkbox in Map Data ▸ Data Layers. Layout stored in `way-table-panel-layout` as fractions of the map area.
 - 2026-09-29: the panel is now docked at the bottom (full width minus the map controls). Its height follows the table up to a maximum set by dragging the top edge (`way-table-panel-max-height`, fraction of the map height; the old free move/resize and `way-table-panel-layout` are gone). Clicking a way column or previous/next selects the way and eases the map so the way is centered in the map area above the panel, zooming out if it does not fit (`flyTo()`, measured against the map surface because the map runs under the top bar).
-- Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values. Maybe a real bottom panel that shrinks the map instead of covering it.
+- 2026-10-03: the table is now a **dock below the map**, not a floating panel (possible since the bottom bar is gone, feature 31).
+  - It is a child of `.main-content`; the map gets smaller (`--way-table-height` for `.main-map`, and `ui.onResize()` subtracts the dock from the map dimensions).
+  - The height is fixed and stored in px (`way-table-panel-height`, default 200, at least 80, at most 70 % of the editor height). Drag the top edge to change it. It no longer follows the table or the selected way.
+  - While it is open and no way is selected, it stays open and shows a hint.
+  - Compact: no header row. Previous / next are in the table's corner cell; cell padding is smaller.
+  - Toggle: the button in the bottom corner of the map (blue while open), or `K`. `K` is now in the shortcut list (`?`).
+  - The checkbox in Map Data ▸ Data layers is gone (`sections/way_table_panel_item.ts` removed); the button replaces it.
+  - The info panels keep 44 px free at the edge, so they do not cover the map buttons.
+  - German strings for the table added.
+  - Checked in the browser: open / close with button and `K`, map height before and after, reload with the dock open, resize by dragging (and its upper limit), previous / next, hint without a selection, info panel next to the button.
+- Open: raw tag editing (v2), a "load more" per side, keyboard navigation between ways, better column widths for long values.
 
 **Existing code to reuse**
 
@@ -1190,7 +1200,7 @@ Code: `modules/tilda_notes/` (config, note class, Markdown), `modules/services/t
 Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, panel toggles). Each button is now one job.
 
 - **Buttons, top to bottom:** Background, Map Data, Map Display (new), Photos (new), Issues, Preferences, Help. Locate stays above them. (Help, Locate and Zoom-to-selection are hidden in this project, see below.)
-- **Map Data** (`U`): "which data is loaded". Data layers (OSM, OSM notes, TILDA notes, Osmose), Custom data layers, Live edits nearby.
+- **Map Data** (`U`): "which data is loaded". Data layers (OSM, OSM notes, TILDA notes, Osmose), Custom data layers, Overlays, Live edits nearby.
   - iD's old single custom-data slot only shows while it holds data (e.g. a GPX file dropped on the map). Custom data layers replaced it (feature 4).
 - **Map Display** (`⇧J`, palette icon): "how OSM is drawn". Style options, Lens, Map features (still collapsed).
   - The "hidden features" hint in the footer and in the preset list now opens and names this pane.
@@ -1199,7 +1209,7 @@ Goal: the Map Data pane was crowded (datasets, photos, lens, feature filter, pan
 - **Button tooltips:** pane name as heading, one sentence on what is inside, the shortcut. For all seven buttons, English and German.
 - **Help and shortcuts:** the street-level help page points to the Photos pane (with its icon). The shortcut list (`?`) has both new panes.
 - **Overlays moved to Map Data (2026-10-03):** the "Overlays" section (imagery-index overlays such as the locator overlay) is now in Map Data, after Custom data layers. Checked in `renderer/background.js`: the background's display options (brightness, contrast, saturation, sharpness) and the imagery offset only act on the base layer, never on overlays, so nothing tied the section to the Background pane. The `overlays=` URL parameter and the minimap are unchanged.
-- **Way table switch moved to Data layers (2026-10-03):** "Show Way Table Panel" is in Map Data ▸ Data layers, right below the OSM and notes layers (it is another view of the OSM data), no longer in Preferences ▸ Panels. Shortcut unchanged.
+- **Way table switch (2026-10-03):** it moved from Preferences ▸ Panels to Map Data ▸ Data layers, and was then replaced by a button in the bottom corner of the map (feature 6).
 - **Optional buttons (2026-10-03):** zoom in / out, zoom-to-selection, locate and help are user settings in Preferences ▸ Interface, all off by default (feature 31). This replaced the project config `iD.uiConfig({ hiddenMapControls })`, which is gone.
   - The buttons are always created and only hidden, so their shortcuts keep working (`+` / `-`, "zoom to this", `H` for help).
   - The gap between the map buttons and the pane buttons, and the rounded corners, follow the buttons that are shown (`css/91_interface_prefs.css`).
@@ -1294,6 +1304,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ## Progress log
 
+- 2026-10-03: Way table is a dock below the map with a fixed, stored height and a toggle button in the map's bottom corner; the checkbox in Map Data is gone (feature 6).
 - 2026-10-03: Bottom bar removed; its contents moved to the map, the toolbar, Preferences, Help and the History panel (feature 31). Optional buttons are user settings now, the `uiConfig` project config is gone.
 - 2026-10-03: Overlays section moved from Background to Map Data; way table switch moved from Preferences to Map Data ▸ Data layers (feature 30).
 - 2026-10-03: Config `iD.uiConfig({ hiddenMapControls })`; the project hides the zoom, zoom-to-selection, locate and help buttons (feature 30).

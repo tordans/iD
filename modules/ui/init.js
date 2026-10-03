@@ -258,9 +258,15 @@ export function uiInit(context) {
         overMap
             .call(ui.info);
 
+        // The way table: a dock below the map, and its button in the bottom corner of the map
         ui.wayTable = uiWayTablePanel(context);
-        overMap
+        content
             .call(ui.wayTable);
+
+        controls
+            .append('div')
+            .attr('class', 'way-table-control')
+            .call(ui.wayTable.renderToggleButton);
 
         installWidthIndicatorListeners(context);
         installMeasureTapeListeners(context);
@@ -518,6 +524,11 @@ export function uiInit(context) {
         // This will call `getBoundingClientRect` and trigger reflow,
         //  but the values will be cached for later use.
         var mapDimensions = utilGetDimensions(context.container().select('.main-content'), true);
+        // the way table dock below the map takes its share of the height
+        var dock = context.container().select('.main-content > .way-table-panel:not(.hide)');
+        if (!dock.empty()) {
+            mapDimensions = [mapDimensions[0], Math.max(mapDimensions[1] - dock.node().offsetHeight, 0)];
+        }
         utilGetDimensions(context.container().select('.sidebar'), true);
 
         if (withPan !== undefined) {

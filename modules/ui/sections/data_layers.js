@@ -11,7 +11,6 @@ import { geoExtent } from '../../geo';
 import { modeBrowse } from '../../modes/browse';
 import { uiCmd } from '../cmd';
 import { uiSection } from '../section';
-import { drawWayTablePanelItem } from './way_table_panel_item';
 import { services } from '../../services';
 import { uiSettingsCustomData } from '../settings/custom_data';
 
@@ -36,7 +35,6 @@ export function uiSectionDataLayers(context) {
             .attr('class', 'data-layer-container')
             .merge(container)
             .call(drawOsmItems)
-            .call(drawWayTableItem)
             .call(drawQAItems)
             .call(drawCustomDataItems)
             .call(drawVectorItems);     // Beta - Detroit mapping challenge
@@ -151,17 +149,6 @@ export function uiSectionDataLayers(context) {
                     ? t.append('tilda_notes.errors.' + access)
                     : t.append('tilda_notes.errors.other', { message: access }));
             });
-    }
-
-    // the way table is another view of the OSM data, so its switch sits with the OSM layers
-    function drawWayTableItem(selection) {
-        selection
-            .selectAll('.layer-list-way-table')
-            .data([0])
-            .enter()
-            .append('ul')
-            .attr('class', 'layer-list layer-list-way-table')
-            .call(drawWayTablePanelItem, context);
     }
 
     function drawQAItems(selection) {

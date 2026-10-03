@@ -18,7 +18,7 @@ de:
     description: Fotos
   pane_tooltips:
     background: Luftbilder, Helligkeit und Bildversatz.
-    map-data: OpenStreetMap-Daten und -Hinweise, Wege-Tabelle, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
+    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
@@ -61,9 +61,6 @@ de:
       network: "TILDA ist nicht erreichbar."
       other: "TILDA: {message}"
   map_data:
-    way_table_panel:
-      title: Wege-Tabelle anzeigen
-      tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg.
     layers:
       notes:
         title: OpenStreetMap-Hinweise (öffentlich)
@@ -77,6 +74,16 @@ de:
   account:
     title: Konto
     tooltip: "Angemeldet als {user}"
+  way_table:
+    title: Wege-Tabelle
+    tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg, unter der Karte.
+    empty: Wähle einen Weg aus, um seine Tags mit dem vorherigen und dem nächsten Weg zu vergleichen.
+    previous: Vorherigen Weg auswählen
+    next: Nächsten Weg auswählen
+    reversed: Dieser Weg zeigt in die Gegenrichtung. Seine left/right-Tags sind getauscht dargestellt.
+    junction:
+      backward: "Vor dem ersten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
+      forward: "Nach dem letzten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
   preferences:
     interface:
       labels:
@@ -115,6 +122,7 @@ de:
       display_options:
         map_display: "Kartendarstellung ein-/ausblenden"
         photos: "Fotos ein-/ausblenden"
+        way_table: "Wege-Tabelle ein-/ausblenden"
 de-CH:
   traffic_sign_field:
     order_hint: Schilder werden von oben nach unten gelesen. Das oberste Schild ist das Hauptschild.
@@ -133,7 +141,7 @@ de-CH:
     description: Fotos
   pane_tooltips:
     background: Luftbilder, Helligkeit und Bildversatz.
-    map-data: OpenStreetMap-Daten und -Hinweise, Wege-Tabelle, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
+    map-data: OpenStreetMap-Daten und -Hinweise, QA-Ebenen, eigene Datenebenen, Überlagerungen und Live-Bearbeitungen.
     map-display: Flächenfüllung, Linse und welche Objektarten angezeigt werden.
     photos: Straßenfotos, ihre Filter und die Verkehrszeichen.
     issues: Fehler und Warnungen in deinen Änderungen und in der Karte.
@@ -176,9 +184,6 @@ de-CH:
       network: "TILDA ist nicht erreichbar."
       other: "TILDA: {message}"
   map_data:
-    way_table_panel:
-      title: Wege-Tabelle anzeigen
-      tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg.
     layers:
       notes:
         title: OpenStreetMap-Hinweise (öffentlich)
@@ -192,6 +197,16 @@ de-CH:
   account:
     title: Konto
     tooltip: "Angemeldet als {user}"
+  way_table:
+    title: Wege-Tabelle
+    tooltip: Vergleiche die Tags des ausgewählten Wegs mit dem vorherigen und dem nächsten Weg, unter der Karte.
+    empty: Wähle einen Weg aus, um seine Tags mit dem vorherigen und dem nächsten Weg zu vergleichen.
+    previous: Vorherigen Weg auswählen
+    next: Nächsten Weg auswählen
+    reversed: Dieser Weg zeigt in die Gegenrichtung. Seine left/right-Tags sind getauscht dargestellt.
+    junction:
+      backward: "Vor dem ersten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
+      forward: "Nach dem letzten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
   preferences:
     interface:
       labels:
@@ -230,3 +245,4 @@ de-CH:
       display_options:
         map_display: "Kartendarstellung ein-/ausblenden"
         photos: "Fotos ein-/ausblenden"
+        way_table: "Wege-Tabelle ein-/ausblenden"

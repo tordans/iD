@@ -1,54 +1,83 @@
 /* Way table panel: selected way with previous and next ways, one row per tag */
 
-/* docked at the bottom of the map: height follows the table, up to a max height (set in JS) */
-.over-map > .way-table-panel {
-    position: absolute;
-    z-index: 2;
-    left: 0;
-    bottom: 0;
-    width: calc(100% - 44px); /* keep the map controls on the right usable */
+/* A dock below the map: a flex child of `.main-content` with a fixed height (set in JS).
+   `.main-map` is positioned absolutely over all of `.main-content`, so it gets the rest explicitly. */
+.main-content > .way-table-panel {
+    position: relative;
+    z-index: 6;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     border-top: 1px solid rgba(0, 0, 0, 0.75);
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.4);
     color: #eee;
     overflow: hidden;
+    pointer-events: auto;
+    touch-action: auto;
 }
-.over-map > .way-table-panel.hide {
+.main-content > .way-table-panel.hide {
     display: none;
 }
+.main-content > .main-map {
+    height: calc(100% - var(--way-table-height, 0px));
+}
 
-.way-table-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    background: rgba(0, 0, 0, 0.5);
-    user-select: none;
+.way-table-empty {
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #bbb;
 }
-.way-table-header h3 {
-    flex: 1 1 auto;
-    margin: 0;
-    font-size: 13px;
-}
+
+/* previous / next way, in the table's corner cell */
 .way-table-nav {
     display: flex;
     gap: 4px;
 }
-.way-table-header button {
-    width: 28px;
-    height: 24px;
+.way-table-nav button {
+    width: 26px;
+    height: 20px;
     padding: 0;
     background: rgba(255, 255, 255, 0.1);
     color: #eee;
     cursor: pointer;
 }
-.way-table-header button:hover:not(:disabled) {
+.way-table-nav button .icon {
+    width: 16px;
+    height: 16px;
+}
+.way-table-nav button:hover:not(:disabled) {
     background: rgba(255, 255, 255, 0.25);
 }
-.way-table-header button:disabled {
+.way-table-nav button:disabled {
     opacity: 0.3;
     cursor: default;
+}
+
+/* the button in the bottom corner of the map that opens and closes the dock */
+.map-controls .way-table-control {
+    margin-top: auto;
+    padding-top: 10px;
+}
+.map-controls .way-table-control > button {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 4px 0 0 4px;
+    pointer-events: auto;
+}
+.ideditor[dir='rtl'] .map-controls .way-table-control > button {
+    border-radius: 0 4px 4px 0;
+}
+.map-controls .way-table-control > button:focus,
+.map-controls .way-table-control > button:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+.map-controls .way-table-control > button.active {
+    background: var(--link-color);
+}
+/* the sidebar icon, turned so the filled part is at the bottom */
+.map-controls .way-table-control > button .icon {
+    transform: rotate(-90deg);
 }
 
 .way-table-body {
@@ -79,7 +108,7 @@ table.way-table {
 }
 table.way-table th,
 table.way-table td {
-    padding: 2px 8px;
+    padding: 1px 8px;
     border: 1px solid rgba(255, 255, 255, 0.12);
     text-align: start;
     white-space: nowrap;
@@ -168,4 +197,12 @@ table.way-table td.removed {
 }
 .way-table-resize:hover::after {
     background: rgba(255, 255, 255, 0.8);
+}
+
+/* the info panels sit in the same corner: keep the map buttons (and the way table button) free */
+.ideditor[dir='ltr'] .over-map > .info-panels {
+    padding-right: 44px;
+}
+.ideditor[dir='rtl'] .over-map > .info-panels {
+    padding-left: 44px;
 }

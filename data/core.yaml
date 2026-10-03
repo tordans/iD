@@ -1146,9 +1146,6 @@ en:
         filter_key: Key
         filter_value: Value
         filter_help: "Only show features with this property. Leave the value empty to show all features that have the key."
-    way_table_panel:
-      title: Show Way Table Panel
-      tooltip: Compare the tags of the selected way with the previous and next ways.
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.
@@ -1229,8 +1226,8 @@ en:
     key: K
     previous: Select the previous way
     next: Select the next way
-    close: Close the way table
-    key_column: Tag
+    tooltip: Compare the tags of the selected way with the previous and next ways, below the map.
+    empty: Select a way to compare its tags with the previous and next ways.
     reversed: This way points in the opposite direction. Its left/right tags are shown swapped.
     junction:
       backward: "Several ways continue before the first way. Choose one:"
@@ -1268,7 +1265,7 @@ en:
     key: J
   pane_tooltips:
     background: Aerial imagery, brightness and imagery offset.
-    map-data: OpenStreetMap data and notes, way table, QA layers, custom data layers, overlays and live edits.
+    map-data: OpenStreetMap data and notes, QA layers, custom data layers, overlays and live edits.
     map-display: Area fill, lens and which feature types are shown.
     photos: Street-level photos, their filters and the traffic signs.
     issues: Errors and warnings in your edits and in the map.
@@ -2697,6 +2694,7 @@ en:
         map_data: "Toggle map data pane"
         map_display: "Toggle map display pane"
         photos: "Toggle photos pane"
+        way_table: "Toggle way table"
         issues: "Toggle validation issues pane"
         preferences: "Toggle user preferences pane"
         fullscreen: "Enter full screen mode"

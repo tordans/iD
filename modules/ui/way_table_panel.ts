@@ -4,7 +4,7 @@ import { select as d3_select } from 'd3-selection';
 
 import { prefs } from '../core/preferences';
 import { geoRawMercator, geoZoomToScale } from '../geo';
-import { t } from '../core/localizer';
+import { localizer, t } from '../core/localizer';
 import { presetManager } from '../presets';
 import { modeSelect } from '../modes/select';
 import { svgIcon } from '../svg/icon';
@@ -16,32 +16,35 @@ import { buildTagRows, type TagCell, type TagRow } from '../way_table/tag_rows';
 import { uiTooltip } from './tooltip';
 
 const ENABLED_PREF = 'way-table-panel';
-/** the panel's maximum height, as a fraction of the map height */
-const HEIGHT_PREF = 'way-table-panel-max-height';
-const DEFAULT_MAX_HEIGHT = 0.5;
+/** the dock's height in px */
+const HEIGHT_PREF = 'way-table-panel-height';
+const DEFAULT_HEIGHT_PX = 200;
 const MIN_HEIGHT_PX = 80;
+/** the dock leaves at least this much of the editor's height to the map */
+const MAX_HEIGHT_FRACTION = 0.7;
 /** margin around a way that the map flies to */
 const FLY_PADDING_PX = 40;
 
 
-function readMaxHeight(): number {
+function readHeight(): number {
     const stored = Number(prefs(HEIGHT_PREF));
-    return stored > 0 && stored <= 1 ? stored : DEFAULT_MAX_HEIGHT;
+    return stored >= MIN_HEIGHT_PX ? stored : DEFAULT_HEIGHT_PX;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 
 /**
- * A panel docked at the bottom of the map that shows the selected way and its
- * previous and next ways as a table, one row per tag. Its height follows the table,
- * up to a maximum the user sets by dragging the top edge.
- * Toggle with the `K` key or in the Map Data pane.
+ * The way table: the selected way and its previous and next ways as a table, one row per tag.
+ * It is a dock below the map (a child of `.main-content`), so the map gets smaller while it is open.
+ * - The height is fixed and stored; drag the top edge to change it. It does not follow the table.
+ * - Without a selected way the dock stays open and shows a hint.
+ * - Toggle with the `K` key or the button in the bottom corner of the map.
  */
 export function uiWayTablePanel(context: iD.Context) {
     let _container: d3.Selection<HTMLDivElement> = d3_select<HTMLDivElement, unknown>(null!);
     let _enabled = prefs(ENABLED_PREF) === 'true';
-    let _maxHeight = readMaxHeight();
+    let _height = readHeight();
     /** chosen way per ambiguous junction node, reset when the selection leaves the chain */
     let _junctionChoices = new Map<NodeId, WayId>();
     let _chain: WayChain | undefined;
@@ -72,55 +75,75 @@ export function uiWayTablePanel(context: iD.Context) {
     }
 
 
-    function applyLayout() {
-        _container.style('max-height', `${_maxHeight * 100}%`);
+    function content() {
+        return context.container().select<HTMLDivElement>('.main-content');
     }
 
 
-    function mapHeight() {
-        return _container.node()?.parentElement?.clientHeight || 1;
+    /** The dock's height and the matching map height; `resize` tells the map about its new size */
+    function applyLayout(resize = true) {
+        const available = content().node()?.clientHeight || 0;
+        const max = Math.max(MIN_HEIGHT_PX, available * MAX_HEIGHT_FRACTION);
+        const height = _enabled ? Math.round(clamp(_height, MIN_HEIGHT_PX, max)) : 0;
+
+        _container
+            .classed('hide', !_enabled)
+            .style('height', `${height}px`);
+        // `.main-map` is positioned absolutely, so it does not shrink on its own (see the CSS)
+        content().style('--way-table-height', `${height}px`);
+        context.container().select('.way-table-control button')
+            .classed('active', _enabled);
+
+        if (resize) (context.ui() as { onResize?: () => void }).onResize?.();
     }
 
 
-    /** Drag the top edge to change the maximum height */
+    /** Drag the top edge to change the height */
     function resizeBehavior() {
         let startHeight: number;
+        let startY: number;
+        // screen coordinates: the dock (d3-drag's default reference) moves while it is resized
+        type DragEvent = { sourceEvent: MouseEvent | TouchEvent };
+        const clientY = (d3_event: DragEvent) => {
+            const source = d3_event.sourceEvent;
+            return 'clientY' in source ? source.clientY : (source.touches[0] ?? source.changedTouches[0]).clientY;
+        };
         return d3_drag<HTMLDivElement, unknown>()
-            .subject((d3_event: { x: number, y: number }) => ({ x: d3_event.x, y: d3_event.y }))
-            .on('start', () => {
+            .on('start', (d3_event: DragEvent) => {
                 startHeight = _container.node()!.offsetHeight;
+                startY = clientY(d3_event);
             })
-            .on('drag', (d3_event: { y: number, subject: { y: number } }) => {
-                const height = mapHeight();
-                const newHeight = startHeight - (d3_event.y - d3_event.subject.y);
-                _maxHeight = clamp(newHeight / height, MIN_HEIGHT_PX / height, 1);
+            .on('drag', (d3_event: DragEvent) => {
+                _height = Math.max(MIN_HEIGHT_PX, startHeight - (clientY(d3_event) - startY));
                 applyLayout();
             })
-            .on('end', () => prefs(HEIGHT_PREF, String(_maxHeight)));
+            .on('end', () => {
+                // what the limits allowed
+                _height = _container.node()!.offsetHeight;
+                prefs(HEIGHT_PREF, String(_height));
+            });
     }
 
 
     /**
      * Pan (and zoom out if needed) so the way is centered in the part of the map
-     * that is not covered by the top bar, the footer or this panel.
+     * that is not covered by the top bar.
      */
     function flyTo(wayID: WayId) {
         const entity = context.hasEntity(wayID);
-        const panel = _container.node();
-        const overMap = panel?.parentElement;
-        if (!entity || !panel || !overMap) return;
+        const overMap = context.container().select<HTMLDivElement>('.over-map').node();
+        if (!entity || !overMap) return;
 
-        // the map surface is larger than the area above the panel; measure in its pixels
+        // the map surface runs under the top bar; measure the free area in its pixels
         const map = context.map();
         const [width, height] = map.dimensions() as [number, number];
         const surface = context.surfaceRect();
         const area = overMap.getBoundingClientRect();
-        const bottom = _container.classed('hide') ? area.bottom : panel.getBoundingClientRect().top;
         const visible = {
             left: area.left - surface.left,
             right: area.right - surface.left,
             top: area.top - surface.top,
-            bottom: Math.max(bottom, area.top + MIN_HEIGHT_PX) - surface.top
+            bottom: area.bottom - surface.top
         };
 
         const extent = entity.extent(context.graph());
@@ -161,6 +184,7 @@ export function uiWayTablePanel(context: iD.Context) {
     }
 
 
+    /** Renders the dock into `.main-content`, below the map */
     function wayTablePanel(selection: d3.Selection) {
         _container = selection.selectAll<HTMLDivElement, number>('.way-table-panel')
             .data([0]);
@@ -174,68 +198,64 @@ export function uiWayTablePanel(context: iD.Context) {
             .attr('class', 'way-table-resize')
             .call(resizeBehavior());
 
-        const header = enter
+        enter
             .append('div')
-            .attr('class', 'way-table-header');
-
-        header
-            .append('h3')
-            .call(t.append('way_table.title'));
-
-        const nav = header
-            .append('div')
-            .attr('class', 'way-table-nav');
-
-        for (const [offset, icon, label] of [[-1, '#iD-icon-backward', 'way_table.previous'], [1, '#iD-icon-forward', 'way_table.next']] as const) {
-            nav
-                .append('button')
-                .attr('class', `way-table-${offset < 0 ? 'previous' : 'next'}`)
-                .call((uiTooltip() as any).title(() => t.append(label)).placement('bottom'))
-                .on('click', () => selectWay(neighborID(offset)))
-                .on('pointerenter', () => highlight(neighborID(offset), true))
-                .on('pointerleave', () => highlight(neighborID(offset), false))
-                .call(svgIcon(icon, ''));
-        }
-
-        header
-            .append('button')
-            .attr('class', 'way-table-close')
-            .call((uiTooltip() as any).title(() => t.append('way_table.close')).keys([t('way_table.key')]).placement('bottom'))
-            .on('click', () => wayTablePanel.toggle(false))
-            .call(svgIcon('#iD-icon-close', ''));
+            .attr('class', 'way-table-empty')
+            .call(t.append('way_table.empty'));
 
         enter
             .append('div')
             .attr('class', 'way-table-body');
 
         _container = _container.merge(enter);
-        applyLayout();
+        // the map gets its size right after the UI is built (`ui.onResize()` in `ui/init.js`)
+        applyLayout(false);
         redraw();
     }
 
 
+    /** The button in the bottom corner of the map that opens and closes the dock */
+    wayTablePanel.renderToggleButton = function(selection: d3.Selection) {
+        selection
+            .append('button')
+            .attr('aria-label', t('way_table.title'))
+            .classed('active', _enabled)
+            .on('click', (d3_event: MouseEvent) => {
+                d3_event.preventDefault();
+                wayTablePanel.toggle();
+            })
+            .call(svgIcon('#iD-icon-sidebar-left', 'light'))
+            .call((uiTooltip() as any)
+                .placement(localizer.textDirection() === 'rtl' ? 'right' : 'left')
+                .heading(() => t.append('way_table.title'))
+                .title(() => t.append('way_table.tooltip'))
+                .keys([t('way_table.key')])
+                .scrollContainer(context.container().select('.over-map'))
+            );
+    };
+
+
     function redraw() {
-        if (_container.empty()) return;
+        if (_container.empty() || !_enabled) return;
 
         const wayID = selectedWayID();
-        _container.classed('hide', !_enabled || !wayID);
-        if (!_enabled || !wayID) return;
-
-        if (_chain && !_chain.segments.some(segment => segment.wayID === wayID)) {
-            _junctionChoices = new Map();
+        if (wayID) {
+            if (_chain && !_chain.segments.some(segment => segment.wayID === wayID)) {
+                _junctionChoices = new Map();
+            }
+            _chain = buildWayChain(context.graph(), wayID, undefined, _junctionChoices);
+        } else {
+            _chain = undefined;
         }
-        _chain = buildWayChain(context.graph(), wayID, undefined, _junctionChoices);
-        if (!_chain) return;
+
+        _container.select('.way-table-empty').classed('hide', !!_chain);
+        const body = _container.select<HTMLDivElement>('.way-table-body')
+            .classed('hide', !_chain);
+        if (!_chain || !wayID) return;
 
         const chain = _chain;
         const rows = buildTagRows(chain, presetKeys(wayID));
 
-        _container.select('.way-table-previous')
-            .property('disabled', !neighborID(-1));
-        _container.select('.way-table-next')
-            .property('disabled', !neighborID(1));
-
-        const body = _container.select<HTMLDivElement>('.way-table-body');
         drawJunctions(body, chain.junctions);
         drawTable(body, chain, rows);
         scrollToCenter(body);
@@ -297,6 +317,26 @@ export function uiWayTablePanel(context: iD.Context) {
     }
 
 
+    /** Previous / next way, in the table's corner cell */
+    function drawNavigation(selection: d3.Selection<HTMLTableCellElement>) {
+        const nav = selection
+            .append('div')
+            .attr('class', 'way-table-nav');
+
+        for (const [offset, icon, label] of [[-1, '#iD-icon-backward', 'way_table.previous'], [1, '#iD-icon-forward', 'way_table.next']] as const) {
+            nav
+                .append('button')
+                .attr('class', `way-table-${offset < 0 ? 'previous' : 'next'}`)
+                .attr('title', t(label))
+                .property('disabled', !neighborID(offset))
+                .on('click', () => selectWay(neighborID(offset)))
+                .on('pointerenter', () => highlight(neighborID(offset), true))
+                .on('pointerleave', () => highlight(neighborID(offset), false))
+                .call(svgIcon(icon, ''));
+        }
+    }
+
+
     function drawTable(body: d3.Selection<HTMLDivElement>, chain: WayChain, rows: TagRow[]) {
         let table = body.selectAll<HTMLTableElement, number>('table')
             .data([0]);
@@ -333,7 +373,7 @@ export function uiWayTablePanel(context: iD.Context) {
             .each(function(d, i) {
                 const th = d3_select(this).text('');
                 if (!d) {
-                    th.call(t.append('way_table.key_column'));
+                    th.call(drawNavigation);
                     return;
                 }
                 const isCenter = i - 1 === chain.centerIndex;
@@ -391,14 +431,18 @@ export function uiWayTablePanel(context: iD.Context) {
     wayTablePanel.toggle = function(enabled?: boolean) {
         _enabled = enabled ?? !_enabled;
         prefs(ENABLED_PREF, String(_enabled));
-        context.container().select('.way-table-panel-toggle-item input')
-            .property('checked', _enabled);
         if (!_enabled && _chain) {
             for (const segment of _chain.segments) highlight(segment.wayID, false);
         }
+        applyLayout();
         redraw();
         return wayTablePanel;
     };
+
+    // the editor got a new height: the dock may have to shrink
+    d3_select(window).on('resize.wayTablePanel', () => {
+        if (_enabled) applyLayout();
+    });
 
     context.on('enter.wayTablePanel', redraw);
     context.history()
