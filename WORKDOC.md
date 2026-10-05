@@ -992,7 +992,18 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 
 **Open:**
 - A side row is shown next to its direction rows (`cycleway:right:traffic_sign` empty + `…:forward` tagged).
-- Labels English only; the plain field keeps the schema's translated label ("Verkehrsschild").
+
+**Redesign 2026-10-05 (way field: switches instead of rows with labels on the left).**
+- History check: the package (`@osm-traffic-signs/id-field`) never had direction logic; rows, labels and "+ forward" buttons were all ours (`traffic_sign_group.ts`). The narrow boxed rows came from a class clash: our rows used `.traffic-sign-row`, which the package styles (flex, border). Our classes are now `traffic-sign-group-*`.
+- Layout: every row is the full-width sign field again; its label is a thin strip above it. With only the whole way's row there is no strip (the look before feature 27). Same for the bike lane and sidewalk fields.
+- Switches in the label of the way's field: **Ganzer Weg | Je Richtung** (EN "Whole way | Per direction"; ways only, or when a direction is tagged). "Whole way" is on by default, "Per direction" only when a direction is tagged. A switch whose rows have a sign cannot be switched off; one of the two is always on. Replaces the "+ ↑ forward" / "+ ↓ backward" buttons. The tooltips explain the keys ("whole way" = `traffic_sign` without a suffix).
+- Wording: "Whole way" instead of "both"; rows "↑ In Wegrichtung (forward)", "↓ Gegen die Wegrichtung (backward)".
+- Merging (`mergeWaySigns`, like `:left` + `:right` → `:both`): forward = backward (whole way empty or the same) → whole way; whole way + one direction with the same sign and no other direction → whole way. Not merged: whole way = forward with a different backward.
+  - The merge is a **display** first: selecting a way never changes tags. The tags follow with the next change of the whole way's sign (`waySignChanges` removes the redundant direction tags).
+  - Once the user switches "Per direction" on or edits a direction row, the rows show the tags as they are and nothing is merged for this selection. Reason: signs are added one by one; forward `A` + backward `A` on the way to `A,B` / `A,C` must not collapse in between. Next time the way is selected, equal signs show merged.
+- German strings for all group labels (`inspector.traffic_sign_group.*`).
+- Tested in the browser: empty way, whole + same backward, forward = backward, different directions, whole + other backward; switches on/off and their locks; removing the sign of a merged display removes both direction tags.
+- Open: explain the merge in the field's info (ⓘ) panel too (now only in the switch tooltips); the same merge for the directions of the side keys.
 
 ### 28. Merge a cycleway and a footway into one path — ✅ (v1)
 
@@ -1308,6 +1319,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ## Progress log
 
+- 2026-10-05: Traffic sign field redesigned: full-width rows, switches "Whole way | Per direction", equal direction signs merge into the whole way (feature 27).
 - 2026-10-03: Way table columns follow the order of the ways on the map (feature 6).
 - 2026-10-03: Photo viewer closes itself when the image cannot be loaded (feature 18).
 - 2026-10-03: Way table is a dock below the map with a fixed, stored height and a toggle button in the map's bottom corner; the checkbox in Map Data is gone (feature 6).

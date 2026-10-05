@@ -106,3 +106,48 @@ function compareRows(a: SignRow, b: SignRow): number {
 export function allSignRowKeys(tags: TagsLike, added?: ReadonlySet<string>): string[] {
     return (['way', 'cycleway', 'sidewalk'] as const).flatMap(group => signRows(tags, group, added).map(row => row.key));
 }
+
+
+/** The way's signs as the field shows them: for the whole way and per direction */
+export type WaySigns = { whole?: string; forward?: string; backward?: string };
+
+const WAY_SIGN_KEY: Record<keyof WaySigns, string> = {
+    whole: 'traffic_sign',
+    forward: 'traffic_sign:forward',
+    backward: 'traffic_sign:backward'
+};
+
+
+/**
+ * Merges the way's direction signs into the sign for the whole way (the key without a suffix)
+ * when they say the same, like `:left` + `:right` become `:both`:
+ * - forward and backward are equal, and the whole way has no sign or the same one
+ * - one direction repeats the sign of the whole way and the other direction has none
+ */
+export function mergeWaySigns(signs: WaySigns): WaySigns {
+    const { whole, forward, backward } = signs;
+    if (forward && forward === backward && (!whole || whole === forward)) return { whole: forward };
+    if (whole && forward === whole && !backward) return { whole };
+    if (whole && backward === whole && !forward) return { whole };
+    return { ...signs };
+}
+
+
+export function waySigns(tags: TagsLike): WaySigns {
+    return {
+        whole: value(tags, WAY_SIGN_KEY.whole),
+        forward: value(tags, WAY_SIGN_KEY.forward),
+        backward: value(tags, WAY_SIGN_KEY.backward)
+    };
+}
+
+
+/** The tag changes that make `tags` say `signs` (`undefined` removes a tag) */
+export function waySignChanges(tags: TagsLike, signs: WaySigns): Record<string, string | undefined> {
+    const changes: Record<string, string | undefined> = {};
+    for (const part of Object.keys(WAY_SIGN_KEY) as (keyof WaySigns)[]) {
+        const key = WAY_SIGN_KEY[part];
+        if (value(tags, key) !== signs[part]) changes[key] = signs[part];
+    }
+    return changes;
+}
