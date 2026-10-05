@@ -2,6 +2,8 @@ import { dispatch as d3_dispatch } from 'd3-dispatch';
 import { select as d3_select } from 'd3-selection';
 
 import { t } from '../../core/localizer';
+import { geoWayDominantHeadingInViewport, geoWayStraightnessInViewport } from '../../geo';
+import { DIRECTIONAL_COMBO_ARROW_UP_PATH, DIRECTIONAL_COMBO_ARROW_VIEWBOX } from '../../svg/directional_combo_arrow';
 import { presetField } from '../../presets/field';
 import { TRAFFIC_SIGN_FIELD_TYPE, WAY_SIGN_KEYS } from '../../presets/traffic_sign_fields';
 import {
@@ -11,23 +13,21 @@ import { utilRebind } from '../../util';
 import { uiFieldTrafficSign } from './traffic_sign';
 import type { Field } from '@openstreetmap/id-tagging-schema';
 
-type Toggle = 'whole' | 'directions';
-
 /**
  * A traffic sign field with one row per key (WORKDOC feature 27): the way's sign with its
  * directions, or the signs of the bike lanes / sidewalks per side. Each row is the traffic sign
  * field of its key, with its tag suggestions.
  *
- * The way's field has two switches in its label, "Whole way" (`traffic_sign`) and "Per direction"
- * (`:forward`, `:backward`). Direction signs that say the same as the whole way are shown merged
- * into it (`mergeWaySigns`); the tags follow with the next change of the whole way's sign.
+ * The way's field always shows the sign of the whole way (`traffic_sign`); the switch "Per
+ * direction" in its label adds the rows for `:forward` and `:backward`. Direction signs that say
+ * the same as the whole way are shown merged into it (`mergeWaySigns`); the tags follow with the
+ * next change of the whole way's sign.
  */
 export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGroup }, context: iD.Context) {
     const dispatch = d3_dispatch('change');
     const group: SignGroup = field.signGroup ?? 'way';
     const rowFields = new Map<string, ReturnType<typeof uiFieldTrafficSign>>();
-    /** the switches the user set while this feature is selected; `undefined`: follow the tags */
-    let _showWhole: boolean | undefined;
+    /** the switch as the user set it while this feature is selected; `undefined`: follow the tags */
     let _showDirections: boolean | undefined;
     let _tags: TagsMulti = {};
     let _entityIDs: string[] = [];
@@ -74,10 +74,8 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
         const directionsTagged = merged
             ? !!(signs.forward || signs.backward)
             : isTagged('traffic_sign:forward') || isTagged('traffic_sign:backward');
-        const wholeTagged = merged ? !!signs.whole : isTagged('traffic_sign');
-        const directions = directionsTagged || _showDirections === true;
-        const whole = wholeTagged || !directions || _showWhole !== false;
-        return { merged, signs, whole, directions, locked: { whole: wholeTagged || !directions, directions: directionsTagged } };
+        // tagged directions are always shown: the switch is locked on
+        return { merged, signs, directions: directionsTagged || _showDirections === true, locked: directionsTagged };
     }
 
 
@@ -115,8 +113,7 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
 
     function wayRows(): SignRow[] {
         const state = wayState();
-        const rows: SignRow[] = [];
-        if (state.whole) rows.push({ key: 'traffic_sign' });
+        const rows: SignRow[] = [{ key: 'traffic_sign' }];
         if (state.directions) {
             rows.push({ key: 'traffic_sign:forward', direction: 'forward' });
             rows.push({ key: 'traffic_sign:backward', direction: 'backward' });
@@ -128,46 +125,64 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
     /** Only ways have directions; other features get the switches when a direction is tagged */
     function hasToggles() {
         if (group !== 'way') return false;
-        return wayState().locked.directions || (_entityIDs.length > 0 && _entityIDs.every(id => id.startsWith('w')));
+        return wayState().locked || (_entityIDs.length > 0 && _entityIDs.every(id => id.startsWith('w')));
     }
 
 
-    /** The switches "Whole way | Per direction" in the field's label */
-    function renderToggles() {
+    /** The switch "Per direction" in the field's label */
+    function renderToggle() {
         const label = _selection!.select<HTMLElement>('.field-label');
         if (label.empty()) return;
 
-        const state = group === 'way' ? wayState() : undefined;
-        let toggles = label.selectAll<HTMLDivElement, number>('.traffic-sign-toggles')
-            .data(state && hasToggles() ? [0] : []);
-        toggles.exit().remove();
-        toggles = toggles.enter()
-            .insert('div', 'button')
-            .attr('class', 'traffic-sign-toggles')
-            .merge(toggles);
+        const state = group === 'way' && hasToggles() ? wayState() : undefined;
+        const toggle = label.selectAll<HTMLButtonElement, number>('.traffic-sign-toggle')
+            .data(state ? [0] : []);
+        toggle.exit().remove();
         if (!state) return;
 
-        const buttons = toggles.selectAll<HTMLButtonElement, Toggle>('button')
-            .data(['whole', 'directions'] as Toggle[]);
-        buttons.enter()
-            .append('button')
+        toggle.enter()
+            .insert('button', 'button')
             .attr('type', 'button')
-            .attr('class', d => `traffic-sign-toggle traffic-sign-toggle-${d}`)
-            .text(d => t(`inspector.traffic_sign_group.toggle.${d}`))
-            .on('click', (d3_event: MouseEvent, d) => {
+            .attr('class', 'traffic-sign-toggle sidebar-toggle')
+            .text(t('inspector.traffic_sign_group.toggle.directions'))
+            .on('click', (d3_event: MouseEvent) => {
                 d3_event.preventDefault();
                 d3_event.stopPropagation();
                 const now = wayState();
-                if (now.locked[d]) return;
-                if (d === 'whole') _showWhole = !now.whole;
-                else _showDirections = !now.directions;
+                if (now.locked) return;
+                _showDirections = !now.directions;
                 render();
             })
-            .merge(buttons)
-            .classed('active', d => state[d])
-            .classed('locked', d => state.locked[d])
-            .attr('aria-pressed', d => String(state[d]))
-            .attr('title', d => t(`inspector.traffic_sign_group.toggle.${d}_tooltip`));
+            .merge(toggle)
+            .classed('active', state.directions)
+            .classed('locked', state.locked)
+            .attr('aria-pressed', String(state.directions))
+            .attr('title', t(`inspector.traffic_sign_group.toggle.${state.locked ? 'directions_locked_tooltip' : 'directions_tooltip'}`));
+    }
+
+
+    /**
+     * The arrows in the direction labels point along the way as it is on the map, like the side
+     * arrows of the directional combo fields. Hidden while the visible part of the way is too curved.
+     */
+    function updateArrows() {
+        if (!_selection || group !== 'way') return;
+        const arrows = _selection.selectAll<SVGSVGElement, SignRow>('.traffic-sign-group-arrow');
+        if (arrows.empty()) return;
+
+        const graph = context.graph();
+        const entity = _entityIDs.length === 1 ? graph.hasEntity(_entityIDs[0] as iD.OsmWay['id']) as iD.OsmWay | undefined : undefined;
+        let heading: number | undefined;
+        if (entity && entity.type === 'way' && entity.geometry(graph) === 'line') {
+            const nodes = graph.childNodes(entity);
+            if (nodes.length > 1 && geoWayStraightnessInViewport(context.projection, nodes, entity.isClosed()).isStraightEnough) {
+                heading = geoWayDominantHeadingInViewport(context.projection, nodes, entity.isClosed())?.headingDeg;
+            }
+        }
+        // the glyph points up; a heading of 0° runs to the right
+        arrows
+            .classed('hide', heading === undefined)
+            .style('transform', d => heading === undefined ? null : `rotate(${heading + (d.direction === 'backward' ? 270 : 90)}deg)`);
     }
 
 
@@ -177,7 +192,7 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
         const labelled = rows.length > 1 || group !== 'way' || rows[0]?.key !== 'traffic_sign';
         const tags = rowTags();
 
-        renderToggles();
+        renderToggle();
 
         let list = _selection.selectAll<HTMLDivElement, number>('.traffic-sign-group-rows').data([0]);
         list = list.enter().append('div').attr('class', 'traffic-sign-group-rows').merge(list);
@@ -192,20 +207,33 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
         enter.append('div').attr('class', 'traffic-sign-group-input');
 
         const all = enter.merge(items).order();
-        all.select('.traffic-sign-group-label')
+        all.select<HTMLDivElement>('.traffic-sign-group-label')
             .classed('hide', d => !labelled || !rowLabel(d))
-            .text(d => labelled ? rowLabel(d) : '');
+            .each(function(d) {
+                const label = d3_select(this).text(labelled ? rowLabel(d) : '');
+                if (!labelled || !d.direction || group !== 'way') return;
+                label.append('svg')
+                    .datum(d)
+                    .attr('class', 'traffic-sign-group-arrow')
+                    .attr('viewBox', DIRECTIONAL_COMBO_ARROW_VIEWBOX)
+                    .attr('aria-hidden', 'true')
+                    .append('path')
+                    .attr('d', DIRECTIONAL_COMBO_ARROW_UP_PATH);
+            });
         all.select<HTMLDivElement>('.traffic-sign-group-input')
             .each(function(d) {
                 const instance = fieldForRow(d.key);
                 instance.tags(tags);
                 d3_select<HTMLElement, unknown>(this).call(instance as unknown as (selection: d3.Selection) => void);
             });
+
+        updateArrows();
     }
 
 
     function trafficSignGroup(selection: d3.Selection) {
         _selection = selection;
+        if (group === 'way') context.map().on('move.trafficSignGroup', updateArrows);
         render();
     }
 
@@ -220,7 +248,6 @@ export function uiFieldTrafficSignGroup(field: { key: string; signGroup?: SignGr
     trafficSignGroup.entityIDs = function(val?: string[]) {
         if (val === undefined) return _entityIDs;
         if (val.join() !== _entityIDs.join()) {
-            _showWhole = undefined;
             _showDirections = undefined;
         }
         _entityIDs = val;

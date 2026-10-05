@@ -794,14 +794,13 @@ en:
         right: Right
         both: Both sides
       direction:
-        forward: "↑ Forward (in the direction of the way)"
-        backward: "↓ Backward (against the direction of the way)"
+        forward: "Forward (in the direction of the way)"
+        backward: "Backward (against the direction of the way)"
         both: "Whole way (both directions)"
       toggle:
-        whole: Whole way
         directions: Per direction
-        whole_tooltip: "The sign applies to the whole way, in both directions. It is tagged as “traffic_sign”, without “:forward” or “:backward”."
-        directions_tooltip: "Signs that apply in one direction of the way only: “traffic_sign:forward” and “traffic_sign:backward”. Direction signs that only repeat the sign of the whole way are shown as “Whole way”; they are tagged that way with your next change of that sign."
+        directions_tooltip: "Add signs that apply in one direction of the way only (“traffic_sign:forward”, “traffic_sign:backward”). The sign of the whole way is tagged as “traffic_sign”, without a direction. Direction signs that only repeat the sign of the whole way are shown as that; they are tagged that way with your next change of that sign."
+        directions_locked_tooltip: "This way has signs per direction (“traffic_sign:forward”, “traffic_sign:backward”). Remove them to switch this off."
     traffic_sign_plan:
       header: "The traffic sign suggests these tags:"
       apply: Apply these tags

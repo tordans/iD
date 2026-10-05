@@ -5,66 +5,53 @@
     width: 100%;
     min-width: 0;
 }
-/* every row is the full-width sign field, with a small label strip above it */
+/* every row is the full-width sign field; rows next to others have a plain label above them */
 .traffic-sign-group-row {
     min-width: 0;
 }
 .traffic-sign-group-label {
-    padding: 2px 10px;
-    font-size: 11px;
-    font-weight: bold;
-    color: var(--muted-text-color, #767676);
-    background: var(--bg-color-2);
-    border: 1px solid var(--border-color);
-    border-top: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 3px;
+    font-size: 12px;
+    color: var(--text-color);
 }
 .traffic-sign-group-label.hide {
     display: none;
 }
+/* points along the way as it is on the map (rotated by the field) */
+.traffic-sign-group-arrow {
+    flex: 0 0 auto;
+    width: 13px;
+    height: 13px;
+    transform-origin: center;
+}
+.traffic-sign-group-arrow.hide {
+    display: none;
+}
+.traffic-sign-group-arrow path {
+    fill: var(--passive-text-color);
+}
 .traffic-sign-group-input {
     min-width: 0;
 }
-/* the rows form one box: only the last one has round corners */
-.ideditor .form-field .traffic-sign-group-row:not(:last-child) .form-field-input-traffic-sign {
-    border-radius: 0 !important;
+/* a labelled row is a box of its own, not attached to the field's title */
+.ideditor .form-field .traffic-sign-group-label:not(.hide) + .traffic-sign-group-input .form-field-input-traffic-sign {
+    border-top: 1px solid var(--border-color) !important;
+    border-radius: 4px !important;
 }
 
-/* "Whole way | Per direction" in the label of the way's field */
-.field-label .traffic-sign-toggles {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    margin: 0 6px;
-}
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle {
+/* "Per direction" in the title of the way's field (look: `sidebar-toggle`, 99_z_sidebar_toggle.css) */
+.ideditor[dir] .entity-editor .form-field > .field-label > button.traffic-sign-toggle {
     width: auto;
-    height: 20px;
-    padding: 0 7px;
-    border: 1px solid var(--border-color);
-    border-radius: 0;
+    padding: 0 8px;
+    margin-right: 6px;
     font-size: 11px;
     font-weight: normal;
-    line-height: 18px;
-    color: var(--text-color);
-    background: var(--bg-color);
     opacity: 1;
+    visibility: visible;
 }
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle:first-child {
-    border-radius: 4px 0 0 4px;
-}
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle:last-child {
-    border-left: 0;
-    border-radius: 0 4px 4px 0;
-}
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle:hover {
-    background: color-mix(in srgb, var(--text-color) 15%, var(--bg-color));
-}
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle.active {
-    color: #fff;
-    background: #7092ff;
-    border-color: #7092ff;
-}
-/* on because it has a sign (or it is the only one that is on): cannot be switched off */
-.ideditor .field-label .traffic-sign-toggles button.traffic-sign-toggle.locked {
+.ideditor .field-label button.traffic-sign-toggle.locked {
     cursor: default;
 }

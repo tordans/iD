@@ -1003,6 +1003,10 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
   - Once the user switches "Per direction" on or edits a direction row, the rows show the tags as they are and nothing is merged for this selection. Reason: signs are added one by one; forward `A` + backward `A` on the way to `A,B` / `A,C` must not collapse in between. Next time the way is selected, equal signs show merged.
 - German strings for all group labels (`inspector.traffic_sign_group.*`).
 - Tested in the browser: empty way, whole + same backward, forward = backward, different directions, whole + other backward; switches on/off and their locks; removing the sign of a merged display removes both direction tags.
+- 2026-10-05, second round (review by Tobias):
+  - Only one switch, **Je Richtung** ("Per direction"); the whole way's row is always there. It is locked on while a direction is tagged.
+  - Row labels are plain text in the text color above the row (no strip, no borders, no gray). The direction labels have an arrow that points along the way as it is on the map, like the side arrows of the directional combo (same glyph, `geoWayDominantHeadingInViewport`; hidden when the visible part of the way is too curved; follows map moves).
+  - One look for switched-on buttons in the sidebar (`css/99_z_sidebar_toggle.css`): a tint of the link color with a thin ring instead of a filled blue button or the barely visible `--active-bg-color`. Used by the "Je Richtung" switch, the measuring tape button, the open related-tags editor and the TILDA edit button.
 - Open: explain the merge in the field's info (ⓘ) panel too (now only in the switch tooltips); the same merge for the directions of the side keys.
 
 ### 28. Merge a cycleway and a footway into one path — ✅ (v1)

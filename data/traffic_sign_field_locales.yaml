@@ -122,14 +122,13 @@ de:
         right: Rechts
         both: Beide Seiten
       direction:
-        forward: "↑ In Wegrichtung (forward)"
-        backward: "↓ Gegen die Wegrichtung (backward)"
+        forward: "In Wegrichtung (forward)"
+        backward: "Gegen die Wegrichtung (backward)"
         both: "Ganzer Weg (beide Richtungen)"
       toggle:
-        whole: Ganzer Weg
         directions: Je Richtung
-        whole_tooltip: "Das Schild gilt für den ganzen Weg, in beiden Richtungen. Es wird als „traffic_sign“ getaggt, ohne „:forward“ oder „:backward“."
-        directions_tooltip: "Schilder, die nur in einer Richtung des Wegs gelten: „traffic_sign:forward“ und „traffic_sign:backward“. Richtungsschilder, die nur das Schild des ganzen Wegs wiederholen, werden als „Ganzer Weg“ angezeigt; so getaggt werden sie mit deiner nächsten Änderung an diesem Schild."
+        directions_tooltip: "Schilder ergänzen, die nur in einer Richtung des Wegs gelten („traffic_sign:forward“, „traffic_sign:backward“). Das Schild des ganzen Wegs wird als „traffic_sign“ getaggt, ohne Richtung. Richtungsschilder, die nur das Schild des ganzen Wegs wiederholen, werden als dieses angezeigt; so getaggt werden sie mit deiner nächsten Änderung an diesem Schild."
+        directions_locked_tooltip: "Dieser Weg hat Schilder je Richtung („traffic_sign:forward“, „traffic_sign:backward“). Entferne sie, um das auszuschalten."
     hidden_preset:
       manual: "{features} sind versteckt. Schalte sie im Bereich Kartendarstellung ein."
   help:
@@ -263,14 +262,13 @@ de-CH:
         right: Rechts
         both: Beide Seiten
       direction:
-        forward: "↑ In Wegrichtung (forward)"
-        backward: "↓ Gegen die Wegrichtung (backward)"
+        forward: "In Wegrichtung (forward)"
+        backward: "Gegen die Wegrichtung (backward)"
         both: "Ganzer Weg (beide Richtungen)"
       toggle:
-        whole: Ganzer Weg
         directions: Je Richtung
-        whole_tooltip: "Das Schild gilt für den ganzen Weg, in beiden Richtungen. Es wird als „traffic_sign“ getaggt, ohne „:forward“ oder „:backward“."
-        directions_tooltip: "Schilder, die nur in einer Richtung des Wegs gelten: „traffic_sign:forward“ und „traffic_sign:backward“. Richtungsschilder, die nur das Schild des ganzen Wegs wiederholen, werden als „Ganzer Weg“ angezeigt; so getaggt werden sie mit deiner nächsten Änderung an diesem Schild."
+        directions_tooltip: "Schilder ergänzen, die nur in einer Richtung des Wegs gelten („traffic_sign:forward“, „traffic_sign:backward“). Das Schild des ganzen Wegs wird als „traffic_sign“ getaggt, ohne Richtung. Richtungsschilder, die nur das Schild des ganzen Wegs wiederholen, werden als dieses angezeigt; so getaggt werden sie mit deiner nächsten Änderung an diesem Schild."
+        directions_locked_tooltip: "Dieser Weg hat Schilder je Richtung („traffic_sign:forward“, „traffic_sign:backward“). Entferne sie, um das auszuschalten."
     hidden_preset:
       manual: "{features} sind versteckt. Schalte sie im Bereich Kartendarstellung ein."
   help:
