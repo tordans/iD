@@ -836,9 +836,33 @@ en:
         inherited: "TILDA takes {value} from other tags (e.g. of the road)"
         derived: "TILDA reads {value} from {tag}"
         guess: "TILDA assumes {value}; please tag it"
-        assumed: "TILDA assumes {tag}. Check it; no need to tag it."
         ignored: TILDA does not accept this value
         normalized: "TILDA reads it as {value}"
+      default:
+        generic: "Not tagged = {tag}. Tag it only if it is different here."
+        surface_colour: "Not tagged = not coloured. Tag it only if the surface is red or green."
+        oneway_bicycle: "Not tagged = bicycles follow the one-way. Tag “no” only if bicycles may ride against it."
+        oneway_side: "Not tagged = bicycles ride with the traffic on this side. Tag “no” only if they may ride both ways here."
+        oneway_road: "Not tagged = two-way road."
+        dual_carriageway: "Not tagged = no dual carriageway. Tag “yes” if the other direction is a separate way."
+      checks:
+        check: Checked
+        check_tooltip: "Confirm that you looked at this and that the default is right. This is saved for the project, not in OpenStreetMap, and needs no upload."
+        uncheck_tooltip: "Checked. Click to remove the check."
+        checked_by: "Checked by {user}, {date}"
+        verify: Verified
+        verify_tooltip: "Mark this way as verified (second look by another mapper). This is saved for the project, not in OpenStreetMap, and needs no upload."
+        unverify_tooltip: "Verified. Click to remove it."
+        verified_by: "Verified by {user}, {date}"
+        not_verified: Not verified yet
+        changed_since: the way was changed since
+        you: you
+        save_failed: "The check could not be saved."
+        disabled:
+          new_way: "Upload the way first; a check needs its OpenStreetMap id."
+          unavailable: "Checks are not available from this address."
+          loading: "Loading the checks…"
+          logged_out: "Log in to OpenStreetMap to save checks."
       side:
         self: This way
         left: Left side
@@ -2165,6 +2189,20 @@ en:
         message: "{feature} has no descriptive tags"
       relation_type:
         message: "{feature} is a relation without a type"
+    cycleway_oneway_wrong:
+      title: Bike Lane Direction Likely Wrong
+      tip: "Find roads where the “oneway” tag of a bike lane or cycle track on the side most likely says the wrong direction."
+      message: "{feature}: {tag} is likely wrong"
+      two_way_road:
+        reference: "“oneway” refers to the direction the way is drawn in. On the left side of a two-way road bicycles ride against that direction, so “{tag}” says they ride against the traffic next to them. Without the tag the usual direction is assumed: with the traffic on each side. Remove the tag, or set “no” if bicycles may ride both ways here."
+      contraflow:
+        reference: "Bicycles may ride against this one-way road, so its left side is the side for the opposite direction. “{tag}” says they ride with the one-way there. Without the tag the usual direction is assumed. Remove the tag, or set “no” if bicycles may ride both ways here."
+    cycleway_oneway_redundant:
+      title: Bike Lane Direction Not Needed
+      tip: "Find roads where the “oneway” tag of a bike lane or cycle track on the side only repeats the default."
+      message: "{feature}: {tag} is not needed"
+      default:
+        reference: "Without “{key}” bicycles are assumed to ride with the traffic on their side, which is what “{tag}” says. The tag is not needed and easy to get wrong, because “oneway” refers to the direction the way is drawn in."
     mutually_exclusive_tags:
       title: Contradictory Tags
       tip: "Find features that have contradictory tags."
@@ -2326,6 +2364,11 @@ en:
       remove_tag:
         title: Remove the tag
         annotation: Removed tag.
+      cycleway_oneway_both_ways:
+        title: Bicycles ride both ways here
+        annotation: Tagged a two-way bike lane.
+      cycleway_oneway_correct:
+        title: This is correct here
       remove_named_tag:
         title: 'Remove the "{tag}" tag'
         annotation: 'Removed "{tag}" tag.'

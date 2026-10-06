@@ -10,11 +10,12 @@ import {
     type CategoryGap
 } from '@tilda-geo/bicycle-infrastructure';
 
-import { t } from '../../core/localizer';
+import { localizer, t } from '../../core/localizer';
 import { svgIcon } from '../../svg/icon';
 import { utilRebind } from '../../util/rebind';
 import { categoryForSide, planCategory, type Side, type TildaTagPlan } from '../../tilda/category_plan';
 import { categoryGroupLabel, categoryLabel, groupCategories } from '../../tilda/category_labels';
+import { tildaChecks, VERIFIED, type TildaCheck } from '../../tilda/checks';
 import { requiredAttributes, roadAttributes, type RequiredAttribute } from '../../tilda/required_attributes';
 import { trafficSignTagKeysFromTags } from '../../presets/traffic_sign_fields';
 import { presetFieldsOf } from '../fields/side_prerequisite';
@@ -59,7 +60,10 @@ function stateNote(attribute: RequiredAttribute) {
     if (state === 'inherited' && attribute.source) return t('inspector.tilda.state.derived', { value: tilda, tag: attribute.source });
     if (state === 'inherited') return t('inspector.tilda.state.inherited', { value: tilda });
     if (state === 'guess') return t('inspector.tilda.state.guess', { value: tilda });
-    if (state === 'assumed') return t('inspector.tilda.state.assumed', { tag: `${attribute.key}=${tilda}` });
+    if (state === 'assumed') {
+        return attribute.note ? t(`inspector.tilda.default.${attribute.note}`)
+            : t('inspector.tilda.default.generic', { tag: attribute.default });
+    }
     if (state === 'ignored') return t('inspector.tilda.state.ignored');
     if (state === 'ok' && tilda !== undefined && tilda !== value) return t('inspector.tilda.state.normalized', { value: tilda });
     return '';
@@ -83,6 +87,8 @@ function attributeSeverity(attribute: RequiredAttribute): 'required' | 'optional
  * the selected way, what is missing for an exact category, how to reach a chosen
  * category, and which attributes the Radnetz dataset needs.
  * Uses `@tilda-geo/bicycle-infrastructure`, the TypeScript port of TILDA's processing.
+ * Defaults that need no tag are confirmed with "Checked", the whole way with "Verified"; both are
+ * stored in our key-value DB, not in OSM (`modules/tilda/checks.ts`, WORKDOC feature 33).
  *
  * Events:
  *   'change' - (entityIDs, changed tags), handled by the entity editor like other sections
@@ -102,6 +108,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     let _editing = new Set<Side>();
     /** keys TILDA reads whose tag is missing, for the field titles */
     let _fieldStatus = new Map<string, 'required' | 'optional'>();
+
+    const checks = tildaChecks(context);
 
     const section = (uiSection('tilda-bike-infra', context) as any)
         .label(() => t.append('inspector.tilda.title'))
@@ -130,6 +138,50 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 section.reRender();
             })
             .call(svgIcon('#iD-icon-inspect', ''));
+    }
+
+
+    // checks were loaded or changed (also by other mappers)
+    checks.on('change.tildaSection', () => {
+        if (section.shouldDisplay()()) section.reRender();
+    });
+
+
+    /** The stored check of the selected way */
+    function checkOf(check: string): TildaCheck | undefined {
+        return _entityIDs.length === 1 ? checks.get(_entityIDs[0], check) : undefined;
+    }
+
+    /** The mapper confirmed this default (the same one: on another default the check does not count) */
+    function confirmed(attribute: RequiredAttribute) {
+        const check = attribute.state === 'assumed' ? checkOf(attribute.key) : undefined;
+        return check?.answer === attribute.default ? check : undefined;
+    }
+
+    function byline(stringID: string, check: TildaCheck) {
+        return t(`inspector.tilda.checks.${stringID}`, {
+            user: checks.isMine(check) ? t('inspector.tilda.checks.you') : check.user,
+            date: new Date(check.at).toLocaleDateString(localizer.localeCode())
+        });
+    }
+
+    /** Stores the check, or removes it when it is stored already. Not an edit: saved at once, no undo step. */
+    function toggleCheck(check: string, answer: string, stored: TildaCheck | undefined) {
+        const wayID = _entityIDs[0];
+        const version = context.hasEntity(wayID as Parameters<iD.Context['hasEntity']>[0])?.version;
+        const request = stored ? checks.remove(wayID, check)
+            : checks.set(wayID, check, answer, version === undefined ? undefined : String(version));
+        request.catch(() => {
+            (context.ui().flash as any)
+                .duration(4000)
+                .iconName('#iD-icon-alert')
+                .label(t.append('inspector.tilda.checks.save_failed'))();
+        });
+    }
+
+    function disabledTitle() {
+        const reason = _entityIDs.length === 1 ? checks.disabledReason(_entityIDs[0]) : undefined;
+        return reason ? t(`inspector.tilda.checks.disabled.${reason}`) : undefined;
     }
 
 
@@ -291,6 +343,45 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
             // no header: "mixed traffic" is the category above, why the data is needed is in the info text
             drawAttributes(d3_select(this), d.roadAttributes);
         });
+
+        drawVerified(selection);
+    }
+
+
+    /** "Verified": a second mapper looked at the way; below the cards, after everything to look at */
+    function drawVerified(selection: d3.Selection) {
+        const verified = checkOf(VERIFIED);
+        const disabled = disabledTitle();
+        const version = context.hasEntity(_entityIDs[0] as Parameters<iD.Context['hasEntity']>[0])?.version;
+
+        let row = selection.selectAll<HTMLDivElement, number>('.tilda-verified')
+            .data([0]);
+        const rowEnter = row.enter()
+            .append('div')
+            .attr('class', 'tilda-verified');
+        rowEnter.append('button')
+            .attr('class', 'tilda-check tilda-verify')
+            .call(svgIcon('#iD-icon-apply', ''))
+            .append('span')
+            .call(t.append('inspector.tilda.checks.verify'));
+        rowEnter.append('span').attr('class', 'tilda-verified-status');
+
+        row = row.merge(rowEnter).order();
+        row.select<HTMLButtonElement>('.tilda-verify')
+            .classed('active', !!verified)
+            .attr('disabled', disabled ? 'true' : null)
+            .attr('aria-pressed', verified ? 'true' : 'false')
+            .attr('title', disabled ?? t(`inspector.tilda.checks.${verified ? 'unverify' : 'verify'}_tooltip`))
+            .on('click', function(this: HTMLButtonElement, d3_event: MouseEvent) {
+                d3_event.preventDefault();
+                this.blur();
+                toggleCheck(VERIFIED, '', verified);
+            });
+
+        const changedSince = verified?.wayVersion !== undefined && version !== undefined && verified.wayVersion !== String(version);
+        row.select('.tilda-verified-status')
+            .text(!verified ? t('inspector.tilda.checks.not_verified')
+                : byline('verified_by', verified) + (changedSince ? ` (${t('inspector.tilda.checks.changed_since')})` : ''));
     }
 
 
@@ -433,6 +524,12 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         mainEnter.append('span').attr('class', 'tilda-attribute-tags');
         mainEnter.append('span').attr('class', 'tilda-attribute-note');
         const inputs = rowsEnter.append('span').attr('class', 'tilda-attribute-inputs');
+        // a default: "Checked" confirms it, the values next to it say something else
+        inputs.append('button')
+            .attr('class', 'tilda-check')
+            .call(svgIcon('#iD-icon-apply', ''))
+            .append('span')
+            .call(t.append('inspector.tilda.checks.check'));
         inputs.append('span').attr('class', 'tilda-buttons');
         inputs.append('input')
             .attr('type', 'text')
@@ -449,14 +546,14 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
         rows = rows.merge(rowsEnter)
             .attr('class', d => {
                 const severity = attributeSeverity(d);
-                return `tilda-attribute state-${d.state}${d.optional ? ' optional' : ''}${severity ? ` severity-${severity}` : ''}`;
+                return `tilda-attribute state-${d.state}${d.optional ? ' optional' : ''}${severity ? ` severity-${severity}` : ''}${confirmed(d) ? ' checked' : ''}`;
             })
             .attr('title', d => [
                 t(`inspector.tilda.attribute.${d.id}`, { default: d.id }),
                 t('inspector.tilda.feeds', { attributes: d.feeds.join(', ') })
             ].join('\n'));
 
-        rows.select('.tilda-attribute-state').text(d => STATE_ICON[d.state]);
+        rows.select('.tilda-attribute-state').text(d => confirmed(d) ? STATE_ICON.ok : STATE_ICON[d.state]);
 
         // the tags as they are tagged, or "`key` is missing; add below"
         rows.select<HTMLSpanElement>('.tilda-attribute-tags')
@@ -469,9 +566,9 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                 const line = cell.append('span').attr('class', 'tilda-attribute-missing');
                 line.append('code').text(d.key);
                 if (d.state === 'inherited') return;
-                // assumed: a notice to check the default, not a request to tag it
+                // assumed: a default to confirm, not a request to tag it
                 line.append('span').text(` ${t(d.state === 'assumed' ? 'inspector.tilda.not_tagged' : 'inspector.tilda.missing')}`);
-                if (!hasField(d)) return;
+                if (!hasField(d) || confirmed(d)) return;
                 line.append('span').text('; ');
                 line.append('a')
                     .attr('href', '#')
@@ -483,12 +580,31 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
                         dispatch.call('reveal', section, d.lookup);
                     });
             });
-        rows.select('.tilda-attribute-note').text(d => stateNote(d));
+        rows.select('.tilda-attribute-note').text(d => {
+            const check = confirmed(d);
+            return check ? `${byline('checked_by', check)}. ${stateNote(d)}` : stateNote(d);
+        });
+
+        const disabled = disabledTitle();
+        rows.select<HTMLButtonElement>('.tilda-check')
+            .style('display', d => d.state === 'assumed' ? null : 'none')
+            .classed('active', d => !!confirmed(d))
+            .attr('disabled', disabled ? 'true' : null)
+            .attr('aria-pressed', d => confirmed(d) ? 'true' : 'false')
+            .attr('title', d => disabled ?? t(`inspector.tilda.checks.${confirmed(d) ? 'uncheck' : 'check'}_tooltip`))
+            .on('click', function(this: HTMLButtonElement, d3_event: MouseEvent, d: RequiredAttribute) {
+                d3_event.preventDefault();
+                this.blur();
+                if (d.default) toggleCheck(d.key, d.default, confirmed(d));
+            });
 
         // values as buttons only where no field below can edit the tag
-        const needsInputs = (d: RequiredAttribute) => d.state !== 'ok' && d.state !== 'inherited' && d.state !== 'assumed' && !hasField(d);
+        const needsInputs = (d: RequiredAttribute) => d.state !== 'ok' && d.state !== 'inherited' && !hasField(d);
         rows.select<HTMLSpanElement>('.tilda-attribute-inputs')
-            .style('display', d => needsInputs(d) ? null : 'none');
+            .style('display', d => needsInputs(d) || d.state === 'assumed' ? null : 'none');
+        // a default: only the listed values say something else, no free value
+        rows.select<HTMLInputElement>('input.tilda-attribute-input')
+            .style('display', d => d.state === 'assumed' ? 'none' : null);
 
         // many options: the first few as buttons, all of them as suggestions in the input
         const datalistID = (d: RequiredAttribute) => `tilda-options-${d.key.replace(/[^\w-]/g, '_')}`;
@@ -540,6 +656,8 @@ export function uiSectionTildaBikeInfra(context: iD.Context) {
     section.entityIDs = function(val?: string[]) {
         if (val === undefined) return _entityIDs;
         if (val.join() !== _entityIDs.join()) {
+            // others may have changed the checks of this way
+            if (val.length === 1) checks.loadWay(val[0]);
             _targets = new Map();
             _selfExpanded = undefined;
             _editing = new Set();

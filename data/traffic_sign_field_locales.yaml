@@ -111,7 +111,54 @@ de:
       hint: Von welchem OpenStreetMap-Server der Editor liest und wohin er hochlädt. Beim Wechsel gehen ungespeicherte Änderungen verloren.
     panels:
       title: Info-Felder
+  issues:
+    cycleway_oneway_wrong:
+      title: Richtung der Radspur vermutlich falsch
+      tip: "Findet Straßen, bei denen das „oneway“-Tag einer Radspur oder eines Radwegs an der Seite sehr wahrscheinlich die falsche Richtung angibt."
+      message: "{feature}: {tag} ist vermutlich falsch"
+      two_way_road:
+        reference: "„oneway“ bezieht sich auf die Richtung, in der die Linie gezeichnet ist. Auf der linken Seite einer Straße mit Gegenverkehr fährt der Radverkehr gegen diese Richtung; „{tag}“ sagt also, er fährt dem Verkehr neben sich entgegen. Ohne das Tag gilt die übliche Richtung: auf jeder Seite mit dem Verkehr. Entferne das Tag, oder setze „no“, wenn Radfahrende hier in beide Richtungen fahren dürfen."
+      contraflow:
+        reference: "Radfahrende dürfen diese Einbahnstraße in Gegenrichtung befahren; die linke Seite ist damit die Seite für die Gegenrichtung. „{tag}“ sagt, dort wird in Richtung der Einbahnstraße gefahren. Ohne das Tag gilt die übliche Richtung. Entferne das Tag, oder setze „no“, wenn Radfahrende hier in beide Richtungen fahren dürfen."
+    cycleway_oneway_redundant:
+      title: Richtung der Radspur nicht nötig
+      tip: "Findet Straßen, bei denen das „oneway“-Tag einer Radspur oder eines Radwegs an der Seite nur den Standard wiederholt."
+      message: "{feature}: {tag} ist nicht nötig"
+      default:
+        reference: "Ohne „{key}“ gilt: Der Radverkehr fährt mit dem Verkehr auf seiner Seite. Genau das sagt „{tag}“. Das Tag ist nicht nötig und leicht falsch zu setzen, weil sich „oneway“ auf die Richtung der gezeichneten Linie bezieht."
+    fix:
+      cycleway_oneway_both_ways:
+        title: Radverkehr fährt hier in beide Richtungen
+        annotation: Radspur in beide Richtungen eingetragen.
+      cycleway_oneway_correct:
+        title: Das ist hier richtig
   inspector:
+    tilda:
+      default:
+        generic: "Nicht getaggt = {tag}. Nur taggen, wenn es hier anders ist."
+        surface_colour: "Nicht getaggt = nicht eingefärbt. Nur taggen, wenn die Oberfläche rot oder grün ist."
+        oneway_bicycle: "Nicht getaggt = Radverkehr folgt der Einbahnstraße. Nur „no“ taggen, wenn er in Gegenrichtung fahren darf."
+        oneway_side: "Nicht getaggt = Radverkehr fährt mit dem Verkehr auf dieser Seite. Nur „no“ taggen, wenn er hier in beide Richtungen fahren darf."
+        oneway_road: "Nicht getaggt = Straße mit Gegenverkehr."
+        dual_carriageway: "Nicht getaggt = keine getrennte Richtungsfahrbahn. „yes“ taggen, wenn die Gegenrichtung eine eigene Linie ist."
+      checks:
+        check: Geprüft
+        check_tooltip: "Bestätige, dass du das angesehen hast und der Standard stimmt. Das wird für das Projekt gespeichert, nicht in OpenStreetMap, und braucht keinen Upload."
+        uncheck_tooltip: "Geprüft. Klicken, um die Prüfung zu entfernen."
+        checked_by: "Geprüft von {user}, {date}"
+        verify: Verifiziert
+        verify_tooltip: "Diesen Weg als verifiziert markieren (zweiter Blick durch eine andere Person). Das wird für das Projekt gespeichert, nicht in OpenStreetMap, und braucht keinen Upload."
+        unverify_tooltip: "Verifiziert. Klicken, um es zu entfernen."
+        verified_by: "Verifiziert von {user}, {date}"
+        not_verified: Noch nicht verifiziert
+        changed_since: der Weg wurde seitdem geändert
+        you: dir
+        save_failed: "Die Prüfung konnte nicht gespeichert werden."
+        disabled:
+          new_way: "Lade den Weg zuerst hoch; eine Prüfung braucht seine OpenStreetMap-ID."
+          unavailable: "Prüfungen sind von dieser Adresse aus nicht verfügbar."
+          loading: "Prüfungen werden geladen…"
+          logged_out: "Melde dich bei OpenStreetMap an, um Prüfungen zu speichern."
     traffic_sign_group:
       label:
         way: Verkehrsschild
@@ -251,7 +298,54 @@ de-CH:
       hint: Von welchem OpenStreetMap-Server der Editor liest und wohin er hochlädt. Beim Wechsel gehen ungespeicherte Änderungen verloren.
     panels:
       title: Info-Felder
+  issues:
+    cycleway_oneway_wrong:
+      title: Richtung der Radspur vermutlich falsch
+      tip: "Findet Straßen, bei denen das „oneway“-Tag einer Radspur oder eines Radwegs an der Seite sehr wahrscheinlich die falsche Richtung angibt."
+      message: "{feature}: {tag} ist vermutlich falsch"
+      two_way_road:
+        reference: "„oneway“ bezieht sich auf die Richtung, in der die Linie gezeichnet ist. Auf der linken Seite einer Straße mit Gegenverkehr fährt der Radverkehr gegen diese Richtung; „{tag}“ sagt also, er fährt dem Verkehr neben sich entgegen. Ohne das Tag gilt die übliche Richtung: auf jeder Seite mit dem Verkehr. Entferne das Tag, oder setze „no“, wenn Radfahrende hier in beide Richtungen fahren dürfen."
+      contraflow:
+        reference: "Radfahrende dürfen diese Einbahnstraße in Gegenrichtung befahren; die linke Seite ist damit die Seite für die Gegenrichtung. „{tag}“ sagt, dort wird in Richtung der Einbahnstraße gefahren. Ohne das Tag gilt die übliche Richtung. Entferne das Tag, oder setze „no“, wenn Radfahrende hier in beide Richtungen fahren dürfen."
+    cycleway_oneway_redundant:
+      title: Richtung der Radspur nicht nötig
+      tip: "Findet Straßen, bei denen das „oneway“-Tag einer Radspur oder eines Radwegs an der Seite nur den Standard wiederholt."
+      message: "{feature}: {tag} ist nicht nötig"
+      default:
+        reference: "Ohne „{key}“ gilt: Der Radverkehr fährt mit dem Verkehr auf seiner Seite. Genau das sagt „{tag}“. Das Tag ist nicht nötig und leicht falsch zu setzen, weil sich „oneway“ auf die Richtung der gezeichneten Linie bezieht."
+    fix:
+      cycleway_oneway_both_ways:
+        title: Radverkehr fährt hier in beide Richtungen
+        annotation: Radspur in beide Richtungen eingetragen.
+      cycleway_oneway_correct:
+        title: Das ist hier richtig
   inspector:
+    tilda:
+      default:
+        generic: "Nicht getaggt = {tag}. Nur taggen, wenn es hier anders ist."
+        surface_colour: "Nicht getaggt = nicht eingefärbt. Nur taggen, wenn die Oberfläche rot oder grün ist."
+        oneway_bicycle: "Nicht getaggt = Radverkehr folgt der Einbahnstraße. Nur „no“ taggen, wenn er in Gegenrichtung fahren darf."
+        oneway_side: "Nicht getaggt = Radverkehr fährt mit dem Verkehr auf dieser Seite. Nur „no“ taggen, wenn er hier in beide Richtungen fahren darf."
+        oneway_road: "Nicht getaggt = Straße mit Gegenverkehr."
+        dual_carriageway: "Nicht getaggt = keine getrennte Richtungsfahrbahn. „yes“ taggen, wenn die Gegenrichtung eine eigene Linie ist."
+      checks:
+        check: Geprüft
+        check_tooltip: "Bestätige, dass du das angesehen hast und der Standard stimmt. Das wird für das Projekt gespeichert, nicht in OpenStreetMap, und braucht keinen Upload."
+        uncheck_tooltip: "Geprüft. Klicken, um die Prüfung zu entfernen."
+        checked_by: "Geprüft von {user}, {date}"
+        verify: Verifiziert
+        verify_tooltip: "Diesen Weg als verifiziert markieren (zweiter Blick durch eine andere Person). Das wird für das Projekt gespeichert, nicht in OpenStreetMap, und braucht keinen Upload."
+        unverify_tooltip: "Verifiziert. Klicken, um es zu entfernen."
+        verified_by: "Verifiziert von {user}, {date}"
+        not_verified: Noch nicht verifiziert
+        changed_since: der Weg wurde seitdem geändert
+        you: dir
+        save_failed: "Die Prüfung konnte nicht gespeichert werden."
+        disabled:
+          new_way: "Lade den Weg zuerst hoch; eine Prüfung braucht seine OpenStreetMap-ID."
+          unavailable: "Prüfungen sind von dieser Adresse aus nicht verfügbar."
+          loading: "Prüfungen werden geladen…"
+          logged_out: "Melde dich bei OpenStreetMap an, um Prüfungen zu speichern."
     traffic_sign_group:
       label:
         way: Verkehrsschild
