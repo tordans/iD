@@ -1463,3 +1463,4 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 
 - How to bring features in: merge the source branches (easy to re-sync) or cherry-pick (cleaner history)? Default: merge.
 - Where will the build be deployed for project users?
+- TILDA processing ignores `oneway=-1` (`derive_oneway.lua` only reads `yes` / `no`, else the category default). To check in TILDA, not here (feature 32).
