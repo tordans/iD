@@ -1272,7 +1272,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ### 32. TILDA checklist: defaults to check, `oneway:bicycle`, wrong `cycleway:*:oneway` — ⬜ (plan, to be confirmed)
 
-Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q** (Q1 and Q2 are answered by feature 33; Q3–Q5 are open).
+Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q** (Q1 and Q2 are answered by feature 33; Q5 is decided; Q3 and Q4 are open).
 
 **Finding first: our own checklist repeats the mistake of the last mapping round.** For a cycle track on a road side (`cycleway:left=track`, TILDA confidence "low") the checklist says "`cycleway:left:oneway` is missing … TILDA assumes …; please tag it" and offers the buttons `yes`, `no`, `-1`. A mapper who sees a one-way track clicks `yes`. On the left side that is wrong.
 
@@ -1329,7 +1329,7 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 - The issue is reported for every loaded way, not only edited ones, so the Issues pane ("everything in view") works as a work list for the cleanup.
 - **Q3:** should the "likely wrong" and the "not needed" rows be two issue types, so the pane can show only the wrong ones?
 - **Q4:** report `cycleway:left:oneway=-1` as "not needed" too (fix: remove), or leave it?
-- **Q5:** the validation runs for every user of this build, everywhere, not only in Berlin. OK?
+- **Decided (2026-10-06):** the validation runs everywhere, not only in Berlin.
 
 **Not part of this:** the bulk removal itself (community decision), finding the tags that existed before the project (needs history data), and the two TILDA todos from the notes (direction arrows on the map, how the processing reads `oneway=-1`: today `derive_oneway.lua` ignores `-1` and falls back to the category default). The last one stays in "Open questions".
 
