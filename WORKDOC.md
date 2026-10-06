@@ -1270,6 +1270,71 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 - **Not tested:** the account button with a real OSM login and picture; switching to the dev server.
 - **Open:** the bug link points to `openstreetmap/iD`. Bugs of this fork do not belong there; decide on another target (or drop the link).
 
+### 32. TILDA checklist: defaults to check, `oneway:bicycle`, wrong `cycleway:*:oneway` — ⬜ (plan, to be confirmed)
+
+Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q**.
+
+**Finding first: our own checklist repeats the mistake of the last mapping round.** For a cycle track on a road side (`cycleway:left=track`, TILDA confidence "low") the checklist says "`cycleway:left:oneway` is missing … TILDA assumes …; please tag it" and offers the buttons `yes`, `no`, `-1`. A mapper who sees a one-way track clicks `yes`. On the left side that is wrong.
+
+#### A. One rule for "tags with a default" (`surface:colour` is the model)
+
+Today (state `assumed`): a blue "i" row, "`surface:colour` is not tagged; check below", note "TILDA assumes surface:colour=no. Check it; no need to tag it.", no value buttons.
+
+Planned: the row says what the missing tag means and when to tag it.
+
+- Text per attribute instead of the generic note, e.g. "Not tagged = not coloured. Tag it only if the surface is red or green."
+- Only the values that differ from the default are offered (`red`, `green`, `red;green`). The default value (`no`) is no button and no suggestion.
+- A tagged default (`surface:colour=no`) stays as it is: ✓, no warning, no fix. We do not remove correct explicit tags.
+- No colour on the row and none on the field title (as today).
+- **Q1:** "be explicit that they notice it": is the notice row enough, or do you want the mapper to confirm it ("checked, not coloured")? A confirmation without a tag could only live in the browser session. A confirmation that is stored means tagging `surface:colour=no`, which is what we do not want to force.
+
+#### B. `oneway:bicycle` only where it says something
+
+Today: on every one-way road and one-way bicycle road a missing `oneway:bicycle` is a request (orange, "is missing; add below"; Radinfra FAQ audit point 9).
+
+Planned: same style as A.
+
+- One-way road without `oneway:bicycle`: notice "Not tagged = bicycles follow the one-way. Tag `oneway:bicycle=no` only if bicycles may ride against it." Only `no` is offered.
+- Road that is not one-way: no row (as today). A tagged `oneway:bicycle` there is left alone.
+- A tagged `oneway:bicycle=yes` on a one-way road stays (✓, no warning).
+- Same rule for bicycle roads (`BICYCLE_ROAD`) and roads in mixed traffic (`ROAD`).
+- Own code that writes the tag:
+  - "Merge cycleway and footway" (feature 28) writes `oneway=no` + `oneway:bicycle=<oneway of the cycleway>`. With a two-way cycleway that gives `oneway:bicycle=no` on a way that is not one-way. Planned: write `oneway:bicycle` only when it is `yes` or `-1`.
+  - "Extract a side" (feature 17) adds `oneway:bicycle=no` only for the old `cycleway=opposite_*` schema. That is the useful case; no change.
+- **Q2:** this reverses the FAQ decision "explicit on every one-way road". Is that intended for all one-way roads, also dual carriageways?
+
+#### C. `cycleway:<side>:oneway`: stop asking for it, and offer to clean it up
+
+Background (Berlin community notes): the Radinfra project set thousands of `cycleway:*:oneway=yes`. `oneway` refers to the direction of the way's geometry, so on the left side the usual direction is `-1`, not `yes`. The defaults are enough: right side with the way's direction, left side against it; on a one-way road both sides run with the road.
+
+**C1. Checklist: never request the tag on a road side.**
+
+- For results of a road side (`left` / `right`) a missing `oneway` is always a notice, for every category (also tracks): "Not tagged = runs with the traffic on this side. Tag `cycleway:<side>:oneway=no` only if bicycles may ride both ways here."
+- Only `no` is offered. No `yes` / `-1` buttons.
+- Separate ways (`highway=cycleway` etc.) keep today's rule: `oneway` is requested where TILDA's default is unreliable. There `oneway=yes` is clear, because the way has its own geometry.
+
+**C2. Validation with a fix** (new `modules/validations/cycleway_side_oneway.ts`, issue type `cycleway_side_oneway`, severity warning, shown in the Issues pane and in the sidebar of the way like every iD issue). It checks ways with `highway=*` for `cycleway:left:oneway`, `cycleway:right:oneway`, `cycleway:both:oneway` and `cycleway:oneway`:
+
+| Tagged | Road | Message | Fixes |
+|---|---|---|---|
+| `cycleway:left:oneway=yes` | not one-way | Likely wrong: says bicycles on the left side ride in the way's direction, against the traffic next to them | "Remove the tag" (default applies) · "Bicycles ride both ways here" → `=no` |
+| `cycleway:both:oneway=yes`, `cycleway:oneway=yes` | not one-way | Likely wrong for the left side (same reason) | same |
+| `cycleway:right:oneway=yes` | any | Not needed: this is the default | "Remove the tag" |
+| `cycleway:left:oneway=yes`, `…:both…` | `oneway=yes`, bicycles too | Not needed: on a one-way road both sides run with the road | "Remove the tag" |
+| `cycleway:left:oneway=yes` | `oneway=yes` + `oneway:bicycle=no` | Likely wrong: the left side is the contraflow side | "Remove the tag" · "both ways" → `=no` |
+
+- Not reported: `cycleway:*:oneway=no` (two-way track, real information) and `cycleway:left:oneway=-1` (correct, only redundant).
+- The rare correct `cycleway:left:oneway=yes` (e.g. w211220112, cycleway on the left of a side arm of Frankfurter Allee): the mapper uses iD's "Ignore this issue". That only lasts for the session; we store no marker in OSM.
+- Each fix is one undo step. Nothing is fixed automatically or in bulk; the mapper decides per way, with the photo next to it.
+- The issue is reported for every loaded way, not only edited ones, so the Issues pane ("everything in view") works as a work list for the cleanup.
+- **Q3:** should the "likely wrong" and the "not needed" rows be two issue types, so the pane can show only the wrong ones?
+- **Q4:** report `cycleway:left:oneway=-1` as "not needed" too (fix: remove), or leave it?
+- **Q5:** the validation runs for every user of this build, everywhere, not only in Berlin. OK?
+
+**Not part of this:** the bulk removal itself (community decision), finding the tags that existed before the project (needs history data), and the two TILDA todos from the notes (direction arrows on the map, how the processing reads `oneway=-1`: today `derive_oneway.lua` ignores `-1` and falls back to the category default). The last one stays in "Open questions".
+
+**Tests planned:** unit tests for the three rule changes and for each table row of the validation; in the browser one way per table row plus the reference way above.
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1320,6 +1385,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ## Progress log
 
+- 2026-10-06: Plan for the TILDA checklist defaults (`surface:colour`, `oneway:bicycle`) and the `cycleway:*:oneway` cleanup validation written (feature 32); waiting for confirmation.
 - 2026-10-06: Traffic sign field comes from npm (`@osm-traffic-signs/id-field` 0.1.0, `@osm-traffic-signs/converter` 0.7.0); `vendor/traffic-sign-*` and the fork's CSS overrides are gone.
 - 2026-10-05: Traffic sign field redesigned: full-width rows, switches "Whole way | Per direction", equal direction signs merge into the whole way (feature 27).
 - 2026-10-03: Way table columns follow the order of the ways on the map (feature 6).
