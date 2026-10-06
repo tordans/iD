@@ -1270,9 +1270,23 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 - **Not tested:** the account button with a real OSM login and picture; switching to the dev server.
 - **Open:** the bug link points to `openstreetmap/iD`. Bugs of this fork do not belong there; decide on another target (or drop the link).
 
-### 32. TILDA checklist: defaults to check, `oneway:bicycle`, wrong `cycleway:*:oneway` — ⬜ (plan, to be confirmed)
+### 32. TILDA checklist: defaults to check, `oneway:bicycle`, wrong `cycleway:*:oneway` — ✅ (v1 built 2026-10-06)
 
-Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q** (Q1 and Q2 are answered by feature 33; Q4 and Q5 are decided; Q3 is open).
+Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation.
+
+**Built (2026-10-06):**
+
+- **A, B, C1** as planned below. Rules: `assumed` + `note` (text id `inspector.tilda.default.<note>`) + `assumedOptions`; an `assumed` attribute carries `default` (`surface:colour=no`) and only offers the values that differ. `sideOnewayDefault(tags, side)` is the direction on a road side (right `yes`, left `-1`; on a one-way road both `yes`, except the left side when `oneway:bicycle=no`).
+- **C2:** `modules/validations/cycleway_side_oneway.ts` with two rules, so each can be switched off in the Issues pane: `cycleway_oneway_wrong` (warning) and `cycleway_oneway_redundant` (suggestion). This was Q3; built as two types. `validator.revalidateRule(type, filter)` (new, in `modules/core/validator.js`) reruns a rule when the stored checks change.
+- The merge of cycleway and footway writes `oneway:bicycle` only for `yes` / `-1`.
+- Texts: English in `data/core.yaml`, German in `data/traffic_sign_field_locales.yaml`. The older texts of the TILDA section are still English only.
+- Tests: `test/spec/tilda/required_attributes.ts` (defaults), `test/spec/validations/cycleway_side_oneway.ts` (every table row), `test/spec/sidepath/merge_tags.ts`.
+- **Checked in the browser** (w211220112, not logged in): the redundant issue with its text and fix; after a test edit (`oneway:bicycle=no`) the "likely wrong" issue with the three actions, "This is correct here" disabled with the login note; the `surface:colour` row with its text, the "Checked" button and the values `red`, `green`, `red;green`.
+- **Not tested:** the issues in a visible browser pane over a normal editing session (the pane was hidden, which pauses iD's background validation; the rules were run directly).
+- **Finding:** the reference way w211220112 has `oneway=yes` + `oneway:bicycle=yes`, so its `cycleway:left:oneway=yes` is reported as "not needed", not as "likely wrong". That matches the rule (on a one-way road both sides run with the road).
+- **Open, for TILDA:** for a track on a road side without the tag TILDA exports `assumed_no` (two-way), not "with the traffic". Our text says "with the traffic on this side". If the tags are removed in bulk, TILDA's default for side tracks should change too, or the infraVelo export reads these as two-way.
+
+Plan as written before the build (Q1 and Q2 are answered by feature 33; Q3–Q5 are decided):
 
 **Finding first: our own checklist repeats the mistake of the last mapping round.** For a cycle track on a road side (`cycleway:left=track`, TILDA confidence "low") the checklist says "`cycleway:left:oneway` is missing … TILDA assumes …; please tag it" and offers the buttons `yes`, `no`, `-1`. A mapper who sees a one-way track clicks `yes`. On the left side that is wrong.
 
@@ -1336,7 +1350,20 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 
 **Tests planned:** unit tests for the three rule changes and for each table row of the validation; in the browser one way per table row plus the reference way above.
 
-### 33. "I checked this" and "Verified": stored in the key-value DB, not in OSM — ⬜ (plan, to be confirmed)
+### 33. "I checked this" and "Verified": stored in the key-value DB, not in OSM — 🟡 (built 2026-10-06; saving not tested with a login)
+
+**Built (2026-10-06):**
+
+- `modules/tilda/checks.ts`: `tildaChecks(context)` (one per editor) with `get`, `set`, `remove`, `load`, `loadWay`, `disabledReason`, `isMine` and a `change` event. All entries are loaded on first use and again every 5 minutes; selecting a way reloads its entries. `@osm-editor-kit/key-value-db-client` is a direct dev dependency now.
+- TILDA section: every default row has a "Checked" button next to the values that differ. Checked rows show ✓ and "Checked by <user>, <date>". A check only counts for the same default (if the default changes, e.g. the road becomes one-way, the row is unchecked again).
+- "Verified" is a row below the cards (not in the section header as planned: the status text needs the room), with "Verified by <user>, <date>" and "(the way was changed since)".
+- Buttons are disabled with a reason: not logged in, new way without an OSM id, checks still loading, API not reachable from this address.
+- Validation: "This is correct here" on a "likely wrong" issue stores the check; the issue is then not reported.
+- Tests: `test/spec/tilda/checks.ts` with an in-memory client.
+- **Checked in the browser (not logged in):** the entries load from `127.0.0.1` (the API answers), the buttons show "Log in to OpenStreetMap to save checks".
+- **Not tested:** saving, unchecking, restoring after a reload, "by you", "changed since", and the issue disappearing after "This is correct here". All need an OSM login, which I cannot do.
+
+Plan as written before the build:
 
 **Rule:** whenever we do not force a tag in OSM, the mapper confirms the default with a check button. The answer goes to our key-value DB, with the OSM way id. OSM gets no tag.
 
@@ -1370,7 +1397,7 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 
 **"Verified" (4-Augen-Prinzip)**
 
-- A button "Verified" in the header of the TILDA section. It stores `way/<id>/verified` with the way version; who and when come from the server.
+- A button "Verified" in the TILDA section (built as a row below the cards). It stores `way/<id>/verified` with the way version; who and when come from the server.
 - Shown as "Verified by <user>, <date>". Clicking again removes it.
 - If the way has a newer version than the verified one, the text says "… (changed since)". The entry stays until someone removes or renews it.
 - One "verified" per way, not per side or per check.
@@ -1433,6 +1460,7 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 
 ## Progress log
 
+- 2026-10-06: Built features 32 and 33: defaults with a "Checked" button (`surface:colour`, `oneway:bicycle`, side `oneway`), "Verified" per way, both stored in the key-value DB; two validations for `cycleway:*:oneway`.
 - 2026-10-06: Plan for the TILDA checklist defaults (`surface:colour`, `oneway:bicycle`) and the `cycleway:*:oneway` cleanup validation written (feature 32); waiting for confirmation.
 - 2026-10-06: Plan for "Checked" and "Verified" buttons stored in the key-value DB written (feature 33).
 - 2026-10-06: Traffic sign field comes from npm (`@osm-traffic-signs/id-field` 0.1.0, `@osm-traffic-signs/converter` 0.7.0); `vendor/traffic-sign-*` and the fork's CSS overrides are gone.
@@ -1512,4 +1540,5 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 
 - How to bring features in: merge the source branches (easy to re-sync) or cherry-pick (cleaner history)? Default: merge.
 - Where will the build be deployed for project users?
+- TILDA exports a side track without `oneway` as two-way (`assumed_no`); the Berlin default is "with the traffic" (feature 32).
 - TILDA processing ignores `oneway=-1` (`derive_oneway.lua` only reads `yes` / `no`, else the category default). To check in TILDA, not here (feature 32).
