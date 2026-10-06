@@ -1272,7 +1272,7 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 ### 32. TILDA checklist: defaults to check, `oneway:bicycle`, wrong `cycleway:*:oneway` — ⬜ (plan, to be confirmed)
 
-Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q** (Q1 and Q2 are answered by feature 33; Q5 is decided; Q3 and Q4 are open).
+Three changes to the checklist of the TILDA section (feature 8, `modules/tilda/required_attributes.ts`) and one new validation. Nothing is built yet. Open points are marked **Q** (Q1 and Q2 are answered by feature 33; Q4 and Q5 are decided; Q3 is open).
 
 **Finding first: our own checklist repeats the mistake of the last mapping round.** For a cycle track on a road side (`cycleway:left=track`, TILDA confidence "low") the checklist says "`cycleway:left:oneway` is missing … TILDA assumes …; please tag it" and offers the buttons `yes`, `no`, `-1`. A mapper who sees a one-way track clicks `yes`. On the left side that is wrong.
 
@@ -1322,13 +1322,14 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 | `cycleway:right:oneway=yes` | any | Not needed: this is the default | "Remove the tag" |
 | `cycleway:left:oneway=yes`, `…:both…` | `oneway=yes`, bicycles too | Not needed: on a one-way road both sides run with the road | "Remove the tag" |
 | `cycleway:left:oneway=yes` | `oneway=yes` + `oneway:bicycle=no` | Likely wrong: the left side is the contraflow side | "Remove the tag" · "both ways" → `=no` |
+| `cycleway:left:oneway=-1` | not one-way, or `oneway=yes` + `oneway:bicycle=no` | Not needed: this is the default (we want as few `-1` as possible) | "Remove the tag" |
 
-- Not reported: `cycleway:*:oneway=no` (two-way track, real information) and `cycleway:left:oneway=-1` (correct, only redundant).
+- Not reported: `cycleway:*:oneway=no` (two-way track, real information), and `-1` where it is not the default (`cycleway:right:oneway=-1`, or `cycleway:left:oneway=-1` on a one-way road that bicycles follow): rare, and real information.
 - The rare correct `cycleway:left:oneway=yes` (e.g. w211220112, cycleway on the left of a side arm of Frankfurter Allee): a third action "This is correct here" stores that in the key-value DB (feature 33); the issue is then gone for this way, for everyone.
 - Each fix is one undo step. Nothing is fixed automatically or in bulk; the mapper decides per way, with the photo next to it.
 - The issue is reported for every loaded way, not only edited ones, so the Issues pane ("everything in view") works as a work list for the cleanup.
 - **Q3:** should the "likely wrong" and the "not needed" rows be two issue types, so the pane can show only the wrong ones?
-- **Q4:** report `cycleway:left:oneway=-1` as "not needed" too (fix: remove), or leave it?
+- **Decided (2026-10-06):** a redundant `cycleway:left:oneway=-1` is reported as "not needed" (see the table).
 - **Decided (2026-10-06):** the validation runs everywhere, not only in Berlin.
 
 **Not part of this:** the bulk removal itself (community decision), finding the tags that existed before the project (needs history data), and the two TILDA todos from the notes (direction arrows on the map, how the processing reads `oneway=-1`: today `derive_oneway.lua` ignores `-1` and falls back to the category default). The last one stays in "Open questions".
@@ -1374,11 +1375,11 @@ Background (Berlin community notes): the Radinfra project set thousands of `cycl
 - If the way has a newer version than the verified one, the text says "… (changed since)". The entry stays until someone removes or renews it.
 - One "verified" per way, not per side or per check.
 
-**Open**
+**Decided (2026-10-06)**
 
-- **Q6:** may a mapper verify a way they edited last themselves? Plan: allowed, but the text says "by you". A real second-person rule would need the last editor of the way, and only works for uploaded edits.
-- **Q7:** ways that are split or merged get new ids; their checks do not follow. Accept that (the mapper checks again)?
-- **Q8:** show checked / verified on the map as a lens (feature 5)? Not in the first version.
+- A mapper may verify a way they edited last themselves; the text then says "by you".
+- Ways that are split or merged get new ids; their checks do not follow. Accepted, the mapper checks again.
+- No lens for checked / verified: the data is not in OSM, so it would be hard to draw.
 
 **Code (planned):** `modules/tilda/checks.ts` (client, cache, load and save), buttons in `modules/ui/sections/tilda_bike_infra.ts`, the lookup in the new validation. Tests with a mocked client.
 
