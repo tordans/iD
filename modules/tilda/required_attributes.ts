@@ -22,7 +22,8 @@ export type InfraveloAttribute = 'verkehrsri' | 'fuehr' | 'pflicht' | 'breite' |
  * - `ok`: tagged, TILDA reads it
  * - `inherited`: not tagged here, but TILDA gets a value elsewhere (road surface, `parking:*`, category)
  * - `guess`: not tagged, TILDA guesses (oneway)
- * - `assumed`: not tagged, and the default is reliable (a road is two-way); to check, not to tag
+ * - `assumed`: not tagged, and the default is reliable (a road is two-way); the mapper confirms it
+ *   with a check that is stored outside of OSM (`modules/tilda/checks.ts`), not with a tag
  * - `ignored`: tagged, but TILDA drops the value
  * - `missing`: not tagged
  */
@@ -44,8 +45,12 @@ export type RequiredAttribute = {
     /** the tag TILDA derives an untagged value from (`parking:right=lane`) */
     source?: string;
     state: AttributeState;
-    /** values TILDA accepts, offered as buttons */
+    /** values TILDA accepts, offered as buttons; for `assumed` only the values that differ from the default */
     options: string[];
+    /** `assumed`: the default as a tag (`surface:colour=no`); what the mapper confirms with a check */
+    default?: string;
+    /** `assumed`: id of the text that says what the missing tag means: `inspector.tilda.default.<note>` */
+    note?: string;
     /** conditional attributes: a missing value is not an error */
     optional: boolean;
     feeds: InfraveloAttribute[];
@@ -83,6 +88,10 @@ type Rule = {
     guesses?: readonly string[];
     /** the value assumed when the tag is missing, if that default is reliable (state `assumed`) */
     assumed?: (ctx: RuleContext) => string | undefined;
+    /** values offered for an `assumed` attribute (default: `options` without the default value) */
+    assumedOptions?: readonly string[];
+    /** text for an `assumed` attribute: `inspector.tilda.default.<note>` (default: a generic text) */
+    note?: string | ((ctx: RuleContext) => string | undefined);
     /**
      * The rule is the source of another key: `source:<key for this side>`, e.g. `source:cycleway:right:width`
      * (Radinfra FAQ decision: `source:` in front, not `cycleway:right:source:width`)
@@ -187,8 +196,24 @@ const RELIABLE_ONEWAY_DEFAULT = new Set(CATEGORY_DEFINITIONS
     .filter(category => category.implicitOneWayConfidence === 'high' || category.implicitOneWayConfidence === 'medium')
     .map(category => category.id));
 
-/** TILDA's oneway default for the category, as a tag value, where it is reliable */
+/**
+ * The direction bicycles ride on one side of a road, as `oneway` of that side, when it is not tagged:
+ * with the traffic on that side. `oneway` refers to the direction of the way, so on the left side
+ * of a two-way road that is `-1`; on a one-way road both sides run with the road, except the
+ * contraflow side (left) when bicycles may ride against the one-way.
+ */
+export function sideOnewayDefault(tags: Tags, side: 'left' | 'right'): 'yes' | '-1' {
+    if (side === 'right') return 'yes';
+    const oneWayForBikes = tags.oneway === 'yes' && tags['oneway:bicycle'] !== 'no';
+    return oneWayForBikes ? 'yes' : '-1';
+}
+
+/**
+ * The oneway default, as a tag value, where it is reliable: on a road side always (never ask for
+ * `cycleway:<side>:oneway`, WORKDOC feature 32), else TILDA's default for the category.
+ */
 function assumedOneway(ctx: RuleContext) {
+    if (ctx.side !== 'self') return sideOnewayDefault(ctx.tags, ctx.side);
     if (!RELIABLE_ONEWAY_DEFAULT.has(ctx.category)) return undefined;
     const category = CATEGORY_DEFINITIONS.find(c => c.id === ctx.category);
     return category?.implicitOneWay ? 'yes' : 'no';
@@ -215,10 +240,12 @@ const COMMON: Rule[] = [
     { id: 'sett_length', key: 'sett:length', feeds: ['ofm'], options: SETT_LENGTH_OPTIONS,
         when: ctx => ctx.value('surface') === 'sett' },
     { id: 'surface_colour', key: 'surface:colour', feeds: ['farbe'], options: SURFACE_COLOUR_OPTIONS, strict: true, tilda: field('surface_color'), optional: true,
-        assumed: () => 'no' },
+        assumed: () => 'no', note: 'surface_colour' },
     { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], tilda: field('oneway'), guesses: ['assumed_no', 'implicit_yes'],
         // lanes on the road run with the traffic, bicycle roads are two-way: TILDA's default is reliable there
-        assumed: assumedOneway }
+        assumed: assumedOneway,
+        // a road side: only "both ways" is information, the direction follows from the side
+        assumedOptions: ['no'], note: ctx => ctx.side !== 'self' ? 'oneway_side' : undefined }
 ];
 
 const SEPARATE_WAY: Rule[] = [
@@ -258,14 +285,20 @@ const PROTECTION: Rule[] = (['left', 'right'] as const).flatMap(side => [
         derivedFrom: side === 'right' ? trafficModeFromParking(ctx => ctx.side) : undefined, assumed: () => 'no' }
 ] as Rule[]);
 
+/** One-way roads: only `oneway:bicycle=no` says something; without the tag bicycles follow the one-way */
+const ONEWAY_BICYCLE: Rule = {
+    id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
+    assumed: () => 'yes', note: 'oneway_bicycle',
+    when: ctx => ctx.value('oneway') === 'yes'
+};
+
 /** Bicycle roads: the white marking on both sides; with a line, the buffer to it (Radinfra FAQ) */
 function lineMarking(side: 'left' | 'right') {
     return (ctx: RuleContext) => ['solid_line', 'dashed_line', 'double_solid_line'].includes(ctx.value(`marking:${side}`) ?? '');
 }
 
 const BICYCLE_ROAD: Rule[] = [
-    { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
-        when: ctx => ctx.value('oneway') === 'yes' },
+    ONEWAY_BICYCLE,
     ...(['left', 'right'] as const).flatMap(side => [
         { id: `traffic_mode_${side}`, key: `traffic_mode:${side}`, feeds: ['trennstreifen'], options: TRAFFIC_MODE_OPTIONS, strict: true, tilda: field(`traffic_mode_${side}`), optional: true,
             derivedFrom: trafficModeFromParking(() => side), assumed: () => 'no' },
@@ -330,13 +363,16 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
             const derived = value === undefined ? rule.derivedFrom?.(ctx) : undefined;
             const assumed = value === undefined && !derived ? rule.assumed?.(ctx) : undefined;
             const tilda = derived?.tilda ?? assumed ?? displayValue(rule.tilda?.(ctx));
-            const options = [...(typeof rule.options === 'function' ? rule.options(ctx) : rule.options ?? [])];
+            const allOptions = [...(typeof rule.options === 'function' ? rule.options(ctx) : rule.options ?? [])];
+            // a default: offer only the values that say something else
+            const options = assumed === undefined ? allOptions
+                : [...(rule.assumedOptions ?? allOptions.filter(option => option !== assumed))];
             const optional = typeof rule.optional === 'function' ? rule.optional(ctx) : !!rule.optional;
 
             let state: AttributeState;
             if (value !== undefined) {
                 const dropped = rule.tilda !== undefined && tilda === undefined;
-                const invalid = rule.tilda === undefined && rule.strict && !options.includes(value);
+                const invalid = rule.tilda === undefined && rule.strict && !allOptions.includes(value);
                 state = dropped || invalid ? 'ignored' : 'ok';
             } else if (derived) {
                 state = 'inherited';
@@ -348,9 +384,11 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 state = 'missing';
             }
 
+            const key = rule.sourceFor ? `source:${writeKeyForSide(rule.sourceFor, ctx.side, ctx.prefix)}` : writeKeyForSide(rule.key, ctx.side, ctx.prefix);
+
             return {
                 id: rule.id,
-                key: rule.sourceFor ? `source:${writeKeyForSide(rule.sourceFor, ctx.side, ctx.prefix)}` : writeKeyForSide(rule.key, ctx.side, ctx.prefix),
+                key,
                 value,
                 tagged,
                 lookup,
@@ -358,6 +396,8 @@ function evaluate(rules: Rule[], ctx: RuleContext): RequiredAttribute[] {
                 source: derived?.tag,
                 state,
                 options,
+                default: state === 'assumed' ? `${key}=${assumed}` : undefined,
+                note: state === 'assumed' ? (typeof rule.note === 'function' ? rule.note(ctx) : rule.note) : undefined,
                 optional,
                 feeds: rule.feeds
             };
@@ -398,12 +438,10 @@ export function isRoad(tags: Tags) {
 
 const ROAD: Rule[] = [
     // a road without `oneway` is two-way (infraVelo drops `oneway=no` anyway)
-    { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], assumed: () => 'no' },
-    { id: 'oneway_bicycle', key: 'oneway:bicycle', feeds: ['verkehrsri'], options: ['no', 'yes'], strict: true,
-        // explicit on every one-way road (Radinfra FAQ)
-        when: ctx => ctx.value('oneway') === 'yes' },
+    { id: 'oneway', key: 'oneway', feeds: ['verkehrsri'], options: ['yes', 'no', '-1'], assumed: () => 'no', note: 'oneway_road' },
+    ONEWAY_BICYCLE,
     { id: 'dual_carriageway', key: 'dual_carriageway', feeds: ['verkehrsri'], options: ['yes', 'no'], strict: true, optional: true,
-        assumed: () => 'no',
+        assumed: () => 'no', note: 'dual_carriageway',
         when: ctx => ctx.value('oneway') === 'yes' },
     { id: 'width', key: 'width', feeds: ['breite'], options: [] },
     SOURCE_WIDTH,

@@ -1,7 +1,7 @@
 import { processBikelanes } from '@tilda-geo/bicycle-infrastructure';
 import { describe, expect, it } from 'vitest';
 
-import { lookupKeys, requiredAttributes, roadAttributes } from '../../../modules/tilda/required_attributes';
+import { lookupKeys, requiredAttributes, roadAttributes, sideOnewayDefault } from '../../../modules/tilda/required_attributes';
 
 function resultFor(tags: Record<string, string>, side: 'self' | 'left' | 'right') {
     const result = processBikelanes(tags).find(r => r._side === side);
@@ -88,6 +88,54 @@ describe('requiredAttributes', () => {
     });
 });
 
+describe('defaults (WORKDOC feature 32)', () => {
+    it('surface:colour: not coloured is the default, only the colours are offered', () => {
+        const tags = { highway: 'cycleway', is_sidepath: 'yes' };
+        const colour = byId(requiredAttributes(resultFor(tags, 'self'), tags)).surface_colour;
+        expect(colour.state).toBe('assumed');
+        expect(colour.default).toBe('surface:colour=no');
+        expect(colour.note).toBe('surface_colour');
+        expect(colour.options).toEqual(['red', 'green', 'red;green']);
+    });
+
+    it('a tagged default stays a normal row', () => {
+        const tags = { highway: 'cycleway', is_sidepath: 'yes', 'surface:colour': 'no' };
+        const colour = byId(requiredAttributes(resultFor(tags, 'self'), tags)).surface_colour;
+        expect(colour.state).toBe('ok');
+        expect(colour.default).toBeUndefined();
+    });
+
+    it('a track on a road side: oneway is never asked for, only "both ways" is offered', () => {
+        const tags = { highway: 'secondary', 'cycleway:left': 'track', 'cycleway:right': 'track' };
+        const left = byId(requiredAttributes(resultFor(tags, 'left'), tags)).oneway;
+        const right = byId(requiredAttributes(resultFor(tags, 'right'), tags)).oneway;
+        expect(left.state).toBe('assumed');
+        expect(left.key).toBe('cycleway:left:oneway');
+        expect(left.default).toBe('cycleway:left:oneway=-1');
+        expect(left.note).toBe('oneway_side');
+        expect(left.options).toEqual(['no']);
+        expect(right.default).toBe('cycleway:right:oneway=yes');
+    });
+
+    it('sideOnewayDefault: both sides of a one-way road run with the road, except the contraflow side', () => {
+        expect(sideOnewayDefault({ highway: 'residential' }, 'left')).toBe('-1');
+        expect(sideOnewayDefault({ highway: 'residential' }, 'right')).toBe('yes');
+        expect(sideOnewayDefault({ highway: 'residential', oneway: 'yes' }, 'left')).toBe('yes');
+        expect(sideOnewayDefault({ highway: 'residential', oneway: 'yes', 'oneway:bicycle': 'no' }, 'left')).toBe('-1');
+    });
+
+    it('a separate cycleway still asks for oneway', () => {
+        const tags = { highway: 'cycleway', is_sidepath: 'yes' };
+        expect(byId(requiredAttributes(resultFor(tags, 'self'), tags)).oneway.state).toBe('guess');
+    });
+
+    it('one-way bicycle road: oneway:bicycle is a default too', () => {
+        const tags = { highway: 'residential', bicycle_road: 'yes', oneway: 'yes' };
+        const attribute = byId(requiredAttributes(resultFor(tags, 'self'), tags)).oneway_bicycle;
+        expect(attribute.state).toBe('assumed');
+    });
+});
+
 describe('roadAttributes', () => {
     it('lane without parking tags: nothing next to it is assumed', () => {
         const tags = { highway: 'secondary', 'cycleway:right': 'lane', 'cycleway:right:lane': 'exclusive' };
@@ -138,7 +186,10 @@ describe('roadAttributes', () => {
 
     it('one-way road: oneway:bicycle and dual_carriageway, cycleway presence from any side key', () => {
         const attributes = byId(roadAttributes({ highway: 'residential', oneway: 'yes', 'cycleway:left': 'no' }));
-        expect(attributes.oneway_bicycle.state).toBe('missing');
+        // bicycles follow the one-way: a default to confirm, only `no` is offered
+        expect(attributes.oneway_bicycle.state).toBe('assumed');
+        expect(attributes.oneway_bicycle.default).toBe('oneway:bicycle=yes');
+        expect(attributes.oneway_bicycle.options).toEqual(['no']);
         expect(attributes.dual_carriageway.state).toBe('assumed');
         expect(attributes.dual_carriageway.optional).toBe(true);
         expect(attributes.cycleway.state).toBe('ok');

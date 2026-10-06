@@ -170,7 +170,8 @@ export function combinedPathTags(bike: Tags, foot: Tags, options: PathTagOptions
     }
 
     tags.oneway = 'no';
-    if (bike.oneway) tags['oneway:bicycle'] = bike.oneway;
+    // only where it says something: on a way that is not one-way, `oneway:bicycle=no` is the default
+    if (bike.oneway === 'yes' || bike.oneway === '-1') tags['oneway:bicycle'] = bike.oneway;
 
     return { tags, dropped };
 }

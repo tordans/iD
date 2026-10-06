@@ -34,6 +34,15 @@ describe('partKind', () => {
 });
 
 describe('combinedPathTags', () => {
+    it('a two-way cycleway gets no oneway:bicycle: on a way that is not one-way it says nothing', () => {
+        const { tags } = combinedPathTags(
+            { highway: 'cycleway', oneway: 'no' },
+            { highway: 'footway', footway: 'sidewalk' }
+        );
+        expect(tags.oneway).toBe('no');
+        expect(tags['oneway:bicycle']).toBeUndefined();
+    });
+
     it('makes a segregated path; equal part values merge, different ones get prefixes', () => {
         const { tags, dropped } = combinedPathTags(
             { highway: 'cycleway', is_sidepath: 'yes', surface: 'asphalt', smoothness: 'good', oneway: 'yes' },
