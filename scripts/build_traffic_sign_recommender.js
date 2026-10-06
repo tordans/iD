@@ -1,5 +1,5 @@
 // Builds `dist/traffic-sign-converter/recommender.js` (see `traffic_sign_recommender_entry.js`):
-// the parts of the vendored traffic sign converter that turn a `traffic_sign` value into tags,
+// the parts of the traffic sign converter (`@osm-traffic-signs/converter`) that turn a `traffic_sign` value into tags,
 // with two stand-ins to keep the lazy bundle small (`opening_hours`, only the German catalogue).
 import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';

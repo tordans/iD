@@ -1315,14 +1315,12 @@ Goal: the grey footer bar is gone; the map gets its height. Everything it held h
 
 - Dev server: `npm start` (port 8080, or `PORT=… npm start`). The CSS watcher only knows files that existed at startup; run `npm run build:css` after adding a CSS file.
 - A fresh worktree needs the SVG sprites: `npx run-p "dist:svg:*"`, and the traffic sign assets: `npx run-p dist:traffic-sign-field dist:traffic-sign-converter`.
-- The traffic sign packages are vendored in `vendor/` (built files from `~/Development/OSM/osm-traffic-sign-tools-id-field`, which is WIP and not fully on npm). Refresh with `npm run vendor:traffic-signs`, see `vendor/README.md`.
-- `npm run build:data` merges `data/traffic_sign_field_locales.yaml` into the committed `dist/locales/de*.min.json`.
-- New UI strings exist only in English (`data/core.yaml`). The localizer now always loads the English UI strings as a fallback (`modules/core/localizer.ts`), so a German browser shows German upstream strings and English for ours instead of "Missing translation". German strings for our UI are still open.
-
-- Since the lens merge, all iD CSS is in `@layer ideditor`. CSS loaded later without a layer (e.g. `vendor/traffic-sign-field/id-field.css`) always wins over it; overriding such CSS from `css/` needs `!important` (see `css/93_traffic_sign_field.css`).
+- The traffic sign packages come from npm since 2026-10-06: `@osm-traffic-signs/id-field` (0.1.0) and `@osm-traffic-signs/converter` (0.7.0), dev dependencies. `npm run dist:traffic-sign-field` / `dist:traffic-sign-converter` copy their `dist/` from `node_modules/` to `dist/`; the recommender bundle (`scripts/traffic_sign_recommender_*.js`) imports the converter's files from `node_modules/`. Source: `~/Development/OSM/osm-traffic-sign-tools` (`main`), released with `bun run release --package --id-field` there. To try an unreleased build, copy its `dist/` over `dist/traffic-sign-field/` (`bun run dev:id-field` with `ID_WORKTREE`). The surface/smoothness field is still vendored, see `vendor/README.md`.
+- Since the lens merge, all iD CSS is in `@layer ideditor`. CSS loaded later without a layer (e.g. the traffic sign field's `id-field.css`) always wins over it; overriding such CSS from `css/` needs `!important`. The field-box look of the traffic sign field was such an override until 2026-10-06; it is part of the package now.
 
 ## Progress log
 
+- 2026-10-06: Traffic sign field comes from npm (`@osm-traffic-signs/id-field` 0.1.0, `@osm-traffic-signs/converter` 0.7.0); `vendor/traffic-sign-*` and the fork's CSS overrides are gone.
 - 2026-10-05: Traffic sign field redesigned: full-width rows, switches "Whole way | Per direction", equal direction signs merge into the whole way (feature 27).
 - 2026-10-03: Way table columns follow the order of the ways on the map (feature 6).
 - 2026-10-03: Photo viewer closes itself when the image cannot be loaded (feature 18).

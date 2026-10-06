@@ -1,1 +1,0 @@
-import{t as e}from"../trafficSignDataPL-rru5KQCq.js";export{e as trafficSignData};

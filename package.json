@@ -28,9 +28,9 @@
     "dist": "run-p dist:**",
     "dist:mapillary": "shx mkdir -p dist/mapillary-js && shx cp -R node_modules/mapillary-js/dist/* dist/mapillary-js/",
     "dist:pannellum": "shx mkdir -p dist/pannellum && shx cp -R node_modules/pannellum/build/* dist/pannellum/",
-    "dist:traffic-sign-field": "shx mkdir -p dist/traffic-sign-field && shx cp -R vendor/traffic-sign-field/* dist/traffic-sign-field/",
+    "dist:traffic-sign-field": "shx mkdir -p dist/traffic-sign-field && shx cp -R node_modules/@osm-traffic-signs/id-field/dist/* dist/traffic-sign-field/",
     "dist:surface-smoothness-field": "shx mkdir -p dist/surface-smoothness-field && shx cp -R vendor/surface-smoothness-field/* dist/surface-smoothness-field/",
-    "dist:traffic-sign-converter": "shx mkdir -p dist/traffic-sign-converter && shx cp -R vendor/traffic-sign-converter/* dist/traffic-sign-converter/",
+    "dist:traffic-sign-converter": "shx mkdir -p dist/traffic-sign-converter && shx cp -R node_modules/@osm-traffic-signs/converter/dist/* dist/traffic-sign-converter/",
     "dist:traffic-sign-recommender": "node scripts/build_traffic_sign_recommender.js",
     "dist:min": "node config/esbuild.config.min.js",
     "dist:svg:iD": "svg-sprite --symbol --symbol-dest . --shape-id-generator \"iD-%s\" --symbol-sprite dist/img/iD-sprite.svg \"svg/iD-sprite/**/*.svg\"",
@@ -55,8 +55,7 @@
     "test:once": "vitest run --no-isolate",
     "test:coverage": "vitest run --no-isolate --coverage.enabled",
     "translations": "node scripts/update_locales.js",
-    "vendor:surface-smoothness": "rsync -a --delete --exclude '*.d.ts' ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/id-field/dist/ vendor/surface-smoothness-field/ && rsync -a --delete ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/data/dist/generated/images vendor/surface-smoothness-field/",
-    "vendor:traffic-signs": "rsync -a --delete --exclude '*.map' --exclude '*.d.ts' ../osm-traffic-sign-tools-id-field/packages/traffic-sign-id-field/dist/ vendor/traffic-sign-field/ && rsync -a --delete --exclude '*.map' --exclude '*.d.ts' ../osm-traffic-sign-tools-id-field/packages/traffic-sign-converter/dist/ vendor/traffic-sign-converter/"
+    "vendor:surface-smoothness": "rsync -a --delete --exclude '*.d.ts' ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/id-field/dist/ vendor/surface-smoothness-field/ && rsync -a --delete ../osm-surface-smoothness-workspace/osm-surface-smoothness-tagging/packages/data/dist/generated/images vendor/surface-smoothness-field/"
   },
   "dependencies": {
     "@mapbox/geojson-area": "^0.2.2",
@@ -96,6 +95,8 @@
     "@mapbox/maki": "^8.2.0",
     "@openstreetmap/editor-layer-index": "github:osmlab/editor-layer-index#gh-pages",
     "@openstreetmap/id-tagging-schema": "^7.0.0",
+    "@osm-traffic-signs/converter": "^0.7.0",
+    "@osm-traffic-signs/id-field": "^0.1.0",
     "@rapideditor/mapillary_sprite_source": "^1.8.0",
     "@rapideditor/temaki": "^5.11.0",
     "@transifex/api": "^8.0.0",
