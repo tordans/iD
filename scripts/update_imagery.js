@@ -83,7 +83,7 @@ sources.features.forEach(feature => {
   const source = feature.properties;
 
   if (!source) return;
-  if (source.type !== 'tms' && source.type !== 'wms' && source.type !== 'bing') return;
+  if (source.type !== 'tms' && source.type !== 'wms' && source.type !== 'bing' && source.type !== 'dem') return;
   if (discard.some(regex => regex.test(source.id))) return;
 
   let im = {
@@ -167,7 +167,7 @@ sources.features.forEach(feature => {
     im.terms_text = attribution.text;
   }
 
-  ['best', 'default', 'description', 'encrypted', 'icon', 'overlay', 'tileSize'].forEach(prop => {
+  ['best', 'default', 'description', 'encrypted', 'encoding', 'icon', 'overlay', 'tileSize'].forEach(prop => {
     if (source[prop]) {
       im[prop] = source[prop];
     }

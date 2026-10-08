@@ -4,3 +4,4 @@ export { rendererFeatures } from './features';
 export { rendererMap } from './map';
 export { rendererPhotos } from './photos';
 export { rendererTileLayer } from './tile_layer';
+export { rendererHillshadeLayer } from './hillshade_layer';
