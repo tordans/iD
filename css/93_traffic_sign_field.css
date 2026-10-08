@@ -13,19 +13,3 @@
     font-size: 12px;
     font-weight: bold;
 }
-
-/* A long sign value (time restrictions) plus its value input are wider than the sidebar row:
-   the input wraps below and the code is cut with an ellipsis instead of running out of the row.
-   (`!important`: the package's CSS is not in a layer, so it wins over ours otherwise.
-   To move into `@osm-traffic-signs/id-field`.) */
-.ideditor .form-field-input-traffic-sign .traffic-sign-row__meta {
-    flex-wrap: wrap !important;
-    row-gap: 2px !important;
-}
-.ideditor .form-field-input-traffic-sign .traffic-sign-row__code {
-    flex: 0 1 auto !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
