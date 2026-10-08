@@ -754,6 +754,31 @@ export default {
     },
 
 
+    // Load the current user's MapRoulette API key from their OSM preferences,
+    // so authenticated MapRoulette task submissions can be signed.
+    // GET /api/0.6/user/preferences.json
+    loadMapRouletteKey: function(callback) {
+        if (!this.authenticated()) {   // require auth
+            return callback(undefined, {});
+        }
+
+        oauth.xhr({
+            method: 'GET',
+            path: '/api/0.6/user/preferences.json'
+        }, wrapcb(this, done, _connectionID));
+
+        function done(err, payload) {
+            if (err) return callback(err);
+            try {
+                var json = JSON.parse(payload);
+                return callback(undefined, json.preferences || {});
+            } catch (parseErr) {
+                return callback(parseErr);
+            }
+        }
+    },
+
+
     // Load previous changesets for the logged in user
     // GET /api/0.6/changesets?user=#id
     userChangesets: function(callback) {

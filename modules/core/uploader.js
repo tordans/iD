@@ -29,6 +29,8 @@ export function coreUploader(context) {
     );
 
     var _isSaving = false;
+    /** Optional promise that delays post-success flush (e.g. MapRoulette resolve). */
+    var _afterSuccessWait = null;
 
     let _anyConflictsAutomaticallyResolved = false;
     var _conflicts = [];
@@ -372,13 +374,18 @@ export function coreUploader(context) {
 
         dispatch.call('resultSuccess', this, changeset);
 
-        // Add delay to allow for postgres replication #1646 #2678
-        window.setTimeout(function() {
+        // Handlers (e.g. save mode) may register work that must finish before
+        // flush — MapRoulette earmark resolve needs the service cache intact.
+        var wait = Promise.resolve(_afterSuccessWait).catch(function() { /* continue */ });
+        _afterSuccessWait = null;
 
-            endSave();
-
-            context.flush(); // reset iD
-        }, 2500);
+        wait.finally(function() {
+            // Add delay to allow for postgres replication #1646 #2678
+            window.setTimeout(function() {
+                endSave();
+                context.flush(); // reset iD
+            }, 2500);
+        });
     }
 
 
@@ -387,6 +394,15 @@ export function coreUploader(context) {
 
         dispatch.call('saveEnded', this);
     }
+
+
+    /**
+     * Register a Promise that must settle before the post-success flush.
+     * Call from a synchronous `resultSuccess` handler.
+     */
+    uploader.deferFlush = function(promise) {
+        _afterSuccessWait = promise;
+    };
 
 
     uploader.cancelConflictResolution = function() {

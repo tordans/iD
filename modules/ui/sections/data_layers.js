@@ -5,6 +5,7 @@ import {
 
 import { prefs } from '../../core/preferences';
 import { t, localizer } from '../../core/localizer';
+import { services } from '../../services';
 import { uiTooltip } from '../tooltip';
 import { svgIcon } from '../../svg/icon';
 import { geoExtent } from '../../geo';
@@ -12,6 +13,7 @@ import { modeBrowse } from '../../modes/browse';
 import { uiCmd } from '../cmd';
 import { uiSection } from '../section';
 import { uiSettingsCustomData } from '../settings/custom_data';
+import { createMapRouletteDataLayerControls } from './data_layers_maproulette';
 
 export function uiSectionDataLayers(context) {
 
@@ -24,6 +26,12 @@ export function uiSectionDataLayers(context) {
     var section = uiSection('data-layers', context)
         .label(() => t.append('map_data.data_layers'))
         .disclosureContent(renderDisclosureContent);
+
+    var maprouletteControls = createMapRouletteDataLayerControls(
+        context,
+        layers,
+        setLayer
+    );
 
     function renderDisclosureContent(selection) {
         var container = selection.selectAll('.data-layer-container')
@@ -59,6 +67,9 @@ export function uiSectionDataLayers(context) {
 
             if (!enabled && (which === 'osm' || which === 'notes')) {
                 context.enter(modeBrowse(context));
+            }
+            if (which === 'maproulette') {
+                maprouletteControls.updateHash();
             }
         }
     }
@@ -130,7 +141,7 @@ export function uiSectionDataLayers(context) {
     }
 
     function drawQAItems(selection) {
-        var qaKeys = ['osmose'];
+        var qaKeys = ['maproulette', 'osmose'];
         var qaLayers = layers.all().filter(function(obj) { return qaKeys.indexOf(obj.id) !== -1; });
 
         var ul = selection
@@ -171,13 +182,16 @@ export function uiSectionDataLayers(context) {
             .append('span')
             .each(function(d) { t.append('map_data.layers.' + d.id + '.title')(d3_select(this)); });
 
+        maprouletteControls.appendEnterControls(liEnter);
 
-        // Update
+        // Update (scope to the checkbox so the challenge-IDs text field is untouched)
         li
             .merge(liEnter)
             .classed('active', function (d) { return d.layer.enabled(); })
-            .selectAll('input')
+            .selectAll('input[type="checkbox"]')
             .property('checked', function (d) { return d.layer.enabled(); });
+
+        maprouletteControls.updateControls(li, liEnter);
     }
 
     // Beta feature - sample vector layers to support Detroit Mapping Challenge
@@ -443,6 +457,12 @@ export function uiSectionDataLayers(context) {
     }
 
     context.layers().on('change.uiSectionDataLayers', section.reRender);
+
+    if (services.maproulette && typeof services.maproulette.on === 'function') {
+        services.maproulette
+            .on('loaded.uiSectionDataLayers', section.reRender)
+            .on('loading.uiSectionDataLayers', section.reRender);
+    }
 
     context.map()
         .on('move.uiSectionDataLayers',

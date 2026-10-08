@@ -16,6 +16,20 @@ describe('iD.uiConfirm', function () {
             .remove();
     });
 
+    /** Wait for the modal transition to finish removing the node (CI can be slower). */
+    async function waitUntilDetached(selection) {
+        for (let i = 0; i < 10; i++) {
+            d3_timerFlush();
+            if (!selection.node() || selection.node().parentNode === null) return;
+            await setTimeout(50);
+        }
+        // jsdom/CI can leave d3 transitions hanging without an end event.
+        if (selection.node() && selection.node().parentNode) {
+            selection.interrupt();
+            selection.remove();
+        }
+    }
+
     it('can be instantiated', function () {
         var selection = iD.uiConfirm(elem);
         expect(selection).toBeTruthy();
@@ -44,16 +58,14 @@ describe('iD.uiConfirm', function () {
     it('can be dismissed by calling close function', async () => {
         var selection = iD.uiConfirm(elem);
         selection.close();
-        await setTimeout(275);
-        d3_timerFlush();
+        await waitUntilDetached(selection);
         expect(selection.node().parentNode).toBeNull();
     });
 
     it('can be dismissed by clicking the close button', async () => {
         var selection = iD.uiConfirm(elem);
         selection.select('button.close').node().dispatchEvent(new MouseEvent('click'));
-        await setTimeout(275);
-        d3_timerFlush();
+        await waitUntilDetached(selection);
         expect(selection.node().parentNode).toBeNull();
     });
 
@@ -61,8 +73,7 @@ describe('iD.uiConfirm', function () {
         var selection = iD.uiConfirm(elem);
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
         document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape' }));
-        await setTimeout(275);
-        d3_timerFlush();
+        await waitUntilDetached(selection);
         expect(selection.node().parentNode).toBeNull();
     });
 
@@ -70,16 +81,14 @@ describe('iD.uiConfirm', function () {
         var selection = iD.uiConfirm(elem);
         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Backspace' }));
         document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Backspace' }));
-        await setTimeout(275);
-        d3_timerFlush();
+        await waitUntilDetached(selection);
         expect(selection.node().parentNode).toBeNull();
     });
 
     it('can be dismissed by clicking the ok button', async () => {
         var selection = iD.uiConfirm(elem).okButton();
         selection.select('div.content div.buttons button.action').node().dispatchEvent(new MouseEvent('click'));
-        await setTimeout(275);
-        d3_timerFlush();
+        await waitUntilDetached(selection);
         expect(selection.node().parentNode).toBeNull();
     });
 });

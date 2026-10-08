@@ -23,6 +23,17 @@ export function svgOsmose(projection, context, dispatch) {
       .attr('points', '16,3 4,3 1,6 1,17 4,20 7,20 10,27 13,20 16,20 19,17.033 19,6');
   }
 
+  /** Rounded teardrop for hover/selected glow — same idea as native point pins. */
+  function markerShadow(selection) {
+    selection
+      .attr('class', 'shadow')
+      .attr('transform', 'translate(-10, -28)')
+      .attr(
+        'd',
+        'M 18,9 C 18,15 13,24 10,27 C 7,24 2,15 2,9 C 2,4.5 5.5,1.5 10,1.5 C 14.5,1.5 18,4.5 18,9 Z',
+      );
+  }
+
   // Loosely-coupled osmose service for fetching issues
   function getService() {
     if (services.osmose && !_qaService) {
@@ -109,8 +120,8 @@ export function svgOsmose(projection, context, dispatch) {
         .attr('class', d => `qaItem ${d.service} itemId-${d.id} itemType-${d.itemType}`);
 
     markersEnter
-      .append('polygon')
-        .call(markerPath, 'shadow');
+      .append('path')
+        .call(markerShadow);
 
     markersEnter
       .append('ellipse')
