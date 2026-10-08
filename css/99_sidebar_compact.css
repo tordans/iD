@@ -75,6 +75,15 @@
     border-radius: 0;
     background: none;
 }
+/* a section body that is such an area itself (issues): it keeps the gutter of a section body */
+.entity-editor .section .disclosure-content.grouped-items-area {
+    padding: 2px var(--sidebar-gutter) var(--sidebar-gutter);
+    margin: 0;
+}
+/* issue details (reference text, suggested tags): a little air below the issue box */
+.entity-editor .section-entity-issues .issue-info {
+    padding: 8px 2px 0;
+}
 
 
 /* Fields: a bit tighter */

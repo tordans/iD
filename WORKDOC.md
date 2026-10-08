@@ -1460,6 +1460,7 @@ Plan as written before the build:
 
 ## Progress log
 
+- 2026-10-08: Sidebar, issues section (feature 23): the issue boxes and their texts ran from edge to edge. Cause: the section body is a `.grouped-items-area`, whose padding the compact styles set to 0. It keeps the gutter of a section body now. Traffic sign field: a long value (time restriction) with its input no longer runs out of the row (the input wraps, the code gets an ellipsis; fix lives in `css/93_traffic_sign_field.css` and should move into `@osm-traffic-signs/id-field`). Checked by measuring the layout of every sidebar section for a way, a node, a relation and a multi-selection (all inside the gutter). Not seen as a picture: the browser pane was not displayed. Not checked: the "suggested tags" table of an outdated-tags issue (no such issue could be produced in the test).
 - 2026-10-08: Light theme and hover preview (features 6, 23):
   - Way table: all colours come from the theme variables (`css/86_way_table_panel.css`), so the dock is light in the light theme. Before it had light text for a dark background only.
   - Sidebar in the light theme: the entity editor gets a slightly darker surface (`--bg-color-2` / `--bg-color-3` set on `.entity-editor`, end of `css/99_sidebar_compact.css`), so the white inputs stand out from the labels as in the dark theme.
