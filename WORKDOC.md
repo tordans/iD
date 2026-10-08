@@ -1460,6 +1460,11 @@ Plan as written before the build:
 
 ## Progress log
 
+- 2026-10-08: Light theme and hover preview (features 6, 23):
+  - Way table: all colours come from the theme variables (`css/86_way_table_panel.css`), so the dock is light in the light theme. Before it had light text for a dark background only.
+  - Sidebar in the light theme: the entity editor gets a slightly darker surface (`--bg-color-2` / `--bg-color-3` set on `.entity-editor`, end of `css/99_sidebar_compact.css`), so the white inputs stand out from the labels as in the dark theme.
+  - Hover preview (nothing selected, `.inspector-hover`): the controls of this fork are hidden or greyed like iD's own (`css/99_zz_inspector_hover.css`): TILDA edit / value / "Checked" / "Verified" buttons, the "Per direction" switch, related-tag buttons, measuring tape, and drag / remove / add of the traffic sign field.
+  - Checked in the browser with the light theme emulated; the hover preview was triggered by script. Not checked: the hover preview in the dark theme after this change.
 - 2026-10-06: Built features 32 and 33: defaults with a "Checked" button (`surface:colour`, `oneway:bicycle`, side `oneway`), "Verified" per way, both stored in the key-value DB; two validations for `cycleway:*:oneway`.
 - 2026-10-06: Plan for the TILDA checklist defaults (`surface:colour`, `oneway:bicycle`) and the `cycleway:*:oneway` cleanup validation written (feature 32); waiting for confirmation.
 - 2026-10-06: Plan for "Checked" and "Verified" buttons stored in the key-value DB written (feature 33).

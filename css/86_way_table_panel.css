@@ -8,8 +8,12 @@
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
-    border-top: 1px solid rgba(0, 0, 0, 0.75);
-    color: #eee;
+    /* theme colors, so the dock follows the light and the dark theme like the sidebar */
+    --way-table-accent: color-mix(in srgb, var(--link-color) 28%, var(--bg-color));
+    --way-table-accent-soft: color-mix(in srgb, var(--link-color) 12%, var(--bg-color));
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
     overflow: hidden;
     pointer-events: auto;
     touch-action: auto;
@@ -24,7 +28,7 @@
 .way-table-empty {
     padding: 8px 10px;
     font-size: 12px;
-    color: #bbb;
+    color: var(--passive-text-color);
 }
 
 /* previous / next way, in the table's corner cell */
@@ -36,8 +40,9 @@
     width: 26px;
     height: 20px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.1);
-    color: #eee;
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: inherit;
     cursor: pointer;
 }
 .way-table-nav button .icon {
@@ -45,7 +50,7 @@
     height: 16px;
 }
 .way-table-nav button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.25);
+    background: var(--active-bg-color);
 }
 .way-table-nav button:disabled {
     opacity: 0.3;
@@ -92,7 +97,7 @@
     gap: 4px;
     padding: 4px 8px;
     font-size: 12px;
-    background: rgba(255, 196, 0, 0.15);
+    background: var(--warning-bg-color);
 }
 .way-table-junction button {
     height: auto;
@@ -109,7 +114,7 @@ table.way-table {
 table.way-table th,
 table.way-table td {
     padding: 1px 8px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-color-2);
     text-align: start;
     white-space: nowrap;
     max-width: 22em;
@@ -120,24 +125,24 @@ table.way-table thead th {
     position: sticky;
     top: 0;
     z-index: 1;
-    background: #333;
+    background: var(--bg-color-3);
 }
 table.way-table thead th.center {
-    background: #3c4f6b;
+    background: var(--way-table-accent);
 }
 /* a way's header cell: name and id; the whole cell is the hover and click area */
 table.way-table thead th.way-table-way {
-    color: #9cf;
+    color: var(--link-focus-color);
     cursor: pointer;
 }
 table.way-table thead th.way-table-way.center {
-    color: #fff;
+    color: var(--text-color);
     cursor: default;
 }
 table.way-table thead th.way-table-way:not(.center):hover,
 table.way-table thead th.way-table-way:not(.center):focus-visible {
-    background: #46536b;
-    color: #fff;
+    background: var(--way-table-accent);
+    color: var(--text-color);
 }
 table.way-table thead th.way-table-way:not(.center):hover .way-table-way-name {
     text-decoration: underline;
@@ -169,7 +174,7 @@ table.way-table thead th.way-table-key-header {
     position: sticky;
     left: 0;
     max-width: 14em;
-    background: #2a2a2a;
+    background: var(--bg-color-2);
     font-family: monospace;
     font-weight: normal;
 }
@@ -179,31 +184,31 @@ table.way-table thead th.way-table-key-header {
 
 /* subtle highlight for keys used by the selected way's preset */
 table.way-table tr.preset-key th.way-table-key {
-    background: #34384a;
+    background: color-mix(in srgb, var(--link-color) 12%, var(--bg-color-2));
     font-weight: bold;
 }
 table.way-table tr:not(.preset-key) {
-    color: #bbb;
+    color: var(--passive-text-color);
 }
 
 table.way-table td.center {
-    background: rgba(60, 79, 107, 0.35);
+    background: var(--way-table-accent-soft);
 }
 table.way-table td.changed {
-    background: rgba(255, 196, 0, 0.25);
+    background: color-mix(in srgb, #ffc400 30%, var(--bg-color));
 }
 table.way-table td.added {
-    background: rgba(108, 255, 61, 0.18);
+    background: color-mix(in srgb, #3fc41e 26%, var(--bg-color));
 }
 table.way-table td.removed {
-    background: rgba(255, 80, 60, 0.25);
+    background: color-mix(in srgb, #ff503c 28%, var(--bg-color));
 }
 
 .way-table-resize {
     flex: 0 0 auto;
     height: 6px;
     cursor: ns-resize;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--bg-color-3);
 }
 .way-table-resize::after {
     content: '';
@@ -212,10 +217,10 @@ table.way-table td.removed {
     height: 2px;
     margin: 2px auto 0;
     border-radius: 1px;
-    background: rgba(255, 255, 255, 0.4);
+    background: var(--muted-text-color);
 }
 .way-table-resize:hover::after {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--text-color);
 }
 
 /* the info panels sit in the same corner: keep the map buttons (and the way table button) free */

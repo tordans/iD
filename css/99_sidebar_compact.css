@@ -334,3 +334,18 @@
 .entity-editor .field-label > button:hover .icon {
     opacity: 1;
 }
+
+/* Light theme: white inputs on the near-white sidebar hardly stand out, so labels and values read
+   as one block. A slightly darker surface gives the hierarchy of the dark theme: the surface with
+   the labels, and the lighter inputs on it. */
+@media (prefers-color-scheme: light) {
+    .ideditor .entity-editor {
+        --bg-color-2: #e9ebef;
+        --bg-color-3: #dde0e5;
+        --active-bg-color: #e3e6ea;
+        background: var(--bg-color-2);
+    }
+    .ideditor .entity-editor .field-label .label-text {
+        color: #222;
+    }
+}
