@@ -7,6 +7,9 @@ import { utilTotalExtent } from '../util';
 import type { Operation } from '../core/history';
 import type { WayId } from '../osm';
 
+/** Half of the way in view is enough to see what happens (iD's own operations ask for 80 %) */
+const MIN_VISIBLE_SHARE = 0.5;
+
 
 /**
  * "Merge into a foot and cycle path" for a selected cycleway and footway(s) (or footway and
@@ -54,7 +57,7 @@ export function operationsMergeSidepaths(context: iD.Context, selectedIDs: strin
         const current = selection();
         if (!current) return 'not_eligible';
         if (current.disabled) return current.disabled;
-        if (utilTotalExtent(wayIDs, context.graph()).percentContainedIn(context.map().extent()) < 0.8) return 'too_large';
+        if (utilTotalExtent(wayIDs, context.graph()).percentContainedIn(context.map().extent()) < MIN_VISIBLE_SHARE) return 'too_large';
         // the signs decide `segregated` and are joined by the tool's rules: wait for them
         if (loadedSignRecommender() === undefined) {
             loadSignRecommender(context).catch(() => { /* merge without sign rules */ });
@@ -71,6 +74,10 @@ export function operationsMergeSidepaths(context: iD.Context, selectedIDs: strin
             return t.append(`operations.merge_sidepaths.${disabled}`, { key });
         }
         if (!current || current.disabled) return t.append('operations.merge_sidepaths.not_eligible');
+        // the longer way is cut first; what runs on past the other way stays as it is
+        if ('cutPlan' in current && current.cutPlan?.points.length) {
+            return t.append(`operations.merge_sidepaths.description_cut.${current.cut}`);
+        }
         return t.append(`operations.merge_sidepaths.description.${current.surviving}`, {
             count: current.deleted.length
         });

@@ -1023,6 +1023,17 @@ Goal: tags about a field's key that have no field of their own (`source:width`, 
 - Tested in the browser on Torstraße (test edits undone, nothing uploaded): extracted cycle track (DE:237) + a sidewalk piece (DE:239) → `highway=path`, `traffic_sign=DE:237;239`, `cycleway:surface` / `footway:surface`, one undo step; the real sidewalks there were refused for length (116 m against 81 m) until split, and the corner sidewalk for "side by side".
 - Open: the preview colors (kept way magenta, deleted way dashed red) were changed after the last screenshot and not looked at again; under the selection halo the preview was hard to see. Strings English only. Tooltip does not list the resulting tags.
 
+**Changed (2026-10-08): a way that is too long is cut, and half of the ways in view is enough.**
+- Two ways (one cycleway, one footway) whose lengths differ by more than 15 m or 20 %: the entry is no longer disabled. The longer way is cut where the shorter one ends, the part alongside is merged, and what runs on stays as it is (a footway stays a footway). Usually that is the sidewalk, cut to the length of the cycleway; a cycleway that is too long is cut the same way.
+  - The cut is at the point of the longer way nearest to each end of the shorter one. A node of the longer way within 3 m is used for it, else a new node is added. No cut at an end where the longer way runs on for less than 5 m.
+  - The tooltip says which way is cut. One undo step for cut and merge.
+  - More than two ways with lengths that differ too much: still disabled ("… Split the ways first, or select one cycleway and one footway"), because there is no clear place to cut.
+  - The side by side check (25 m) only looks at the part that is merged, not at what runs on.
+- "Not enough of it is visible": extract (feature 17) and merge now need 50 % of the ways in view instead of 80 %.
+- Code: `planCut` / `cutWay` in `modules/actions/merge_sidepaths.ts`, `projectOnLine` in `modules/sidepath/offset_line.ts`, `cut` in `mergeSelection`. Tests: four cut cases in `test/spec/actions/merge_sidepaths.ts`.
+- Checked in the browser by script (test edit undone): a new 79 m cycleway beside the middle of a 263 m sidewalk (w1228562470) → a 79 m `highway=path` with the tags of both, and two footways of 77 m and 107 m left over; the entry was enabled and its tooltip named the cut.
+- Not checked: the hover preview (it still draws the whole long way as "stays"), and clicking the menu entry by hand.
+
 **Goal.** Still the goal of feature 17: make it as easy as possible to turn infrastructure mapped on the centerline into its own geometry. Often the cycle track should not end up as its own `highway=cycleway` but together with the sidewalk as one `highway=path` ("Geh- und Radweg"). Feature 17's variant C does that only when both the track and the sidewalk are still tags on the road. In Berlin the sidewalk is usually a separate way already, so this needs a second step.
 
 **Decided (2026-10-01): two steps, not one.**
@@ -1460,6 +1471,7 @@ Plan as written before the build:
 
 ## Progress log
 
+- 2026-10-08: Merge of cycleway and footway cuts the longer way to the length of the other (two ways); extract and merge work with half of the ways in view (features 17, 28).
 - 2026-10-08: Sidebar, issues section (feature 23): the issue boxes and their texts ran from edge to edge. Cause: the section body is a `.grouped-items-area`, whose padding the compact styles set to 0. It keeps the gutter of a section body now. Traffic sign field: a long value (time restriction) with its input no longer runs out of the row (the input wraps, the code gets an ellipsis; fix lives in `css/93_traffic_sign_field.css` and should move into `@osm-traffic-signs/id-field`). Checked by measuring the layout of every sidebar section for a way, a node, a relation and a multi-selection (all inside the gutter). Not seen as a picture: the browser pane was not displayed. Not checked: the "suggested tags" table of an outdated-tags issue (no such issue could be produced in the test).
 - 2026-10-08: Light theme and hover preview (features 6, 23):
   - Way table: all colours come from the theme variables (`css/86_way_table_panel.css`), so the dock is light in the light theme. Before it had light text for a dark background only.

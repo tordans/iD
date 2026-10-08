@@ -189,7 +189,11 @@ export type MergeWay = {
 export type MergeSelection =
     | { disabled: 'mixed' | 'lengths' }
     | { disabled: 'different_values'; key: string }
-    | { disabled: false; surviving: PartKind; survivors: MergeWay[]; deleted: MergeWay[] };
+    | {
+        disabled: false; surviving: PartKind; survivors: MergeWay[]; deleted: MergeWay[];
+        /** the lengths differ too much: the way of this kind (the longer one) is cut to the other's length first */
+        cut?: PartKind;
+    };
 
 /** Lengths may differ by this much, or by this share of the longer one */
 const LENGTH_TOLERANCE_METERS = 15;
@@ -200,6 +204,8 @@ const LENGTH_TOLERANCE_SHARE = 0.2;
  * What a selection of ways merges into: `undefined` when it is not cycleways plus footways.
  * - One way of one kind and one or more of the other; several of both is too complex.
  * - The older kind keeps its geometry: a saved way beats a new one, then the older changeset.
+ * - Lengths that differ too much: with two ways the longer one is cut to the other's length (`cut`);
+ *   with more ways there is no clear place to cut, so the mapper splits first.
  */
 export function mergeSelection(ways: MergeWay[]): MergeSelection | undefined {
     if (ways.length < 2) return undefined;
@@ -213,7 +219,9 @@ export function mergeSelection(ways: MergeWay[]): MergeSelection | undefined {
     const length = (list: MergeWay[]) => list.reduce((sum, way) => sum + way.lengthMeters, 0);
     const difference = Math.abs(length(bikes) - length(foots));
     const longer = Math.max(length(bikes), length(foots));
-    if (difference > Math.max(LENGTH_TOLERANCE_METERS, longer * LENGTH_TOLERANCE_SHARE)) return { disabled: 'lengths' };
+    const lengthsDiffer = difference > Math.max(LENGTH_TOLERANCE_METERS, longer * LENGTH_TOLERANCE_SHARE);
+    if (lengthsDiffer && ways.length > 2) return { disabled: 'lengths' };
+    const cut: PartKind | undefined = !lengthsDiffer ? undefined : length(bikes) > length(foots) ? 'bike' : 'foot';
 
     const age = (list: MergeWay[]) => Math.min(...list.map(way => way.changeset ?? Infinity));
     // equally old (e.g. both new): the footway, it usually has the junctions
@@ -226,7 +234,7 @@ export function mergeSelection(ways: MergeWay[]): MergeSelection | undefined {
             if (new Set(deleted.map(way => way.tags[key])).size > 1) return { disabled: 'different_values', key };
         }
     }
-    return { disabled: false, surviving, survivors, deleted };
+    return cut ? { disabled: false, surviving, survivors, deleted, cut } : { disabled: false, surviving, survivors, deleted };
 }
 
 

@@ -76,3 +76,43 @@ export function distanceToLineMeters(point: Loc, line: Loc[]) {
     }
     return nearest;
 }
+
+
+export type LineProjection = {
+    /** the nearest point of the line */
+    loc: Loc;
+    /** meters from the point to it */
+    distance: number;
+    /** meters from the start of the line to it */
+    along: number;
+    /** it lies on the segment from this node index to the next */
+    index: number;
+};
+
+/** The nearest point of a line to a point, and where on the line it is (local plane) */
+export function projectOnLine(point: Loc, line: Loc[]): LineProjection {
+    const degLon = geoMetersToLon(1, point[1]);
+    const degLat = geoMetersToLat(1);
+    const xy = line.map(loc => [(loc[0] - point[0]) / degLon, (loc[1] - point[1]) / degLat]);
+    let best: LineProjection = { loc: line[0], distance: Math.hypot(xy[0][0], xy[0][1]), along: 0, index: 0 };
+    let walked = 0;
+    for (let i = 1; i < xy.length; i++) {
+        const [ax, ay] = xy[i - 1];
+        const [dx, dy] = [xy[i][0] - ax, xy[i][1] - ay];
+        const length = Math.hypot(dx, dy);
+        if (length) {
+            const share = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (length * length)));
+            const distance = Math.hypot(ax + share * dx, ay + share * dy);
+            if (distance < best.distance) {
+                best = {
+                    loc: [point[0] + (ax + share * dx) * degLon, point[1] + (ay + share * dy) * degLat],
+                    distance,
+                    along: walked + share * length,
+                    index: i - 1
+                };
+            }
+        }
+        walked += length;
+    }
+    return best;
+}

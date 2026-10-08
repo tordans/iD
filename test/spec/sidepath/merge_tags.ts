@@ -156,9 +156,17 @@ describe('mergeSelection', () => {
 
     it('allows lengths that differ by 15 m or 20 %', () => {
         expect(mergeSelection([way('w1', cycleway, 1, 30), way('w2', footway, 2, 44)])).toMatchObject({ disabled: false });
-        expect(mergeSelection([way('w1', cycleway, 1, 30), way('w2', footway, 2, 50)])).toEqual({ disabled: 'lengths' });
+        expect(mergeSelection([way('w1', cycleway, 1, 30), way('w2', footway, 2, 44)])).not.toHaveProperty('cut');
         expect(mergeSelection([way('w1', cycleway, 1, 400), way('w2', footway, 2, 330)])).toMatchObject({ disabled: false });
-        expect(mergeSelection([way('w1', cycleway, 1, 400), way('w2', footway, 2, 300)])).toEqual({ disabled: 'lengths' });
+    });
+
+    it('two ways whose lengths differ more: the longer one is to be cut', () => {
+        expect(mergeSelection([way('w1', cycleway, 1, 30), way('w2', footway, 2, 50)])).toMatchObject({ disabled: false, cut: 'foot' });
+        expect(mergeSelection([way('w1', cycleway, 1, 400), way('w2', footway, 2, 300)])).toMatchObject({ disabled: false, cut: 'bike' });
+    });
+
+    it('more than two ways whose lengths differ too much: split first', () => {
+        expect(mergeSelection([way('w1', cycleway, 1, 30), way('w2', footway, 2, 40), way('w3', footway, 3, 40)])).toEqual({ disabled: 'lengths' });
     });
 
     it('refuses several deleted pieces with different part values', () => {

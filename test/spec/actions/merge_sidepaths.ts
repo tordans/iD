@@ -78,17 +78,91 @@ describe('iD.actionMergeSidepaths', () => {
         expect(after.entity('r1').members.map((member: { id: string }) => member.id)).toEqual(['w1', 'w2']);
     });
 
-    it('is disabled when the lengths differ too much or the ways are not a cycleway and a footway', () => {
+    // a saved footway w1 (200 m, nodes every 50 m) and a new cycleway beside its middle part
+    // (ids far from -1: the cut creates new nodes and ways, which count down from -1 in a test)
+    function longFootway(bikeFrom: number, bikeTo: number, extra: unknown[] = []) {
+        return new iD.coreGraph([
+            ...[0, 50, 100, 150, 200].map((meters, i) => new iD.osmNode({ id: `n${i + 1}`, loc: [lon(meters), lat(0)] })),
+            new iD.osmNode({ id: 'n-101', loc: [lon(bikeFrom), lat(3)] }),
+            new iD.osmNode({ id: 'n-102', loc: [lon(bikeTo), lat(3)] }),
+            new iD.osmWay({ id: 'w1', version: 3, changeset: '500', nodes: ['n1', 'n2', 'n3', 'n4', 'n5'], tags: { highway: 'footway', surface: 'sett' } }),
+            new iD.osmWay({ id: 'w-101', nodes: ['n-101', 'n-102'], tags: { highway: 'cycleway', surface: 'asphalt' } }),
+            ...extra
+        ] as unknown as iD.Graph);
+    }
+    const meters = (graph: iD.Graph, nodeID: string) => Math.round((graph.entity(nodeID as 'n1').loc[0] - 13.4) / iD.geoMetersToLon(1, 52.5));
+    const span = (graph: iD.Graph, wayID: string) => {
+        const nodes = graph.entity(wayID as 'w1').nodes;
+        return [meters(graph, nodes[0]), meters(graph, nodes[nodes.length - 1])];
+    };
+
+    it('cuts a footway that is too long to the length of the cycleway: new nodes where it ends', () => {
+        const before = longFootway(70, 130);
+        const action = actionMergeSidepaths(['w1', 'w-101'], undefined, undefined);
+        expect(action.disabled!(before)).toBe(false);
+
+        const after = action(before);
+        const [pathID] = action.survivorIds();
+        expect(after.hasEntity('w-101')).toBeUndefined();
+        expect(after.entity(pathID).tags.highway).toBe('path');
+        expect(span(after, pathID)).toEqual([70, 130]);
+
+        // the rest stays a footway, in two pieces
+        const footways = after.parentWays(after.entity('n1')).concat(after.parentWays(after.entity('n5')));
+        expect(footways.map(way => way.tags.highway)).toEqual(['footway', 'footway']);
+        expect(footways.map(way => span(after, way.id)).sort((a, b) => a[0] - b[0])).toEqual([[0, 70], [130, 200]]);
+        expect(footways.every(way => way.tags.surface === 'sett' && way.tags.bicycle === undefined)).toBe(true);
+    });
+
+    it('cuts at a node of the footway that is close to the end of the cycleway', () => {
+        const before = longFootway(51, 149);
+        const action = actionMergeSidepaths(['w1', 'w-101'], undefined, undefined);
+        const after = action(before);
+
+        expect(after.entity(action.survivorIds()[0]).nodes).toEqual(['n2', 'n3', 'n4']);
+    });
+
+    it('cuts only one end when the ways start together', () => {
+        const before = longFootway(2, 90);
+        const action = actionMergeSidepaths(['w1', 'w-101'], undefined, undefined);
+        const after = action(before);
+
+        expect(span(after, action.survivorIds()[0])).toEqual([0, 90]);
+        expect(after.parentWays(after.entity('n5')).map(way => [way.tags.highway, span(after, way.id)])).toEqual([['footway', [90, 200]]]);
+    });
+
+    it('cuts a cycleway that is too long, and keeps the saved footway as the path', () => {
+        const before = new iD.coreGraph([
+            new iD.osmNode({ id: 'n1', loc: [lon(60), lat(0)] }),
+            new iD.osmNode({ id: 'n2', loc: [lon(140), lat(0)] }),
+            new iD.osmNode({ id: 'n-101', loc: [lon(0), lat(3)] }),
+            new iD.osmNode({ id: 'n-102', loc: [lon(200), lat(3)] }),
+            new iD.osmWay({ id: 'w1', version: 3, changeset: '500', nodes: ['n1', 'n2'], tags: { highway: 'footway' } }),
+            new iD.osmWay({ id: 'w-101', nodes: ['n-101', 'n-102'], tags: { highway: 'cycleway', surface: 'asphalt' } })
+        ] as unknown as iD.Graph);
+        const action = actionMergeSidepaths(['w1', 'w-101'], undefined, undefined);
+        const after = action(before);
+
+        expect(action.survivorIds()).toEqual(['w1']);
+        expect(after.entity('w1').tags).toMatchObject({ highway: 'path', 'cycleway:surface': 'asphalt' });
+        // the two ends of the cycleway stay
+        const rest = [...after.parentWays(after.entity('n-101')), ...after.parentWays(after.entity('n-102'))];
+        expect(rest.map(way => [way.tags.highway, span(after, way.id)])).toEqual([['cycleway', [0, 60]], ['cycleway', [140, 200]]]);
+    });
+
+    it('is disabled when more than two ways differ too much in length, or the ways are not a cycleway and a footway', () => {
         const short = new iD.coreGraph([
             new iD.osmNode({ id: 'n1', loc: [lon(0), lat(0)] }),
             new iD.osmNode({ id: 'n2', loc: [lon(100), lat(0)] }),
             new iD.osmNode({ id: 'n3', loc: [lon(0), lat(3)] }),
-            new iD.osmNode({ id: 'n4', loc: [lon(40), lat(3)] }),
+            new iD.osmNode({ id: 'n4', loc: [lon(20), lat(3)] }),
+            new iD.osmNode({ id: 'n5', loc: [lon(40), lat(3)] }),
             new iD.osmWay({ id: 'w1', nodes: ['n1', 'n2'], tags: { highway: 'footway' } }),
             new iD.osmWay({ id: 'w2', nodes: ['n3', 'n4'], tags: { highway: 'cycleway' } }),
+            new iD.osmWay({ id: 'w4', nodes: ['n4', 'n5'], tags: { highway: 'cycleway' } }),
             new iD.osmWay({ id: 'w3', nodes: ['n3', 'n4'], tags: { highway: 'residential' } })
         ] as unknown as iD.Graph);
-        expect(actionMergeSidepaths(['w1', 'w2'], undefined, undefined).disabled!(short)).toBe('lengths');
+        expect(actionMergeSidepaths(['w1', 'w2', 'w4'], undefined, undefined).disabled!(short)).toBe('lengths');
         expect(actionMergeSidepaths(['w1', 'w3'], undefined, undefined).disabled!(short)).toBe('not_eligible');
     });
 
