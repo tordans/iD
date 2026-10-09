@@ -55,7 +55,16 @@
           iD.mapillaryConfig({
             defaultFromDate: '2024-01-01',
             highlightUsers: ['radinfra'],
-            highlightOrgs: ['fixmycity']
+            highlightOrgs: ['fixmycity'],
+            signGroups: ['bike', 'speed', 'access']
+          });
+
+          // Radnetz Berlin: internal notes from TILDA (modules/tilda_notes/config.ts).
+          // Staging for now (note folders are not on production yet); `folderId` is the `key` of TILDA's `notes` URL parameter
+          iD.tildaNotesConfig({
+            origin: 'https://staging.tilda-geo.de',
+            regionSlug: 'infravelo',
+            folderId: 12
           });
 
           context.init();
