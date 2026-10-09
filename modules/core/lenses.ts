@@ -1,4 +1,6 @@
 import { prefs } from './preferences';
+import { patchHash } from '../behavior/hash';
+import { utilStringQs } from '../util';
 import { BUNDLED_LENSES } from '../lenses';
 
 // UI lens support. A lens is a CSS file imported by the user and kept in
@@ -137,6 +139,26 @@ export function removeUploadedLens(id: string): void {
 export function getSelectedLensId(): string {
     const raw = prefs(LENS_PREF);
     return (typeof raw === 'string' && raw) ? raw : DEFAULT_LENS_ID;
+}
+
+/** URL hash parameter with the active bundled lens */
+const LENS_HASH_KEY = 'lens';
+
+/**
+ * The lens of a link: `lens=radnetz-qa` selects that bundled lens, `lens=default` the built-in
+ * one. Only bundled lenses can be linked; an imported lens is CSS in the sender's browser.
+ * Call before the first `applyLens()`.
+ */
+export function readLensFromHash(): void {
+    const id = utilStringQs(window.location.hash)[LENS_HASH_KEY];
+    if (typeof id !== 'string') return;
+    if (id === DEFAULT_LENS_ID || getBundledLens(id)) prefs(LENS_PREF, id);
+}
+
+/** Writes the active lens to the URL if it is a bundled one, else removes the parameter */
+export function writeLensToHash(): void {
+    const id = getSelectedLensId();
+    patchHash({ [LENS_HASH_KEY]: getBundledLens(id) ? id : null });
 }
 
 /** @param id - the lens id to select */

@@ -1,7 +1,10 @@
 import { throttle } from 'es-toolkit';
 import { select as d3_select } from 'd3-selection';
 
+import { patchHash } from '../behavior/hash';
 import { prefs } from '../core/preferences';
+import { notesHashHas, notesHashWith } from '../tilda_notes/notes_hash';
+import { utilStringQs } from '../util';
 import { modeBrowse } from '../modes/browse';
 import { services } from '../services';
 import { svgPointTransform } from './helpers';
@@ -9,8 +12,9 @@ import type { TildaNote } from '../tilda_notes/note';
 import type { Projection } from '../geo/raw_mercator';
 import type { LayerDispatch } from './layers';
 
-// On unless the user turned the layer off
-let _enabled = prefs('tilda-notes.enabled') !== 'false';
+// A link's `notes` parameter wins (`notes=osm,tilda`); else on unless the user turned the layer off
+const _hashNotes = utilStringQs(window.location.hash).notes;
+let _enabled = typeof _hashNotes === 'string' ? notesHashHas(_hashNotes, 'tilda') : prefs('tilda-notes.enabled') !== 'false';
 
 const MARKER_PATH = 'm17.5,0l-15,0c-1.37,0 -2.5,1.12 -2.5,2.5l0,11.25c0,1.37 1.12,2.5 2.5,2.5l3.75,0l0,3.28c0,0.38 0.43,0.6 0.75,0.37l4.87,-3.65l5.62,0c1.37,0 2.5,-1.12 2.5,-2.5l0,-11.25c0,-1.37 -1.12,-2.5 -2.5,-2.5z';
 
@@ -35,6 +39,8 @@ export function svgTildaNotes(projection: Projection, context: iD.Context, dispa
         if (!service || !service.configured()) return null;
         if (!_listening) {
             _listening = true;
+            // a layer that is on by default is in the URL too, so a link shows the same note layers
+            patchHash((current: Record<string, string>) => ({ notes: notesHashWith(current.notes, 'tilda', _enabled) }));
             service.on('loadedNotes.svg-tilda-notes', throttledRedraw);
         }
         return service;
@@ -172,6 +178,7 @@ export function svgTildaNotes(projection: Projection, context: iD.Context, dispa
 
         _enabled = !!val;
         prefs('tilda-notes.enabled', _enabled ? 'true' : 'false');
+        patchHash((current: Record<string, string>) => ({ notes: notesHashWith(current.notes, 'tilda', _enabled && !!getService()) }));
 
         if (!_enabled) {
             throttledRedraw.cancel();

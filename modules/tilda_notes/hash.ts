@@ -35,3 +35,4 @@ export function selectTildaNoteFromHash(context: iD.Context, hashId: string, mov
         context.enter(modeSelectTildaNote(context, id) as any);
     });
 }
+

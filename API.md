@@ -24,6 +24,8 @@ of iD (e.g. `https://ideditor-release.netlify.app`), the following parameters ar
   _Example:_ `readonly_features=buildings,landuse`<br/>
 * __`data_layers`__ - (Radnetz Berlin fork) The enabled custom data layers: `url|name|color|filter|o` per layer, joined with `;`. Only `url` is required; `color` is a hex color without `#`, `filter` is `key=value`, `o` makes the layer an overlay that cannot be selected. A link enables exactly its layers (unknown ones are added to the stored layers) and turns the other stored layers off.<br/>
   _Example:_ `data_layers=https://example.com/a.pmtiles|Radnetz|ff26d4;https://example.com/b.geojson`<br/>
+* __`lens`__ - (Radnetz Berlin fork) The map style lens: the id of a bundled lens, or `default` for none. Lenses imported from a CSS file cannot be linked.<br/>
+  _Example:_ `lens=radnetz-qa`<br/>
 * __`way_table`__ - (Radnetz Berlin fork) `true` opens the way table below the map, `false` closes it.<br/>
 * __`disable_features`__ - Disables features in the list.<br/>
   _Example:_ `disable_features=water,service_roads,points,paths,boundaries`<br/>
@@ -45,7 +47,9 @@ of iD (e.g. `https://ideditor-release.netlify.app`), the following parameters ar
 * __`map`__ - A slash-separated `zoom/latitude/longitude`.<br/>
   _Example:_ `map=20.00/38.90085/-77.02271`
 * __`notes`__ - Enables the notes layer by default.<br/>
-  _Example:_ `notes=true`
+  _Example:_ `notes=true`<br/>
+  (Radnetz Berlin fork) Also a list of the note layers that are on: `osm` (OpenStreetMap notes, the same as `true`) and `tilda` (internal TILDA notes). With the parameter, exactly the listed layers are on.<br/>
+  _Example:_ `notes=osm,tilda`
 * __`offset`__ - Background imagery alignment offset in meters, formatted as `east,north`.<br/>
   _Example:_ `offset=-10,5`
 * __`photo_overlay`__ - The street-level photo overlay layers to enable.<br/>

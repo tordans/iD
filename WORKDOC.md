@@ -1436,13 +1436,14 @@ A link should open the editor the way the sender saw it. iD keeps this state in 
 | Read-only categories (feature 12) | `readonly_features` | earlier; from 2026-10-09 also written when the state comes from the browser storage |
 | Custom data layers (feature 4): the enabled ones with URL, name, colour, filter, overlay flag | `data_layers` | 2026-10-09 |
 | Way table open (feature 6) | `way_table` | 2026-10-09 |
+| Lens (feature 5): the bundled lens, or `default` | `lens` | 2026-10-09 |
+| Note layers that are on: `osm`, `tilda` (feature 29) | `notes` | 2026-10-09 (iD only read `notes=true` on load) |
 
 **Not in the URL, and why**
 
 | Feature | Where it lives | In the URL? |
 |---|---|---|
-| Lens (feature 5): which one is active | browser storage; imported lenses are CSS files in the browser | Worth adding for the bundled lens (`lens=radnetz-qa`). An imported lens cannot be linked (its CSS is not at a URL). |
-| TILDA notes layer on / off, OSM notes layer on / off | browser storage (TILDA), not stored (OSM) | Could be added (`notes=osm,tilda`). Low value: a link to a note turns its layer on anyway. |
+| An imported lens (feature 5) | its CSS is in the sender's browser storage | No: there is no URL to link to. With an imported lens active the `lens` parameter is removed. |
 | Live edits nearby on / off (feature 11) | browser storage, after a consent dialog | No: it needs the user's consent, a link must not turn it on. |
 | Way table height, sidebar width, photo viewer size | browser storage | No: depends on the screen. |
 | Area fill, toolbar labels, optional buttons, hidden map controls (features 13, 30, 31) | browser storage | No: personal preferences. Area fill could be added if needed for screenshots. |
@@ -1453,6 +1454,8 @@ A link should open the editor the way the sender saw it. iD keeps this state in 
 | Unsaved edits | iD's own restore in the browser storage | No. |
 
 Notes on the new parameters:
+- `lens`: only ids of bundled lenses (and `default`) are accepted; anything else is ignored. The link sets the receiver's stored lens.
+- `notes`: with the parameter exactly the listed layers are on (`notes=osm` turns the TILDA notes off for that session and stores it). The TILDA layer, on by default, writes itself into the URL when it starts. Helpers in `modules/tilda_notes/notes_hash.ts`.
 - `data_layers`: a link enables exactly its layers. Layers the receiver does not have are added to their stored layers (name and colour from the link); their other layers are turned off, not deleted. Format in `API.md`.
 - `|` in `data_layers` shows as `%7C` in the address bar (iD's hash writer only leaves `/ : , { }` unescaped).
 
@@ -1506,6 +1509,7 @@ Notes on the new parameters:
 
 ## Progress log
 
+- 2026-10-09: URL: `lens` (bundled lens) and `notes=osm,tilda` (note layers) (feature 34).
 - 2026-10-09: URL: `data_layers` (custom data layers), `way_table`, and `readonly_features` also written from the stored state; review of what is in the URL (feature 34).
 - 2026-10-09: Two fixes for the deployed preview.
   - Background list: imagery with several years showed one year only, and choosing it did nothing. The label of a new row was drawn twice, the second time as plain text, which removed the year dropdown; the radio button then failed looking for it. Fixed in `modules/ui/sections/background_list.js`; the rows also get a copy of the source per render, as in the `multiple-custom-backgrounds` branch. That branch has the same double drawing (its `drawListItems`, "render the label text on enter") and needs the same fix. Checked in the browser: ten Berlin years in the dropdown, radio and dropdown change the background and the URL.

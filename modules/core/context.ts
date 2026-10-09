@@ -8,7 +8,7 @@ import type { EntityId, NoteId, osmChangeset, OsmEntity } from '../osm';
 import { t, localizer } from './localizer';
 import { fileFetcher, type AssetMap } from './file_fetcher';
 import { prefs } from './preferences';
-import { applyLens, LENS_PREF, UPLOADED_LENSES_PREF } from './lenses';
+import { applyLens, LENS_PREF, readLensFromHash, UPLOADED_LENSES_PREF, writeLensToHash } from './lenses';
 import { coreHistory } from './history';
 import { coreValidator } from './validator';
 import { coreUploader } from './uploader';
@@ -764,9 +764,13 @@ export function coreContext(this: object): coreContext {
 
       // apply the active CSS lens (injected CSS + tag classes), and re-apply +
       // redraw whenever the selected lens or the stored lenses change
+      // a link can name a bundled lens (`lens=radnetz-qa`); the active one is written to the URL
+      readLensFromHash();
       applyLens();
+      writeLensToHash();
       const onLensChange = () => {
         applyLens();
+        writeLensToHash();
         if (_map) _map.pan([0, 0]);   // force a redraw so classes are recomputed
       };
       prefs.onChange(LENS_PREF, onLensChange);
