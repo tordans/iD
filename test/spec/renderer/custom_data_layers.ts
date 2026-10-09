@@ -4,6 +4,8 @@ import {
     customDataFormat,
     customDataLabel,
     customDataLayers,
+    decodeCustomDataLayers,
+    encodeCustomDataLayers,
     matchesCustomDataFilter
 } from '../../../modules/renderer/custom_data_layers';
 
@@ -12,6 +14,7 @@ describe('customDataLayers', () => {
     beforeEach(() => {
         prefs('custom-data-layers', null);
         prefs('custom-data-layers-next-id', null);
+        window.location.hash = '';
         customDataLayers.reset();
     });
 
@@ -107,6 +110,56 @@ describe('customDataLayers', () => {
             customDataLayers.update(a.id, { filterKey: '', filterValue: 'x' });
             expect(customDataLayers.get(a.id)?.filterKey).toBeUndefined();
             expect(customDataLayers.get(a.id)?.filterValue).toBeUndefined();
+        });
+    });
+
+    describe('URL hash `data_layers`', () => {
+        const pmtiles = 'https://example.com/tiles/a.pmtiles';
+
+        it('writes the enabled layers: url, name, color, filter, overlay flag', () => {
+            customDataLayers.add(pmtiles, 'Radnetz', { filterKey: 'kind', filterValue: 'a|b' });
+            const plain = customDataLayers.add('https://example.com/b.geojson');
+            customDataLayers.update(plain.id, { selectable: false, name: '' });
+            const off = customDataLayers.add('https://example.com/off.geojson');
+            customDataLayers.toggle(off.id);
+
+            const value = encodeCustomDataLayers(customDataLayers.all());
+            expect(value).toBe(`${pmtiles}|Radnetz|ff26d4|kind=a%7Cb;https://example.com/b.geojson||00c8ff||o`);
+            expect(new URLSearchParams(window.location.hash.slice(1)).get('data_layers')).toBe(value);
+        });
+
+        it('reads them back', () => {
+            expect(decodeCustomDataLayers(`${pmtiles}|Radnetz|ff26d4|kind=a%7Cb;https://example.com/b.geojson||00c8ff||o;;`)).toEqual([
+                { url: pmtiles, name: 'Radnetz', color: '#ff26d4', selectable: true, filterKey: 'kind', filterValue: 'a|b' },
+                { url: 'https://example.com/b.geojson', name: '', color: '#00c8ff', selectable: false, filterKey: undefined, filterValue: undefined }
+            ]);
+            expect(decodeCustomDataLayers('https://example.com/c.geojson')).toMatchObject([{ url: 'https://example.com/c.geojson', color: undefined, selectable: true }]);
+        });
+
+        it('a link enables exactly its layers: known ones by URL and filter, new ones are added', () => {
+            const known = customDataLayers.add(pmtiles, 'Mine');
+            const other = customDataLayers.add('https://example.com/other.geojson');
+            window.location.hash = '#' + new URLSearchParams({ map: '16/52.5/13.4', data_layers: `${pmtiles};https://example.com/new.geojson|New|6cff3d` }).toString();
+            customDataLayers.reset();
+
+            const layers = customDataLayers.all();
+            expect(layers.map(layer => [layer.url, layer.name, layer.enabled])).toEqual([
+                [pmtiles, 'Mine', true],
+                ['https://example.com/other.geojson', '', false],
+                ['https://example.com/new.geojson', 'New', true]
+            ]);
+            expect(layers[0].id).toBe(known.id);
+            expect(layers[1].id).toBe(other.id);
+            expect(layers[2]).toMatchObject({ id: 'data-3', color: '#6cff3d' });
+        });
+
+        it('without the parameter the stored layers stay, and the enabled ones go into the URL', () => {
+            customDataLayers.add(pmtiles);
+            window.location.hash = '#map=16/52.5/13.4';
+            customDataLayers.reset();
+
+            expect(customDataLayers.enabled()).toHaveLength(1);
+            expect(new URLSearchParams(window.location.hash.slice(1)).get('data_layers')).toBe(`${pmtiles}||ff26d4`);
         });
     });
 });

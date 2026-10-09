@@ -1421,6 +1421,41 @@ Plan as written before the build:
 
 **Code (planned):** `modules/tilda/checks.ts` (client, cache, load and save), buttons in `modules/ui/sections/tilda_bike_infra.ts`, the lookup in the new validation. Tests with a mocked client.
 
+### 34. What is in the URL — ✅ (review 2026-10-09)
+
+A link should open the editor the way the sender saw it. iD keeps this state in the URL hash; a parameter in the URL wins over the stored state of the browser, and the state is written back to the URL.
+
+**In the URL**
+
+| Feature | Parameter | Since |
+|---|---|---|
+| Map place, selected feature, background (also a custom one as `background=custom:<url>`), hidden categories | `map`, `id`, `background`, `disable_features` | iD |
+| Photo layers, photo filters, the open photo | `photo_overlay`, `photo_dates`, `photo_username`, `photo` | iD |
+| Mapillary: highlighted users and organisations, sign groups, the selected sign (features 18, 26) | `photo_highlight_users`, `photo_highlight_orgs`, `photo_sign_groups`, `photo_sign` | earlier |
+| A selected TILDA note (feature 29) | `id=tilda-note/<id>` | earlier |
+| Read-only categories (feature 12) | `readonly_features` | earlier; from 2026-10-09 also written when the state comes from the browser storage |
+| Custom data layers (feature 4): the enabled ones with URL, name, colour, filter, overlay flag | `data_layers` | 2026-10-09 |
+| Way table open (feature 6) | `way_table` | 2026-10-09 |
+
+**Not in the URL, and why**
+
+| Feature | Where it lives | In the URL? |
+|---|---|---|
+| Lens (feature 5): which one is active | browser storage; imported lenses are CSS files in the browser | Worth adding for the bundled lens (`lens=radnetz-qa`). An imported lens cannot be linked (its CSS is not at a URL). |
+| TILDA notes layer on / off, OSM notes layer on / off | browser storage (TILDA), not stored (OSM) | Could be added (`notes=osm,tilda`). Low value: a link to a note turns its layer on anyway. |
+| Live edits nearby on / off (feature 11) | browser storage, after a consent dialog | No: it needs the user's consent, a link must not turn it on. |
+| Way table height, sidebar width, photo viewer size | browser storage | No: depends on the screen. |
+| Area fill, toolbar labels, optional buttons, hidden map controls (features 13, 30, 31) | browser storage | No: personal preferences. Area fill could be added if needed for screenshots. |
+| Favorite presets and their numbers (feature 3) | browser storage | No: personal. |
+| Names of the stored custom backgrounds (feature 1) | browser storage | The active one is in `background`; its name is not. |
+| TILDA section: chosen target category, open cards; traffic sign "Per direction"; measuring tape | not stored, lost on reload | No: steps of an edit in progress. |
+| "Checked" / "Verified" (feature 33) | key-value DB, per way | No: shared data, the same for everyone. |
+| Unsaved edits | iD's own restore in the browser storage | No. |
+
+Notes on the new parameters:
+- `data_layers`: a link enables exactly its layers. Layers the receiver does not have are added to their stored layers (name and colour from the link); their other layers are turned off, not deleted. Format in `API.md`.
+- `|` in `data_layers` shows as `%7C` in the address bar (iD's hash writer only leaves `/ : , { }` unescaped).
+
 ## Integration order (proposal)
 
 1. Multiple custom backgrounds (most mature)
@@ -1471,6 +1506,7 @@ Plan as written before the build:
 
 ## Progress log
 
+- 2026-10-09: URL: `data_layers` (custom data layers), `way_table`, and `readonly_features` also written from the stored state; review of what is in the URL (feature 34).
 - 2026-10-09: Two fixes for the deployed preview.
   - Background list: imagery with several years showed one year only, and choosing it did nothing. The label of a new row was drawn twice, the second time as plain text, which removed the year dropdown; the radio button then failed looking for it. Fixed in `modules/ui/sections/background_list.js`; the rows also get a copy of the source per render, as in the `multiple-custom-backgrounds` branch. That branch has the same double drawing (its `drawListItems`, "render the label text on enter") and needs the same fix. Checked in the browser: ten Berlin years in the dropdown, radio and dropdown change the background and the URL.
   - TILDA notes were missing on Netlify: `dist/index.html` (the page Netlify serves) did not call `iD.tildaNotesConfig(...)`, only the development `index.html` did. Added, with the Mapillary `signGroups` that were missing there too. **Both files carry the project config; change them together.**

@@ -53,6 +53,11 @@ function createReadOnlyFeatures() {
     const readOnlyFeatures = {
         keys: () => [..._keys],
 
+        /** Categories that come from the stored preference are written to the URL too, so a copied link carries them */
+        writeHash() {
+            patchHash({ [HASH_KEY]: [..._keys].join(',') || null });
+        },
+
         isReadOnlyKey: (key: string) => _keys.has(key),
 
         toggle(key: string) {
@@ -118,6 +123,7 @@ function entityForDatum(datum: unknown): Entity | undefined {
  */
 export function setupReadOnlyFeatures(context: iD.Context) {
     const features = context.features() as unknown as Features;
+    readOnlyFeatures.writeHash();
 
     function applyClasses() {
         const surface = context.surface();

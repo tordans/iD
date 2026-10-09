@@ -1,6 +1,8 @@
 import { dispatch as d3_dispatch } from 'd3-dispatch';
 
+import { patchHash } from '../behavior/hash';
 import { prefs } from '../core/preferences';
+import { utilStringQs } from '../util';
 import { utilRebind } from '../util/rebind';
 
 /**
@@ -90,6 +92,57 @@ function cleanFilter(filter: Pick<CustomDataLayer, 'filterKey' | 'filterValue'>)
 }
 
 
+/** URL hash parameter with the enabled layers, so a link shows the same data */
+const HASH_KEY = 'data_layers';
+
+/** What the URL says about a layer: enough to show it again, not its id */
+export type CustomDataLayerLink = Pick<CustomDataLayer, 'url' | 'name' | 'filterKey' | 'filterValue'> & {
+    color?: string;
+    selectable: boolean;
+};
+
+// `;` between layers and `|` between fields: only these (and `%`) are escaped inside a field,
+// so the layer URLs stay readable in the hash
+const escapeField = (value: string) => value.replace(/[%|;]/g, char => encodeURIComponent(char));
+const unescapeField = (value: string) => value.replace(/%(25|7C|3B)/gi, decodeURIComponent);
+
+/**
+ * The enabled layers as the value of the `data_layers` hash parameter:
+ * `url|name|color|filter|o` per layer, joined with `;`. `color` without `#`, `filter` as
+ * `key=value`, `o` marks a layer that is only an overlay (not selectable); empty fields at the
+ * end are left out.
+ */
+export function encodeCustomDataLayers(layers: CustomDataLayer[]) {
+    return layers.filter(layer => layer.enabled).map(layer => {
+        const fields = [
+            layer.url,
+            layer.name,
+            layer.color.replace(/^#/, ''),
+            layer.filterKey ? `${layer.filterKey}=${layer.filterValue ?? ''}` : '',
+            isSelectable(layer) ? '' : 'o'
+        ];
+        while (fields.length > 1 && !fields[fields.length - 1]) fields.pop();
+        return fields.map(escapeField).join('|');
+    }).join(';');
+}
+
+export function decodeCustomDataLayers(value: string): CustomDataLayerLink[] {
+    return value.split(';').map(part => part.split('|').map(unescapeField)).flatMap(fields => {
+        const [url = '', name = '', color = '', filter = '', flags = ''] = fields;
+        if (!url.trim()) return [];
+        const separator = filter.indexOf('=');
+        const filterKey = (separator < 0 ? filter : filter.slice(0, separator)).trim();
+        return [{
+            url: url.trim(),
+            name: name.trim(),
+            color: /^[0-9a-f]{3,8}$/i.test(color) ? `#${color}` : undefined,
+            selectable: !flags.includes('o'),
+            ...cleanFilter({ filterKey, filterValue: separator < 0 ? '' : filter.slice(separator + 1) })
+        }];
+    });
+}
+
+
 function isCustomDataLayer(item: unknown): item is CustomDataLayer {
     const layer = item as CustomDataLayer;
     return typeof layer?.id === 'string' && typeof layer?.url === 'string';
@@ -97,7 +150,9 @@ function isCustomDataLayer(item: unknown): item is CustomDataLayer {
 
 
 /**
- * Stores the custom data layers in local preferences.
+ * Stores the custom data layers in local preferences. The enabled ones are also in the URL hash
+ * (`data_layers`); a link with that parameter enables exactly its layers (adding unknown ones)
+ * and turns the others off, like `disable_features` does for the map features.
  *
  * Events:
  *   'change' - layers were added, removed, edited or toggled
@@ -110,24 +165,61 @@ function createCustomDataLayers() {
     function load(): CustomDataLayer[] {
         if (_layers) return _layers;
 
+        let layers: CustomDataLayer[];
         try {
             const parsed: unknown = JSON.parse(prefs(STORAGE_KEY) ?? '[]');
-            _layers = Array.isArray(parsed) ? parsed.filter(isCustomDataLayer) : [];
+            layers = Array.isArray(parsed) ? parsed.filter(isCustomDataLayer) : [];
         } catch {
-            _layers = [];
+            layers = [];
         }
+
+        // the URL wins over the stored state
+        const hashValue = utilStringQs(window.location.hash)[HASH_KEY];
+        if (typeof hashValue === 'string') {
+            layers = withLinkedLayers(layers, decodeCustomDataLayers(hashValue));
+            prefs(STORAGE_KEY, JSON.stringify(layers));
+        }
+        _layers = layers;
+        writeHash();
         return _layers;
+    }
+
+    /** Exactly the linked layers are enabled; the ones that are not stored yet are added */
+    function withLinkedLayers(stored: CustomDataLayer[], linked: CustomDataLayerLink[]) {
+        const layers = stored.map(layer => ({ ...layer, enabled: false }));
+        for (const link of linked) {
+            const existing = layers.find(layer => layer.url === link.url && customDataFilterLabel(layer) === customDataFilterLabel(link));
+            if (existing) {
+                existing.enabled = true;
+                continue;
+            }
+            layers.push({
+                id: nextId(layers),
+                name: link.name,
+                url: link.url,
+                color: link.color ?? CUSTOM_DATA_COLORS[layers.length % CUSTOM_DATA_COLORS.length],
+                enabled: true,
+                ...(link.selectable ? {} : { selectable: false }),
+                ...cleanFilter(link)
+            });
+        }
+        return layers;
+    }
+
+    function writeHash() {
+        patchHash({ [HASH_KEY]: encodeCustomDataLayers(_layers ?? []) || null });
     }
 
     function save(layers: CustomDataLayer[]) {
         _layers = layers;
         prefs(STORAGE_KEY, JSON.stringify(layers));
+        writeHash();
         dispatch.call('change');
     }
 
-    function nextId() {
+    function nextId(layers = load()) {
         const stored = Number(prefs(NEXT_ID_KEY));
-        const highest = Math.max(0, ...load().map(layer => Number(layer.id.replace(/^data-/, '')) || 0));
+        const highest = Math.max(0, ...layers.map(layer => Number(layer.id.replace(/^data-/, '')) || 0));
         const next = Math.max(Number.isFinite(stored) ? stored : 0, highest) + 1;
         prefs(NEXT_ID_KEY, String(next));
         return `data-${next}`;

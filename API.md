@@ -20,6 +20,11 @@ of iD (e.g. `https://ideditor-release.netlify.app`), the following parameters ar
   _Example:_ `background=custom:https://tile.openstreetmap.org/{zoom}/{x}/{y}.png`
 * __`comment`__ - Prefills the changeset comment.<br/>
   _Example:_ `comment=CAR%20crisis%2C%20refugee%20areas%20in%20Cameroon`
+* __`readonly_features`__ - (Radnetz Berlin fork) Feature categories that stay visible but cannot be selected. Same category names as `disable_features`.<br/>
+  _Example:_ `readonly_features=buildings,landuse`<br/>
+* __`data_layers`__ - (Radnetz Berlin fork) The enabled custom data layers: `url|name|color|filter|o` per layer, joined with `;`. Only `url` is required; `color` is a hex color without `#`, `filter` is `key=value`, `o` makes the layer an overlay that cannot be selected. A link enables exactly its layers (unknown ones are added to the stored layers) and turns the other stored layers off.<br/>
+  _Example:_ `data_layers=https://example.com/a.pmtiles|Radnetz|ff26d4;https://example.com/b.geojson`<br/>
+* __`way_table`__ - (Radnetz Berlin fork) `true` opens the way table below the map, `false` closes it.<br/>
 * __`disable_features`__ - Disables features in the list.<br/>
   _Example:_ `disable_features=water,service_roads,points,paths,boundaries`<br/>
   _Available features:_ `points`, `traffic_roads`, `service_roads`, `paths`, `buildings`, `building_parts`, `indoor`, `landuse`,

@@ -2,13 +2,14 @@ import { debounce } from 'es-toolkit';
 import { drag as d3_drag } from 'd3-drag';
 import { select as d3_select } from 'd3-selection';
 
+import { patchHash } from '../behavior/hash';
 import { prefs } from '../core/preferences';
 import { geoRawMercator, geoZoomToScale } from '../geo';
 import { localizer, t } from '../core/localizer';
 import { presetManager } from '../presets';
 import { modeSelect } from '../modes/select';
 import { svgIcon } from '../svg/icon';
-import { utilHighlightEntities } from '../util/util';
+import { utilHighlightEntities, utilStringQs } from '../util/util';
 import { utilDisplayLabel } from '../util/utilDisplayLabel';
 import type { NodeId, WayId } from '../osm';
 import { buildWayChain, mirrorChain, runsAgainstReadingOrder, type ChainSegment, type JunctionChoice, type WayChain } from '../way_table/chain';
@@ -16,6 +17,8 @@ import { buildTagRows, type TagCell, type TagRow } from '../way_table/tag_rows';
 import { uiTooltip } from './tooltip';
 
 const ENABLED_PREF = 'way-table-panel';
+/** URL hash parameter: the table is open */
+const HASH_KEY = 'way_table';
 /** the dock's height in px */
 const HEIGHT_PREF = 'way-table-panel-height';
 const DEFAULT_HEIGHT_PX = 200;
@@ -43,7 +46,10 @@ const clamp = (value: number, min: number, max: number) => Math.min(Math.max(val
  */
 export function uiWayTablePanel(context: iD.Context) {
     let _container: d3.Selection<HTMLDivElement> = d3_select<HTMLDivElement, unknown>(null!);
-    let _enabled = prefs(ENABLED_PREF) === 'true';
+    // the URL (`way_table=true|false`) wins over the stored state; an open table is written to the URL
+    const hashValue = utilStringQs(window.location.hash)[HASH_KEY];
+    let _enabled = typeof hashValue === 'string' ? hashValue !== 'false' && hashValue !== '0' : prefs(ENABLED_PREF) === 'true';
+    patchHash({ [HASH_KEY]: _enabled ? 'true' : null });
     let _height = readHeight();
     /** chosen way per ambiguous junction node, reset when the selection leaves the chain */
     let _junctionChoices = new Map<NodeId, WayId>();
@@ -461,6 +467,7 @@ export function uiWayTablePanel(context: iD.Context) {
     wayTablePanel.toggle = function(enabled?: boolean) {
         _enabled = enabled ?? !_enabled;
         prefs(ENABLED_PREF, String(_enabled));
+        patchHash({ [HASH_KEY]: _enabled ? 'true' : null });
         if (!_enabled && _chain) {
             for (const segment of _chain.segments) highlight(segment.wayID, false);
         }
