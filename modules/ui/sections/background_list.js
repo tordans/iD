@@ -159,16 +159,22 @@ export function uiSectionBackgroundList(context) {
                         !s.isCustom && s.prefix === prefix && s.suffix === suffix);
                     if (main) {
                         main.variants.push({ variant, source });
-                        return;
                     } else {
-                        source.prefix = prefix;
-                        source.suffix = suffix;
-                        source.variants = [{ variant, source }];
+                        // a copy per render (as in the multiple-custom-backgrounds branch): the rows keep
+                        // their own data, so a changed list of variants is seen as a change
+                        sources.push({
+                            ...source,
+                            prefix,
+                            suffix,
+                            variants: [{ variant, source }]
+                        });
                     }
                 } else {
-                    source.variants = [{ source }];
+                    sources.push({
+                        ...source,
+                        variants: [{ source }]
+                    });
                 }
-                sources.push(source);
             });
         sources.forEach(source => {
             if (!source.isCustom && source.variants.length > 1) {
@@ -183,7 +189,13 @@ export function uiSectionBackgroundList(context) {
             // We have to be a bit inefficient about reordering the list since
             // arrow key navigation of radio values likes to work in the order
             // they were added, not the display document order.
-            .data(sources, function(d, i) { return d.id + '---' + i; });
+            // The variants are part of the key: a row is drawn once, with or without the dropdown of
+            // its variants. When the variants change (the list is first drawn before the map has its
+            // place, with fewer sources), the row has to be drawn again, or its radio button looks
+            // for a dropdown that is not there and the background cannot be changed.
+            .data(sources, function(d, i) {
+                return d.id + '---' + i + '---' + d.variants.map(variant => variant.source.id).join(',');
+            });
 
         layerLinks.exit()
             .remove();
@@ -271,10 +283,12 @@ export function uiSectionBackgroundList(context) {
             .append('span')
             .text('★');
 
-        // render the label text on enter; on update re-render only custom rows,
-        // whose labels can change after an edit (regular imagery labels are
-        // static, and this runs on every map-move driven reRender)
-        enter.merge(layerLinks.filter(function(d) { return d.isCustom; }))
+        // New rows got their label above (plain text, or the dropdown of their variants).
+        // On update re-render only custom rows, whose labels can change after an edit (regular
+        // imagery labels are static, and this runs on every map-move driven reRender).
+        // Not the new rows again: that replaced the dropdown of the variants with plain text,
+        // and the row's radio button then failed looking for it.
+        layerLinks.filter(function(d) { return d.isCustom; })
             .select('label > span')
             .text(null)
             .each(function(d) { d.label()(d3_select(this)); });
