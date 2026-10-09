@@ -420,6 +420,7 @@ export function rendererMap(context) {
             'browse': true,
             'save': true,
             'select-note': true,
+            'select-tilda-note': true,
             'select-data': true,
             'select-error': true
         };
@@ -886,7 +887,7 @@ export function rendererMap(context) {
 
     function footerHeight() {
         const footer = context.container().select('.map-footer-bar');
-        return footer.node().offsetHeight;
+        return footer.empty() ? 0 : footer.node().offsetHeight;
     }
 
     map.zoom = function(z2) {

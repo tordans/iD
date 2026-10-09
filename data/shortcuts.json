@@ -49,6 +49,19 @@
             "text": "shortcuts.browsing.display_options.map_data"
           },
           {
+            "modifiers": ["⇧"],
+            "shortcuts": ["map_display.key"],
+            "text": "shortcuts.browsing.display_options.map_display"
+          },
+          {
+            "shortcuts": ["photos_pane.key"],
+            "text": "shortcuts.browsing.display_options.photos"
+          },
+          {
+            "shortcuts": ["way_table.key"],
+            "text": "shortcuts.browsing.display_options.way_table"
+          },
+          {
             "shortcuts": ["issues.key"],
             "text": "shortcuts.browsing.display_options.issues"
           },

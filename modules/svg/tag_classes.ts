@@ -1,6 +1,7 @@
 import type { Geometry } from '@openstreetmap/id-tagging-schema';
 import { select as d3_select } from 'd3-selection';
 import { osmPathHighwayTagValues, osmPavedTags, osmSemipavedTags, osmLifecyclePrefixes } from '../osm/tags';
+import { appendLensTagClasses } from '../core/lenses';
 
 export type TagGetter<T> = (entity: T) => Tags;
 
@@ -160,6 +161,9 @@ export function svgTagClasses<T>() {
         if (qid) {
             classes.push('tag-wikidata');
         }
+
+        // add classes for the OSM keys the active lens's CSS styles
+        appendLensTagClasses(classes, t);
 
         // ensure that classes for tags keys/values with special characters like spaces
         // are not added to the DOM, because it can cause bizarre issues (#9448)

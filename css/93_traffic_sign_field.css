@@ -1,0 +1,15 @@
+/* Traffic sign field: what the fork adds around the package's field
+   (the field's own look comes from @osm-traffic-signs/id-field, id-field.css) */
+
+/* tags the sign implies, below the field (modules/ui/fields/traffic_sign.ts, tag plan UI) */
+.traffic-sign-plan {
+    flex-basis: 100%;
+    width: 100%;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-color-2);
+}
+.traffic-sign-plan-header {
+    font-size: 12px;
+    font-weight: bold;
+}
