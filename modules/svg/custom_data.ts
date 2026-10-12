@@ -1,7 +1,7 @@
 import { throttle } from 'es-toolkit';
 import type { Dispatch } from 'd3-dispatch';
 import { json as d3_json } from 'd3-fetch';
-import { geoPath as d3_geoPath } from 'd3-geo';
+import { geoBounds as d3_geoBounds, geoPath as d3_geoPath } from 'd3-geo';
 import { select as d3_select } from 'd3-selection';
 import stringify from 'fast-json-stable-stringify';
 import type { Feature, FeatureCollection } from 'geojson';
@@ -13,6 +13,7 @@ import {
     matchesCustomDataFilter,
     type CustomDataLayer
 } from '../renderer/custom_data_layers';
+import { progressFeatureID, progressTracker, type ProgressTrackerID } from '../progress/tracker';
 import { services } from '../services';
 import { utilHashcode } from '../util';
 import { svgPath } from './helpers';
@@ -30,9 +31,34 @@ type GeoJSONCacheEntry = {
     features?: DataFeature[];
 };
 
-type DataGroup = 'fill' | 'shadow' | 'stroke';
+type DataGroup = 'fill' | 'shadow' | 'casing' | 'stroke';
 
-const DATA_GROUPS: DataGroup[] = ['fill', 'shadow', 'stroke'];
+// `casing`: the done / not done colour around the lines of a layer with a progress tracker
+const DATA_GROUPS: DataGroup[] = ['fill', 'shadow', 'casing', 'stroke'];
+
+/** The features the main map drew last, per layer: the sidebar needs the layer and all pieces of a line */
+const _drawn = new Map<string, DataFeature[]>();
+const _layerOfFeature = new WeakMap<object, string>();
+
+/** The custom data layer a feature of the map belongs to */
+export function customDataLayerOfFeature(feature: object): CustomDataLayer | undefined {
+    const layerID = _layerOfFeature.get(feature);
+    return layerID ? customDataLayers.get(layerID) : undefined;
+}
+
+/**
+ * The bounding box of all drawn pieces of the line with this id (vector tiles cut a line at
+ * their borders), or undefined
+ */
+export function customDataLineBBox(layerID: string, featureID: string): [number, number, number, number] | undefined {
+    const pieces = (_drawn.get(layerID) ?? []).filter(feature => progressFeatureID(feature.properties) === featureID);
+    if (!pieces.length) return undefined;
+    const bounds = pieces.map(piece => d3_geoBounds(piece));
+    return [
+        Math.min(...bounds.map(b => b[0][0])), Math.min(...bounds.map(b => b[0][1])),
+        Math.max(...bounds.map(b => b[1][0])), Math.max(...bounds.map(b => b[1][1]))
+    ];
+}
 
 
 function isPolygon(d: DataFeature) {
@@ -91,6 +117,18 @@ export function svgCustomData(
     let _vtService: typeof services.vectorTile | undefined;
 
     customDataLayers.on(`change.${namespace}`, () => dispatch.call('change'));
+
+    const _trackersListenedTo = new Set<ProgressTrackerID>();
+    /** The layer's tracker, redrawing when its marks change */
+    function trackerOf(layer: CustomDataLayer) {
+        if (!layer.tracker) return undefined;
+        const tracker = progressTracker(context, layer.tracker);
+        if (!_trackersListenedTo.has(layer.tracker)) {
+            _trackersListenedTo.add(layer.tracker);
+            tracker.on(`change.${namespace}`, () => dispatch.call('change'));
+        }
+        return tracker;
+    }
 
 
     function vectorTileService() {
@@ -175,10 +213,24 @@ export function svgCustomData(
 
             const group = d3_select<SVGGElement, CustomDataLayer>(this);
             if (minimap) {
-                drawPaths(group, { fill: polygons, shadow: [], stroke: features }, getPath, getPath);
+                drawPaths(group, { fill: polygons, shadow: [], casing: [], stroke: features }, getPath, getPath);
                 return;
             }
-            drawPaths(group, { fill: polygons, shadow: features, stroke: features }, getPath, getAreaPath);
+
+            // progress tracking: a green (done) or red casing around every line with an id
+            const tracker = trackerOf(layer);
+            let tracked: DataFeature[] = [];
+            if (tracker) {
+                const [[minLon, minLat], [maxLon, maxLat]] = context.map().extent();
+                tracker.loadView([minLon, minLat, maxLon, maxLat]);
+                tracked = features.filter(feature => !isPolygon(feature) && progressFeatureID(feature.properties));
+            }
+            _drawn.set(layer.id, features);
+            for (const feature of features) _layerOfFeature.set(feature, layer.id);
+
+            drawPaths(group, { fill: polygons, shadow: features, casing: tracked, stroke: features }, getPath, getAreaPath);
+            group.selectAll<SVGPathElement, DataFeature>('.datagroup-casing path')
+                .classed('progress-done', d => !!tracker?.get(progressFeatureID(d.properties) ?? ''));
             drawLabels(group, 'label-halo', features);
             drawLabels(group, 'label', features);
         });

@@ -1,5 +1,8 @@
+import { select as d3_select } from 'd3-selection';
+
 import { t } from '../../core/localizer';
 import { CUSTOM_DATA_COLORS, customDataLayers, type CustomDataLayer } from '../../renderer/custom_data_layers';
+import { PROGRESS_TRACKERS, type ProgressTrackerID } from '../../progress/tracker';
 import { utilNoAuto } from '../../util';
 import { uiConfirm } from '../confirm';
 
@@ -96,6 +99,39 @@ export function uiSettingsCustomDataLayer(context: iD.Context, layer?: CustomDat
         .attr('type', 'color')
         .property('value', layer?.color ?? CUSTOM_DATA_COLORS[customDataLayers.all().length % CUSTOM_DATA_COLORS.length]);
 
+    // progress tracking: the lines of the layer can be marked as done for one task
+    textSection
+        .append('label')
+        .call(t.append('map_data.custom_data_layers.settings.tracker.label'));
+
+    let tracker: ProgressTrackerID | undefined = layer?.tracker;
+    const trackerOptions: (ProgressTrackerID | undefined)[] = [undefined, ...Object.keys(PROGRESS_TRACKERS) as ProgressTrackerID[]];
+    const trackerLabels = textSection
+        .append('div')
+        .attr('class', 'tracker-options')
+        .selectAll('label')
+        .data(trackerOptions)
+        .enter()
+        .append('label');
+
+    trackerLabels
+        .append('input')
+        .attr('type', 'radio')
+        .attr('name', 'custom-data-layer-tracker')
+        .property('checked', d => d === tracker)
+        .on('change', (_d3_event: Event, d) => { tracker = d; });
+
+    trackerLabels
+        .append('span')
+        .each(function(d) {
+            t.append(`map_data.custom_data_layers.settings.tracker.${d ?? 'none'}`)(d3_select(this));
+        });
+
+    textSection
+        .append('div')
+        .attr('class', 'instructions-tracker deemphasize')
+        .call(t.append('map_data.custom_data_layers.settings.tracker.help'));
+
     const buttonSection = modal.select('.modal-section.buttons');
 
     buttonSection
@@ -132,11 +168,13 @@ export function uiSettingsCustomDataLayer(context: iD.Context, layer?: CustomDat
         };
         modal.close();
 
+        // lines that are tracked must be clickable
+        const tracking = { tracker, ...(tracker ? { selectable: true } : {}) };
         if (layer) {
-            customDataLayers.update(layer.id, { name, url, color, ...filter });
+            customDataLayers.update(layer.id, { name, url, color, ...filter, ...tracking });
         } else {
             const added = customDataLayers.add(url, name, filter);
-            customDataLayers.update(added.id, { color });
+            customDataLayers.update(added.id, { color, ...tracking });
         }
     }
 }

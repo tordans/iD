@@ -1507,8 +1507,26 @@ Notes on the new parameters:
 - The traffic sign packages come from npm since 2026-10-06: `@osm-traffic-signs/id-field` (0.1.0) and `@osm-traffic-signs/converter` (0.7.0), dev dependencies. `npm run dist:traffic-sign-field` / `dist:traffic-sign-converter` copy their `dist/` from `node_modules/` to `dist/`; the recommender bundle (`scripts/traffic_sign_recommender_*.js`) imports the converter's files from `node_modules/`. Source: `~/Development/OSM/osm-traffic-sign-tools` (`main`), released with `bun run release --package --id-field` there. To try an unreleased build, copy its `dist/` over `dist/traffic-sign-field/` (`bun run dev:id-field` with `ID_WORKTREE`). The surface/smoothness field is still vendored, see `vendor/README.md`.
 - Since the lens merge, all iD CSS is in `@layer ideditor`. CSS loaded later without a layer (e.g. the traffic sign field's `id-field.css`) always wins over it; overriding such CSS from `css/` needs `!important`. The field-box look of the traffic sign field was such an override until 2026-10-06; it is part of the package now.
 
+### 35. Progress tracking for the lines of a custom data layer — 🟡 (built 2026-10-12; saving not tested with a login)
+
+Goal: track which lines of a dataset are done, for two tasks: the mapping of the REN network and the separate mapping of `track` cycleways.
+
+- **Setting per layer.** The dialog of a custom data layer has "Progress tracking": No tracking, "Track mapping progress", "Track "track" separation mapping progress". With a tracker the layer is made selectable. The tracker is the 6th field of the `data_layers` URL parameter.
+- **Storage.** One project per tracker in the key-value DB: `infravelo-tracker` (mapping) and `infravelo-track-tracker` (track). One entry per done line; "Not done" deletes it. Who and when come from the server. Reading is public, writing needs the OSM login (`modules/progress/tracker.ts`).
+- **Id of a line.** The property `id`, else `lfd_nr`. `zuteilung_netz` has `lfd_nr` (unique; `element_nr` is not). The track lines (`centerline_tracks_pruefliste.geojson`) have `id` like `way/1079383678/cycleway/right`. A line without one of them cannot be tracked.
+- **Per view.** The API has no area query. As its docs suggest, an entry has the z14 tiles of its line as tags (`z14/8802/5376`), and every draw asks for the tiles of the view plus one ring that are not fresh (2 minutes). Nothing is loaded when more than 60 tiles are in view.
+- **Map.** Tracked lines get a casing: red, green when done (`css/85_custom_data_layers.css`).
+- **Sidebar.** A selected line shows "Done" / "Not done" above its properties, with "Done: user, date" (`modules/ui/progress_tracking.ts`).
+
+Limits and open points:
+- The projects allow the origins `http://127.0.0.1:*` and `https://fixmyberlin.github.io`, not the Netlify preview. There the marks cannot be read or saved until the origin is added.
+- PMTiles cut a line at tile borders. The tile tags come from the pieces of the line that are drawn when it is marked. A part of the line in a tile that was not loaded then has no tag; the ring of tiles around the view covers the usual case.
+- There is no explicit "not done" state: no entry means not done.
+- URLs to use: mapping lines `https://tilda-geo.de/api/uploads/infravelo-ren-netz-zuteilung-netz.pmtiles`. The track lines are a TILDA review list; they need a file URL (GeoJSON or PMTiles) with the `id` property.
+
 ## Progress log
 
+- 2026-10-12: Progress tracking for the lines of a custom data layer (feature 35): setting per layer, done / not done in the sidebar, red / green casing, marks loaded per view from the key-value DB.
 - 2026-10-12: Fixes from a list by the user.
   - TILDA notes use production: `https://tilda-geo.de`, region `infravelo`, folder 13 (both index pages). Not tested with a login.
   - Mapillary buttons in the bar above the viewer: a tagged (green) button is no longer disabled, a click takes the tag out again (an image id out of its list, a supplementary sign out of the sign value, else the whole tag). The tooltips name the colours: green = already tagged, yellow frame = suggested, orange = replaces another value.

@@ -136,6 +136,15 @@ describe('customDataLayers', () => {
             expect(decodeCustomDataLayers('https://example.com/c.geojson')).toMatchObject([{ url: 'https://example.com/c.geojson', color: undefined, selectable: true }]);
         });
 
+        it('carries the progress tracker of a layer', () => {
+            const layer = customDataLayers.add(pmtiles, 'Netz');
+            customDataLayers.update(layer.id, { tracker: 'mapping' });
+            const value = encodeCustomDataLayers(customDataLayers.all());
+            expect(value).toBe(`${pmtiles}|Netz|ff26d4|||mapping`);
+            expect(decodeCustomDataLayers(value)).toMatchObject([{ url: pmtiles, tracker: 'mapping', selectable: true }]);
+            expect(decodeCustomDataLayers(`${pmtiles}|Netz|ff26d4|||nonsense`)[0].tracker).toBeUndefined();
+        });
+
         it('a link enables exactly its layers: known ones by URL and filter, new ones are added', () => {
             const known = customDataLayers.add(pmtiles, 'Mine');
             const other = customDataLayers.add('https://example.com/other.geojson');

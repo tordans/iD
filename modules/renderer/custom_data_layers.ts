@@ -2,6 +2,7 @@ import { dispatch as d3_dispatch } from 'd3-dispatch';
 
 import { patchHash } from '../behavior/hash';
 import { prefs } from '../core/preferences';
+import { isProgressTrackerID, type ProgressTrackerID } from '../progress/tracker';
 import { utilStringQs } from '../util';
 import { utilRebind } from '../util/rebind';
 
@@ -22,6 +23,8 @@ export interface CustomDataLayer {
     filterKey?: string;
     /** …with this value; empty: any value */
     filterValue?: string;
+    /** the lines can be marked as done for this task (`progress/tracker.ts`) */
+    tracker?: ProgressTrackerID;
 }
 
 export type CustomDataFormat = 'geojson' | 'vectortile';
@@ -96,7 +99,7 @@ function cleanFilter(filter: Pick<CustomDataLayer, 'filterKey' | 'filterValue'>)
 const HASH_KEY = 'data_layers';
 
 /** What the URL says about a layer: enough to show it again, not its id */
-export type CustomDataLayerLink = Pick<CustomDataLayer, 'url' | 'name' | 'filterKey' | 'filterValue'> & {
+export type CustomDataLayerLink = Pick<CustomDataLayer, 'url' | 'name' | 'filterKey' | 'filterValue' | 'tracker'> & {
     color?: string;
     selectable: boolean;
 };
@@ -108,9 +111,9 @@ const unescapeField = (value: string) => value.replace(/%(25|7C|3B)/gi, decodeUR
 
 /**
  * The enabled layers as the value of the `data_layers` hash parameter:
- * `url|name|color|filter|o` per layer, joined with `;`. `color` without `#`, `filter` as
- * `key=value`, `o` marks a layer that is only an overlay (not selectable); empty fields at the
- * end are left out.
+ * `url|name|color|filter|o|tracker` per layer, joined with `;`. `color` without `#`, `filter` as
+ * `key=value`, `o` marks a layer that is only an overlay (not selectable), `tracker` is the
+ * progress tracker (`mapping`, `track`); empty fields at the end are left out.
  */
 export function encodeCustomDataLayers(layers: CustomDataLayer[]) {
     return layers.filter(layer => layer.enabled).map(layer => {
@@ -119,7 +122,8 @@ export function encodeCustomDataLayers(layers: CustomDataLayer[]) {
             layer.name,
             layer.color.replace(/^#/, ''),
             layer.filterKey ? `${layer.filterKey}=${layer.filterValue ?? ''}` : '',
-            isSelectable(layer) ? '' : 'o'
+            isSelectable(layer) ? '' : 'o',
+            layer.tracker ?? ''
         ];
         while (fields.length > 1 && !fields[fields.length - 1]) fields.pop();
         return fields.map(escapeField).join('|');
@@ -128,7 +132,7 @@ export function encodeCustomDataLayers(layers: CustomDataLayer[]) {
 
 export function decodeCustomDataLayers(value: string): CustomDataLayerLink[] {
     return value.split(';').map(part => part.split('|').map(unescapeField)).flatMap(fields => {
-        const [url = '', name = '', color = '', filter = '', flags = ''] = fields;
+        const [url = '', name = '', color = '', filter = '', flags = '', tracker = ''] = fields;
         if (!url.trim()) return [];
         const separator = filter.indexOf('=');
         const filterKey = (separator < 0 ? filter : filter.slice(0, separator)).trim();
@@ -137,6 +141,7 @@ export function decodeCustomDataLayers(value: string): CustomDataLayerLink[] {
             name: name.trim(),
             color: /^[0-9a-f]{3,8}$/i.test(color) ? `#${color}` : undefined,
             selectable: !flags.includes('o'),
+            ...(isProgressTrackerID(tracker) ? { tracker } : {}),
             ...cleanFilter({ filterKey, filterValue: separator < 0 ? '' : filter.slice(separator + 1) })
         }];
     });
@@ -191,6 +196,7 @@ function createCustomDataLayers() {
             const existing = layers.find(layer => layer.url === link.url && customDataFilterLabel(layer) === customDataFilterLabel(link));
             if (existing) {
                 existing.enabled = true;
+                if (link.tracker) existing.tracker = link.tracker;
                 continue;
             }
             layers.push({
@@ -200,6 +206,7 @@ function createCustomDataLayers() {
                 color: link.color ?? CUSTOM_DATA_COLORS[layers.length % CUSTOM_DATA_COLORS.length],
                 enabled: true,
                 ...(link.selectable ? {} : { selectable: false }),
+                ...(link.tracker ? { tracker: link.tracker } : {}),
                 ...cleanFilter(link)
             });
         }

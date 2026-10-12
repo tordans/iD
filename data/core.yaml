@@ -1176,6 +1176,12 @@ en:
         filter_key: Key
         filter_value: Value
         filter_help: "Only show features with this property. Leave the value empty to show all features that have the key."
+        tracker:
+          label: Progress tracking
+          none: No tracking
+          mapping: Track mapping progress
+          track: Track "track" separation mapping progress
+          help: "With tracking, the lines can be clicked and marked as done in the sidebar. Done lines get a green casing, the others a red one. The marks are stored in our key-value database with your OSM user name, not in OpenStreetMap."
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.
@@ -1287,6 +1293,15 @@ en:
       forward: "↑ forward"
       backward: "↓ backward"
       tooltip: The direction along the selected way the sign applies to, from the way the sign faces
+  progress_tracking:
+    done: Done
+    not_done: Not done
+    done_by: "Done: {user}, {date}"
+    error: The progress could not be saved.
+    disabled:
+      logged_out: Log in to OpenStreetMap to change the progress.
+      unavailable: The progress database cannot be reached from this address.
+      no_id: This line has no id (id or lfd_nr), so it cannot be tracked.
   map_display:
     title: Map Display
     description: Map Display
