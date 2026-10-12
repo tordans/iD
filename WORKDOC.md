@@ -1515,7 +1515,7 @@ Goal: track which lines of a dataset are done, for two tasks: the mapping of the
 - **Storage.** One project per tracker in the key-value DB: `infravelo-tracker` (mapping) and `infravelo-track-tracker` (track). One entry per done line; "Not done" deletes it. Who and when come from the server. Reading is public, writing needs the OSM login (`modules/progress/tracker.ts`).
 - **Id of a line.** The property `id`, else `lfd_nr`. `zuteilung_netz` has `lfd_nr` (unique; `element_nr` is not). The track lines (`centerline_tracks_pruefliste.geojson`) have `id` like `way/1079383678/cycleway/right`. A line without one of them cannot be tracked.
 - **Per view.** The API has no area query. As its docs suggest, an entry has the z14 tiles of its line as tags (`z14/8802/5376`), and every draw asks for the tiles of the view plus one ring that are not fresh (2 minutes). Nothing is loaded when more than 60 tiles are in view.
-- **Map.** Tracked lines get a casing: red, green when done (`css/85_custom_data_layers.css`).
+- **Map.** Tracked lines get a casing: red, green when done (`css/85_custom_data_layers.css`). Zoomed out too far to load the marks, there are no casings.
 - **Sidebar.** A selected line shows a "Done" toggle above its properties, with "Done: user, date"; a second click takes the mark away (`modules/ui/progress_tracking.ts`).
 
 Limits and open points:
@@ -1526,7 +1526,7 @@ Limits and open points:
 
 ### 36. infra3D links — 🟡 (built 2026-10-12; the links not opened with an infra3D account)
 
-infra3D is street-level imagery we have for Berlin; it needs a login. The link builder is `buildInfra3dUrl` from `@osm-editor-kit/street-imagery` (the package TILDA uses), the project (`infra3D Berlin`, with its bbox) is the one from TILDA (`modules/infra3d/infra3d.ts`). The links open in a new tab.
+infra3D is street-level imagery we have for Berlin; it needs a login. The link format is the one of `buildInfra3dUrl` in `@osm-editor-kit/street-imagery` (the package TILDA uses), repeated in a few lines: importing the package bundled all of it (about 7,000 lines). The project (`infra3D Berlin`, with its bbox) is the one from TILDA (`modules/infra3d/infra3d.ts`). The links open in a new tab.
 
 - **Sidebar.** A "3D" button in the preset header of a selected feature, next to the favorite heart and the info button: infra3D's nearest image, turned to the feature. For a line the target is the point at half its length, for a node its position, else the center of the extent. Only shown inside the project's bbox.
 - **Mapillary bar** (above the viewer). "infra3D ↗": with a selected sign it looks at the sign; without, it opens the image nearest to where the shown Mapillary image was taken. The bar now also shows with an image and nothing selected, for this link.
@@ -1534,7 +1534,8 @@ infra3D is street-level imagery we have for Berlin; it needs a login. The link b
 
 ## Progress log
 
-- 2026-10-12: infra3D links (feature 36): a "3D" button in the sidebar's preset header and "infra3D ↗" in the Mapillary bar; new dependency `@osm-editor-kit/street-imagery` (only its link builder is bundled).
+- 2026-10-12: Review of the day's changes, fixed: a mark set while the view was loading could vanish again; zoomed out, every tracked line looked not done (now no casings there); polygons of data layers are not culled by their bounds (a mask's bounds are not reliable); the progress section could land below the properties; the way table keeps the row of a tag removed in this session; removing a supplementary sign keeps the value's separator; the infra3D link no longer pulls in the whole imagery package.
+- 2026-10-12: infra3D links (feature 36): a "3D" button in the sidebar's preset header and "infra3D ↗" in the Mapillary bar.
 - 2026-10-12: Progress tracking: "Done" is one toggle (nothing / done). Origins of the three key-value projects checked: `127.0.0.1` and the Netlify preview of PR 10 answer 200.
 - 2026-10-12: Progress tracking for the lines of a custom data layer (feature 35): setting per layer, done / not done in the sidebar, red / green casing, marks loaded per view from the key-value DB.
 - 2026-10-12: Fixes from a list by the user.

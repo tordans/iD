@@ -156,5 +156,6 @@ export function removeSignFromValue(current: string | undefined, sign: string): 
     if (!current || !isSupplementarySign(sign)) return undefined;
     const code = sign.replace(/^DE:/, '');
     const parts = current.split(/[,;]/).map(part => part.trim()).filter(part => part.replace(/^DE:/, '') !== code);
-    return parts.length ? parts.join(',') : undefined;
+    // keep the separator of the value (`,` joins signs on one post, `;` separate ones)
+    return parts.length ? parts.join(current.includes(';') && !current.includes(',') ? ';' : ',') : undefined;
 }

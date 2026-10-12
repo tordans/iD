@@ -71,8 +71,9 @@ export function uiProgressTracking(context: iD.Context) {
         section.exit()
             .remove();
 
+        // above the properties, also when they were drawn first (a line of another layer before)
         const enter = section.enter()
-            .append('div')
+            .insert('div', '.raw-tag-editor')
             .attr('class', 'progress-tracking');
 
         enter.append('div').attr('class', 'progress-tracking-title');

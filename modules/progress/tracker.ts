@@ -91,8 +91,11 @@ export type ProgressTracker = {
     /** `bbox` of the whole line, so the mark is found from every tile the line touches */
     setDone(id: string, bbox: BBox): Promise<void>;
     setNotDone(id: string): Promise<void>;
-    /** Loads the marks of the view; cheap when its tiles are fresh, so it can run on every draw */
-    loadView(bbox: BBox): void;
+    /**
+     * Loads the marks of the view; cheap when its tiles are fresh, so it can run on every draw.
+     * `false` when the view is too large to load: what is done there is not known.
+     */
+    loadView(bbox: BBox): boolean;
     on(type: string, listener: (() => void) | null): ProgressTracker;
 };
 
@@ -123,6 +126,8 @@ export function createProgressTracker(context: iD.Context, trackerID: ProgressTr
     /** tile tag → time of the last load */
     const _loaded = new Map<string, number>();
     const _loading = new Set<string>();
+    /** Counts our own changes: a load that started before one must not undo it */
+    let _changes = 0;
     /** the API cannot be reached from here (other origin, offline) */
     let _unavailable = false;
 
@@ -146,10 +151,17 @@ export function createProgressTracker(context: iD.Context, trackerID: ProgressTr
 
     function loadTileGroup(tags: string[]) {
         for (const tag of tags) _loading.add(tag);
+        const changesAtStart = _changes;
+        let skipped = false;
 
         loadTiles(tags)
             .then(found => {
                 _unavailable = false;
+                // we marked or unmarked a line while this ran: its answer may be older than that
+                if (changesAtStart !== _changes) {
+                    skipped = true;
+                    return;
+                }
                 let changed = false;
                 // marks someone else removed: known for one of these tiles, not found anymore
                 for (const id of [..._marks.keys()]) {
@@ -171,7 +183,8 @@ export function createProgressTracker(context: iD.Context, trackerID: ProgressTr
             .then(() => {
                 for (const tag of tags) {
                     _loading.delete(tag);
-                    _loaded.set(tag, now());
+                    // a skipped answer leaves the tiles stale, so the next draw asks again
+                    if (!skipped) _loaded.set(tag, now());
                 }
             });
     }
@@ -188,13 +201,16 @@ export function createProgressTracker(context: iD.Context, trackerID: ProgressTr
 
         async setDone(id, bbox) {
             const tags = progressTileTags(bbox).slice(0, MAX_TILE_TAGS);
-            store(await client.put(id, { done: true }, tags));
+            const entry = await client.put(id, { done: true }, tags);
+            _changes++;
+            store(entry);
             dispatch.call('change');
         },
 
         async setNotDone(id) {
             // batch: deleting an entry that someone else removed already is not an error
             await client.batch({ delete: [id] });
+            _changes++;
             _marks.delete(id);
             _markTiles.delete(id);
             dispatch.call('change');
@@ -202,13 +218,14 @@ export function createProgressTracker(context: iD.Context, trackerID: ProgressTr
 
         loadView(bbox) {
             const viewTiles = progressTileTags(bbox, 1);
-            if (viewTiles.length > MAX_VIEW_TILES) return;
+            if (viewTiles.length > MAX_VIEW_TILES) return false;
             const time = now();
             const stale = viewTiles.filter(tag => !_loading.has(tag) && time - (_loaded.get(tag) ?? -Infinity) > TILE_FRESH_MS);
 
             for (let i = 0; i < stale.length; i += TILES_PER_REQUEST) {
                 loadTileGroup(stale.slice(i, i + TILES_PER_REQUEST));
             }
+            return true;
         },
 
         on(type, listener) {

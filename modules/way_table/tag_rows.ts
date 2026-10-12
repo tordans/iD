@@ -37,10 +37,12 @@ function cellStatus(centerValue: string | undefined, value: string | undefined):
 /**
  * One row per tag key used on any way of the chain.
  * Preset keys come first, then the other keys, each group sorted by key.
+ * `extraKeys` get a row too.
  */
-export function buildTagRows(chain: WayChain, presetKeys: Set<string>): TagRow[] {
+export function buildTagRows(chain: WayChain, presetKeys: Set<string>, extraKeys: Iterable<string> = []): TagRow[] {
     const center = chain.segments[chain.centerIndex];
-    const keys = new Set(chain.segments.flatMap(segment => Object.keys(segment.tags)));
+    // `extraKeys`: keys no way has anymore, e.g. tags removed in this session
+    const keys = new Set([...chain.segments.flatMap(segment => Object.keys(segment.tags)), ...extraKeys]);
 
     return [...keys]
         .sort((a, b) => Number(presetKeys.has(b)) - Number(presetKeys.has(a)) || a.localeCompare(b))

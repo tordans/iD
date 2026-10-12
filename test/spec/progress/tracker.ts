@@ -120,11 +120,27 @@ describe('progressTracker', () => {
         expect(tracker.get('10021')).toBeUndefined();
     });
 
-    it('does not load when zoomed out too far', () => {
+    it('does not load when zoomed out too far, and says so', () => {
         const { client, calls } = fakeClient();
         const tracker = createProgressTracker(fakeContext(), 'mapping', { client });
-        tracker.loadView([13.1, 52.3, 13.8, 52.7]);
+        expect(tracker.loadView([13.1, 52.3, 13.8, 52.7])).toBe(false);
         expect(calls).toHaveLength(0);
+        expect(tracker.loadView(BBOX)).toBe(true);
+    });
+
+    it('keeps a mark that was set while a load of the view ran', async () => {
+        const { client, calls } = fakeClient();
+        const tracker = createProgressTracker(fakeContext(), 'mapping', { client });
+        tracker.loadView(BBOX);   // answers without the mark
+        await tracker.setDone('10021', BBOX);
+        await flush();
+        expect(tracker.get('10021')).toBeDefined();
+
+        // the skipped answer left the tiles stale: the next draw asks again
+        tracker.loadView(BBOX);
+        await flush();
+        expect(calls).toHaveLength(2);
+        expect(tracker.get('10021')).toBeDefined();
     });
 
     it('needs a login to change marks', () => {

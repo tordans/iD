@@ -238,6 +238,9 @@ export function svgCustomData(
         const [clipWidth, clipHeight] = projection.clipExtent()[1];
         const inView = (feature: DataFeature) => {
             if (!clipWidth || !clipHeight) return true;   // no extent yet
+            // d3 reads a polygon's winding on the sphere: the bounds of a mask (the world with a hole)
+            // or of a ring in the other order are not what is on screen. Polygons are few, draw them all.
+            if (isPolygon(feature)) return true;
             const [[minLon, minLat], [maxLon, maxLat]] = featureBounds(feature);
             // bounds that cross the antimeridian (`minLon > maxLon`) are always drawn
             return minLon > maxLon || (minLon <= east && maxLon >= west && minLat <= north && maxLat >= south);
@@ -259,8 +262,10 @@ export function svgCustomData(
             let tracked: DataFeature[] = [];
             if (tracker) {
                 const [[minLon, minLat], [maxLon, maxLat]] = context.map().extent();
-                tracker.loadView([minLon, minLat, maxLon, maxLat]);
-                tracked = features.filter(feature => !isPolygon(feature) && progressFeatureID(feature.properties));
+                // zoomed out too far to load the marks: no casings, else every line would look not done
+                if (tracker.loadView([minLon, minLat, maxLon, maxLat])) {
+                    tracked = features.filter(feature => !isPolygon(feature) && progressFeatureID(feature.properties));
+                }
             }
             _drawn.set(layer.id, features);
             for (const feature of features) _layerOfFeature.set(feature, layer.id);

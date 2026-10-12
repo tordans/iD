@@ -69,6 +69,7 @@ describe('addSignToValue', () => {
 describe('removeSignFromValue', () => {
     it('takes a supplementary sign out of the value and removes a main sign with its tag', () => {
         expect(removeSignFromValue('DE:239,1022-10', 'DE:1022-10')).toBe('DE:239');
+        expect(removeSignFromValue('DE:239;1022-10;1012-32', 'DE:1022-10')).toBe('DE:239;1012-32');
         expect(removeSignFromValue('DE:1022-10', 'DE:1022-10')).toBeUndefined();
         expect(removeSignFromValue('DE:237', 'DE:237')).toBeUndefined();
         expect(removeSignFromValue(undefined, 'DE:237')).toBeUndefined();

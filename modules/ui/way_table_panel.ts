@@ -261,11 +261,26 @@ export function uiWayTablePanel(context: iD.Context) {
         if (!_chain || !wayID) return;
 
         const chain = _chain;
-        const rows = buildTagRows(chain, presetKeys(wayID));
+        const rows = buildTagRows(chain, presetKeys(wayID), removedKeys(chain));
 
         drawJunctions(body, chain.junctions);
         drawTable(body, chain, rows);
         scrollToCenter(body);
+    }
+
+
+    /** Keys of tags that were removed from a way in this session, in chain direction: they keep their row */
+    function removedKeys(chain: WayChain) {
+        const base = context.history().base();
+        const graph = context.graph();
+        return chain.segments.flatMap(segment => {
+            const before = base.hasEntity(segment.wayID);
+            const now = graph.hasEntity(segment.wayID);
+            if (!before || !now) return [];
+            return Object.keys(before.tags)
+                .filter(key => !(key in now.tags))
+                .map(key => segment.reversed ? swapLeftRightKey(key) : key);
+        });
     }
 
 

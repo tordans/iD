@@ -1,12 +1,21 @@
-import { buildInfra3dUrl, type Infra3dProject } from '@osm-editor-kit/street-imagery';
-
 import { geoSphericalDistance } from '../geo';
 
 /**
  * Links into infra3D, the street-level imagery we have for Berlin (WORKDOC feature 36).
- * The link builder is the one from `@osm-editor-kit/street-imagery`, as in TILDA.
+ * The link format is the one of `buildInfra3dUrl` in `@osm-editor-kit/street-imagery` (the package
+ * TILDA uses, `src/openers/infra3d.ts`). It is repeated here: importing the package bundles all
+ * of it (about 7,000 lines with date-fns) for these few lines.
  * infra3D asks for a login; without an account the link ends on its login page.
  */
+
+const INFRA3D_EDIT_URL = 'https://app.infra3d.com/edit/';
+
+type Infra3dProject = {
+    uid: string;
+    label: string;
+    /** west, south, east, north */
+    bbox: [number, number, number, number];
+};
 
 /** The projects we link to, as in TILDA (`imageryLinks.const.ts`); a place inside the `bbox` gets the link */
 export const INFRA3D_PROJECTS: Infra3dProject[] = [
@@ -20,7 +29,7 @@ export const INFRA3D_PROJECTS: Infra3dProject[] = [
 type Loc = [lon: number, lat: number];
 
 function projectAt(loc: Loc) {
-    return INFRA3D_PROJECTS.find(({ bbox }) => !bbox || (loc[0] >= bbox[0] && loc[0] <= bbox[2] && loc[1] >= bbox[1] && loc[1] <= bbox[3]));
+    return INFRA3D_PROJECTS.find(({ bbox }) => loc[0] >= bbox[0] && loc[0] <= bbox[2] && loc[1] >= bbox[1] && loc[1] <= bbox[3]);
 }
 
 /** infra3D has images at this place */
@@ -36,7 +45,8 @@ export function infra3dCovers(loc: Loc) {
 export function infra3dUrl(loc: Loc, mode: 'lookAt' | 'jumpTo' = 'lookAt') {
     const project = projectAt(loc);
     if (!project) return undefined;
-    return buildInfra3dUrl({ mode, lng: loc[0], lat: loc[1], projectUid: project.uid });
+    const place = encodeURIComponent(JSON.stringify({ easting: loc[0], northing: loc[1], epsg: 4326 }));
+    return `${INFRA3D_EDIT_URL}?projectUID=${encodeURIComponent(project.uid)}&${mode}=${place}`;
 }
 
 /** The point at half the length of a line: on the line, unlike the center of its bounding box */
