@@ -146,3 +146,15 @@ export function addSignToValue(current: string | undefined, sign: string): strin
     if (parts.includes(code)) return current;
     return `${current},${code}`;
 }
+
+
+/**
+ * The traffic sign value after taking `sign` out again: a supplementary sign leaves the rest of
+ * the value (`DE:239,1022-10` → `DE:239`), anything else removes the tag (undefined)
+ */
+export function removeSignFromValue(current: string | undefined, sign: string): string | undefined {
+    if (!current || !isSupplementarySign(sign)) return undefined;
+    const code = sign.replace(/^DE:/, '');
+    const parts = current.split(/[,;]/).map(part => part.trim()).filter(part => part.replace(/^DE:/, '') !== code);
+    return parts.length ? parts.join(',') : undefined;
+}

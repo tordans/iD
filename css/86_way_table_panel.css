@@ -203,6 +203,17 @@ table.way-table td.added {
 table.way-table td.removed {
     background: color-mix(in srgb, #ff503c 28%, var(--bg-color));
 }
+/* changed in this mapping session: the cell clearly, its row lightly */
+table.way-table tr.edited th.way-table-key {
+    box-shadow: inset 3px 0 0 #7c3aed;
+}
+table.way-table tr.edited td {
+    background-image: linear-gradient(color-mix(in srgb, #7c3aed 7%, transparent), color-mix(in srgb, #7c3aed 7%, transparent));
+}
+table.way-table td.edited {
+    box-shadow: inset 0 0 0 2px #7c3aed;
+    font-weight: bold;
+}
 
 .way-table-resize {
     flex: 0 0 auto;

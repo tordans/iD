@@ -24,6 +24,13 @@ export function appendImageId(tags: TagsLike, key: string, id: string): string {
 }
 
 
+/** Value of `key` without `id`; undefined when no id is left */
+export function removeImageId(tags: TagsLike, key: string, id: string): string | undefined {
+    const value = tags[key];
+    return joinImageIds(splitImageIds(typeof value === 'string' ? value : undefined).filter(other => other !== id));
+}
+
+
 export function hasImageId(tags: TagsLike, key: string, id: string): boolean {
     const value = tags[key];
     return splitImageIds(typeof value === 'string' ? value : undefined).includes(id);

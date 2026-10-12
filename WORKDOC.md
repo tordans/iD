@@ -1509,6 +1509,12 @@ Notes on the new parameters:
 
 ## Progress log
 
+- 2026-10-12: Fixes from a list by the user.
+  - TILDA notes use production: `https://tilda-geo.de`, region `infravelo`, folder 13 (both index pages). Not tested with a login.
+  - Mapillary buttons in the bar above the viewer: a tagged (green) button is no longer disabled, a click takes the tag out again (an image id out of its list, a supplementary sign out of the sign value, else the whole tag). The tooltips name the colours: green = already tagged, yellow frame = suggested, orange = replaces another value.
+  - Read-only features: the click targets of nodes were never marked (the selector matched `path` and `g` in the touch layer, node targets are `circle` and `rect`), so nodes of read-only features could be selected and moved. Now all `.target` elements are marked. Unchanged by design: a node shared with an editable way stays editable.
+  - Custom data layers: the outline of a polygon of a read-only layer stayed clickable (iD's rule for area fills is more specific; ours is `!important` now). The row of a read-only data layer is not dimmed anymore, as the layer looks the same on the map.
+  - Way table (feature 6): cells changed in this session have a violet frame, their row a light tint and a mark at the key. The columns are in the direction of the selected way again (ways before it on the left, next ones on the right); the order "like on the map" from 2026-10-03 is removed.
 - 2026-10-12: Performance. Measured with a CPU profile in headless Chrome (Tempelhof, z17.6, 6,400 features in view, 1300 px map; hover, drag, wheel zoom, select, tag change).
   - Hovering a side card of the TILDA section or a left/right field redrew the whole map on every enter and leave (`context.setDirectionalComboIndicator` fired the context's `change`). Now only the ways with the arrows are redrawn (`map.redrawEntities(ids)`), and nothing when the value did not change.
   - Read-only features: the classes were applied to all map elements after every draw, also the small ones on hover, even without a read-only category. Now nothing runs without a category, and with one it uses `classList` directly.

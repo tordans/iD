@@ -19,6 +19,10 @@
 :is(.map-data-pane, .map-display-pane) .layer-list li[data-mode="hidden"] > label > :not(.popover, input) {
     opacity: 0.6;
 }
+/* a read-only data layer looks the same on the map, so its row is not dimmed */
+:is(.map-data-pane, .map-display-pane) .layer-list-custom-data li[data-mode="readonly"] > label > :not(.popover, input) {
+    opacity: 1;
+}
 :is(.map-data-pane, .map-display-pane) .layer-mode {
     display: flex;
     flex: 0 0 auto;

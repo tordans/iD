@@ -2,13 +2,13 @@ import { select as d3_select } from 'd3-selection';
 
 import { actionChangeTags } from '../actions';
 import { activeTargetEvents, clearActiveTarget, getActiveTarget } from '../mapillary/active_target';
-import { appendImageId, imageButtonKeys } from '../mapillary/set_photo';
+import { appendImageId, imageButtonKeys, removeImageId } from '../mapillary/set_photo';
 import { geoSphericalDistance } from '../geo';
 import { t, localizer } from '../core/localizer';
 import { services } from '../services';
 import { svgIcon } from '../svg/icon';
 import { loadSignRecommender, loadedSignDescriber, type SignDescription } from '../traffic_sign/recommender';
-import { signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
+import { removeSignFromValue, signGroupsOf, signMeaning, signName } from '../mapillary/sign_groups';
 import { clearSelectedSign, restoreSelectedSign, selectedSign, showSignImage, signSelectEvents, type SelectedSign } from '../mapillary/sign_select';
 import { changeLabel, directionalTags, sideOfLine, signButtonKeys, signDirectionOnWay, signSourceChanges, signTagChanges, type SignDirection } from '../mapillary/sign_tagging';
 import { dayLabels, type ImageDay } from '../mapillary/sign_view';
@@ -35,6 +35,8 @@ type Action = {
     image?: boolean;
     disabled?: boolean;
     changes: Record<string, string>;
+    /** what a click on a tagged ("present") button does: the tags as they are without the change (undefined: no tag) */
+    remove: Record<string, string | undefined>;
 };
 
 
@@ -118,7 +120,8 @@ function actionsFor(sign: SelectedSign, tags: Record<string, string>, keys: stri
     // the label is the main tag (with what is tagged now); the tooltip lists all of them (with the source)
     const actions: Action[] = tagSets.map((changes, i) => {
         const list = Object.entries(changes).map(([k, v]) => `${k}=${v}`);
-        return { id: `tags-${i}`, ...labelled(tags, changes, `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`) };
+        const remove = Object.fromEntries(Object.keys(changes).map(key => [key, undefined]));
+        return { id: `tags-${i}`, remove, ...labelled(tags, changes, `${t('mapillary_sign_bar.write_tags')}: ${list.join(', ')}`) };
     });
     // each possible sign as `key=value` for the plain key and its directions
     for (const value of meaning.signs) {
@@ -128,6 +131,7 @@ function actionsFor(sign: SelectedSign, tags: Record<string, string>, keys: stri
                 id: `sign-${value}-${key}`,
                 sign: value,
                 suggested: key === suggested,
+                remove: { [key]: removeSignFromValue(tags[key], value) },
                 ...labelled(tags, changes, t('mapillary_sign_bar.write_sign', { key }))
             });
         }
@@ -135,7 +139,13 @@ function actionsFor(sign: SelectedSign, tags: Record<string, string>, keys: stri
     // the image as source of the suggested key: `source:traffic_sign:mapillary=1586…`
     if (sign.imageId) {
         const changes = signSourceChanges(tags, suggested, sign.imageId);
-        actions.push({ id: 'source', source: true, ...labelled(tags, changes, t('mapillary_sign_bar.write_source')) });
+        const sourceKey = Object.keys(changes)[0];
+        actions.push({
+            id: 'source',
+            source: true,
+            remove: { [sourceKey]: removeImageId(tags, sourceKey, sign.imageId) },
+            ...labelled(tags, changes, t('mapillary_sign_bar.write_source'))
+        });
     }
     return actions;
 }
@@ -345,6 +355,7 @@ function imageActionsFor(context: coreContext, entity: iD.OsmEntity, exclude: st
             id: `image-${key}`,
             image: true,
             suggested: key === suggested,
+            remove: { [key]: removeImageId(tags, key, id) },
             ...labelled(tags, changes, t('mapillary_sign_bar.write_image', { key }))
         };
         if (tooFar && !action.present) {
@@ -371,13 +382,24 @@ function renderButtons(context: coreContext, row: d3.Selection<HTMLDivElement>, 
         .classed('present', d => d.present)
         .classed('replaces', d => !!d.replaces)
         .classed('suggested', d => !!d.suggested && !d.present)
-        .property('disabled', d => d.present || !!d.disabled)
+        .property('disabled', d => !!d.disabled)
         .on('click', (_event, d) => {
             const entity = d.image ? selectedEntity(context) : selectedWay(context);
             if (!entity) return;
+            // a second click takes the tag out again
+            const tags: Record<string, string> = { ...entity.tags, ...(d.present ? {} : d.changes) };
+            if (d.present) {
+                for (const [key, value] of Object.entries(d.remove)) {
+                    if (value === undefined) {
+                        delete tags[key];
+                    } else {
+                        tags[key] = value;
+                    }
+                }
+            }
             context.perform(
-                actionChangeTags(entity.id, { ...entity.tags, ...d.changes }),
-                t('mapillary_sign_bar.annotation')
+                actionChangeTags(entity.id, tags),
+                t(d.present ? 'mapillary_sign_bar.annotation_remove' : 'mapillary_sign_bar.annotation')
             );
         });
 }

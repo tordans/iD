@@ -81,6 +81,7 @@ de:
     previous: Vorherigen Weg auswählen
     next: Nächsten Weg auswählen
     reversed: Dieser Weg zeigt in die Gegenrichtung. Seine left/right-Tags sind getauscht dargestellt.
+    edited: In dieser Sitzung geändert
     junction:
       backward: "Vor dem ersten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
       forward: "Nach dem letzten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
@@ -268,6 +269,7 @@ de-CH:
     previous: Vorherigen Weg auswählen
     next: Nächsten Weg auswählen
     reversed: Dieser Weg zeigt in die Gegenrichtung. Seine left/right-Tags sind getauscht dargestellt.
+    edited: In dieser Sitzung geändert
     junction:
       backward: "Vor dem ersten Weg geht es mit mehreren Wegen weiter. Wähle einen:"
       forward: "Nach dem letzten Weg geht es mit mehreren Wegen weiter. Wähle einen:"

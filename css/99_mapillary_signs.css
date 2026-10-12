@@ -223,10 +223,12 @@
     flex-wrap: wrap;
 }
 /* already tagged: green with a check; another value tagged: the arrow label */
-.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.present:disabled {
-    opacity: 1;
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.present {
     background: rgba(76, 175, 80, 0.45);
     color: #fff;
+}
+.ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.present:hover:not(:disabled) {
+    background: rgba(76, 175, 80, 0.7);
 }
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.suggested {
     box-shadow: inset 0 0 0 1.5px #ffee00;

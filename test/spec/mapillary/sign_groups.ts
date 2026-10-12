@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addSignToValue, parseSignGroups, signGroupsOf, signMatchesGroups, signMeaning } from '../../../modules/mapillary/sign_groups';
+import { addSignToValue, parseSignGroups, removeSignFromValue, signGroupsOf, signMatchesGroups, signMeaning } from '../../../modules/mapillary/sign_groups';
 
 describe('signGroupsOf', () => {
     it('groups bike, speed and access signs', () => {
@@ -63,5 +63,14 @@ describe('addSignToValue', () => {
         expect(addSignToValue('DE:240', 'DE:237')).toBe('DE:237');
         expect(addSignToValue(undefined, 'DE:1022-10')).toBe('DE:1022-10');
         expect(addSignToValue('none', 'DE:1022-10')).toBe('DE:1022-10');
+    });
+});
+
+describe('removeSignFromValue', () => {
+    it('takes a supplementary sign out of the value and removes a main sign with its tag', () => {
+        expect(removeSignFromValue('DE:239,1022-10', 'DE:1022-10')).toBe('DE:239');
+        expect(removeSignFromValue('DE:1022-10', 'DE:1022-10')).toBeUndefined();
+        expect(removeSignFromValue('DE:237', 'DE:237')).toBeUndefined();
+        expect(removeSignFromValue(undefined, 'DE:237')).toBeUndefined();
     });
 });

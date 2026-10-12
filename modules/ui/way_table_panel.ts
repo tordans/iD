@@ -12,7 +12,7 @@ import { svgIcon } from '../svg/icon';
 import { utilHighlightEntities, utilStringQs } from '../util/util';
 import { utilDisplayLabel } from '../util/utilDisplayLabel';
 import type { NodeId, WayId } from '../osm';
-import { buildWayChain, mirrorChain, runsAgainstReadingOrder, type ChainSegment, type JunctionChoice, type WayChain } from '../way_table/chain';
+import { buildWayChain, swapLeftRightKey, type ChainSegment, type JunctionChoice, type WayChain } from '../way_table/chain';
 import { buildTagRows, type TagCell, type TagRow } from '../way_table/tag_rows';
 import { uiTooltip } from './tooltip';
 
@@ -249,7 +249,8 @@ export function uiWayTablePanel(context: iD.Context) {
             if (_chain && !_chain.segments.some(segment => segment.wayID === wayID)) {
                 _junctionChoices = new Map();
             }
-            _chain = orderLikeMap(buildWayChain(context.graph(), wayID, undefined, _junctionChoices));
+            // in the direction of the selected way: the ways before it on the left, the next ones on the right
+            _chain = buildWayChain(context.graph(), wayID, undefined, _junctionChoices);
         } else {
             _chain = undefined;
         }
@@ -265,21 +266,6 @@ export function uiWayTablePanel(context: iD.Context) {
         drawJunctions(body, chain.junctions);
         drawTable(body, chain, rows);
         scrollToCenter(body);
-    }
-
-
-    /** Columns in the order the ways have on the map: left to right, or top to bottom for a vertical chain */
-    function orderLikeMap(chain: WayChain | undefined) {
-        if (!chain) return chain;
-        const graph = context.graph();
-        const first = chain.segments[0];
-        const last = chain.segments[chain.segments.length - 1];
-        const start = graph.hasEntity(first.nodeIDs[0]);
-        const end = graph.hasEntity(last.nodeIDs[last.nodeIDs.length - 1]);
-        if (!start || !end) return chain;
-
-        const against = runsAgainstReadingOrder(context.projection(start.loc), context.projection(end.loc));
-        return against ? mirrorChain(chain) : chain;
     }
 
 
@@ -438,10 +424,24 @@ export function uiWayTablePanel(context: iD.Context) {
             .append('th')
             .attr('class', 'way-table-key');
 
+        // changed in this mapping session: the tag differs from the downloaded way
+        const base = context.history().base();
+        const graph = context.graph();
+        const isEdited = (key: string, columnIndex: number) => {
+            const segment = chain.segments[columnIndex];
+            const before = base.hasEntity(segment.wayID);
+            const now = graph.hasEntity(segment.wayID);
+            if (!before || !now) return false;   // a new way: nothing to compare with
+            // the table shows a reversed way in chain direction, its own keys have left and right swapped
+            const ownKey = segment.reversed ? swapLeftRightKey(key) : key;
+            return before.tags[ownKey] !== now.tags[ownKey];
+        };
+
         tagRows = tagRows.merge(tagRowsEnter)
             .order()
             .classed('preset-key', d => d.isPresetKey)
-            .classed('differs', d => d.differs);
+            .classed('differs', d => d.differs)
+            .classed('edited', d => d.cells.some((_cell, i) => isEdited(d.key, i)));
 
         tagRows.select('.way-table-key')
             .text(d => d.key);
@@ -456,6 +456,14 @@ export function uiWayTablePanel(context: iD.Context) {
             .append('td')
             .merge(cells)
             .attr('class', (d, i) => `way-table-value ${d.status}${i === chain.centerIndex ? ' center' : ''}`)
+            .classed('edited', function(_d, i) {
+                const row = d3_select<Element, TagRow>(this.parentElement!).datum();
+                return isEdited(row.key, i);
+            })
+            .attr('title', function(_d, i) {
+                const row = d3_select<Element, TagRow>(this.parentElement!).datum();
+                return isEdited(row.key, i) ? t('way_table.edited') : null;
+            })
             .text(d => d.value ?? '');
     }
 

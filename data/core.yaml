@@ -1259,6 +1259,7 @@ en:
     tooltip: Compare the tags of the selected way with the previous and next ways, below the map.
     empty: Select a way to compare its tags with the previous and next ways.
     reversed: This way points in the opposite direction. Its left/right tags are shown swapped.
+    edited: Changed in this mapping session
     junction:
       backward: "Several ways continue before the first way. Choose one:"
       forward: "Several ways continue after the last way. Choose one:"
@@ -1272,12 +1273,13 @@ en:
     write_sign: "Write the sign to {key}"
     write_source: "Add this image as source of the sign"
     write_image: "Add this image to {key}"
-    suggested_image: the image row chosen in the Mapillary images field
-    suggested: fits the direction the sign faces
+    suggested_image: "yellow frame: the image row chosen in the Mapillary images field"
+    suggested: "yellow frame: fits the direction the sign faces"
     write_tags: Set these tags
-    present: already tagged
-    replaces: "replaces {value}"
+    present: "green: already tagged, click to remove it again"
+    replaces: "orange: replaces {value}"
     annotation: Set a traffic sign from Mapillary.
+    annotation_remove: Removed a tag set from Mapillary.
     icon:
       mapillary: "Detected by Mapillary: {value}"
       sign: "German traffic sign this detection means (from the traffic sign tool): {sign} {name}"

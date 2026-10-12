@@ -1,7 +1,7 @@
 /**
  * Project configuration of the TILDA notes (WORKDOC feature 29), set before `context.init()`:
  *
- *     iD.tildaNotesConfig({ origin: 'https://staging.tilda-geo.de', regionSlug: 'infravelo', folderId: 12 });
+ *     iD.tildaNotesConfig({ origin: 'https://tilda-geo.de', regionSlug: 'infravelo', folderId: 13 });
  *
  * TILDA notes are the project's internal notes (only members of the TILDA region see them),
  * next to the public OpenStreetMap notes. Without a config the feature is off.

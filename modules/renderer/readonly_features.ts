@@ -141,7 +141,7 @@ export function setupReadOnlyFeatures(context: iD.Context) {
         }
 
         const graph = context.graph();
-        surface.selectAll<Element, unknown>('.layer-osm path, .layer-osm g.point, .layer-osm g.vertex, .layer-touch path, .layer-touch g')
+        surface.selectAll<Element, unknown>('.layer-osm path, .layer-osm g.point, .layer-osm g.vertex, .layer-touch .target')
             .each(function(datum) {
                 const entity = entityForDatum(datum);
                 const readOnly = !!entity && readOnlyFeatures.isReadOnly(entity, graph, features);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { appendImageId, hasImageId, imageButtonKeys, resolveTargetKey, targetKeys } from '../../../modules/mapillary/set_photo';
+import { appendImageId, hasImageId, removeImageId, imageButtonKeys, resolveTargetKey, targetKeys } from '../../../modules/mapillary/set_photo';
 import { activeTargetEvents, clearActiveTarget, getActiveTarget, setActiveTarget } from '../../../modules/mapillary/active_target';
 
 describe('resolveTargetKey', () => {
@@ -66,5 +66,13 @@ describe('active target store', () => {
         expect(getActiveTarget('w2')).toBeUndefined();
         expect(calls).toBe(3);
         activeTargetEvents.on('change.test', undefined);
+    });
+});
+
+describe('removeImageId', () => {
+    it('takes one id out of the list', () => {
+        expect(removeImageId({ mapillary: '5;7' }, 'mapillary', '7')).toBe('5');
+        expect(removeImageId({ mapillary: '5' }, 'mapillary', '5')).toBeUndefined();
+        expect(removeImageId({}, 'mapillary', '5')).toBeUndefined();
     });
 });

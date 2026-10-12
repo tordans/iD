@@ -68,7 +68,8 @@
 .layer-custom-data.not-selectable,
 .layer-custom-data.not-selectable path,
 .layer-custom-data.not-selectable text {
-    pointer-events: none;
+    /* iD's rules for area fills are more specific */
+    pointer-events: none !important;
 }
 .custom-data-filter-tooltip {
     margin-top: 6px;
