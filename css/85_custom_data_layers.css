@@ -160,12 +160,6 @@
     color: #fff;
     opacity: 1;
 }
-.ideditor .progress-tracking-buttons button.progress-not-done.active {
-    background: #e5484d;
-    border-color: #e5484d;
-    color: #fff;
-    opacity: 1;
-}
 .progress-tracking-byline:not(:empty) {
     margin-top: 6px;
     font-size: 12px;

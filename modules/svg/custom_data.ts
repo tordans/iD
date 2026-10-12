@@ -40,6 +40,17 @@ const DATA_GROUPS: DataGroup[] = ['fill', 'shadow', 'casing', 'stroke'];
 const _drawn = new Map<string, DataFeature[]>();
 const _layerOfFeature = new WeakMap<object, string>();
 
+/** Bounds of a feature, kept: a GeoJSON layer has all its features in memory, most of them out of view */
+const _bounds = new WeakMap<object, [[number, number], [number, number]]>();
+function featureBounds(feature: DataFeature) {
+    let bounds = _bounds.get(feature);
+    if (!bounds) {
+        bounds = d3_geoBounds(feature);
+        _bounds.set(feature, bounds);
+    }
+    return bounds;
+}
+
 /** The custom data layer a feature of the map belongs to */
 export function customDataLayerOfFeature(feature: object): CustomDataLayer | undefined {
     const layerID = _layerOfFeature.get(feature);
@@ -53,7 +64,7 @@ export function customDataLayerOfFeature(feature: object): CustomDataLayer | und
 export function customDataLineBBox(layerID: string, featureID: string): [number, number, number, number] | undefined {
     const pieces = (_drawn.get(layerID) ?? []).filter(feature => progressFeatureID(feature.properties) === featureID);
     if (!pieces.length) return undefined;
-    const bounds = pieces.map(piece => d3_geoBounds(piece));
+    const bounds = pieces.map(featureBounds);
     return [
         Math.min(...bounds.map(b => b[0][0])), Math.min(...bounds.map(b => b[0][1])),
         Math.max(...bounds.map(b => b[1][0])), Math.max(...bounds.map(b => b[1][1]))
@@ -202,12 +213,38 @@ export function svgCustomData(
             .classed('not-selectable', d => !isSelectable(d))
             .style('--custom-data-color', d => d.color);
 
-        const getPath = svgPath(projection).geojson;
-        const getAreaPath = svgPath(projection, undefined, true).geojson;
+        // every feature is drawn as several paths (shadow, casing, stroke): project it once per draw
+        const memo = (path: (d: DataFeature) => string | null) => {
+            const paths = new Map<DataFeature, string | null>();
+            return (d: DataFeature) => {
+                let result = paths.get(d);
+                if (result === undefined) {
+                    result = path(d);
+                    paths.set(d, result);
+                }
+                return result;
+            };
+        };
+        const getPath = memo(svgPath(projection).geojson);
+        const getAreaPath = memo(svgPath(projection, undefined, true).geojson);
         const allPolygons: DataFeature[] = [];
 
+        // only what is in view (with the projection's own extent, the minimap's is wider)
+        const [[west, south], [east, north]] = [projection.invert([0, 0]), projection.invert(projection.clipExtent()[1])]
+            .reduce<[[number, number], [number, number]]>((box, loc) => [
+                [Math.min(box[0][0], loc[0]), Math.min(box[0][1], loc[1])],
+                [Math.max(box[1][0], loc[0]), Math.max(box[1][1], loc[1])]
+            ], [[Infinity, Infinity], [-Infinity, -Infinity]]);
+        const [clipWidth, clipHeight] = projection.clipExtent()[1];
+        const inView = (feature: DataFeature) => {
+            if (!clipWidth || !clipHeight) return true;   // no extent yet
+            const [[minLon, minLat], [maxLon, maxLat]] = featureBounds(feature);
+            // bounds that cross the antimeridian (`minLon > maxLon`) are always drawn
+            return minLon > maxLon || (minLon <= east && maxLon >= west && minLat <= north && maxLat >= south);
+        };
+
         groups.each(function(layer) {
-            const features = layerFeatures(layer).filter(getPath);
+            const features = layerFeatures(layer).filter(inView).filter(getPath);
             const polygons = features.filter(isPolygon);
             allPolygons.push(...polygons);
 

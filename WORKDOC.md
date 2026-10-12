@@ -1516,16 +1516,17 @@ Goal: track which lines of a dataset are done, for two tasks: the mapping of the
 - **Id of a line.** The property `id`, else `lfd_nr`. `zuteilung_netz` has `lfd_nr` (unique; `element_nr` is not). The track lines (`centerline_tracks_pruefliste.geojson`) have `id` like `way/1079383678/cycleway/right`. A line without one of them cannot be tracked.
 - **Per view.** The API has no area query. As its docs suggest, an entry has the z14 tiles of its line as tags (`z14/8802/5376`), and every draw asks for the tiles of the view plus one ring that are not fresh (2 minutes). Nothing is loaded when more than 60 tiles are in view.
 - **Map.** Tracked lines get a casing: red, green when done (`css/85_custom_data_layers.css`).
-- **Sidebar.** A selected line shows "Done" / "Not done" above its properties, with "Done: user, date" (`modules/ui/progress_tracking.ts`).
+- **Sidebar.** A selected line shows a "Done" toggle above its properties, with "Done: user, date"; a second click takes the mark away (`modules/ui/progress_tracking.ts`).
 
 Limits and open points:
-- The projects allow the origins `http://127.0.0.1:*` and `https://fixmyberlin.github.io`, not the Netlify preview. There the marks cannot be read or saved until the origin is added.
+- The projects allow the origins `http://127.0.0.1:*`, `https://fixmyberlin.github.io` and the Netlify preview of PR 10 (checked 2026-10-12). Another preview number or a production URL has to be added.
 - PMTiles cut a line at tile borders. The tile tags come from the pieces of the line that are drawn when it is marked. A part of the line in a tile that was not loaded then has no tag; the ring of tiles around the view covers the usual case.
-- There is no explicit "not done" state: no entry means not done.
-- URLs to use: mapping lines `https://tilda-geo.de/api/uploads/infravelo-ren-netz-zuteilung-netz.pmtiles`. The track lines are a TILDA review list; they need a file URL (GeoJSON or PMTiles) with the `id` property.
+- Two states only, decided 2026-10-12: nothing and done.
+- URLs to use: mapping lines `https://tilda-geo.de/api/uploads/infravelo-ren-netz-zuteilung-netz.pmtiles` (tracker `mapping`), track lines `https://tilda-geo.de/api/uploads/infravelo-ren-kartierung-tracks.geojson` (tracker `track`, 4,663 lines, 3.8 MB).
 
 ## Progress log
 
+- 2026-10-12: Progress tracking: "Done" is one toggle (nothing / done). Origins of the three key-value projects checked: `127.0.0.1` and the Netlify preview of PR 10 answer 200.
 - 2026-10-12: Progress tracking for the lines of a custom data layer (feature 35): setting per layer, done / not done in the sidebar, red / green casing, marks loaded per view from the key-value DB.
 - 2026-10-12: Fixes from a list by the user.
   - TILDA notes use production: `https://tilda-geo.de`, region `infravelo`, folder 13 (both index pages). Not tested with a login.

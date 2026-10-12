@@ -14,7 +14,7 @@ type State = {
 
 
 /**
- * "Done" / "Not done" for the selected line of a custom data layer with a progress tracker
+ * A "Done" toggle for the selected line of a custom data layer with a progress tracker
  * (WORKDOC feature 35), in the sidebar above the line's properties.
  */
 export function uiProgressTracking(context: iD.Context) {
@@ -37,11 +37,13 @@ export function uiProgressTracking(context: iD.Context) {
     }
 
 
-    function set(done: boolean) {
+    /** Done, or back to nothing */
+    function toggle() {
         const layer = _datum && customDataLayerOfFeature(_datum);
         const featureID = progressFeatureID(_datum?.properties);
         if (!layer?.tracker || !featureID || _saving) return;
         const tracker = progressTracker(context, layer.tracker);
+        const done = !tracker.get(featureID);
         const bbox = customDataLineBBox(layer.id, featureID);
         if (done && !bbox) return;
 
@@ -74,11 +76,11 @@ export function uiProgressTracking(context: iD.Context) {
             .attr('class', 'progress-tracking');
 
         enter.append('div').attr('class', 'progress-tracking-title');
-        const buttons = enter.append('div').attr('class', 'progress-tracking-buttons');
-        buttons.append('button').attr('class', 'progress-done').call(t.append('progress_tracking.done'))
-            .on('click', () => set(true));
-        buttons.append('button').attr('class', 'progress-not-done').call(t.append('progress_tracking.not_done'))
-            .on('click', () => set(false));
+        enter.append('div').attr('class', 'progress-tracking-buttons')
+            .append('button')
+            .attr('class', 'progress-done')
+            .attr('role', 'switch')
+            .on('click', toggle);
         enter.append('div').attr('class', 'progress-tracking-byline deemphasize');
 
         section = section.merge(enter);
@@ -87,10 +89,10 @@ export function uiProgressTracking(context: iD.Context) {
         section.select('.progress-tracking-title').text(current.name);
         section.select('.progress-done')
             .classed('active', !!current.mark)
-            .property('disabled', !!current.disabled || _saving || !!current.mark);
-        section.select('.progress-not-done')
-            .classed('active', !current.mark)
-            .property('disabled', !!current.disabled || _saving || !current.mark);
+            .attr('aria-checked', String(!!current.mark))
+            .attr('title', t(current.mark ? 'progress_tracking.undo_tooltip' : 'progress_tracking.done_tooltip'))
+            .text(`${current.mark ? '✓ ' : ''}${t('progress_tracking.done')}`)
+            .property('disabled', !!current.disabled || _saving);
 
         const date = current.mark && new Date(current.mark.at).toLocaleDateString(localizer.languageCode(), { dateStyle: 'medium' });
         section.select('.progress-tracking-byline')

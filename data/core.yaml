@@ -1181,7 +1181,7 @@ en:
           none: No tracking
           mapping: Track mapping progress
           track: Track "track" separation mapping progress
-          help: "With tracking, the lines can be clicked and marked as done in the sidebar. Done lines get a green casing, the others a red one. The marks are stored in our key-value database with your OSM user name, not in OpenStreetMap."
+          help: "With tracking, the lines can be clicked and marked as done in the sidebar (a second click takes the mark away). Done lines get a green casing, the others a red one. The marks are stored in our key-value database with your OSM user name, not in OpenStreetMap."
     history_panel:
       title: Show History Panel
       tooltip: Show version details for the selection.
@@ -1295,7 +1295,8 @@ en:
       tooltip: The direction along the selected way the sign applies to, from the way the sign faces
   progress_tracking:
     done: Done
-    not_done: Not done
+    done_tooltip: Mark this line as done
+    undo_tooltip: Take the mark away again
     done_by: "Done: {user}, {date}"
     error: The progress could not be saved.
     disabled:
