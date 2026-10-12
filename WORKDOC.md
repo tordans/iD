@@ -1524,8 +1524,17 @@ Limits and open points:
 - Two states only, decided 2026-10-12: nothing and done.
 - URLs to use: mapping lines `https://tilda-geo.de/api/uploads/infravelo-ren-netz-zuteilung-netz.pmtiles` (tracker `mapping`), track lines `https://tilda-geo.de/api/uploads/infravelo-ren-kartierung-tracks.geojson` (tracker `track`, 4,663 lines, 3.8 MB).
 
+### 36. infra3D links — 🟡 (built 2026-10-12; the links not opened with an infra3D account)
+
+infra3D is street-level imagery we have for Berlin; it needs a login. The link builder is `buildInfra3dUrl` from `@osm-editor-kit/street-imagery` (the package TILDA uses), the project (`infra3D Berlin`, with its bbox) is the one from TILDA (`modules/infra3d/infra3d.ts`). The links open in a new tab.
+
+- **Sidebar.** A "3D" button in the preset header of a selected feature, next to the favorite heart and the info button: infra3D's nearest image, turned to the feature. For a line the target is the point at half its length, for a node its position, else the center of the extent. Only shown inside the project's bbox.
+- **Mapillary bar** (above the viewer). "infra3D ↗": with a selected sign it looks at the sign; without, it opens the image nearest to where the shown Mapillary image was taken. The bar now also shows with an image and nothing selected, for this link.
+- Not built: "click on the map to open". The two buttons cover a selected feature and a shown image; a free map click would need its own mode.
+
 ## Progress log
 
+- 2026-10-12: infra3D links (feature 36): a "3D" button in the sidebar's preset header and "infra3D ↗" in the Mapillary bar; new dependency `@osm-editor-kit/street-imagery` (only its link builder is bundled).
 - 2026-10-12: Progress tracking: "Done" is one toggle (nothing / done). Origins of the three key-value projects checked: `127.0.0.1` and the Netlify preview of PR 10 answer 200.
 - 2026-10-12: Progress tracking for the lines of a custom data layer (feature 35): setting per layer, done / not done in the sidebar, red / green casing, marks loaded per view from the key-value DB.
 - 2026-10-12: Fixes from a list by the user.

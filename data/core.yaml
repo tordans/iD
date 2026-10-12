@@ -1293,6 +1293,10 @@ en:
       forward: "↑ forward"
       backward: "↓ backward"
       tooltip: The direction along the selected way the sign applies to, from the way the sign faces
+  infra3d:
+    tooltip_feature: "Open infra3D looking at this feature (the middle of a line). Needs an infra3D account."
+    tooltip_image: "Open infra3D where this image was taken. Needs an infra3D account."
+    tooltip_sign: "Open infra3D looking at this sign. Needs an infra3D account."
   progress_tracking:
     done: Done
     done_tooltip: Mark this line as done

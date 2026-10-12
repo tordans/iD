@@ -10,6 +10,7 @@ import { uiPresetIcon } from '../preset_icon';
 import { uiSection } from '../section';
 import { uiTagReference } from '../tag_reference';
 import { uiFavoriteButton } from '../favorite_button';
+import { uiInfra3dButton } from '../infra3d_button';
 import { presetFavorites } from '../../core/preset_favorites';
 
 
@@ -22,6 +23,7 @@ export function uiSectionFeatureType(context) {
 
     var _tagReference;
     var _favoriteButton = uiFavoriteButton(context);
+    var _infra3dButton = uiInfra3dButton(context);
 
     var section = uiSection('feature-type', context)
         .label(() => t.append('inspector.feature_type'))
@@ -82,7 +84,9 @@ export function uiSectionFeatureType(context) {
         }
 
         selection.selectAll('.preset-list-button-wrap .accessory-buttons')
-            .call(_favoriteButton.presets(_presets));
+            .call(_favoriteButton.presets(_presets))
+            // Radnetz Berlin: open infra3D at the selected feature
+            .call(_infra3dButton.entityIDs(_entityIDs));
 
         selection.selectAll('.preset-reset')
             .on('click', function() {

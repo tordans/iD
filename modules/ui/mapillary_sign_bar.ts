@@ -4,6 +4,7 @@ import { actionChangeTags } from '../actions';
 import { activeTargetEvents, clearActiveTarget, getActiveTarget } from '../mapillary/active_target';
 import { appendImageId, imageButtonKeys, removeImageId } from '../mapillary/set_photo';
 import { geoSphericalDistance } from '../geo';
+import { infra3dUrl, openInfra3d } from '../infra3d/infra3d';
 import { t, localizer } from '../core/localizer';
 import { services } from '../services';
 import { svgIcon } from '../svg/icon';
@@ -158,8 +159,10 @@ export function renderSignBar(context: coreContext) {
     if (viewer.empty()) return;
     const sign = mapillaryShown ? selectedSign() : null;
     const image = mapillaryShown ? services.mapillary?.getActiveImage() : null;
+    // infra3D at the sign (turned to it), else where the shown image was taken
+    const infra3d = sign ? infra3dUrl(sign.loc) : image ? infra3dUrl(image.loc, 'jumpTo') : undefined;
     // with a sign: the sign, its images and what to write; without: the image keys of the feature
-    const shown = !!sign || (!!image && !!selectedEntity(context));
+    const shown = !!sign || (!!image && (!!selectedEntity(context) || !!infra3d));
 
     let bar = viewer.selectAll<HTMLDivElement, number>('.mapillary-sign-bar')
         .data(shown ? [0] : []);
@@ -179,6 +182,12 @@ export function renderSignBar(context: coreContext) {
     write.append('div').attr('class', 'mapillary-sign-bar-signs');
     write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-source');
     write.append('div').attr('class', 'mapillary-sign-bar-actions mapillary-sign-bar-images');
+    // the same place in other imagery
+    enter.append('div').attr('class', 'mapillary-sign-bar-links')
+        .append('button')
+        .attr('type', 'button')
+        .attr('class', 'mapillary-sign-bar-infra3d')
+        .text('infra3D ↗');
 
     bar = enter.merge(bar);
     if (!shown) return;
@@ -190,6 +199,13 @@ export function renderSignBar(context: coreContext) {
         renderDays(context, bar.select('.mapillary-sign-bar-days'), sign);
     }
     renderActions(context, bar, sign);
+
+    bar.select('.mapillary-sign-bar-links').classed('hide', !infra3d);
+    bar.select('.mapillary-sign-bar-infra3d')
+        .attr('title', t(sign ? 'infra3d.tooltip_sign' : 'infra3d.tooltip_image'))
+        .on('click', () => {
+            if (infra3d) openInfra3d(infra3d);
+        });
 }
 
 

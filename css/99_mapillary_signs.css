@@ -241,3 +241,36 @@
 .ideditor .photoviewer .mapillary-sign-bar button.mapillary-sign-bar-action.replaces {
     background: rgba(255, 152, 0, 0.35);
 }
+
+/* links to the same place in other imagery (infra3D) */
+.mapillary-sign-bar-links {
+    display: flex;
+    gap: 3px;
+}
+.mapillary-sign-bar-links.hide {
+    display: none;
+}
+.mapillary-sign-bar.with-sign .mapillary-sign-bar-links,
+.mapillary-sign-bar-write:not(.hide) + .mapillary-sign-bar-links {
+    padding-top: 4px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+/* infra3D in the inspector's preset header, next to the favorite heart */
+.preset-list-button-wrap button.infra3d-button {
+    width: 32px;
+    flex: 0 0 auto;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: var(--bg-color-2);
+    color: var(--text-color);
+    font-size: 11px;
+    font-weight: bold;
+    opacity: 0.75;
+}
+.preset-list-button-wrap button.infra3d-button:hover,
+.preset-list-button-wrap button.infra3d-button:focus {
+    background: var(--bg-color-3);
+    opacity: 1;
+}

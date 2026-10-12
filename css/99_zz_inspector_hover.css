@@ -4,6 +4,7 @@
 /* hidden, but they keep their place */
 .ideditor .inspector-hover .disclosure-header-option,
 .ideditor .inspector-hover .tilda-card button.tilda-edit,
+.ideditor .inspector-hover .preset-list-button-wrap button.infra3d-button,
 .ideditor[dir] .inspector-hover .form-field > .field-label > button.traffic-sign-toggle,
 .ideditor .inspector-hover .field-related button.field-related-button,
 .ideditor .inspector-hover .form-field-input-traffic-sign .traffic-sign-row__drag,
