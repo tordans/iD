@@ -125,16 +125,32 @@ export function setupReadOnlyFeatures(context: iD.Context) {
     const features = context.features() as unknown as Features;
     readOnlyFeatures.writeHash();
 
+    /** Some map elements have the class; without read-only categories there is nothing to do else */
+    let _marked = false;
+
     function applyClasses() {
         const surface = context.surface();
         if (!surface || surface.empty()) return;
 
+        // runs after every draw, also the small ones on hover: do as little as possible
+        if (!readOnlyFeatures.keys().length) {
+            if (!_marked) return;
+            surface.selectAll('.readonly-feature').classed('readonly-feature', false);
+            _marked = false;
+            return;
+        }
+
         const graph = context.graph();
-        surface.selectAll('.layer-osm path, .layer-osm g.point, .layer-osm g.vertex, .layer-touch path, .layer-touch g')
-            .classed('readonly-feature', datum => {
+        surface.selectAll<Element, unknown>('.layer-osm path, .layer-osm g.point, .layer-osm g.vertex, .layer-touch path, .layer-touch g')
+            .each(function(datum) {
                 const entity = entityForDatum(datum);
-                return !!entity && readOnlyFeatures.isReadOnly(entity, graph, features);
+                const readOnly = !!entity && readOnlyFeatures.isReadOnly(entity, graph, features);
+                // d3's `classed` is much slower here (thousands of elements)
+                if (readOnly !== this.classList.contains('readonly-feature')) {
+                    this.classList.toggle('readonly-feature', readOnly);
+                }
             });
+        _marked = true;
     }
 
     readOnlyFeatures.on('change.setupReadOnlyFeatures', () => {

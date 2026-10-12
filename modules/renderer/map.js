@@ -287,8 +287,9 @@ export function rendererMap(context) {
 
             dispatch.call('drawn', this, { full: false });
 
-            // redraw everything else later
-            scheduleRedraw();
+            // redraw everything else later: in its own task, so the selection and the sidebar
+            // show up before the full redraw runs (`scheduleRedraw` alone often runs at once)
+            window.setTimeout(scheduleRedraw, 0);
         });
 
         map.dimensions(utilGetDimensions(selection));
@@ -739,6 +740,27 @@ export function rendererMap(context) {
     map.redrawEnable = function(val) {
         if (!arguments.length) return _redrawEnabled;
         _redrawEnabled = val;
+        return map;
+    };
+
+
+    /**
+     * Redraws only the given entities, e.g. after something changed that is not in the history.
+     * @param {string[]} entityIDs
+     */
+    map.redrawEntities = function(entityIDs) {
+        var graph = context.graph();
+        var complete = {};
+        entityIDs.forEach(function(id) {
+            var entity = graph.hasEntity(id);
+            if (entity) complete[id] = entity;
+        });
+        if (_isTransformed) {
+            // mid pan or zoom only full redraws work; one is on its way
+            scheduleRedraw();
+        } else {
+            immediateRedraw({ complete: function() { return complete; } });
+        }
         return map;
     };
 

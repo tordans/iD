@@ -492,8 +492,14 @@ export function coreContext(this: object): coreContext {
   let _directionalComboIndicator: DirectionalComboIndicatorState | null = null;
   context.directionalComboIndicator = () => _directionalComboIndicator;
   context.setDirectionalComboIndicator = (val: DirectionalComboIndicatorState | null) => {
+    const previous = _directionalComboIndicator;
+    const unchanged = previous === val ||
+      (!!previous && !!val && previous.side === val.side && previous.entityIDs.join() === val.entityIDs.join());
+    if (unchanged) return context;
+
     _directionalComboIndicator = val;
-    dispatch.call('change');
+    // only the ways with the arrows; a full redraw on every hover in the sidebar is too slow
+    _map.redrawEntities([...new Set([...(previous?.entityIDs ?? []), ...(val?.entityIDs ?? [])])]);
     return context;
   };
 

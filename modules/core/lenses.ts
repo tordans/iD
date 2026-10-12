@@ -316,6 +316,13 @@ let lensSecondaryTagKeys = new Set<string>();
 /** @param keys - secondary keys required by the active lens's CSS */
 export function setLensSecondaryTagKeys(keys: string[]): void {
     lensSecondaryTagKeys = new Set(Array.isArray(keys) ? keys : []);
+    _lensClassesVersion++;
+}
+
+/** Counts the changes of what `appendLensTagClasses()` adds, so its results can be cached */
+let _lensClassesVersion = 0;
+export function lensClassesVersion(): number {
+    return _lensClassesVersion;
 }
 
 /** @returns the lens-required secondary keys (CSS-class form) */
@@ -385,6 +392,7 @@ export function appendLensTagClasses(classes: string[], t: Record<string, string
 export function refreshLensTagKeys(): void {
     setLensSecondaryTagKeys(extractTagKeysFromCss(getActiveLensCss()));
     lensClassProvider = getBundledLens(getSelectedLensId())?.classes;
+    _lensClassesVersion++;
 }
 
 /** Computed classes of the active bundled lens (see `BundledLens.classes`) */

@@ -1509,6 +1509,13 @@ Notes on the new parameters:
 
 ## Progress log
 
+- 2026-10-12: Performance. Measured with a CPU profile in headless Chrome (Tempelhof, z17.6, 6,400 features in view, 1300 px map; hover, drag, wheel zoom, select, tag change).
+  - Hovering a side card of the TILDA section or a left/right field redrew the whole map on every enter and leave (`context.setDirectionalComboIndicator` fired the context's `change`). Now only the ways with the arrows are redrawn (`map.redrawEntities(ids)`), and nothing when the value did not change.
+  - Read-only features: the classes were applied to all map elements after every draw, also the small ones on hover, even without a read-only category. Now nothing runs without a category, and with one it uses `classList` directly.
+  - Tag classes (`svg/tag_classes.ts`, upstream code plus our lens classes) were the most expensive function of every redraw. The result is cached per tags object and current class string; a lens change clears the cache (`lensClassesVersion()`).
+  - Selecting: the full redraw after a mode change runs in its own task, so the selection and the sidebar show first.
+  - Result in the same scenario: selecting a way about 250 ms → about 100 ms blocked; hover with a way selected 31 → 57 fps; tag change about 110 → 65 ms; full redraw about 140 → 110 ms.
+  - Not ours and unchanged: a full redraw of a dense view costs about 100 ms (iD), and every hover change with a selection redraws all visible vertices (iD).
 - 2026-10-12: Custom data layers: after saving an edit, the edit dialog opened with the old name and filter again (and a later save wrote them back). The edit and delete buttons of a row kept the layer object from when the row was first drawn; they now get the current one on every render (`modules/ui/sections/custom_data_layers.ts`).
 - 2026-10-09: URL: `lens` (bundled lens) and `notes=osm,tilda` (note layers) (feature 34).
 - 2026-10-09: URL: `data_layers` (custom data layers), `way_table`, and `readonly_features` also written from the stored state; review of what is in the URL (feature 34).
