@@ -138,8 +138,11 @@ export function uiSectionCustomDataLayers(context: iD.Context) {
             if (toggle && label && label.nextSibling !== toggle) label.after(toggle);
         });
 
-        // pass the edited layer on to the label, whose tooltip reads it
+        // pass the edited layer on to the label (its tooltip reads it) and to the buttons,
+        // which else open the editor with the values from before the last save
         items.select('label');
+        items.select('.layer-edit-custom-data');
+        items.select('.layer-delete-custom-data');
 
         items.select('.custom-data-swatch')
             .style('background-color', d => d.color);

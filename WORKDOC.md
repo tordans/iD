@@ -1509,6 +1509,7 @@ Notes on the new parameters:
 
 ## Progress log
 
+- 2026-10-12: Custom data layers: after saving an edit, the edit dialog opened with the old name and filter again (and a later save wrote them back). The edit and delete buttons of a row kept the layer object from when the row was first drawn; they now get the current one on every render (`modules/ui/sections/custom_data_layers.ts`).
 - 2026-10-09: URL: `lens` (bundled lens) and `notes=osm,tilda` (note layers) (feature 34).
 - 2026-10-09: URL: `data_layers` (custom data layers), `way_table`, and `readonly_features` also written from the stored state; review of what is in the URL (feature 34).
 - 2026-10-09: Two fixes for the deployed preview.
