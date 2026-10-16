@@ -216,6 +216,15 @@
             "text": "shortcuts.editing.drawing.disable_snap"
           },
           {
+            "shortcuts": ["⇧"],
+            "text": "shortcuts.editing.drawing.snap_angles_45"
+          },
+          {
+            "modifiers": ["⇧"],
+            "shortcuts": ["⌥"],
+            "text": "shortcuts.editing.drawing.snap_angles_10"
+          },
+          {
             "shortcuts": ["↵", "⎋"],
             "text": "shortcuts.editing.drawing.stop_line"
           },
